@@ -2,8 +2,11 @@ program Formatter;
 
 uses
   Vcl.Forms,
-  fMain in 'C:\Users\Softwarer\Documents\RAD Studio\Projects\Formatter\fMain.pas' {FormMain},
-  Base in 'C:\Users\Softwarer\Documents\RAD Studio\Projects\Formatter\Base.pas';
+  fMain in 'fMain.pas' {FormMain},
+  Streams in 'Streams.pas',
+  Tokens in 'Tokens.pas',
+  Printer in 'Printer.pas',
+  Tokenizer in 'Tokenizer.pas';
 
 {$R *.res}
 

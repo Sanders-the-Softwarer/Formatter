@@ -31,7 +31,5 @@ object FormMain: TFormMain
     Align = alClient
     ReadOnly = True
     TabOrder = 1
-    ExplicitLeft = 5
-    ExplicitWidth = 185
   end
 end

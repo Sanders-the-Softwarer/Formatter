@@ -22,7 +22,7 @@ var
 
 implementation
 
-uses Base;
+uses Streams, Tokens, Printer, Tokenizer;
 
 {$R *.dfm}
 
@@ -39,13 +39,12 @@ end;
 procedure TFormMain.Process(const AText: string);
 var
   P: TPrinter;
-  S: TNodeStream;
+  S: TBaseStream<TToken>;
 begin
-  S := TTokenizer.Create(TStringStream.Create(AText));
+  S := TSkipWhiteSpaceTokenizer.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(AText))));
   P := TPrinter.Create;
   try
-    while not S.Eof do
-      S.Next.Describe(P);
+    while not S.Eof do S.Next.Describe(P);
   finally
     edDest.Text := P.Data;
     FreeAndNil(S);
