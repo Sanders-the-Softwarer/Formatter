@@ -38,10 +38,12 @@ type
 
   { Класс владельца запоминает созданные объекты и уничтожает их вместе с собой }
   TObjectStream<T: class> = class(TBaseStream<T>)
+  strict private
+    Owned: TObjectList<T>;
+    InTransit: T;
   strict protected
-    Output: TObjectList<T>;
     function InternalNext: T; virtual; abstract;
-    function OwnsOutput: boolean; virtual;
+    function Transit(AValue: T): T;
   public
     destructor Destroy; override;
     function Next: T; override;
@@ -52,7 +54,9 @@ type
   public
     type TMark = integer;
   strict private
+    Output: TList<T>;
     RepeatMark, SavedMark: TMark;
+    function PutIntoOutput(AValue: T): T;
   strict protected
     function InternalEof: boolean; virtual; abstract;
   public
@@ -61,6 +65,7 @@ type
     procedure Restore(AMark: TMark); overload;
     procedure Restore; overload;
   public
+    destructor Destroy; override;
     function Eof: boolean; override; final;
     function Next: T; override; final;
   end;
@@ -116,13 +121,15 @@ function TObjectStream<T>.Next: T;
 begin
   if Eof then raise Exception.Create('End of the text had been reached');
   Result := InternalNext;
-  if not Assigned(Output) then Output := TObjectList<T>.Create(OwnsOutput);
-  Output.Add(Result);
+  if Result = InTransit then exit;
+  if not Assigned(Owned) then Owned := TObjectList<T>.Create(true);
+  Owned.Add(Result);
 end;
 
-function TObjectStream<T>.OwnsOutput: boolean;
+function TObjectStream<T>.Transit(AValue: T): T;
 begin
-  Result := true;
+  InTransit := AValue;
+  Result := AValue;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,6 +137,12 @@ end;
 //     Класс буферизации позволяет откат и повторный возврат прочитанного     //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+destructor TBufferedStream<T>.Destroy;
+begin
+  FreeAndNil(Output);
+  inherited;
+end;
 
 function TBufferedStream<T>.Eof: boolean;
 begin
@@ -140,7 +153,7 @@ function TBufferedStream<T>.Next: T;
 begin
   if Assigned(Output) and (RepeatMark < Output.Count)
     then Result := Output[RepeatMark]
-    else Result := inherited Next;
+    else Result := PutIntoOutput(inherited Next);
   Inc(RepeatMark);
 end;
 
@@ -166,6 +179,13 @@ end;
 procedure TBufferedStream<T>.Restore;
 begin
   Restore(SavedMark);
+end;
+
+function TBufferedStream<T>.PutIntoOutput(AValue: T): T;
+begin
+  if not Assigned(Output) then Output := TList<T>.Create;
+  Output.Add(AValue);
+  Result := AValue;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,5 +275,3 @@ begin
 end;
 
 end.
-
-

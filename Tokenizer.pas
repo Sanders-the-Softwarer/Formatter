@@ -28,7 +28,6 @@ type
   strict protected
     function InternalEof: boolean; override;
     function InternalNext: TToken; override;
-    function OwnsOutput: boolean; override;
   end;
 
 implementation
@@ -239,12 +238,7 @@ end;
 function TSkipWhitespaceTokenizer.InternalNext: TToken;
 begin
   Skip;
-  Result := Source.Next;
-end;
-
-function TSkipWhitespaceTokenizer.OwnsOutput: boolean;
-begin
-  Result := false;
+  Result := Transit(Source.Next);
 end;
 
 procedure TSkipWhitespaceTokenizer.Skip;
