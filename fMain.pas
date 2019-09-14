@@ -39,11 +39,15 @@ end;
 procedure TFormMain.Process(const AText: string);
 var
   P: TPrinter;
-  S: TBaseStream<TToken>;
+  S: TBufferedStream<TToken>;
 begin
-  S := TSkipWhiteSpaceTokenizer.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(AText))));
+  S := TCommentProcessor.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(AText)))));
   P := TPrinter.Create;
   try
+    { прокрутим список, чтобы комментарии привязались до печати }
+    S.SaveMark;
+    while not S.Eof do S.Next;
+    S.Restore;
     while not S.Eof do S.Next.Describe(P);
   finally
     edDest.Text := P.Data;

@@ -12,9 +12,13 @@ unit Tokens;
 
 interface
 
-uses Printer;
+uses System.SysUtils, System.Generics.Collections, Printer;
 
 type
+
+  { Предварительное объявление типов }
+  TComment = class;
+
   { Базовый класс лексем. Для отладки снабжён методом Describe }
   TBaseToken = class
   public
@@ -47,12 +51,18 @@ type
   strict private
     FValue: string;
     FLine, FCol: integer;
+    FCommentsAbove, FCommentsBelow, FCommentsBefore, FCommentsAfter: TList<TComment>;
   strict protected
     function TokenType: string; virtual; abstract;
   public
     constructor Create(const AValue: string; AChar: TPositionedChar); overload;
     constructor Create(AChar: TPositionedChar); overload;
+    destructor Destroy; override;
     procedure Describe(Printer: TPrinter); override;
+    procedure AddCommentAbove(AComment: TComment);
+    procedure AddCommentBelow(AComment: TComment);
+    procedure AddCommentBefore(AComment: TComment);
+    procedure AddCommentAfter(AComment: TComment);
     property Value: string read FValue;
     property Line: integer read FLine;
     property Col: integer read FCol;
@@ -149,9 +159,54 @@ begin
   FValue := AValue;
 end;
 
-procedure TToken.Describe(Printer: TPrinter);
+destructor TToken.Destroy;
 begin
-  Printer.WriteLn('%s "%s", строка %d, позиция %d', [TokenType, Value, Line, Col]);
+  FreeAndNil(FCommentsAbove);
+  FreeAndNil(FCommentsBelow);
+  FreeAndNil(FCommentsBefore);
+  FreeAndNil(FCommentsAfter);
+  inherited;
+end;
+
+procedure TToken.Describe(Printer: TPrinter);
+var Comma: char;
+begin
+  Printer.Write('%s "%s", строка %d, позиция %d', [TokenType, Value, Line, Col]);
+  if Assigned(FCommentsAbove) or Assigned(FCommentsBelow) or Assigned(FCommentsBefore) or Assigned(FCommentsAfter) then
+  begin
+    Comma := ':';
+    Printer.Write(' (комментарии');
+    if Assigned(FCommentsAbove) then begin Printer.Write(Comma + ' выше'); Comma := ','; end;
+    if Assigned(FCommentsBefore) then begin Printer.Write(Comma + ' слева'); Comma := ','; end;
+    if Assigned(FCommentsAfter) then begin Printer.Write(Comma + ' справа'); Comma := ','; end;
+    if Assigned(FCommentsBelow) then begin Printer.Write(Comma + ' ниже'); Comma := ','; end;
+    Printer.Write(')');
+  end;
+  Printer.NextLine;
+end;
+
+procedure TToken.AddCommentAbove(AComment: TComment);
+begin
+  if not Assigned(FCommentsAbove) then FCommentsAbove := TList<TComment>.Create;
+  FCommentsAbove.Add(AComment);
+end;
+
+procedure TToken.AddCommentBelow(AComment: TComment);
+begin
+  if not Assigned(FCommentsBelow) then FCommentsBelow := TList<TComment>.Create;
+  FCommentsBelow.Add(AComment);
+end;
+
+procedure TToken.AddCommentBefore(AComment: TComment);
+begin
+  if not Assigned(FCommentsBefore) then FCommentsBefore := TList<TComment>.Create;
+  FCommentsBefore.Add(AComment);
+end;
+
+procedure TToken.AddCommentAfter(AComment: TComment);
+begin
+  if not Assigned(FCommentsAfter) then FCommentsAfter := TList<TComment>.Create;
+  FCommentsAfter.Add(AComment);
 end;
 
 { TUnknownToken }

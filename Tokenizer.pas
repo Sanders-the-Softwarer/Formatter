@@ -10,11 +10,33 @@
 
 unit Tokenizer;
 
+{ ----- ѕримечани€ -------------------------------------------------------------
+
+  Ќаиболее сложной, видимо, задачей форматировани€ €вл€етс€ работа с коммента-
+  ри€ми. ќни могут находитьс€ в любом месте кода, мешают синтаксическому
+  анализу, но при этом должны быть сохранены и выведены в итоговый текст,
+  причЄм правильно расположенными относительно синтаксических конструкций.
+  ƒл€ решени€ этой задачи между лексическим и синтаксическим анализом введЄн
+  специальный шаг обработки комментариев. »де€ в том, что комментарий убираетс€
+  из потока и прив€зываетс€ к значимой лексеме, р€дом с которой находитс€.
+  ƒалее лексема войдЄт составной частью в распознанную синтаксическую конструк-
+  цию, и когда дело дойдЄт до вывода форматированного текста - вместе с лексемой
+  будет выведен и прив€занный к ней комментарий.
+
+  ѕредполагаетс€, что будет анализироватьс€ и сохран€тьс€ положение комментари€
+  относительно лексемы - сверху, снизу, левее или правее. ѕока что дл€ простоты
+  реализации все комментарии, кроме стартового, прив€зываютс€ к предыдущей
+  значимой лексеме. ѕосле реализации других частей кода это место будет
+  доработано.
+
+------------------------------------------------------------------------------ }
+
 interface
 
-uses System.Character, System.SysUtils, Tokens, Streams;
+uses System.Character, System.SysUtils, System.Generics.Collections, Tokens, Streams;
 
 type
+
   { Ћексический анализатор превращает поток символов в поток лексем }
   TTokenizer = class(TNextStream<TPositionedChar, TToken>)
   protected
@@ -22,7 +44,7 @@ type
   end;
 
   { ƒополнительный класс пропускает незначащие пробелы }
-  TSkipWhitespaceTokenizer = class(TNextStream<TToken, TToken>)
+  TWhitespaceSkipper = class(TNextStream<TToken, TToken>)
   strict private
     procedure Skip;
   strict protected
@@ -30,9 +52,23 @@ type
     function InternalNext: TToken; override;
   end;
 
+  {  ласс выкусывает комментарии из основного потока и прив€зывает их к значимым лексемам }
+  TCommentProcessor = class(TNextStream<TToken, TToken>)
+  strict private
+    PrevToken: TToken;
+    procedure Process;
+  strict protected
+    function InternalEof: boolean; override;
+    function InternalNext: TToken; override;
+  end;
+
 implementation
 
-{ TTokenizer }
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//       Ћексический анализатор превращает поток символов в поток лексем      //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 function TTokenizer.InternalNext: TToken;
 
@@ -157,6 +193,7 @@ function TTokenizer.InternalNext: TToken;
     Result := (NextChar = '''');
     if not Result then exit;
     PrevApo := false;
+    PrevPrevApo := false;
     while NextChar <> #0 do
       if (LastChar <> '''') and PrevApo and not PrevPrevApo then
         break
@@ -227,26 +264,79 @@ begin
     end;
 end;
 
-{ TSkipWhitespaceTokenizer }
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//           ƒополнительный класс дл€ пропуска незначимых пробелов            //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
-function TSkipWhitespaceTokenizer.InternalEof: boolean;
+function TWhitespaceSkipper.InternalEof: boolean;
 begin
   Skip;
   Result := inherited InternalEof;
 end;
 
-function TSkipWhitespaceTokenizer.InternalNext: TToken;
+function TWhitespaceSkipper.InternalNext: TToken;
 begin
   Skip;
   Result := Transit(Source.Next);
 end;
 
-procedure TSkipWhitespaceTokenizer.Skip;
+procedure TWhitespaceSkipper.Skip;
 begin
   repeat
     Source.SaveMark
   until Source.Eof or not (Source.Next is TWhitespace);
   if not Source.Eof then Source.Restore;
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                          ќбработчик комментариев                           //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+function TCommentProcessor.InternalEof: boolean;
+begin
+  Process;
+  Result := Source.Eof;
+end;
+
+function TCommentProcessor.InternalNext: TToken;
+begin
+  Process;
+  Result := Transit(Source.Next);
+  PrevToken := Result;
+end;
+
+procedure TCommentProcessor.Process;
+var
+  Token: TToken;
+  Prev: TList<TComment>;
+  i: integer;
+begin
+  Prev := nil;
+  while not Source.Eof do
+  begin
+    Source.SaveMark;
+    Token := Source.Next;
+    if Token is TComment then
+      if Assigned(PrevToken) then
+        PrevToken.AddCommentBelow(Token as TComment)
+      else
+        begin
+          if not Assigned(Prev) then Prev := TList<TComment>.Create;
+          Prev.Add(Token as TComment);
+        end
+    else
+      begin
+        if Assigned(Prev) then
+          for i := 0 to Prev.Count - 1 do
+            Token.AddCommentAbove(Prev[i]);
+        Source.Restore;
+        exit;
+      end;
+  end;
 end;
 
 end.
