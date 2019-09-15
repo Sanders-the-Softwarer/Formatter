@@ -48,6 +48,7 @@ type
     function InternalParse: boolean; override;
   public
     function Name: string; override;
+    procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
   { Команда create [or replace] }
@@ -163,6 +164,12 @@ function TUnexpectedToken.InternalParse: boolean;
 begin
   Token := NextToken;
   Result := true;
+end;
+
+procedure TUnexpectedToken.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(Token);
+  APrinter.NextLine;
 end;
 
 { TStatement }
@@ -333,6 +340,7 @@ begin
   APrinter.PrintItem(_Body);
   APrinter.PrintItem(_PackageName);
   APrinter.PrintItem(_Is);
+  APrinter.NextLine;
   for i := 0 to _Statements.Count - 1 do APrinter.PrintItem(_Statements[i]);
   APrinter.PrintItem(_End);
 end;
@@ -364,6 +372,7 @@ begin
   APrinter.PrintItem(_End);
   APrinter.PrintItem(_PackageName);
   APrinter.PrintItem(_Semicolon);
+  APrinter.NextLine;
   APrinter.PrintItem(_Slash);
 end;
 
@@ -434,6 +443,7 @@ begin
   APrinter.PrintItem(_Return);
   APrinter.PrintItem(_ReturnType);
   APrinter.PrintItem(_Semicolon);
+  APrinter.NextLine;
 end;
 
 { TTypeRefStatement }

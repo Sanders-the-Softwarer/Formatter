@@ -32,6 +32,10 @@ type
     procedure BeginPrint; virtual; abstract;
     procedure PrintItem(AItem: TObject); virtual; abstract;
     procedure EndPrint; virtual; abstract;
+    procedure Indent; virtual; abstract;
+    procedure Undent; virtual; abstract;
+    procedure Space; virtual; abstract;
+    procedure NextLine; virtual; abstract;
   public
     class function CreateTokenizerPrinter(AStrings: TStrings): TPrinter;
     class function CreateSyntaxTreePrinter(ATreeView: TTreeView): TPrinter;
@@ -56,10 +60,20 @@ type
   TFormatterPrinter = class(TBasePrinter)
   private
     Strings: TStrings;
+    Builder: TStringBuilder;
+    Shift:   integer;
+    BOL:     boolean;
+    SPC:     boolean;
   public
     constructor Create(AStrings: TStrings);
     procedure BeginPrint; override;
     procedure EndPrint; override;
+    procedure PrintToken(AToken: TToken); override;
+    procedure PrintStatement(AStatement: TStatement); override;
+    procedure Indent; override;
+    procedure Undent; override;
+    procedure Space; override;
+    procedure NextLine; override;
   end;
 
   TTokenizerPrinter = class(TBasePrinter)
@@ -137,21 +151,71 @@ end;
 
 { TFormatterPrinter }
 
+constructor TFormatterPrinter.Create(AStrings: TStrings);
+begin
+  Strings := AStrings;
+  inherited Create;
+end;
+
 procedure TFormatterPrinter.BeginPrint;
 begin
   inherited;
-  { ничего не делаем }
-end;
-
-constructor TFormatterPrinter.Create(AStrings: TStrings);
-begin
-  { ничего не делаем }
+  Builder := TStringBuilder.Create;
+  Shift   := 0;
+  BOL     := true;
+  SPC     := false;
 end;
 
 procedure TFormatterPrinter.EndPrint;
 begin
+  Strings.BeginUpdate;
+  Strings.Text := Builder.ToString;
+  Strings.EndUpdate;
+  FreeAndNil(Builder);
   inherited;
-  { ничего не делаем }
+end;
+
+procedure TFormatterPrinter.PrintToken(AToken: TToken);
+var Spaced: boolean;
+begin
+  Spaced := (AToken is TKeyword) or (AToken is TIdent) or (AToken is TNumber);
+  if Spaced then Space;
+  if BOL then
+    Builder.Append(StringOfChar(' ', Shift))
+  else if SPC then
+    Builder.Append(' ');
+  Builder.Append(AToken.Value);
+  BOL := false;
+  SPC := false;
+  if Spaced then Space;
+end;
+
+procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
+begin
+  Space;
+  inherited;
+  Space;
+end;
+
+procedure TFormatterPrinter.Indent;
+begin
+  Inc(Shift, 4);
+end;
+
+procedure TFormatterPrinter.Undent;
+begin
+  Dec(Shift, 4);
+end;
+
+procedure TFormatterPrinter.NextLine;
+begin
+  Builder.AppendLine;
+  BOL := true;
+end;
+
+procedure TFormatterPrinter.Space;
+begin
+  if not BOL then SPC := true;
 end;
 
 { TTokenizerPrinter }
