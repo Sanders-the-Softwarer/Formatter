@@ -12,17 +12,15 @@ unit Tokens;
 
 interface
 
-uses System.SysUtils, System.Generics.Collections, Printer;
+uses System.SysUtils, System.Generics.Collections;
 
 type
 
   { Предварительное объявление типов }
   TComment = class;
 
-  { Базовый класс лексем. Для отладки снабжён методом Describe }
+  { Базовый класс лексем }
   TBaseToken = class
-  public
-    procedure Describe(Printer: TPrinter); virtual; abstract;
   end;
 
   { Просто прочитанный символ }
@@ -32,7 +30,6 @@ type
   public
     constructor Create(AValue: char);
     property Value: char read FValue;
-    procedure Describe(Printer: TPrinter); override;
   end;
 
   { Прочитанный символ, дополненный положением в тексте }
@@ -41,7 +38,6 @@ type
     FLine, FCol: integer;
   public
     constructor Create(AValue: char; ALine, ACol: integer);
-    procedure Describe(Printer: TPrinter); override;
     property Line: integer read FLine;
     property Col: integer read FCol;
   end;
@@ -58,7 +54,6 @@ type
     constructor Create(const AValue: string; AChar: TPositionedChar); overload;
     constructor Create(AChar: TPositionedChar); overload;
     destructor Destroy; override;
-    procedure Describe(Printer: TPrinter); override;
     procedure AddCommentAbove(AComment: TComment);
     procedure AddCommentBelow(AComment: TComment);
     procedure AddCommentBefore(AComment: TComment);
@@ -140,11 +135,6 @@ begin
   FValue := AValue;
 end;
 
-procedure TChar.Describe(Printer: TPrinter);
-begin
-  Printer.WriteLn('Символ "%s", код %d', [FValue, Ord(FValue)]);
-end;
-
 { TPositionedChar }
 
 constructor TPositionedChar.Create(AValue: char; ALine, ACol: integer);
@@ -152,11 +142,6 @@ begin
   inherited Create(AValue);
   FLine := ALine;
   FCol  := ACol;
-end;
-
-procedure TPositionedChar.Describe(Printer: TPrinter);
-begin
-  Printer.WriteLn('Символ "%s", код %d, строка %d, позиция %d', [Value, Ord(Value), Line, Col]);
 end;
 
 { TToken }
@@ -181,23 +166,6 @@ begin
   FreeAndNil(FCommentsBefore);
   FreeAndNil(FCommentsAfter);
   inherited;
-end;
-
-procedure TToken.Describe(Printer: TPrinter);
-var Comma: char;
-begin
-  Printer.Write('%s "%s", строка %d, позиция %d', [TokenType, Value, Line, Col]);
-  if Assigned(FCommentsAbove) or Assigned(FCommentsBelow) or Assigned(FCommentsBefore) or Assigned(FCommentsAfter) then
-  begin
-    Comma := ':';
-    Printer.Write(' (комментарии');
-    if Assigned(FCommentsAbove) then begin Printer.Write(Comma + ' выше'); Comma := ','; end;
-    if Assigned(FCommentsBefore) then begin Printer.Write(Comma + ' слева'); Comma := ','; end;
-    if Assigned(FCommentsAfter) then begin Printer.Write(Comma + ' справа'); Comma := ','; end;
-    if Assigned(FCommentsBelow) then begin Printer.Write(Comma + ' ниже'); Comma := ','; end;
-    Printer.Write(')');
-  end;
-  Printer.NextLine;
 end;
 
 procedure TToken.AddCommentAbove(AComment: TComment);

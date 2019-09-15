@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, Printers_;
 
 type
   TFormMain = class(TForm)
@@ -14,11 +14,17 @@ type
     edTokenizer: TMemo;
     tabParser: TTabSheet;
     treeParser: TTreeView;
+    tabResult: TTabSheet;
+    edResult: TMemo;
     procedure FormResize(Sender: TObject);
     procedure edSrcChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure PagesChange(Sender: TObject);
   private
-    procedure Process(const AText: string);
+    TokenizerPrinter, SyntaxTreePrinter, ResultPrinter: TPrinter;
+    function CurrentPrinter: TPrinter;
+    procedure UpdateData;
   public
   end;
 
@@ -27,13 +33,33 @@ var
 
 implementation
 
-uses Streams, Tokens, Printer, TreePrinter, Tokenizer, Parser;
+uses Streams, Tokens, Tokenizer, Parser;
 
 {$R *.dfm}
 
+procedure TFormMain.FormShow(Sender: TObject);
+begin
+  TokenizerPrinter  := TPrinter.CreateTokenizerPrinter(edTokenizer.Lines);
+  SyntaxTreePrinter := TPrinter.CreateSyntaxTreePrinter(treeParser);
+  ResultPrinter     := TPrinter.CreateFormatterPrinter(edResult.Lines);
+  Self.WindowState  := wsMaximized;
+end;
+
+procedure TFormMain.PagesChange(Sender: TObject);
+begin
+  UpdateData;
+end;
+
 procedure TFormMain.edSrcChange(Sender: TObject);
 begin
-  Process(edSrc.Text);
+  UpdateData;
+end;
+
+procedure TFormMain.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(TokenizerPrinter);
+  FreeAndNil(SyntaxTreePrinter);
+  FreeAndNil(ResultPrinter);
 end;
 
 procedure TFormMain.FormResize(Sender: TObject);
@@ -41,34 +67,26 @@ begin
   edSrc.Width := Self.ClientWidth div 2;
 end;
 
-procedure TFormMain.FormShow(Sender: TObject);
+function TFormMain.CurrentPrinter: TPrinter;
 begin
-  Self.WindowState := wsMaximized;
+  if Pages.ActivePage = tabTokenizer then
+    Result := TokenizerPrinter
+  else if Pages.ActivePage = tabParser then
+    Result := SyntaxTreePrinter
+  else
+    Result := ResultPrinter;
 end;
 
-procedure TFormMain.Process(const AText: string);
-var
-  P: TPrinter;
-  TP: TTreePrinter;
-  Tokens: TBufferedStream<TToken>;
-  Statements: TBufferedStream<TStatement>;
+procedure TFormMain.UpdateData;
+var Statements: TBufferedStream<TStatement>;
 begin
-  Tokens := TCommentProcessor.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(AText)))));
-  Statements := TParser.Create(Tokens);
-  P := TPrinter.Create;
-  TP := TTreePrinter.Create(treeParser);
+  Statements := TParser.Create(TCommentProcessor.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(edSrc.Text))))));
   try
-    treeParser.Items.BeginUpdate;
-    Tokens.SaveMark;
-    while not Statements.Eof do Statements.Next.Describe(TP);
-    Tokens.Restore;
-    while not Tokens.Eof do Tokens.Next.Describe(P);
+    CurrentPrinter.BeginPrint;
+    while not Statements.Eof do CurrentPrinter.PrintItem(Statements.Next);
   finally
-    edTokenizer.Text := P.Data;
-    treeParser.Items.EndUpdate;
+    CurrentPrinter.EndPrint;
     FreeAndNil(Statements);
-    FreeAndNil(P);
-    FreeAndNil(TP);
   end;
 end;
 

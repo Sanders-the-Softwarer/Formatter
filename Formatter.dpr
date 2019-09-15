@@ -5,10 +5,9 @@ uses
   fMain in 'fMain.pas' {FormMain},
   Streams in 'Streams.pas',
   Tokens in 'Tokens.pas',
-  Printer in 'Printer.pas',
   Tokenizer in 'Tokenizer.pas',
   Parser in 'Parser.pas',
-  TreePrinter in 'TreePrinter.pas';
+  Printers_ in 'Printers_.pas';
 
 {$R *.res}
 

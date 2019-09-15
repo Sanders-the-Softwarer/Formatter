@@ -370,6 +370,8 @@ initialization
   Keywords.Add('is');
   Keywords.Add('as');
   Keywords.Add('null');
+  Keywords.Add('true');
+  Keywords.Add('false');
   Keywords.Add('return');
   Keywords.Add('within');
   Keywords.Add('cast');
@@ -378,6 +380,7 @@ initialization
   Keywords.Add('then');
   Keywords.Add('else');
   Keywords.Add('if');
+  Keywords.Add('elsif');
   Keywords.Add('exception');
   Keywords.Add('keep');
   Keywords.Add('for');

@@ -12,7 +12,7 @@ unit Parser;
 
 interface
 
-uses System.SysUtils, System.Generics.Collections, Streams, Tokens, TreePrinter;
+uses System.SysUtils, System.Generics.Collections, Streams, Tokens, Printers_;
 
 type
 
@@ -21,7 +21,6 @@ type
   strict protected
     Source: TBufferedStream<TToken>;
     function InternalParse: boolean; virtual; abstract;
-    procedure InternalDescribe(APrinter: TTreePrinter); virtual;
     function NextToken: TToken;
     function Keyword(const AKeyword: string): TKeyword;
     function Identifier: TIdent;
@@ -32,7 +31,7 @@ type
   public
     constructor Create(ASource: TBufferedStream<TToken>);
     function Name: string; virtual;
-    procedure Describe(APrinter: TTreePrinter);
+    procedure PrintSelf(APrinter: TPrinter); virtual;
   end;
 
   { Синтаксический анализатор }
@@ -55,12 +54,12 @@ type
   TCreateStatement = class(TStatement)
   strict private
     _Create, _Or, _Replace, _Force: TKeyword;
-    What: TStatement;
+    _What: TStatement;
   strict protected
     function InternalParse: boolean; override;
-    procedure InternalDescribe(APrinter: TTreePrinter); override;
   public
     function Name: string; override;
+    procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
   { Завершение конструкции package }
@@ -71,9 +70,9 @@ type
     _Semicolon, _Slash: TTerminal;
   strict protected
     function InternalParse: boolean; override;
-    procedure InternalDescribe(APrinter: TTreePrinter); override;
   public
     function Name: string; override;
+    procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
   { Конструкция package [body] }
@@ -86,11 +85,11 @@ type
     _End: TPackageStatementEnd;
   strict protected
     function InternalParse: boolean; override;
-    procedure InternalDescribe(APrinter: TTreePrinter); override;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
     function Name: string; override;
+    procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
   { Название типа данных }
@@ -103,9 +102,9 @@ type
     _RowType: TTerminal;
   strict protected
     function InternalParse: boolean; override;
-    procedure InternalDescribe(APrinter: TTreePrinter); override;
   public
     function Name: string; override;
+    procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
   { Подпрограмма }
@@ -121,11 +120,11 @@ type
     _Semicolon: TTerminal;
   strict protected
     function InternalParse: boolean; override;
-    procedure InternalDescribe(APrinter: TTreePrinter); override;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
     function Name: string; override;
+    procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
   { Параметр подпрограммы }
@@ -139,9 +138,9 @@ type
     _Comma: TTerminal;
   strict protected
     function InternalParse: boolean; override;
-    procedure InternalDescribe(APrinter: TTreePrinter); override;
   public
     function Name: string; override;
+    procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
 implementation
@@ -199,15 +198,7 @@ begin
   Result := Self.ClassName;
 end;
 
-procedure TStatement.Describe(APrinter: TTreePrinter);
-begin
-  APrinter.PrintNode(Name);
-  APrinter.BeginChildren;
-  InternalDescribe(APrinter);
-  APrinter.EndChildren;
-end;
-
-procedure TStatement.InternalDescribe(APrinter: TTreePrinter);
+procedure TStatement.PrintSelf(APrinter: TPrinter);
 begin
   { ничего не делаем }
 end;
@@ -272,22 +263,22 @@ begin
   { Проверим наличие force }
   _Force := Keyword('force');
   { И, наконец, распознаем, что же мы создаём }
-  TPackageStatement.Parse(Source, What);
+  TPackageStatement.Parse(Source, _What);
   Result := true;
 end;
 
 function TCreateStatement.Name: string;
 begin
   Result := 'create';
-  if Assigned(What) then Result := Result + ' ' + What.Name;
+  if Assigned(_What) then Result := Result + ' ' + _What.Name;
 end;
 
-procedure TCreateStatement.InternalDescribe(APrinter: TTreePrinter);
+procedure TCreateStatement.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintNode(_Create);
-  APrinter.PrintNode(_Or);
-  APrinter.PrintNode(_Replace);
-  if Assigned(What) then What.Describe(APrinter);
+  APrinter.PrintItem(_Create);
+  APrinter.PrintItem(_Or);
+  APrinter.PrintItem(_Replace);
+  APrinter.PrintItem(_What);
 end;
 
 { TPackageStatement }
@@ -335,15 +326,15 @@ begin
   if Assigned(_PackageName) then Result := Result + ' ' + _PackageName.Value;
 end;
 
-procedure TPackageStatement.InternalDescribe(APrinter: TTreePrinter);
+procedure TPackageStatement.PrintSelf(APrinter: TPrinter);
 var i: integer;
 begin
-  APrinter.PrintNode(_Package);
-  APrinter.PrintNode(_Body);
-  APrinter.PrintNode(_PackageName);
-  APrinter.PrintNode(_Is);
-  for i := 0 to _Statements.Count - 1 do _Statements[i].Describe(APrinter);
-  if Assigned(_End) then _End.Describe(APrinter);
+  APrinter.PrintItem(_Package);
+  APrinter.PrintItem(_Body);
+  APrinter.PrintItem(_PackageName);
+  APrinter.PrintItem(_Is);
+  for i := 0 to _Statements.Count - 1 do APrinter.PrintItem(_Statements[i]);
+  APrinter.PrintItem(_End);
 end;
 
 { TPackageStatementEnd }
@@ -368,12 +359,12 @@ begin
   Result := 'end';
 end;
 
-procedure TPackageStatementEnd.InternalDescribe(APrinter: TTreePrinter);
+procedure TPackageStatementEnd.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintNode(_End);
-  APrinter.PrintNode(_PackageName);
-  APrinter.PrintNode(_Semicolon);
-  APrinter.PrintNode(_Slash);
+  APrinter.PrintItem(_End);
+  APrinter.PrintItem(_PackageName);
+  APrinter.PrintItem(_Semicolon);
+  APrinter.PrintItem(_Slash);
 end;
 
 { TProcedureStatement }
@@ -430,19 +421,19 @@ begin
     Result := Result + ' ' + _ProcedureName.Value;
 end;
 
-procedure TProcedureStatement.InternalDescribe(APrinter: TTreePrinter);
+procedure TProcedureStatement.PrintSelf(APrinter: TPrinter);
 var i: integer;
 begin
-  APrinter.PrintNode(_Procedure);
-  APrinter.PrintNode(_Function);
-  APrinter.PrintNode(_ProcedureName);
-  APrinter.PrintNode(_OpenBracket);
+  APrinter.PrintItem(_Procedure);
+  APrinter.PrintItem(_Function);
+  APrinter.PrintItem(_ProcedureName);
+  APrinter.PrintItem(_OpenBracket);
   for i := 0 to _Params.Count - 1 do
-    _Params[i].Describe(APrinter);
-  APrinter.PrintNode(_CloseBracket);
-  APrinter.PrintNode(_Return);
-  if Assigned(_ReturnType) then _ReturnType.Describe(APrinter);
-  APrinter.PrintNode(_Semicolon);
+    APrinter.PrintItem(_Params[i]);
+  APrinter.PrintItem(_CloseBracket);
+  APrinter.PrintItem(_Return);
+  APrinter.PrintItem(_ReturnType);
+  APrinter.PrintItem(_Semicolon);
 end;
 
 { TTypeRefStatement }
@@ -465,13 +456,13 @@ begin
   Result := 'type reference';
 end;
 
-procedure TTypeRefStatement.InternalDescribe(APrinter: TTreePrinter);
+procedure TTypeRefStatement.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintNode(_Ident);
-  APrinter.PrintNode(_Dot);
-  APrinter.PrintNode(_SecondIdent);
-  APrinter.PrintNode(_Type);
-  APrinter.PrintNode(_RowType);
+  APrinter.PrintItem(_Ident);
+  APrinter.PrintItem(_Dot);
+  APrinter.PrintItem(_SecondIdent);
+  APrinter.PrintItem(_Type);
+  APrinter.PrintItem(_RowType);
 end;
 
 { TParamDeclaration }
@@ -494,14 +485,14 @@ begin
   if Assigned(_ParamName) then Result := Result + ' ' + _ParamName.Value;
 end;
 
-procedure TParamDeclaration.InternalDescribe(APrinter: TTreePrinter);
+procedure TParamDeclaration.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintNode(_ParamName);
-  APrinter.PrintNode(_In);
-  APrinter.PrintNode(_Out);
-  APrinter.PrintNode(_Nocopy);
-  if Assigned(_ParamType) then _ParamType.Describe(APrinter);
-  APrinter.PrintNode(_Comma);
+  APrinter.PrintItem(_ParamName);
+  APrinter.PrintItem(_In);
+  APrinter.PrintItem(_Out);
+  APrinter.PrintItem(_Nocopy);
+  APrinter.PrintItem(_ParamType);
+  APrinter.PrintItem(_Comma);
 end;
 
 end.

@@ -12,6 +12,7 @@ object FormMain: TFormMain
   Font.Style = []
   OldCreateOrder = False
   WindowState = wsMinimized
+  OnDestroy = FormDestroy
   OnResize = FormResize
   OnShow = FormShow
   PixelsPerInch = 96
@@ -29,22 +30,18 @@ object FormMain: TFormMain
     Align = alLeft
     TabOrder = 0
     OnChange = edSrcChange
-    ExplicitLeft = 0
-    ExplicitTop = 430
-    ExplicitHeight = 362
   end
   object Pages: TPageControl
     Left = 481
     Top = 0
     Width = 448
     Height = 792
-    ActivePage = tabParser
+    ActivePage = tabResult
     Align = alClient
     TabOrder = 1
+    OnChange = PagesChange
     object tabTokenizer: TTabSheet
       Caption = #1051#1077#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
-      ExplicitWidth = 281
-      ExplicitHeight = 165
       object edTokenizer: TMemo
         AlignWithMargins = True
         Left = 5
@@ -57,11 +54,8 @@ object FormMain: TFormMain
         Margins.Bottom = 5
         Align = alClient
         ReadOnly = True
+        ScrollBars = ssVertical
         TabOrder = 0
-        ExplicitLeft = -83
-        ExplicitTop = -347
-        ExplicitWidth = 364
-        ExplicitHeight = 512
       end
     end
     object tabParser: TTabSheet
@@ -80,10 +74,25 @@ object FormMain: TFormMain
         Align = alClient
         Indent = 19
         TabOrder = 0
-        ExplicitLeft = 319
-        ExplicitTop = 265
-        ExplicitWidth = 121
-        ExplicitHeight = 97
+      end
+    end
+    object tabResult: TTabSheet
+      Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090
+      ImageIndex = 2
+      object edResult: TMemo
+        AlignWithMargins = True
+        Left = 5
+        Top = 5
+        Width = 430
+        Height = 754
+        Margins.Left = 5
+        Margins.Top = 5
+        Margins.Right = 5
+        Margins.Bottom = 5
+        Align = alClient
+        ReadOnly = True
+        ScrollBars = ssBoth
+        TabOrder = 0
       end
     end
   end
