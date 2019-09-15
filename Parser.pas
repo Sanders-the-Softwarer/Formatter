@@ -28,6 +28,7 @@ type
     function Terminal(const ATerminal: string): TTerminal;
   public
     class function Parse(Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+    class procedure ParseAnyTarget(Tokens: TBufferedStream<TToken>; out AResult: TStatement);
   public
     constructor Create(ASource: TBufferedStream<TToken>);
     function Name: string; virtual;
@@ -107,7 +108,7 @@ type
     function Name: string; override;
   end;
 
-  { Конструкция procedure }
+  { Подпрограмма }
   TProcedureStatement = class(TStatement)
   strict private
     _Procedure, _Function: TKeyword;
@@ -127,15 +128,29 @@ type
     function Name: string; override;
   end;
 
+  { Параметр подпрограммы }
+  TParamDeclaration = class(TStatement)
+  strict private
+    _ParamName: TIdent;
+    _In: TKeyword;
+    _Out: TKeyword;
+    _Nocopy: TKeyword;
+    _ParamType: TStatement;
+    _Comma: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalDescribe(APrinter: TTreePrinter); override;
+  public
+    function Name: string; override;
+  end;
+
 implementation
 
 { TParser }
 
 function TParser.InternalNext: TStatement;
 begin
-  if not TCreateStatement.Parse(Source, Result) and
-     not TProcedureStatement.Parse(Source, Result) then
-    TUnexpectedToken.Parse(Source, Result);
+  TStatement.ParseAnyTarget(Source, Result);
 end;
 
 { TUnexpectedToken }
@@ -169,6 +184,14 @@ begin
     Tokens.Restore(SavedPosition);
     FreeAndNil(AResult);
   end;
+end;
+
+class procedure TStatement.ParseAnyTarget(Tokens: TBufferedStream<TToken>; out AResult: TStatement);
+begin
+  if not TCreateStatement.Parse(Tokens, AResult) and
+     not TPackageStatement.Parse(Tokens, AResult) and
+     not TProcedureStatement.Parse(Tokens, AResult)
+    then TUnexpectedToken.Parse(Tokens, AResult);
 end;
 
 function TStatement.Name: string;
@@ -297,9 +320,10 @@ begin
   _Is := Keyword('is');
   { И теперь будем парсить конструкции, пока не доберёмся до end-а }
   while not TPackageStatementEnd.Parse(Source, Statement) do
-    if TProcedureStatement.Parse(Source, Statement) or
-       TUnexpectedToken.Parse(Source, Statement) then
-      _Statements.Add(Statement);
+  begin
+    TStatement.ParseAnyTarget(Source, Statement);
+    _Statements.Add(Statement);
+  end;
   { Добрались }
   _End := Statement as TPackageStatementEnd;
 end;
@@ -381,9 +405,11 @@ begin
   if Assigned(_OpenBracket) then
     repeat
       _CloseBracket := Terminal(')');
-      if not Assigned(_CloseBracket) and TUnexpectedToken.Parse(Source, Param) then
+      if Assigned(_CloseBracket) then break;
+      if TParamDeclaration.Parse(Source, Param) or
+         TUnexpectedToken.Parse(Source, Param) then
         _Params.Add(Param);
-    until Assigned(_CloseBracket);
+    until false;
   { Возвращаемое значение }
   _Return := Keyword('return');
   TTypeRefStatement.Parse(Source, _ReturnType);
@@ -446,6 +472,36 @@ begin
   APrinter.PrintNode(_SecondIdent);
   APrinter.PrintNode(_Type);
   APrinter.PrintNode(_RowType);
+end;
+
+{ TParamDeclaration }
+
+function TParamDeclaration.InternalParse: boolean;
+begin
+  _ParamName := Identifier;
+  _In := Keyword('in');
+  _Out := Keyword('out');
+  _Nocopy := Keyword('nocopy');
+  TTypeRefStatement.Parse(Source, _ParamType);
+  _Comma := Terminal(',');
+  Result := Assigned(_ParamName) or Assigned(_In) or Assigned(_Out) or
+    Assigned(_Nocopy) or Assigned(_ParamType) or Assigned(_Comma);
+end;
+
+function TParamDeclaration.Name: string;
+begin
+  Result := 'param';
+  if Assigned(_ParamName) then Result := Result + ' ' + _ParamName.Value;
+end;
+
+procedure TParamDeclaration.InternalDescribe(APrinter: TTreePrinter);
+begin
+  APrinter.PrintNode(_ParamName);
+  APrinter.PrintNode(_In);
+  APrinter.PrintNode(_Out);
+  APrinter.PrintNode(_Nocopy);
+  if Assigned(_ParamType) then _ParamType.Describe(APrinter);
+  APrinter.PrintNode(_Comma);
 end;
 
 end.
