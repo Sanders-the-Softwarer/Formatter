@@ -52,7 +52,7 @@ type
     FValue: string;
     FLine, FCol: integer;
     FCommentsAbove, FCommentsBelow, FCommentsBefore, FCommentsAfter: TList<TComment>;
-  strict protected
+  public
     function TokenType: string; virtual; abstract;
   public
     constructor Create(const AValue: string; AChar: TPositionedChar); overload;
@@ -81,7 +81,7 @@ type
   end;
 
   { Символьная лексема }
-  TCharToken = class(TToken)
+  TTerminal = class(TToken)
   strict protected
     function TokenType: string; override;
   end;
@@ -97,6 +97,12 @@ type
 
   { "Квотированный" идентификатор }
   TQuotedIdent = class(TIdent);
+
+  { Ключевое слово }
+  TKeyword = class(TToken)
+  strict protected
+    function TokenType: string; override;
+  end;
 
   { Комментарий }
   TComment = class(TToken)
@@ -115,6 +121,15 @@ type
   strict protected
     function TokenType: string; override;
   end;
+
+  { Неожиданный конец входного файла }
+  TUnexpectedEOF = class(TToken)
+  strict protected
+    function TokenType: string; override;
+  end;
+
+var
+  UnexpectedEOF: TUnexpectedEOF;
 
 implementation
 
@@ -251,12 +266,32 @@ begin
   Result := 'Литерал';
 end;
 
-{ TCharToken }
+{ TTerminal }
 
-function TCharToken.TokenType: string;
+function TTerminal.TokenType: string;
 begin
   Result := 'Символ';
 end;
+
+{ TKeyword }
+
+function TKeyword.TokenType: string;
+begin
+  Result := 'Ключевое слово';
+end;
+
+{ TUnexpectedEOF }
+
+function TUnexpectedEOF.TokenType: string;
+begin
+  Result := 'Конец входного файла';
+end;
+
+initialization
+  UnexpectedEOF := TUnexpectedEOF.Create;
+
+finalization
+  FreeAndNil(UnexpectedEOF);
 
 end.
 

@@ -36,7 +36,7 @@ unit Streams;
 
 interface
 
-uses SysUtils, System.Generics.Collections, Tokens;
+uses SysUtils, System.Generics.Collections, Tokens, Windows;
 
 type
 
@@ -60,10 +60,11 @@ type
     function Next: T; override;
   end;
 
+  { Отметка позиции в буфере }
+  TMark = integer;
+
   { Класс буферизации позволяет откат и повторный возврат прочитанного }
   TBufferedStream<T: class> = class(TObjectStream<T>)
-  public
-    type TMark = integer;
   strict private
     Output: TList<T>;
     RepeatMark, SavedMark: TMark;

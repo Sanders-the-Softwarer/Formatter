@@ -6,7 +6,9 @@ uses
   Streams in 'Streams.pas',
   Tokens in 'Tokens.pas',
   Printer in 'Printer.pas',
-  Tokenizer in 'Tokenizer.pas';
+  Tokenizer in 'Tokenizer.pas',
+  Parser in 'Parser.pas',
+  TreePrinter in 'TreePrinter.pas';
 
 {$R *.res}
 

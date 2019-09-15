@@ -23,6 +23,7 @@ interface
 uses SysUtils;
 
 type
+
   TPrinter = class
   private
     FData: string;
@@ -66,4 +67,5 @@ begin
 end;
 
 end.
+
 

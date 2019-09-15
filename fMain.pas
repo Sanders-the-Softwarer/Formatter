@@ -4,14 +4,19 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls;
 
 type
   TFormMain = class(TForm)
     edSrc: TMemo;
-    edDest: TMemo;
+    Pages: TPageControl;
+    tabTokenizer: TTabSheet;
+    edTokenizer: TMemo;
+    tabParser: TTabSheet;
+    treeParser: TTreeView;
     procedure FormResize(Sender: TObject);
     procedure edSrcChange(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     procedure Process(const AText: string);
   public
@@ -22,7 +27,7 @@ var
 
 implementation
 
-uses Streams, Tokens, Printer, Tokenizer;
+uses Streams, Tokens, Printer, TreePrinter, Tokenizer, Parser;
 
 {$R *.dfm}
 
@@ -36,23 +41,34 @@ begin
   edSrc.Width := Self.ClientWidth div 2;
 end;
 
+procedure TFormMain.FormShow(Sender: TObject);
+begin
+  Self.WindowState := wsMaximized;
+end;
+
 procedure TFormMain.Process(const AText: string);
 var
   P: TPrinter;
-  S: TBufferedStream<TToken>;
+  TP: TTreePrinter;
+  Tokens: TBufferedStream<TToken>;
+  Statements: TBufferedStream<TStatement>;
 begin
-  S := TCommentProcessor.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(AText)))));
+  Tokens := TCommentProcessor.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(AText)))));
+  Statements := TParser.Create(Tokens);
   P := TPrinter.Create;
+  TP := TTreePrinter.Create(treeParser);
   try
-    { прокрутим список, чтобы комментарии привязались до печати }
-    S.SaveMark;
-    while not S.Eof do S.Next;
-    S.Restore;
-    while not S.Eof do S.Next.Describe(P);
+    treeParser.Items.BeginUpdate;
+    Tokens.SaveMark;
+    while not Statements.Eof do Statements.Next.Describe(TP);
+    Tokens.Restore;
+    while not Tokens.Eof do Tokens.Next.Describe(P);
   finally
-    edDest.Text := P.Data;
-    FreeAndNil(S);
+    edTokenizer.Text := P.Data;
+    treeParser.Items.EndUpdate;
+    FreeAndNil(Statements);
     FreeAndNil(P);
+    FreeAndNil(TP);
   end;
 end;
 

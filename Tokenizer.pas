@@ -33,7 +33,7 @@ unit Tokenizer;
 
 interface
 
-uses System.Character, System.SysUtils, System.Generics.Collections, Tokens, Streams;
+uses Classes, System.Character, System.SysUtils, System.Generics.Collections, Tokens, Streams;
 
 type
 
@@ -63,6 +63,9 @@ type
   end;
 
 implementation
+
+var
+  Keywords: TStringList;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -207,10 +210,10 @@ function TTokenizer.InternalNext: TToken;
   end;
 
   { —читывание многосимвольных лексем }
-  function ParseMultiChar: boolean;
+  function ParseTerminal: boolean;
   const
-    N = 23;
-    Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=', '=>', '.', ',', ';', '(', ')', '+', '-', '*', '/', '%', '@', '=', '<', '>', '(+)');
+    N = 25;
+    Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=', '=>', '.', ',', ';', '(', ')', '+', '-', '*', '/', '%', '@', '=', '<', '>', '(+)', '%type', '%rowtype');
   var
     Value: string;
     Starts, Exact, PrevExact: boolean;    
@@ -244,7 +247,9 @@ begin
   if ParseWhitespace then
     Result := TWhitespace.Create(TokenValue, Start)
   else if ParseSimpleIdent then
-    Result := TSimpleIdent.Create(TokenValue, Start)
+    if Keywords.IndexOf(TokenValue) >= 0
+      then Result := TKeyword.Create(TokenValue, Start)
+      else Result := TSimpleIdent.Create(TokenValue, Start)
   else if ParseQuotedIdent then
     Result := TQuotedIdent.Create(TokenValue, Start)
   else if ParseLineComment then
@@ -255,8 +260,8 @@ begin
     Result := TNumber.Create(TokenValue, Start)
   else if ParseLiteral then
     Result := TLiteral.Create(TokenValue, Start)
-  else if ParseMultiChar then
-    Result := TCharToken.Create(TokenValue, Start)
+  else if ParseTerminal then
+    Result := TTerminal.Create(TokenValue, Start)
   else
     begin
       Restore;
@@ -338,5 +343,53 @@ begin
       end;
   end;
 end;
+
+initialization
+  Keywords := TStringList.Create;
+  Keywords.Sorted := true;
+  Keywords.Duplicates := dupIgnore;
+  Keywords.CaseSensitive := false;
+  Keywords.Add('create');
+  Keywords.Add('or');
+  Keywords.Add('replace');
+  Keywords.Add('package');
+  Keywords.Add('body');
+  Keywords.Add('is');
+  Keywords.Add('procedure');
+  Keywords.Add('function');
+  Keywords.Add('declare');
+  Keywords.Add('begin');
+  Keywords.Add('end');
+  Keywords.Add('select');
+  Keywords.Add('from');
+  Keywords.Add('where');
+  Keywords.Add('into');
+  Keywords.Add('group');
+  Keywords.Add('by');
+  Keywords.Add('order');
+  Keywords.Add('is');
+  Keywords.Add('as');
+  Keywords.Add('null');
+  Keywords.Add('return');
+  Keywords.Add('within');
+  Keywords.Add('cast');
+  Keywords.Add('case');
+  Keywords.Add('when');
+  Keywords.Add('then');
+  Keywords.Add('else');
+  Keywords.Add('if');
+  Keywords.Add('exception');
+  Keywords.Add('keep');
+  Keywords.Add('for');
+  Keywords.Add('loop');
+  Keywords.Add('in');
+  Keywords.Add('out');
+  Keywords.Add('nocopy');
+  Keywords.Add('update');
+  Keywords.Add('set');
+  Keywords.Add('delete');
+
+finalization
+  FreeAndNil(Keywords);
 
 end.
