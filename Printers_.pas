@@ -55,6 +55,10 @@ type
     procedure PrintToken(AToken: TToken); virtual;
     procedure PrintStatement(AStatement: TStatement); virtual;
     procedure EndPrint; override;
+    procedure Indent; override;
+    procedure Undent; override;
+    procedure Space; override;
+    procedure NextLine; override;
   end;
 
   TFormatterPrinter = class(TBasePrinter)
@@ -69,7 +73,6 @@ type
     procedure BeginPrint; override;
     procedure EndPrint; override;
     procedure PrintToken(AToken: TToken); override;
-    procedure PrintStatement(AStatement: TStatement); override;
     procedure Indent; override;
     procedure Undent; override;
     procedure Space; override;
@@ -149,6 +152,26 @@ begin
   AStatement.PrintSelf(Self);
 end;
 
+procedure TBasePrinter.Indent;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.Undent;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.Space;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.NextLine;
+begin
+  { ничего не делаем }
+end;
+
 { TFormatterPrinter }
 
 constructor TFormatterPrinter.Create(AStrings: TStrings);
@@ -163,7 +186,6 @@ begin
   Builder := TStringBuilder.Create;
   Shift   := 0;
   BOL     := true;
-  SPC     := false;
 end;
 
 procedure TFormatterPrinter.EndPrint;
@@ -176,10 +198,7 @@ begin
 end;
 
 procedure TFormatterPrinter.PrintToken(AToken: TToken);
-var Spaced: boolean;
 begin
-  Spaced := (AToken is TKeyword) or (AToken is TIdent) or (AToken is TNumber);
-  if Spaced then Space;
   if BOL then
     Builder.Append(StringOfChar(' ', Shift))
   else if SPC then
@@ -187,14 +206,6 @@ begin
   Builder.Append(AToken.Value);
   BOL := false;
   SPC := false;
-  if Spaced then Space;
-end;
-
-procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
-begin
-  Space;
-  inherited;
-  Space;
 end;
 
 procedure TFormatterPrinter.Indent;
@@ -215,7 +226,7 @@ end;
 
 procedure TFormatterPrinter.Space;
 begin
-  if not BOL then SPC := true;
+  SPC := true;
 end;
 
 { TTokenizerPrinter }

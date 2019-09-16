@@ -24,6 +24,8 @@ type
     function NextToken: TToken;
     function Keyword(const AKeyword: string): TKeyword;
     function Identifier: TIdent;
+    function Number: TNumber;
+    function Literal: TLiteral;
     function Terminal(const ATerminal: string): TTerminal;
   public
     class function Parse(Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
@@ -31,7 +33,7 @@ type
   public
     constructor Create(ASource: TBufferedStream<TToken>);
     function Name: string; virtual;
-    procedure PrintSelf(APrinter: TPrinter); virtual;
+    procedure PrintSelf(APrinter: TPrinter); virtual; abstract;
   end;
 
   { Синтаксический анализатор }
@@ -101,6 +103,11 @@ type
     _SecondIdent: TIdent;
     _Type: TTerminal;
     _RowType: TTerminal;
+    _OpenBracket: TTerminal;
+    _Size: TNumber;
+    _CloseBracket: TTerminal;
+    _Default: TKeyword;
+    _Value: TToken;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -168,6 +175,7 @@ end;
 
 procedure TUnexpectedToken.PrintSelf(APrinter: TPrinter);
 begin
+  APrinter.Space;
   APrinter.PrintItem(Token);
   APrinter.NextLine;
 end;
@@ -205,11 +213,6 @@ begin
   Result := Self.ClassName;
 end;
 
-procedure TStatement.PrintSelf(APrinter: TPrinter);
-begin
-  { ничего не делаем }
-end;
-
 function TStatement.NextToken: TToken;
 begin
   if Source.Eof
@@ -240,6 +243,32 @@ begin
   Token := NextToken;
   if Token is TIdent
     then Result := Token as TIdent
+    else Source.Restore(P);
+end;
+
+function TStatement.Number: TNumber;
+var
+  Token: TToken;
+  P: TMark;
+begin
+  Result := nil;
+  P := Source.Mark;
+  Token := NextToken;
+  if Token is TNumber
+    then Result := Token as TNumber
+    else Source.Restore(P);
+end;
+
+function TStatement.Literal: TLiteral;
+var
+  Token: TToken;
+  P: TMark;
+begin
+  Result := nil;
+  P := Source.Mark;
+  Token := NextToken;
+  if Token is TLiteral
+    then Result := Token as TLiteral
     else Source.Restore(P);
 end;
 
@@ -283,8 +312,11 @@ end;
 procedure TCreateStatement.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Create);
+  APrinter.Space;
   APrinter.PrintItem(_Or);
+  APrinter.Space;
   APrinter.PrintItem(_Replace);
+  APrinter.Space;
   APrinter.PrintItem(_What);
 end;
 
@@ -337,11 +369,17 @@ procedure TPackageStatement.PrintSelf(APrinter: TPrinter);
 var i: integer;
 begin
   APrinter.PrintItem(_Package);
+  APrinter.Space;
   APrinter.PrintItem(_Body);
+  APrinter.Space;
   APrinter.PrintItem(_PackageName);
+  APrinter.Space;
   APrinter.PrintItem(_Is);
+  APrinter.Space;
   APrinter.NextLine;
+  APrinter.Indent;
   for i := 0 to _Statements.Count - 1 do APrinter.PrintItem(_Statements[i]);
+  APrinter.Undent;
   APrinter.PrintItem(_End);
 end;
 
@@ -370,10 +408,12 @@ end;
 procedure TPackageStatementEnd.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_End);
+  APrinter.Space;
   APrinter.PrintItem(_PackageName);
   APrinter.PrintItem(_Semicolon);
   APrinter.NextLine;
   APrinter.PrintItem(_Slash);
+  APrinter.NextLine;
 end;
 
 { TProcedureStatement }
@@ -435,15 +475,27 @@ var i: integer;
 begin
   APrinter.PrintItem(_Procedure);
   APrinter.PrintItem(_Function);
+  APrinter.Space;
   APrinter.PrintItem(_ProcedureName);
+  APrinter.NextLine;
+  APrinter.Indent;
   APrinter.PrintItem(_OpenBracket);
+  APrinter.NextLine;
+  APrinter.Indent;
   for i := 0 to _Params.Count - 1 do
+  begin
     APrinter.PrintItem(_Params[i]);
+    APrinter.NextLine;
+  end;
+  APrinter.Undent;
   APrinter.PrintItem(_CloseBracket);
+  APrinter.Space;
   APrinter.PrintItem(_Return);
+  APrinter.Space;
   APrinter.PrintItem(_ReturnType);
   APrinter.PrintItem(_Semicolon);
   APrinter.NextLine;
+  APrinter.Undent;
 end;
 
 { TTypeRefStatement }
@@ -459,6 +511,21 @@ begin
   if Assigned(_Dot) then _SecondIdent := Identifier;
   _Type := Terminal('%type');
   _RowType := Terminal('%rowtype');
+  { Проверим указание размера }
+  _OpenBracket := Terminal('(');
+  if Assigned(_OpenBracket) then
+  begin
+    _Size := Number;
+    _CloseBracket := Terminal(')');
+  end;
+  { Проверим значение по умолчанию }
+  _Default := Keyword('default');
+  if Assigned(_Default) then
+  begin
+    _Value := Identifier;
+    if not Assigned(_Value) then _Value := Number;
+    if not Assigned(_Value) then _Value := Literal;
+  end;
 end;
 
 function TTypeRefStatement.Name: string;
@@ -473,6 +540,16 @@ begin
   APrinter.PrintItem(_SecondIdent);
   APrinter.PrintItem(_Type);
   APrinter.PrintItem(_RowType);
+  APrinter.PrintItem(_OpenBracket);
+  APrinter.PrintItem(_Size);
+  APrinter.PrintItem(_CloseBracket);
+  if Assigned(_Default) then
+  begin
+    APrinter.Space;
+    APrinter.PrintItem(_Default);
+    APrinter.Space;
+    APrinter.PrintItem(_Value);
+  end;
 end;
 
 { TParamDeclaration }
@@ -498,9 +575,13 @@ end;
 procedure TParamDeclaration.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_ParamName);
+  APrinter.Space;
   APrinter.PrintItem(_In);
+  APrinter.Space;
   APrinter.PrintItem(_Out);
+  APrinter.Space;
   APrinter.PrintItem(_Nocopy);
+  APrinter.Space;
   APrinter.PrintItem(_ParamType);
   APrinter.PrintItem(_Comma);
 end;

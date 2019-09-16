@@ -369,7 +369,7 @@ initialization
   Keywords.Add('order');
   Keywords.Add('is');
   Keywords.Add('as');
-  Keywords.Add('null');
+//  Keywords.Add('null');
   Keywords.Add('true');
   Keywords.Add('false');
   Keywords.Add('return');
@@ -391,6 +391,7 @@ initialization
   Keywords.Add('update');
   Keywords.Add('set');
   Keywords.Add('delete');
+  Keywords.Add('default');
 
 finalization
   FreeAndNil(Keywords);

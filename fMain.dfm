@@ -30,7 +30,6 @@ object FormMain: TFormMain
     Align = alLeft
     TabOrder = 0
     OnChange = edSrcChange
-    ExplicitHeight = 782
   end
   object Pages: TPageControl
     Left = 481
@@ -41,10 +40,8 @@ object FormMain: TFormMain
     Align = alClient
     TabOrder = 1
     OnChange = PagesChange
-    ExplicitHeight = 792
     object tabTokenizer: TTabSheet
       Caption = #1051#1077#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
-      ExplicitHeight = 764
       object edTokenizer: TMemo
         AlignWithMargins = True
         Left = 5
@@ -59,13 +56,11 @@ object FormMain: TFormMain
         ReadOnly = True
         ScrollBars = ssVertical
         TabOrder = 0
-        ExplicitHeight = 754
       end
     end
     object tabParser: TTabSheet
       Caption = #1057#1080#1085#1090#1072#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
       ImageIndex = 1
-      ExplicitHeight = 764
       object treeParser: TTreeView
         AlignWithMargins = True
         Left = 5
@@ -79,13 +74,11 @@ object FormMain: TFormMain
         Align = alClient
         Indent = 19
         TabOrder = 0
-        ExplicitHeight = 754
       end
     end
     object tabResult: TTabSheet
       Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090
       ImageIndex = 2
-      ExplicitHeight = 764
       object edResult: TMemo
         AlignWithMargins = True
         Left = 5
@@ -97,10 +90,15 @@ object FormMain: TFormMain
         Margins.Right = 5
         Margins.Bottom = 5
         Align = alClient
+        Font.Charset = RUSSIAN_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Courier New'
+        Font.Style = []
+        ParentFont = False
         ReadOnly = True
         ScrollBars = ssBoth
         TabOrder = 0
-        ExplicitHeight = 754
       end
     end
   end
