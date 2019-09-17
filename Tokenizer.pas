@@ -349,17 +349,27 @@ initialization
   Keywords.Sorted := true;
   Keywords.Duplicates := dupIgnore;
   Keywords.CaseSensitive := false;
-  Keywords.Add('create');
-  Keywords.Add('or');
-  Keywords.Add('replace');
-  Keywords.Add('package');
-  Keywords.Add('body');
-  Keywords.Add('is');
-  Keywords.Add('procedure');
-  Keywords.Add('function');
-  Keywords.Add('declare');
+
+  Keywords.Add('as');
   Keywords.Add('begin');
+  Keywords.Add('body');
+  Keywords.Add('byte');
+  Keywords.Add('char');
+  Keywords.Add('constant');
+  Keywords.Add('create');
   Keywords.Add('end');
+  Keywords.Add('function');
+  Keywords.Add('in');
+  Keywords.Add('is');
+  Keywords.Add('or');
+  Keywords.Add('out');
+  Keywords.Add('package');
+  Keywords.Add('procedure');
+  Keywords.Add('replace');
+  Keywords.Add('return');
+
+(*
+  Keywords.Add('declare');
   Keywords.Add('select');
   Keywords.Add('from');
   Keywords.Add('where');
@@ -367,12 +377,9 @@ initialization
   Keywords.Add('group');
   Keywords.Add('by');
   Keywords.Add('order');
-  Keywords.Add('is');
-  Keywords.Add('as');
-//  Keywords.Add('null');
+  Keywords.Add('null');
   Keywords.Add('true');
   Keywords.Add('false');
-  Keywords.Add('return');
   Keywords.Add('within');
   Keywords.Add('cast');
   Keywords.Add('case');
@@ -382,16 +389,17 @@ initialization
   Keywords.Add('if');
   Keywords.Add('elsif');
   Keywords.Add('exception');
+  Keywords.Add('exceptions');
   Keywords.Add('keep');
   Keywords.Add('for');
   Keywords.Add('loop');
-  Keywords.Add('in');
-  Keywords.Add('out');
   Keywords.Add('nocopy');
   Keywords.Add('update');
   Keywords.Add('set');
   Keywords.Add('delete');
   Keywords.Add('default');
+  Keywords.Add('deterministic');
+*)
 
 finalization
   FreeAndNil(Keywords);

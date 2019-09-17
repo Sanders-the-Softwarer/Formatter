@@ -7,7 +7,9 @@ uses
   Tokens in 'Tokens.pas',
   Tokenizer in 'Tokenizer.pas',
   Parser in 'Parser.pas',
-  Printers_ in 'Printers_.pas';
+  Printers_ in 'Printers_.pas',
+  PLSQL in 'PLSQL.pas',
+  Expressions in 'Expressions.pas';
 
 {$R *.res}
 

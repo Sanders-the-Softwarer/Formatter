@@ -35,7 +35,10 @@ type
     procedure Indent; virtual; abstract;
     procedure Undent; virtual; abstract;
     procedure Space; virtual; abstract;
+    procedure SupressSpace; virtual; abstract;
     procedure NextLine; virtual; abstract;
+    procedure PaddingFrom; virtual; abstract;
+    procedure PaddingTo(ALen: integer); virtual; abstract;
   public
     class function CreateTokenizerPrinter(AStrings: TStrings): TPrinter;
     class function CreateSyntaxTreePrinter(ATreeView: TTreeView): TPrinter;
@@ -51,14 +54,17 @@ type
   TBasePrinter = class(TPrinter)
   public
     procedure BeginPrint; override;
-    procedure PrintItem(AItem: TObject); override; final;
+    procedure PrintItem(AItem: TObject); override;
     procedure PrintToken(AToken: TToken); virtual;
     procedure PrintStatement(AStatement: TStatement); virtual;
     procedure EndPrint; override;
     procedure Indent; override;
     procedure Undent; override;
     procedure Space; override;
+    procedure SupressSpace; override;
     procedure NextLine; override;
+    procedure PaddingFrom; override;
+    procedure PaddingTo(ALen: integer); override;
   end;
 
   TFormatterPrinter = class(TBasePrinter)
@@ -68,15 +74,21 @@ type
     Shift:   integer;
     BOL:     boolean;
     SPC:     boolean;
+    PadPos:  integer;
+    PAD:     boolean;
   public
     constructor Create(AStrings: TStrings);
     procedure BeginPrint; override;
     procedure EndPrint; override;
+    procedure PrintItem(AItem: TObject); override;
     procedure PrintToken(AToken: TToken); override;
     procedure Indent; override;
     procedure Undent; override;
     procedure Space; override;
+    procedure SupressSpace; override;
     procedure NextLine; override;
+    procedure PaddingFrom; override;
+    procedure PaddingTo(ALen: integer); override;
   end;
 
   TTokenizerPrinter = class(TBasePrinter)
@@ -167,7 +179,22 @@ begin
   { ничего не делаем }
 end;
 
+procedure TBasePrinter.SupressSpace;
+begin
+  { ничего не делаем }
+end;
+
 procedure TBasePrinter.NextLine;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.PaddingFrom;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.PaddingTo(ALen: integer);
 begin
   { ничего не делаем }
 end;
@@ -197,15 +224,33 @@ begin
   inherited;
 end;
 
+procedure TFormatterPrinter.PrintItem(AItem: TObject);
+begin
+  if not Assigned(AItem) and PAD then
+    PrintToken(nil)
+  else
+    inherited;
+end;
+
 procedure TFormatterPrinter.PrintToken(AToken: TToken);
 begin
   if BOL then
-    Builder.Append(StringOfChar(' ', Shift))
-  else if SPC then
+  begin
+    Builder.Append(StringOfChar(' ', Shift));
+    BOL := false;
+    SPC := false;
+  end;
+  if SPC and Assigned(AToken) then
+  begin
     Builder.Append(' ');
-  Builder.Append(AToken.Value);
-  BOL := false;
-  SPC := false;
+    SPC := false;
+  end;
+  if PAD then
+  begin
+    PadPos := Builder.Length;
+    PAD := false;
+  end;
+  if Assigned(AToken) then Builder.Append(AToken.Value);
 end;
 
 procedure TFormatterPrinter.Indent;
@@ -227,6 +272,23 @@ end;
 procedure TFormatterPrinter.Space;
 begin
   SPC := true;
+end;
+
+procedure TFormatterPrinter.SupressSpace;
+begin
+  SPC := false;
+end;
+
+procedure TFormatterPrinter.PaddingFrom;
+begin
+  PAD := true;
+end;
+
+procedure TFormatterPrinter.PaddingTo(ALen: integer);
+var i: integer;
+begin
+  for i := Builder.Length to PadPos + ALen - 1 do Builder.Append(' ');
+  SPC := false;
 end;
 
 { TTokenizerPrinter }
