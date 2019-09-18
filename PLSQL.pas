@@ -23,38 +23,98 @@ unit PLSQL;
 interface
 
 uses SysUtils, Math, System.Generics.Collections, Streams, Parser, Tokens, Expressions,
-  Printers_;
+  Printers_, DML;
 
 type
 
-  { Конструкция package [body] }
-  TPackage = class(TStatement)
+  { Программный блок - та или иная конструкция на основе begin .. end }
+  TProgramBlock = class(TStatement)
   strict private
+    _Header: TStatement;
+    _Declarations: TStatement;
+    _Begin: TKeyword;
+    _Operators: TStatement;
+    _Exceptions: TKeyword;
+    _ExceptionHandlers: TStatement;
+    _End: TKeyword;
+    _EndName: TIdent;
+    _Semicolon: TTerminal;
+    _Slash: TTerminal;
+  strict protected
+    property Header: TStatement read _Header;
+    function GetHeaderClass: TStatementClass; virtual; abstract;
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function Name: string; override;
+  end;
+
+  { Заголовок пакета }
+  TPackageHeader = class(TStatement)
+  strict protected
     _Package, _Body: TKeyword;
     _PackageName: TIdent;
     _Is: TKeyword;
-    _Statements: TList<TStatement>;
-    _End: TStatement;
   strict protected
     function InternalParse: boolean; override;
   public
-    procedure AfterConstruction; override;
-    procedure BeforeDestruction; override;
     function Name: string; override;
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function PackageInfo: string;
+  end;
+
+  { Пакет }
+  TPackage = class(TProgramBlock)
+  strict protected
+    function GetHeaderClass: TStatementClass; override;
+  public
+    function Name: string; override;
+  end;
+
+  { Объявление подпрограммы }
+  TSubroutineHeaderBase = class(TStatement)
+  strict private
+    _Initial: TKeyword;
+    _Name: TIdent;
+    _Params: TStatement;
+    _Return: TKeyword;
+    _ReturnType: TStatement;
+    _Deterministic: TKeyword;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function Name: string; override;
+    function MultiLine: boolean;
+    procedure MultiLineSpace(APrinter: TPrinter);
+  end;
+
+  { Заголовок подпрограммы }
+  TSubroutineHeader = class(TSubroutineHeaderBase)
+  strict private
+    _Is: TKeyword;
+  strict protected
+    function InternalParse: boolean; override;
+  public
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Завершение конструкции package }
-  TEndOfUnit = class(TStatement)
+  { Предварительное объявление подпрограммы }
+  TSubroutineForwardDeclaration = class(TSubroutineHeaderBase)
   strict private
-    _End: TKeyword;
-    _PackageName: TIdent;
-    _Semicolon, _Slash: TTerminal;
+    _Semicolon: TTerminal;
   strict protected
     function InternalParse: boolean; override;
   public
-    function Name: string; override;
     procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Подпрограмма }
+  TSubroutine = class(TProgramBlock)
+  strict protected
+    function GetHeaderClass: TStatementClass; override;
+  public
+    function Name: string; override;
   end;
 
   { Название типа данных }
@@ -79,16 +139,15 @@ type
   end;
 
   { Блок параметров подпрограммы }
-  TParamsDeclaration = class(TStatement)
+  TParamsDeclaration = class(TStatementList)
   strict private
     _OpenBracket: TTerminal;
-    _Params: TList<TStatement>;
     _CloseBracket: TTerminal;
   strict protected
     function InternalParse: boolean; override;
+    function ParseStatement(out AResult: TStatement): boolean; override;
+    function ParseBreak: boolean; override;
   public
-    procedure AfterConstruction; override;
-    procedure BeforeDestruction; override;
     function Name: string; override;
     procedure PrintSelf(APrinter: TPrinter); override;
     function ParamNameMax: integer;
@@ -113,67 +172,21 @@ type
     function ModifiersLen: integer;
   end;
 
-  { Подпрограмма }
-  TSubroutine = class(TStatement)
-  strict private
-    _Initial: TKeyword;
-    _Name: TIdent;
-    _Params: TStatement;
-    _Return: TKeyword;
-    _ReturnType: TStatement;
-    _Deterministic: TKeyword;
-    _Semicolon: TTerminal;
-    _Is: TKeyword;
-    _Body: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
-  end;
-
-  { Тело подпрограммы }
-  TSubroutineBody = class(TStatement)
-  strict private
-    _Declarations: TStatement;
-    _Begin: TKeyword;
-    _Statements: TList<TStatement>;
-    _Exceptions: TKeyword;
-    _ExceptionHandlers: TList<TStatement>;
-    _End: TKeyword;
-    _Semicolon: TTerminal;
-  strict protected
-    function InternalParse: boolean; override;
-  public
-    procedure AfterConstruction; override;
-    procedure BeforeDestruction; override;
-    procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
-  end;
-
   { Блок деклараций }
-  TDeclarations = class(TStatement)
-  strict private
-    _Declarations: TList<TStatement>;
+  TDeclarations = class(TStatementList)
   strict protected
-    function InternalParse: boolean; override;
+    function ParseStatement(out AResult: TStatement): boolean; override;
+    function ParseBreak: boolean; override;
   public
-    procedure AfterConstruction; override;
-    procedure BeforeDestruction; override;
-    procedure PrintSelf(APrinter: TPrinter); override;
     function Name: string; override;
   end;
 
   { Блок переменных }
-  TVariableDeclarations = class(TStatement)
-  strict private
-    _Variables: TList<TStatement>;
+  TVariableDeclarations = class(TStatementList)
   strict protected
-    function InternalParse: boolean; override;
+    function ParseStatement(out AResult: TStatement): boolean; override;
+    function ParseBreak: boolean; override;
   public
-    procedure AfterConstruction; override;
-    procedure BeforeDestruction; override;
-    procedure PrintSelf(APrinter: TPrinter); override;
     function Name: string; override;
     function MaxNameLen: integer;
   end;
@@ -195,6 +208,21 @@ type
     function NameLen: integer;
   end;
 
+  { Список операторов }
+  TOperators = class(TStatementList)
+  strict protected
+    function ParseStatement(out AResult: TStatement): boolean; override;
+    function ParseBreak: boolean; override;
+  public
+    function Name: string; override;
+  end;
+
+  { Список операторов в секциях then/else }
+  TIfOperators = class(TOperators)
+  strict protected
+    function ParseBreak: boolean; override;
+  end;
+
   { Оператор }
   TOperator = class(TStatement)
   strict private
@@ -210,7 +238,7 @@ type
   { Присваивание }
   TAssignment = class(TOperator)
   strict private
-    _Ident: TStatement;
+    _Ident: TIdent;
     _Assignment: TTerminal;
     _Expression: TStatement;
   strict protected
@@ -243,24 +271,83 @@ type
     function Name: string; override;
   end;
 
+  { Условный оператор }
+  TIf = class(TOperator)
+  strict private
+    _If: TKeyword;
+    _Condition: TStatement;
+    _Then: TKeyword;
+    _ThenStatements: TStatement;
+    _Else: TKeyword;
+    _ElseStatements: TStatement;
+    _EndIf: TKeyword;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function Name: string; override;
+  end;
+
 implementation
 
-{ TPackage }
+{ TProgramBlock }
 
-procedure TPackage.AfterConstruction;
+function TProgramBlock.InternalParse: boolean;
 begin
-  inherited;
-  _Statements := TList<TStatement>.Create;
+  { Пытаемся распознать заголовок }
+  Result := GetHeaderClass.Parse(Self, Source, _Header);
+  if not Result then exit;
+  { Распознаём декларации }
+  TDeclarations.Parse(Self, Source, _Declarations);
+  { Если нашли begin, распознаём операторы }
+  _Begin := Keyword('begin');
+  if Assigned(_Begin) then TOperators.Parse(Self, Source, _Operators);
+  { Если нашли exception, распознаём обработчики исключений }
+{  _Exceptions := Keyword('exceptions');
+  if Assigned(_Exceptions) then TExceptionHandlers.Parse(Self, Source, _ExceptionHandlers);}
+  { end и завершающие символы после него }
+  _End := Keyword('end');
+  if Assigned(_End) then
+  begin
+    _EndName := Identifier;
+    _Semicolon := Terminal(';');
+    _Slash := Terminal('/');
+  end;
 end;
 
-procedure TPackage.BeforeDestruction;
+function TProgramBlock.Name: string;
 begin
-  FreeAndNil(_Statements);
-  inherited;
+  Result := 'pl/sql block';
 end;
 
-function TPackage.InternalParse: boolean;
-var Statement: TStatement;
+procedure TProgramBlock.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Header);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_Declarations);
+  APrinter.Undent;
+  APrinter.PrintItem(_Begin);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_Operators);
+  APrinter.Undent;
+  APrinter.PrintItem(_Exceptions);
+  APrinter.Indent;
+  APrinter.PrintItem(_ExceptionHandlers);
+  APrinter.Undent;
+  APrinter.PrintItem(_End);
+  APrinter.Space;
+  APrinter.PrintItem(_EndName);
+  APrinter.PrintItem(_Semicolon);
+  APrinter.NextLine;
+  APrinter.PrintItem(_Slash);
+  APrinter.NextLine;
+end;
+
+{ TPackageHeader }
+
+function TPackageHeader.InternalParse: boolean;
 begin
   { Если распознали слово package, то распознали конструкцию }
   _Package := Keyword('package');
@@ -270,27 +357,24 @@ begin
   _Body := Keyword('body');
   { Проверим название пакета }
   _PackageName := Identifier;
-  if not Assigned(_PackageName) then exit;
   { Проверим наличие is }
   _Is := Keyword(['is', 'as']);
-  { И теперь будем парсить конструкции, пока не доберёмся до end-а }
-  while not TEndOfUnit.Parse(Self, Source, Statement) do
-    if TDeclarations.Parse(Self, Source, Statement) or TUnexpectedToken.Parse(Self, Source, Statement)
-      then _Statements.Add(Statement)
-      else exit;
-  { Добрались }
-  _End := Statement as TEndOfUnit;
 end;
 
-function TPackage.Name: string;
+function TPackageHeader.Name: string;
 begin
-  Result := 'package';
-  if Assigned(_Body) then Result := Result + ' body';
-  if Assigned(_PackageName) then Result := Result + ' ' + _PackageName.Value;
+  Result := '< header >';
 end;
 
-procedure TPackage.PrintSelf(APrinter: TPrinter);
-var i: integer;
+function TPackageHeader.PackageInfo: string;
+begin
+  if Assigned(_Package) then Result := _Package.Value + ' ';
+  if Assigned(_Body) then Result := Result + _Body.Value + ' ';
+  if Assigned(_PackageName) then Result := Result + _PackageName.Value + ' ';
+  Result := Trim(Result);
+end;
+
+procedure TPackageHeader.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Package);
   APrinter.Space;
@@ -299,51 +383,24 @@ begin
   APrinter.PrintItem(_PackageName);
   APrinter.Space;
   APrinter.PrintItem(_Is);
-  APrinter.Space;
-  APrinter.NextLine;
-  APrinter.Indent;
-  for i := 0 to _Statements.Count - 1 do APrinter.PrintItem(_Statements[i]);
-  APrinter.Undent;
-  APrinter.PrintItem(_End);
-end;
-
-{ TEndOfUnit }
-
-function TEndOfUnit.InternalParse: boolean;
-begin
-  { Проверим end }
-  _End := Keyword('end');
-  if not Assigned(_End) then exit(false);
-  { Необязательное название пакета }
-  _PackageName := Identifier;
-  { Проверим точку с запятой }
-  _Semicolon := Terminal(';');
-  if not Assigned(_Semicolon) then exit(false);
-  { Проверим слеш }
-  _Slash := Terminal('/');
-  Result := Assigned(_Slash);
-end;
-
-function TEndOfUnit.Name: string;
-begin
-  Result := 'end';
-end;
-
-procedure TEndOfUnit.PrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItem(_End);
-  APrinter.Space;
-  APrinter.PrintItem(_PackageName);
-  APrinter.PrintItem(_Semicolon);
-  APrinter.NextLine;
-  APrinter.PrintItem(_Slash);
   APrinter.NextLine;
 end;
 
-{ TSubroutine }
+{ TPackage }
 
-function TSubroutine.InternalParse: boolean;
-var Param: TStatement;
+function TPackage.Name: string;
+begin
+  Result := '< ' + (Header as TPackageHeader).PackageInfo + ' >';
+end;
+
+function TPackage.GetHeaderClass: TStatementClass;
+begin
+  Result := TPackageHeader;
+end;
+
+{ TSubroutineHeaderBase }
+
+function TSubroutineHeaderBase.InternalParse: boolean;
 begin
   { Проверим procedure/function }
   _Initial := Keyword(['procedure', 'function']);
@@ -358,53 +415,45 @@ begin
   TTypeRef.Parse(Self, Source, _ReturnType);
   { Признак deterministic }
   _Deterministic := Keyword('deterministic');
-  { Если завершается точкой с запятой - значит, описание }
-  _Semicolon := Terminal(';');
-  if Assigned(_Semicolon) then exit;
-  { Если завершается is или as, значит определение }
-  _Is := Keyword(['is', 'as']);
-  if Assigned(_Is) then TSubroutineBody.Parse(Self, Source, _Body);
 end;
 
-function TSubroutine.Name: string;
+procedure TSubroutineHeaderBase.MultiLineSpace(APrinter: TPrinter);
 begin
-  Result := _Initial.Value + ' ' + _Name.Value;
+  if MultiLine
+    then APrinter.NextLine
+    else APrinter.Space;
 end;
 
-procedure TSubroutine.PrintSelf(APrinter: TPrinter);
-var i: integer;
+procedure TSubroutineHeaderBase.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Initial);
   APrinter.Space;
   APrinter.PrintItem(_Name);
   APrinter.Space;
-  if Assigned(_Params) then
+  if MultiLine then
   begin
     APrinter.NextLine;
     APrinter.Indent;
-    APrinter.PrintItem(_Params);
   end;
-  if Assigned(_Return) then APrinter.NextLine;
+  APrinter.PrintItem(_Params);
+  if Assigned(_Return) then MultiLineSpace(APrinter);
   APrinter.PrintItem(_Return);
   APrinter.Space;
   APrinter.PrintItem(_ReturnType);
-  APrinter.Space;
+  if Assigned(_Deterministic) then MultiLineSpace(APrinter);
   APrinter.PrintItem(_Deterministic);
-  APrinter.Space;
-  if Assigned(_Semicolon) then
-  begin
-    APrinter.SupressSpace;
-    APrinter.PrintItem(_Semicolon);
-  end;
-  APrinter.NextLine;
-  if Assigned(_Params) then APrinter.Undent;
-  if Assigned(_Is) then
-  begin
-    APrinter.PrintItem(_Is);
-    APrinter.NextLine;
-    if _Body is TSubroutineBody then APrinter.Indent;
-    APrinter.PrintItem(_Body);
-  end;
+end;
+
+function TSubroutineHeaderBase.Name: string;
+begin
+  if Assigned(_Name)
+    then Result := _Name.Value
+    else Result := _Initial.Value;
+end;
+
+function TSubroutineHeaderBase.MultiLine: boolean;
+begin
+  Result := Assigned(_Params) and ((_Params as TStatementList).Count >= 3);
 end;
 
 { TTypeRef }
@@ -435,7 +484,7 @@ end;
 
 function TTypeRef.Name: string;
 begin
-  Result := 'type reference';
+  Result := '< type >';
 end;
 
 procedure TTypeRef.PrintSelf(APrinter: TPrinter);
@@ -476,8 +525,9 @@ end;
 
 function TParamDeclaration.Name: string;
 begin
-  Result := 'param';
-  if Assigned(_ParamName) then Result := Result + ' ' + _ParamName.Value;
+  if Assigned(_ParamName)
+    then Result := _ParamName.Value
+    else Result := '< param >';
 end;
 
 procedure TParamDeclaration.PrintSelf(APrinter: TPrinter);
@@ -496,6 +546,7 @@ begin
   APrinter.Space;
   APrinter.PrintItem(_ParamType);
   APrinter.PrintItem(_Comma);
+  (Parent.Parent as TSubroutineHeaderBase).MultiLineSpace(APrinter);
 end;
 
 function TParamDeclaration.ParamNameLen: integer;
@@ -513,62 +564,37 @@ end;
 
 { TParamsDeclaration }
 
-procedure TParamsDeclaration.AfterConstruction;
-begin
-  inherited;
-  _Params := TList<TStatement>.Create;
-end;
-
-procedure TParamsDeclaration.BeforeDestruction;
-begin
-  FreeAndNil(_Params);
-  inherited;
-end;
-
 function TParamsDeclaration.InternalParse: boolean;
-var _Param: TStatement;
 begin
-  { Если нашли открывающую скобку - всё вплоть до закрывающей считаем параметрами }
   _OpenBracket := Terminal('(');
   if not Assigned(_OpenBracket) then exit(false);
-  Result := true;
-  while not Assigned(_CloseBracket) do
-  begin
-    _CloseBracket := Terminal(')');
-    if Assigned(_CloseBracket) then
-      break
-    else if TParamDeclaration.Parse(Self, Source, _Param) then
-      _Params.Add(_Param)
-    else if TUnexpectedToken.Parse(Self, Source, _Param) then
-      _Params.Add(_Param)
-    else
-      exit(true);
-  end;
+  Result := inherited InternalParse;
+  if Result then _CloseBracket := Terminal(')');
+end;
+
+function TParamsDeclaration.ParseStatement(out AResult: TStatement): boolean;
+begin
+  Result := TParamDeclaration.Parse(Self, Source, AResult);
+end;
+
+function TParamsDeclaration.ParseBreak: boolean;
+begin
+  Result := Any([Terminal(')')]);
 end;
 
 function TParamsDeclaration.Name: string;
 begin
-  Result := 'parameters';
+  Result := '< parameters >';
 end;
 
 procedure TParamsDeclaration.PrintSelf(APrinter: TPrinter);
-var
-  i: integer;
-  MultiLine: boolean;
 begin
-  MultiLine := (_Params.Count > 0);
   APrinter.PrintItem(_OpenBracket);
-  if MultiLine then
-  begin
-    APrinter.NextLine;
-    APrinter.Indent;
-  end;
-  for i := 0 to _Params.Count - 1 do
-  begin
-    APrinter.PrintItem(_Params[i]);
-    if MultiLine then APrinter.NextLine;
-  end;
-  if MultiLine then APrinter.Undent;
+  if (Parent as TSubroutineHeaderBase).MultiLine then APrinter.NextLine;
+  APrinter.Indent;
+  inherited;
+  APrinter.Undent;
+  APrinter.SupressSpace;
   APrinter.PrintItem(_CloseBracket);
 end;
 
@@ -576,118 +602,39 @@ function TParamsDeclaration.ParamNameMax: integer;
 var i: integer;
 begin
   Result := 0;
-  for i := 0 to _Params.Count - 1 do
-    if _Params[i] is TParamDeclaration then
-      Result := Math.Max(Result, TParamDeclaration(_Params[i]).ParamNameLen);
+  if not (Parent as TSubroutineHeaderBase).MultiLine then exit;
+  for i := 0 to Count - 1 do
+    if Item(i) is TParamDeclaration then
+      Result := Math.Max(Result, TParamDeclaration(Item(i)).ParamNameLen);
 end;
 
 function TParamsDeclaration.ModifiersMax: integer;
 var i: integer;
 begin
   Result := 0;
-  for i := 0 to _Params.Count - 1 do
-    if _Params[i] is TParamDeclaration then
-      Result := Math.Max(Result, TParamDeclaration(_Params[i]).ModifiersLen);
-end;
-
-{ TSubroutineBody }
-
-procedure TSubroutineBody.AfterConstruction;
-begin
-  inherited;
-  _Statements   := TList<TStatement>.Create;
-  _ExceptionHandlers := TList<TStatement>.Create;
-end;
-
-procedure TSubroutineBody.BeforeDestruction;
-begin
-  inherited;
-  FreeAndNil(_Statements);
-  FreeAndNil(_ExceptionHandlers);
-end;
-
-function TSubroutineBody.InternalParse: boolean;
-var _Stmt: TStatement;
-begin
-  { Тело считаем распознанным, если успешно добрались до begin }
-  TDeclarations.Parse(Self, Source, _Declarations);
-  _Begin := Keyword('begin');
-  if not Assigned(_Begin) then exit(false);
-  Result := true;
-  { И сканируем всё до end-а }
-  repeat
-    _End := Keyword('end');
-    if Assigned(_End) then break;
-    if TOperator.ParseOperator(Self, Source, _Stmt) then
-      _Statements.Add(_Stmt)
-    else if TUnexpectedToken.Parse(Self, Source, _Stmt) then
-      _Statements.Add(_Stmt)
-    else
-      exit;
-  until false;
-  _Semicolon := Terminal(';');
-end;
-
-function TSubroutineBody.Name: string;
-begin
-  Result := 'body';
-end;
-
-procedure TSubroutineBody.PrintSelf(APrinter: TPrinter);
-var i: integer;
-begin
-  APrinter.PrintItem(_Declarations);
-  APrinter.Undent;
-  APrinter.PrintItem(_Begin);
-  APrinter.NextLine;
-  APrinter.Indent;
-  for i := 0 to _Statements.Count - 1 do
-    APrinter.PrintItem(_Statements[i]);
-  APrinter.Undent;
-  APrinter.PrintItem(_Exceptions);
-  APrinter.Indent;
-  for i := 0 to _ExceptionHandlers.Count - 1 do
-    APrinter.PrintItem(_ExceptionHandlers[i]);
-  APrinter.Undent;
-  APrinter.PrintItem(_End);
-  APrinter.PrintItem(_Semicolon);
-  APrinter.NextLine;
+  if not (Parent as TSubroutineHeaderBase).MultiLine then exit;
+  for i := 0 to Count - 1 do
+    if Item(i) is TParamDeclaration then
+      Result := Math.Max(Result, TParamDeclaration(Item(i)).ModifiersLen);
 end;
 
 { TDeclarations }
 
-procedure TDeclarations.AfterConstruction;
+function TDeclarations.ParseStatement(out AResult: TStatement): boolean;
 begin
-  inherited;
-  _Declarations := TList<TStatement>.Create;
+  Result := TSubroutineForwardDeclaration.Parse(Self, Source, AResult) or
+            TSubroutine.Parse(Self, Source, AResult) or
+            TVariableDeclarations.Parse(Self, Source, AResult);
 end;
 
-procedure TDeclarations.BeforeDestruction;
+function TDeclarations.ParseBreak: boolean;
 begin
-  inherited;
-  FreeAndNil(_Declarations);
-end;
-
-function TDeclarations.InternalParse: boolean;
-var _Statement: TStatement;
-begin
-  while TVariableDeclarations.Parse(Self, Source, _Statement) or
-        TSubroutine.Parse(Self, Source, _Statement)
-  do
-    _Declarations.Add(_Statement);
-  Result := (_Declarations.Count > 0);
+  Result := Any([Keyword(['begin', 'end'])]);
 end;
 
 function TDeclarations.Name: string;
 begin
-  Result := 'declarations';
-end;
-
-procedure TDeclarations.PrintSelf(APrinter: TPrinter);
-var i: integer;
-begin
-  for i := 0 to _Declarations.Count - 1 do
-    APrinter.PrintItem(_Declarations[i]);
+  Result := '< declarations >';
 end;
 
 { TVariableDeclaration }
@@ -739,45 +686,28 @@ end;
 
 { TVariableDeclarations }
 
-procedure TVariableDeclarations.AfterConstruction;
+function TVariableDeclarations.ParseStatement(out AResult: TStatement): boolean;
 begin
-  inherited;
-  _Variables := TList<TStatement>.Create;
+  Result := TVariableDeclaration.Parse(Self, Source, AResult);
 end;
 
-procedure TVariableDeclarations.BeforeDestruction;
+function TVariableDeclarations.ParseBreak: boolean;
 begin
-  inherited;
-  FreeAndNil(_Variables);
+  Result := Any([Keyword(['begin', 'end', 'type', 'cursor', 'procedure', 'function'])]);
 end;
 
-function TVariableDeclarations.InternalParse: boolean;
-var _Var: TStatement;
+function TVariableDeclarations.Name: string;
 begin
-  while TVariableDeclaration.Parse(Self, Source, _Var) do
-    _Variables.Add(_Var);
-  Result := (_Variables.Count > 0);
+  Result := '< variables >';
 end;
 
 function TVariableDeclarations.MaxNameLen: integer;
 var i: integer;
 begin
   Result := 0;
-  for i := 0 to _Variables.Count - 1 do
-    if _Variables[i] is TVariableDeclaration then
-      Result := Math.Max(Result, TVariableDeclaration(_Variables[i]).NameLen);
-end;
-
-function TVariableDeclarations.Name: string;
-begin
-  Name := 'variables';
-end;
-
-procedure TVariableDeclarations.PrintSelf(APrinter: TPrinter);
-var i: integer;
-begin
-  for i := 0 to _Variables.Count - 1 do
-    APrinter.PrintItem(_Variables[i]);
+  for i := 0 to Count - 1 do
+    if Item(i) is TVariableDeclaration then
+      Result := Math.Max(Result, TVariableDeclaration(Item(i)).NameLen);
 end;
 
 { TOperator }
@@ -788,6 +718,8 @@ begin
   Result :=
     TAssignment.Parse(AParent, Tokens, AResult) or
     TReturn.Parse(AParent, Tokens, AResult) or
+    TIf.Parse(AParent, Tokens, AResult) or
+    TDML.Parse(AParent, Tokens, AResult) or
     TProcedureCall.Parse(AParent, Tokens, AResult);
 end;
 
@@ -827,16 +759,17 @@ end;
 
 function TAssignment.InternalParse: boolean;
 begin
-  TQualifiedIdentifier.Parse(Self, Source, _Ident);
+  _Ident := Identifier;
   _Assignment := Terminal(':=');
   Result := Assigned(_Ident) and Assigned(_Assignment);
+  if not Result then exit;
   TExpression.Parse(Self, Source, _Expression);
   inherited;
 end;
 
 function TAssignment.Name: string;
 begin
-  Result := 'assignment';
+  Result := '< assignment >';
 end;
 
 procedure TAssignment.PrintSelf(APrinter: TPrinter);
@@ -871,6 +804,119 @@ begin
   APrinter.Space;
   APrinter.PrintItem(_Value);
   inherited;
+end;
+
+{ TSubroutine }
+
+function TSubroutine.GetHeaderClass: TStatementClass;
+begin
+  Result := TSubroutineHeader;
+end;
+
+function TSubroutine.Name: string;
+begin
+  Result := '< subroutine >';
+end;
+
+{ TSubroutineHeader }
+
+function TSubroutineHeader.InternalParse: boolean;
+begin
+  Result := inherited InternalParse;
+  if Result then _Is := Keyword(['is', 'as']);
+end;
+
+procedure TSubroutineHeader.PrintSelf(APrinter: TPrinter);
+begin
+  inherited;
+  MultiLineSpace(APrinter);
+  APrinter.PrintItem(_Is);
+  APrinter.NextLine;
+  if MultiLine then APrinter.Undent;
+end;
+
+{ TSubroutineForwardDeclaration }
+
+function TSubroutineForwardDeclaration.InternalParse: boolean;
+begin
+  Result := inherited InternalParse;
+  if Result then _Semicolon := Terminal(';');
+  Result := Result and Assigned(_Semicolon);
+end;
+
+procedure TSubroutineForwardDeclaration.PrintSelf(APrinter: TPrinter);
+begin
+  inherited;
+  APrinter.SupressSpace;
+  APrinter.PrintItem(_Semicolon);
+  APrinter.NextLine;
+  if MultiLine then APrinter.Undent;
+end;
+
+{ TOperators }
+
+function TOperators.ParseStatement(out AResult: TStatement): boolean;
+begin
+  Result := TOperator.ParseOperator(Self, Source, AResult);
+end;
+
+function TOperators.ParseBreak: boolean;
+begin
+  Result := Any([Keyword(['end', 'exceptions'])]);
+end;
+
+function TOperators.Name: string;
+begin
+  Result := '< statements >';
+end;
+
+{ TIf }
+
+function TIf.InternalParse: boolean;
+begin
+  _If := Keyword('if');
+  if not Assigned(_If) then exit(false);
+  TExpression.Parse(Self, Source, _Condition);
+  _Then := Keyword('then');
+  TIfOperators.Parse(Self, Source, _ThenStatements);
+  _Else := Keyword('else');
+  if Assigned(_Else) then TIfOperators.Parse(Self, Source, _ElseStatements);
+  _EndIf := Keyword('end if');
+  Result := true;
+  inherited;
+end;
+
+function TIf.Name: string;
+begin
+  Result := 'if';
+end;
+
+procedure TIf.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_If);
+  APrinter.Space;
+  APrinter.PrintItem(_Condition);
+  APrinter.Space;
+  APrinter.PrintItem(_Then);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_ThenStatements);
+  APrinter.Undent;
+  APrinter.PrintItem(_Else);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_ElseStatements);
+  APrinter.Undent;
+  APrinter.PrintItem(_EndIf);
+  APrinter.Space;
+  inherited;
+end;
+
+{ TIfOperators }
+
+function TIfOperators.ParseBreak: boolean;
+begin
+  Result := Any([Keyword(['else', 'elsif', 'end if'])]) or inherited ParseBreak;
 end;
 
 end.

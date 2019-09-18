@@ -9,7 +9,8 @@ uses
   Parser in 'Parser.pas',
   Printers_ in 'Printers_.pas',
   PLSQL in 'PLSQL.pas',
-  Expressions in 'Expressions.pas';
+  Expressions in 'Expressions.pas',
+  DML in 'DML.pas';
 
 {$R *.res}
 

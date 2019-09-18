@@ -12,7 +12,7 @@ unit Parser;
 
 interface
 
-uses System.SysUtils, System.Generics.Collections, Math, Streams, Tokens, Printers_;
+uses Windows, System.SysUtils, System.Generics.Collections, Math, Streams, Tokens, Printers_;
 
 type
 
@@ -39,6 +39,25 @@ type
     property Parent: TStatement read FParent;
   end;
 
+  TStatementClass = class of TStatement;
+
+  { Ѕазовый класс дл€ списков однотипных конструкций (переменные, операторы и т. п. }
+  TStatementList = class(TStatement)
+  strict private
+    FList: TList<TStatement>;
+  strict protected
+    function InternalParse: boolean; override;
+    function ParseStatement(out AResult: TStatement): boolean; virtual; abstract;
+    function ParseBreak: boolean; virtual; abstract;
+  public
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function Count: integer;
+    function Item(Index: integer): TStatement;
+    function Any(Found: array of TObject): boolean;
+  end;
+
   { —интаксический анализатор }
   TParser = class(TNextStream<TToken, TStatement>)
   strict protected
@@ -57,19 +76,6 @@ type
     property Token: TToken read _Token;
   end;
 
-  {  валифицированный идентификатор }
-  TQualifiedIdentifier = class(TStatement)
-  strict private
-    _Ident: TIdent;
-    _Dot: TTerminal;
-    _Rest: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-  public
-    function Name: string; override;
-    procedure PrintSelf(APrinter: TPrinter); override;
-  end;
-
   {  оманда create [or replace] }
   TCreateStatement = class(TStatement)
   strict private
@@ -84,13 +90,16 @@ type
 
 implementation
 
-uses PLSQL;
+uses DML, PLSQL;
 
 { TParser }
 
 function TParser.InternalNext: TStatement;
 begin
-  if not TCreateStatement.Parse(nil, Source, Result) then
+  if not TCreateStatement.Parse(nil, Source, Result) and
+     not TPackage.Parse(nil, Source, Result) and
+     not TSubroutine.Parse(nil, Source, Result) and
+     not TDML.Parse(nil, Source, Result) then
     TUnexpectedToken.Parse(nil, Source, Result);
 end;
 
@@ -98,7 +107,11 @@ end;
 
 function TUnexpectedToken.Name: string;
 begin
-  Result := Format('*** Ќ≈ќ∆»ƒјЌЌјя  ќЌ—“–” ÷»я *** [%s ''%s'']', [Token.TokenType, Token.Value]);
+  try
+    Result := Format('*** Ќ≈ќ∆»ƒјЌЌјя  ќЌ—“–” ÷»я *** [%s ''%s'']', [Token.TokenType, Token.Value]);
+  except
+    Result := '*** Ќ≈ќ∆»ƒјЌЌјя  ќЌ—“–” ÷»я ***';
+  end;
 end;
 
 function TUnexpectedToken.InternalParse: boolean;
@@ -123,7 +136,7 @@ begin
 end;
 
 class function TStatement.Parse(AParent: TStatement; Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-var SavedPosition: TMark;
+var SavedPosition: TMark; S: string;
 begin
   AResult := Self.Create(AParent, Tokens);
   SavedPosition := Tokens.Mark;
@@ -221,6 +234,70 @@ begin
     else Source.Restore(P);
 end;
 
+{ TStatementList }
+
+procedure TStatementList.AfterConstruction;
+begin
+  inherited;
+  FList := TList<TStatement>.Create;
+end;
+
+procedure TStatementList.BeforeDestruction;
+begin
+  inherited;
+  FreeAndNil(FList);
+end;
+
+function TStatementList.InternalParse: boolean;
+var
+  P: TMark;
+  S: TStatement;
+  B: boolean;
+begin
+  repeat
+    P := Source.Mark;
+    { ≈сли успешно разобрали конструкцию - работаем дальше }
+    if ParseStatement(S) then
+    begin
+      FList.Add(S);
+      continue;
+    end;
+    { ≈сли встретили завершающую конструкцию - выходим }
+    Source.Restore(P);
+    B := ParseBreak;
+    Source.Restore(P);
+    if B then break;
+    { ≈сли ни то, ни другое - фиксируем неожиданную конструкцию и дальше ждЄм завершающей конструкции }
+    if TUnexpectedToken.Parse(Self, Source, S)
+      then FList.Add(S)
+      else break;
+  until false;
+  Result := (Count > 0);
+end;
+
+procedure TStatementList.PrintSelf(APrinter: TPrinter);
+var i: integer;
+begin
+  for i := 0 to FList.Count - 1 do APrinter.PrintItem(FList[i]);
+end;
+
+function TStatementList.Count: integer;
+begin
+  Result := FList.Count;
+end;
+
+function TStatementList.Item(Index: integer): TStatement;
+begin
+  Result := FList[Index];
+end;
+
+function TStatementList.Any(Found: array of TObject): boolean;
+var i: integer;
+begin
+  Result := false;
+  for i := Low(Found) to High(Found) do Result := Result or Assigned(Found[i]);
+end;
+
 { TCreateStatement }
 
 function TCreateStatement.InternalParse: boolean;
@@ -254,29 +331,6 @@ begin
   APrinter.PrintItem(_Replace);
   APrinter.Space;
   APrinter.PrintItem(_What);
-end;
-
-{ TQualifiedIdentifier }
-
-function TQualifiedIdentifier.InternalParse: boolean;
-begin
-  _Ident := Identifier;
-  if not Assigned(_Ident) then exit(false);
-  Result := true;
-  _Dot := Terminal('.');
-  if Assigned(_Dot) then TQualifiedIdentifier.Parse(Self, Source, _Rest);
-end;
-
-function TQualifiedIdentifier.Name: string;
-begin
-  Result := 'qualified identifier';
-end;
-
-procedure TQualifiedIdentifier.PrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItem(_Ident);
-  APrinter.PrintItem(_Dot);
-  APrinter.PrintItem(_Rest);
 end;
 
 end.

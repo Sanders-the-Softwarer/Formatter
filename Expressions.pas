@@ -34,17 +34,22 @@ type
   { Вызов функции }
   TFunctionCall = class(TStatement)
   strict private
-    _Name: TStatement;
+    _Name: TIdent;
     _OpenBracket: TTerminal;
-    _Arguments: TList<TStatement>;
+    _Arguments: TStatement;
     _CloseBracket: TTerminal;
   strict protected
     function InternalParse: boolean; override;
   public
-    procedure AfterConstruction; override;
-    procedure BeforeDestruction; override;
     procedure PrintSelf(APrinter: TPrinter); override;
     function Name: string; override;
+  end;
+
+  { Аргументы вызова подпрограммы }
+  TArguments = class(TStatementList)
+  strict protected
+    function ParseStatement(out AResult: TStatement): boolean; override;
+    function ParseBreak: boolean; override;
   end;
 
   { Аргумент функции }
@@ -81,7 +86,7 @@ end;
 
 function TExpression.Name: string;
 begin
-  Result := 'expression';
+  Result := '< expression >';
 end;
 
 procedure TExpression.PrintSelf(APrinter: TPrinter);
@@ -95,48 +100,28 @@ end;
 
 { TFunctionCall }
 
-procedure TFunctionCall.AfterConstruction;
-begin
-  inherited;
-  _Arguments := TList<TStatement>.Create;
-end;
-
-procedure TFunctionCall.BeforeDestruction;
-begin
-  inherited;
-  FreeAndNil(_Arguments);
-end;
-
 function TFunctionCall.InternalParse: boolean;
 var _Arg: TStatement;
 begin
-  Result := TQualifiedIdentifier.Parse(Self, Source, _Name);
-  if not Result then exit;
+  _Name := Identifier;
   _OpenBracket := Terminal('(');
-  if not Assigned(_OpenBracket) then exit;
-  repeat
-    _CloseBracket := Terminal(')');
-    if Assigned(_CloseBracket) then break;
-    if TArgument.Parse(Self, Source, _Arg) or
-       TUnexpectedToken.Parse(Self, Source, _Arg)
-      then _Arguments.Add(_Arg)
-      else exit;
-  until false;
-end;
-
-function TFunctionCall.Name: string;
-begin
-  Result := 'function call';
+  if not Assigned(_Name) or not Assigned(_OpenBracket) then exit(false);
+  TArguments.Parse(Self, Source, _Arguments);
+  _CloseBracket := Terminal(')');
 end;
 
 procedure TFunctionCall.PrintSelf(APrinter: TPrinter);
-var i: integer;
 begin
   APrinter.PrintItem(_Name);
   APrinter.Space;
   APrinter.PrintItem(_OpenBracket);
-  for i := 0 to _Arguments.Count - 1 do APrinter.PrintItem(_Arguments[i]);
+  APrinter.PrintItem(_Arguments);
   APrinter.PrintItem(_CloseBracket);
+end;
+
+function TFunctionCall.Name: string;
+begin
+  Result := '<function call>';
 end;
 
 { TArgument }
@@ -159,7 +144,7 @@ end;
 
 function TArgument.Name: string;
 begin
-  Result := 'argument';
+  Result := '< argument >';
 end;
 
 procedure TArgument.PrintSelf(APrinter: TPrinter);
@@ -171,6 +156,18 @@ begin
   APrinter.PrintItem(_Expression);
   APrinter.PrintItem(_Comma);
   if Assigned(_Comma) then APrinter.Space;
+end;
+
+{ TArguments }
+
+function TArguments.ParseStatement(out AResult: TStatement): boolean;
+begin
+  Result := TArgument.Parse(Self, Source, AResult);
+end;
+
+function TArguments.ParseBreak: boolean;
+begin
+  Result := Any([Terminal(';'), Terminal(')')]);
 end;
 
 end.

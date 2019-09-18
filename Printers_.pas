@@ -260,7 +260,7 @@ end;
 
 procedure TFormatterPrinter.Undent;
 begin
-  Dec(Shift, 4);
+  if Shift >= 4 then Dec(Shift, 4);
 end;
 
 procedure TFormatterPrinter.NextLine;

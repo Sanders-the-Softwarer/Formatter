@@ -53,6 +53,7 @@ type
   public
     constructor Create(const AValue: string; AChar: TPositionedChar); overload;
     constructor Create(AChar: TPositionedChar); overload;
+    constructor Create(const AValue: string; ALine, ACol: integer); overload;
     destructor Destroy; override;
     procedure AddCommentAbove(AComment: TComment);
     procedure AddCommentBelow(AComment: TComment);
@@ -86,12 +87,6 @@ type
   strict protected
     function TokenType: string; override;
   end;
-
-  { "Простой" (регистронезависимый) идентификатор }
-  TSimpleIdent = class(TIdent);
-
-  { "Квотированный" идентификатор }
-  TQuotedIdent = class(TIdent);
 
   { Ключевое слово }
   TKeyword = class(TToken)
@@ -157,6 +152,13 @@ constructor TToken.Create(const AValue: string; AChar: TPositionedChar);
 begin
   Create(AChar);
   FValue := AValue;
+end;
+
+constructor TToken.Create(const AValue: string; ALine, ACol: integer);
+begin
+  FValue := AValue;
+  FLine  := ALine;
+  FCol   := ACol;
 end;
 
 destructor TToken.Destroy;

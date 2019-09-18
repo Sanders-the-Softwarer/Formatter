@@ -29,11 +29,18 @@ unit Tokenizer;
   значимой лексеме. После реализации других частей кода это место будет
   доработано.
 
+  Для ключевого слова end предусмотрена особая обработка - делается попытка
+  соединить его со следующим ключевым словом в одну комбинацию (end if, end
+  loop и т. п.) Это позволяет проще и надёжнее описывать грамматику, в том
+  числе в случае ошибок парсинга анализ программного блока не завершается на
+  первом попавшемся end, что позволяет корректнее продолжить обработку.
+
 ------------------------------------------------------------------------------ }
 
 interface
 
-uses Classes, System.Character, System.SysUtils, System.Generics.Collections, Tokens, Streams;
+uses Classes, System.Character, System.SysUtils, System.Generics.Collections,
+  Tokens, Streams;
 
 type
 
@@ -49,6 +56,12 @@ type
     procedure Skip;
   strict protected
     function InternalEof: boolean; override;
+    function InternalNext: TToken; override;
+  end;
+
+  { Дополнительный класс склеивает комбинации типа 'end' 'if' в общий 'end if' }
+  TEndMerger = class(TNextStream<TToken, TToken>)
+  strict protected
     function InternalNext: TToken; override;
   end;
 
@@ -126,30 +139,29 @@ function TTokenizer.InternalNext: TToken;
   end;
 
   { Считывание идентификатора }
-  function ParseSimpleIdent: boolean;
-  var C: char;
+  function ParseIdent: boolean;
+  var
+    C: char;
   begin
     Restore;
-    Result := TCharacter.IsLetter(NextChar);
-    if not Result then exit;
     repeat
       C := NextChar;
-    until not TCharacter.IsLetter(C) and not TCharacter.IsDigit(C) and not (C in ['$', '#', '_']);
+      if C = '"' then
+        repeat
+          C := NextChar
+        until C in ['"', #0]
+      else if TCharacter.IsLetter(C) then
+        repeat
+          C := NextChar;
+        until not TCharacter.IsLetter(C) and not TCharacter.IsDigit(C) and not (C in ['$', '#', '_'])
+      else
+        begin
+          RefuseLastChar;
+          exit(false);
+        end;
+    until C <> '.';
     RefuseLastChar;
-  end;
-
-  { Считывание идентификатора в кавычках }
-  function ParseQuotedIdent: boolean;
-  var C: char;
-  begin
-    Restore;
-    Result := (NextChar = '"');
-    if not Result then exit;
-    repeat
-      C := NextChar;
-      if C = #0 then exit(false);
-    until C = '"';
-    ApplyLastChar;
+    Result := true;
   end;
 
   { Считывание строчного комментария }
@@ -246,12 +258,10 @@ begin
   { В зависимости от первого символа }
   if ParseWhitespace then
     Result := TWhitespace.Create(TokenValue, Start)
-  else if ParseSimpleIdent then
+  else if ParseIdent then
     if Keywords.IndexOf(TokenValue) >= 0
       then Result := TKeyword.Create(TokenValue, Start)
-      else Result := TSimpleIdent.Create(TokenValue, Start)
-  else if ParseQuotedIdent then
-    Result := TQuotedIdent.Create(TokenValue, Start)
+      else Result := TIdent.Create(TokenValue, Start)
   else if ParseLineComment then
     Result := TComment.Create(TokenValue, Start)
   else if ParseBracedComment then
@@ -344,6 +354,23 @@ begin
   end;
 end;
 
+{ TEndMerger }
+
+function TEndMerger.InternalNext: TToken;
+var
+  Additional: TToken;
+begin
+  Result := Transit(Source.Next);
+  if (Result is TKeyword) and SameText(Result.Value, 'end') and not Source.Eof then
+  begin
+    Source.SaveMark;
+    Additional := Source.Next;
+    if (Additional is TKeyword) and (SameText(Additional.Value, 'if') or SameText(Additional.Value, 'loop'))
+      then Result := TKeyword.Create(Result.Value + ' ' + Additional.Value, Result.Line, Result.Col)
+      else Source.Restore;
+  end;
+end;
+
 initialization
   Keywords := TStringList.Create;
   Keywords.Sorted := true;
@@ -357,46 +384,48 @@ initialization
   Keywords.Add('char');
   Keywords.Add('constant');
   Keywords.Add('create');
+  Keywords.Add('delete');
+  Keywords.Add('else');
   Keywords.Add('end');
+  Keywords.Add('false');
   Keywords.Add('function');
+  Keywords.Add('if');
   Keywords.Add('in');
+  Keywords.Add('insert');
   Keywords.Add('is');
+  Keywords.Add('merge');
+  Keywords.Add('nocopy');
+  Keywords.Add('null');
   Keywords.Add('or');
   Keywords.Add('out');
   Keywords.Add('package');
   Keywords.Add('procedure');
+  Keywords.Add('select');
   Keywords.Add('replace');
   Keywords.Add('return');
+  Keywords.Add('then');
+  Keywords.Add('true');
+  Keywords.Add('update');
 
 (*
   Keywords.Add('declare');
-  Keywords.Add('select');
   Keywords.Add('from');
   Keywords.Add('where');
   Keywords.Add('into');
   Keywords.Add('group');
   Keywords.Add('by');
   Keywords.Add('order');
-  Keywords.Add('null');
-  Keywords.Add('true');
-  Keywords.Add('false');
   Keywords.Add('within');
   Keywords.Add('cast');
   Keywords.Add('case');
   Keywords.Add('when');
-  Keywords.Add('then');
-  Keywords.Add('else');
-  Keywords.Add('if');
   Keywords.Add('elsif');
   Keywords.Add('exception');
   Keywords.Add('exceptions');
   Keywords.Add('keep');
   Keywords.Add('for');
   Keywords.Add('loop');
-  Keywords.Add('nocopy');
-  Keywords.Add('update');
   Keywords.Add('set');
-  Keywords.Add('delete');
   Keywords.Add('default');
   Keywords.Add('deterministic');
 *)

@@ -80,7 +80,7 @@ end;
 procedure TFormMain.UpdateData;
 var Statements: TBufferedStream<TStatement>;
 begin
-  Statements := TParser.Create(TCommentProcessor.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(edSrc.Text))))));
+  Statements := TParser.Create(TCommentProcessor.Create(TEndMerger.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(edSrc.Text)))))));
   try
     CurrentPrinter.BeginPrint;
     while not Statements.Eof do CurrentPrinter.PrintItem(Statements.Next);
