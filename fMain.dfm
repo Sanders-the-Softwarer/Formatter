@@ -3,7 +3,7 @@ object FormMain: TFormMain
   Top = 0
   Caption = 'Formatter'
   ClientHeight = 607
-  ClientWidth = 929
+  ClientWidth = 1128
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -29,7 +29,7 @@ object FormMain: TFormMain
     AlignWithMargins = True
     Left = 188
     Top = 110
-    Width = 736
+    Width = 935
     Height = 492
     Margins.Left = 0
     Margins.Top = 0
@@ -39,19 +39,15 @@ object FormMain: TFormMain
     Align = alClient
     TabOrder = 0
     OnChange = UpdateRequired
-    ExplicitLeft = 481
-    ExplicitTop = 0
-    ExplicitWidth = 448
-    ExplicitHeight = 607
+    ExplicitWidth = 736
     object tabTokenizer: TTabSheet
       Caption = #1051#1077#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
-      ExplicitWidth = 440
-      ExplicitHeight = 579
+      ExplicitWidth = 728
       object edTokenizer: TMemo
         AlignWithMargins = True
         Left = 5
         Top = 5
-        Width = 718
+        Width = 917
         Height = 454
         Margins.Left = 5
         Margins.Top = 5
@@ -61,20 +57,18 @@ object FormMain: TFormMain
         ReadOnly = True
         ScrollBars = ssVertical
         TabOrder = 0
-        ExplicitWidth = 430
-        ExplicitHeight = 569
+        ExplicitWidth = 718
       end
     end
     object tabParser: TTabSheet
       Caption = #1057#1080#1085#1090#1072#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
       ImageIndex = 1
-      ExplicitWidth = 440
-      ExplicitHeight = 579
+      ExplicitWidth = 728
       object treeParser: TTreeView
         AlignWithMargins = True
         Left = 5
         Top = 5
-        Width = 718
+        Width = 917
         Height = 454
         Margins.Left = 5
         Margins.Top = 5
@@ -83,20 +77,18 @@ object FormMain: TFormMain
         Align = alClient
         Indent = 19
         TabOrder = 0
-        ExplicitWidth = 430
-        ExplicitHeight = 569
+        ExplicitWidth = 718
       end
     end
     object tabResult: TTabSheet
       Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090
       ImageIndex = 2
-      ExplicitWidth = 440
-      ExplicitHeight = 579
+      ExplicitWidth = 728
       object edResult: TMemo
         AlignWithMargins = True
         Left = 5
         Top = 5
-        Width = 718
+        Width = 917
         Height = 454
         Margins.Left = 5
         Margins.Top = 5
@@ -112,8 +104,7 @@ object FormMain: TFormMain
         ReadOnly = True
         ScrollBars = ssBoth
         TabOrder = 0
-        ExplicitWidth = 430
-        ExplicitHeight = 569
+        ExplicitWidth = 718
       end
     end
   end
@@ -125,8 +116,6 @@ object FormMain: TFormMain
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitTop = 0
-    ExplicitHeight = 579
     object pgSrc: TPageControl
       AlignWithMargins = True
       Left = 5
@@ -140,12 +129,14 @@ object FormMain: TFormMain
       ActivePage = tabSrc
       Align = alClient
       TabOrder = 0
-      ExplicitWidth = 906
-      ExplicitHeight = 67
+      ExplicitLeft = 7
+      ExplicitTop = 15
+      ExplicitWidth = 176
+      ExplicitHeight = 36
       object tabSrc: TTabSheet
         Caption = #1048#1089#1093#1086#1076#1085#1080#1082
-        ExplicitWidth = 898
-        ExplicitHeight = 39
+        ExplicitWidth = 168
+        ExplicitHeight = 8
         object edSrc: TMemo
           AlignWithMargins = True
           Left = 5
@@ -165,8 +156,8 @@ object FormMain: TFormMain
           ParentFont = False
           TabOrder = 0
           OnChange = UpdateRequired
-          ExplicitWidth = 888
-          ExplicitHeight = 29
+          ExplicitWidth = 158
+          ExplicitHeight = 0
         end
       end
     end
@@ -175,7 +166,7 @@ object FormMain: TFormMain
     AlignWithMargins = True
     Left = 5
     Top = 5
-    Width = 919
+    Width = 1118
     Height = 100
     Margins.Left = 5
     Margins.Top = 5
@@ -184,13 +175,11 @@ object FormMain: TFormMain
     ActivePage = tabSettings
     Align = alTop
     TabOrder = 2
-    ExplicitLeft = 0
-    ExplicitTop = -7
-    ExplicitWidth = 929
+    ExplicitWidth = 919
     object tabSettings: TTabSheet
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
-      ExplicitWidth = 177
-      ExplicitHeight = 165
+      ExplicitTop = 27
+      ExplicitWidth = 911
       object Label1: TLabel
         Left = 5
         Top = 15
@@ -226,6 +215,77 @@ object FormMain: TFormMain
         TabOrder = 1
         Value = 3
         OnChange = UpdateRequired
+      end
+      object GroupBox1: TGroupBox
+        Left = 310
+        Top = 3
+        Width = 561
+        Height = 58
+        Caption = '  '#1042#1099#1088#1072#1074#1085#1080#1074#1072#1090#1100'  '
+        TabOrder = 2
+        object checkAlignSubroutineParams: TCheckBox
+          Left = 13
+          Top = 26
+          Width = 148
+          Height = 17
+          Caption = #1055#1072#1088#1072#1084#1077#1090#1088#1099' '#1087#1086#1076#1087#1088#1086#1075#1088#1072#1084#1084
+          Checked = True
+          State = cbChecked
+          TabOrder = 0
+          OnClick = UpdateRequired
+        end
+        object checkAlignVariables: TCheckBox
+          Left = 178
+          Top = 26
+          Width = 89
+          Height = 17
+          Caption = #1055#1077#1088#1077#1084#1077#1085#1085#1099#1077
+          Checked = True
+          State = cbChecked
+          TabOrder = 1
+          OnClick = UpdateRequired
+        end
+        object checkAlignCallArguments: TCheckBox
+          Left = 273
+          Top = 26
+          Width = 131
+          Height = 17
+          Caption = #1055#1072#1088#1072#1084#1077#1090#1088#1099' '#1074' '#1074#1099#1079#1086#1074#1072#1093
+          Checked = True
+          State = cbChecked
+          TabOrder = 2
+          OnClick = UpdateRequired
+        end
+        object checkAlignCommentInsert: TCheckBox
+          Left = 418
+          Top = 26
+          Width = 131
+          Height = 17
+          Caption = #1050#1086#1084#1084#1077#1085#1090#1072#1088#1080#1080' '#1074' INSERT'
+          Checked = True
+          State = cbChecked
+          TabOrder = 3
+          OnClick = UpdateRequired
+        end
+      end
+      object GroupBox2: TGroupBox
+        Left = 877
+        Top = 3
+        Width = 124
+        Height = 58
+        Caption = '  '#1044#1086#1087'. '#1082#1086#1084#1084#1077#1085#1090#1072#1088#1080#1080'  '
+        TabOrder = 3
+        object checkCommentInsert: TCheckBox
+          Left = 13
+          Top = 26
+          Width = 83
+          Height = 17
+          Caption = #1044#1083#1103' INSERT'
+          Checked = True
+          State = cbChecked
+          TabOrder = 0
+          OnClick = UpdateRequired
+        end
       end
     end
   end

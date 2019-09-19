@@ -22,10 +22,12 @@ unit PLSQL;
 
 interface
 
-uses SysUtils, Math, System.Generics.Collections, Streams, Parser, Tokens, Expressions,
-  Printers_, DML;
+uses Windows, SysUtils, Math, Streams, Tokens, Statements, Expressions, Printers_;
 
 type
+
+  { Class reference для TProgramBlock.GetHeaderClass }
+  TStatementClass = class of TStatement;
 
   { Программный блок - та или иная конструкция на основе begin .. end }
   TProgramBlock = class(TStatement)
@@ -62,8 +64,9 @@ type
 
   { Анонимный блок }
   TAnonymousBlock = class(TProgramBlock)
-  protected
+  strict protected
     function GetHeaderClass: TStatementClass; override;
+  public
     function Name: string; override;
   end;
 
@@ -103,6 +106,7 @@ type
   public
     procedure PrintSelf(APrinter: TPrinter); override;
     function Name: string; override;
+    function UpName: string;
     function MultiLine: boolean;
   end;
 
@@ -124,6 +128,7 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
+    function Name: string; override;
   end;
 
   { Подпрограмма }
@@ -248,8 +253,7 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-  public
-    class function ParseOperator(AParent: TStatement; Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+    function Name: string; override; final;
   end;
 
   { Присваивание }
@@ -262,7 +266,6 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
   end;
 
   { Вызов процедуры }
@@ -274,7 +277,6 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
   end;
 
   { Оператор return }
@@ -286,7 +288,6 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
   end;
 
   { Оператор null }
@@ -297,7 +298,6 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
   end;
 
   { Оператор raise }
@@ -308,7 +308,6 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
   end;
 
   { Условный оператор }
@@ -325,7 +324,6 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
   end;
 
   { Блок обработки исключений }
@@ -352,6 +350,8 @@ type
   end;
 
 implementation
+
+uses Parser;
 
 { TProgramBlock }
 
@@ -504,9 +504,14 @@ end;
 
 function TSubroutineHeaderBase.Name: string;
 begin
-  if Assigned(_Name)
-    then Result := _Name.Value
-    else Result := _Initial.Value;
+  Result := '< header >';
+end;
+
+function TSubroutineHeaderBase.UpName: string;
+begin
+  if Assigned(_Initial) then Result := _Initial.Value;
+  if Assigned(_Name) then Result := Result + ' ' + _Name.Value;
+  if Result = '' then Result := '< subroutine >' else Result := Trim(Result);
 end;
 
 function TSubroutineHeaderBase.MultiLine: boolean;
@@ -660,20 +665,20 @@ function TParamsDeclaration.ParamNameMax: integer;
 var i: integer;
 begin
   Result := 0;
-  if not (Parent as TSubroutineHeaderBase).MultiLine then exit;
-  for i := 0 to Count - 1 do
-    if Item(i) is TParamDeclaration then
-      Result := Math.Max(Result, TParamDeclaration(Item(i)).ParamNameLen);
+  if (Parent as TSubroutineHeaderBase).MultiLine and Settings.AlignSubroutineParams then
+    for i := 0 to Count - 1 do
+      if Item(i) is TParamDeclaration then
+        Result := Math.Max(Result, TParamDeclaration(Item(i)).ParamNameLen);
 end;
 
 function TParamsDeclaration.ModifiersMax: integer;
 var i: integer;
 begin
   Result := 0;
-  if not (Parent as TSubroutineHeaderBase).MultiLine then exit;
-  for i := 0 to Count - 1 do
-    if Item(i) is TParamDeclaration then
-      Result := Math.Max(Result, TParamDeclaration(Item(i)).ModifiersLen);
+  if (Parent as TSubroutineHeaderBase).MultiLine and Settings.AlignSubroutineParams then
+    for i := 0 to Count - 1 do
+      if Item(i) is TParamDeclaration then
+        Result := Math.Max(Result, TParamDeclaration(Item(i)).ModifiersLen);
 end;
 
 { TDeclarations }
@@ -763,26 +768,13 @@ function TVariableDeclarations.MaxNameLen: integer;
 var i: integer;
 begin
   Result := 0;
-  for i := 0 to Count - 1 do
-    if Item(i) is TVariableDeclaration then
-      Result := Math.Max(Result, TVariableDeclaration(Item(i)).NameLen);
+  if Settings.AlignVariables then
+    for i := 0 to Count - 1 do
+      if Item(i) is TVariableDeclaration then
+        Result := Math.Max(Result, TVariableDeclaration(Item(i)).NameLen);
 end;
 
 { TOperator }
-
-class function TOperator.ParseOperator(AParent: TStatement;
-  Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-begin
-  Result :=
-    TAssignment.Parse(AParent, Tokens, AResult) or
-    TReturn.Parse(AParent, Tokens, AResult) or
-    TNull.Parse(AParent, Tokens, AResult) or
-    TRaise.Parse(AParent, Tokens, AResult) or
-    TIf.Parse(AParent, Tokens, AResult) or
-    TDML.Parse(AParent, Tokens, AResult) or
-    TProcedureCall.Parse(AParent, Tokens, AResult) or
-    TAnonymousBlock.Parse(AParent, Tokens, AResult);
-end;
 
 function TOperator.InternalParse: boolean;
 begin
@@ -795,6 +787,11 @@ begin
   APrinter.SupressSpace;
   APrinter.PrintItem(_Semicolon);
   APrinter.NextLine;
+end;
+
+function TOperator.Name: string;
+begin
+  Result := '< ' + LowerCase(ClassName.SubString(1)) + ' >';
 end;
 
 { TProcedureCall }
@@ -810,11 +807,6 @@ begin
   end;
   Result := Assigned(_Ident) or Assigned(_FunctionCall);
   inherited;
-end;
-
-function TProcedureCall.Name: string;
-begin
-  Result := '< procedure call >';
 end;
 
 procedure TProcedureCall.PrintSelf(APrinter: TPrinter);
@@ -834,11 +826,6 @@ begin
   if not Result then exit;
   TExpression.Parse(Self, Source, _Expression);
   inherited;
-end;
-
-function TAssignment.Name: string;
-begin
-  Result := '< assignment >';
 end;
 
 procedure TAssignment.PrintSelf(APrinter: TPrinter);
@@ -862,11 +849,6 @@ begin
   inherited;
 end;
 
-function TReturn.Name: string;
-begin
-  Name := 'return';
-end;
-
 procedure TReturn.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Return);
@@ -884,7 +866,11 @@ end;
 
 function TSubroutine.Name: string;
 begin
-  Result := '< subroutine >';
+  Result := '< ';
+  if Header is TSubroutineHeader
+    then Result := Result + TSubroutineHeader(Header).UpName
+    else Result := 'subroutine';
+  Result := Result + ' >';
 end;
 
 { TSubroutineHeader }
@@ -922,11 +908,16 @@ begin
   if MultiLine then APrinter.Undent;
 end;
 
+function TSubroutineForwardDeclaration.Name: string;
+begin
+  Result := '< ' + UpName + ' >';
+end;
+
 { TOperators }
 
 function TOperators.ParseStatement(out AResult: TStatement): boolean;
 begin
-  Result := TOperator.ParseOperator(Self, Source, AResult);
+  Result := TParser.ParseOperator(Self, Source, AResult);
 end;
 
 function TOperators.ParseBreak: boolean;
@@ -953,11 +944,6 @@ begin
   _EndIf := Keyword('end if');
   Result := true;
   inherited;
-end;
-
-function TIf.Name: string;
-begin
-  Result := 'if';
 end;
 
 procedure TIf.PrintSelf(APrinter: TPrinter);
@@ -991,9 +977,13 @@ end;
 { TAnonymousHeader }
 
 function TAnonymousHeader.InternalParse: boolean;
+var P: TMark;
 begin
   _Declare := Keyword('declare');
-  Result := Assigned(_Declare);
+  if Assigned(_Declare) then exit(true);
+  P := Source.Mark;
+  Result := Assigned(Keyword('begin'));
+  Source.Restore(P);
 end;
 
 procedure TAnonymousHeader.PrintSelf(APrinter: TPrinter);
@@ -1075,11 +1065,6 @@ begin
   inherited;
 end;
 
-function TNull.Name: string;
-begin
-  Result := '< null >' ;
-end;
-
 procedure TNull.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Null);
@@ -1093,11 +1078,6 @@ begin
   _Raise := Keyword('raise');
   Result := Assigned(_Raise);
   inherited;
-end;
-
-function TRaise.Name: string;
-begin
-  Result := '< raise >';
 end;
 
 procedure TRaise.PrintSelf(APrinter: TPrinter);

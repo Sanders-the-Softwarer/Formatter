@@ -12,7 +12,7 @@ unit Expressions;
 
 interface
 
-uses SysUtils, Math, System.Generics.Collections, Tokens, Parser, Printers_;
+uses SysUtils, Math, Tokens, Statements, Printers_;
 
 type
 
@@ -32,6 +32,7 @@ type
   public
     procedure PrintSelf(APrinter: TPrinter); override;
     function Name: string; override;
+    function Ident: string;
   end;
 
   { Элемент выражения }
@@ -47,6 +48,7 @@ type
   public
     procedure PrintSelf(APrinter: TPrinter); override;
     function Name: string; override;
+    function Ident: string;
   end;
 
   { Вызов функции }
@@ -112,6 +114,13 @@ begin
   Result := '< term >';
 end;
 
+function TTerm.Ident: string;
+begin
+  if Assigned(_Identifier)
+    then Result := _Identifier.Value
+    else Result := '';
+end;
+
 procedure TTerm.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Number);
@@ -142,6 +151,13 @@ end;
 function TExpression.Name: string;
 begin
   Result := '< expression >';
+end;
+
+function TExpression.Ident: string;
+begin
+  if _Term is TTerm
+    then Result := TTerm(_Term).Ident
+    else Result := '';
 end;
 
 procedure TExpression.PrintSelf(APrinter: TPrinter);
@@ -265,6 +281,7 @@ function TArguments.MaxIdentLen: integer;
 var i: integer;
 begin
   Result := 0;
+  if not Settings.AlignCallArguments then exit;
   for i := 0 to Count - 1 do
     if Item(i) is TArgument then
       Result := Math.Max(Result, TArgument(Item(i)).IdentLen);

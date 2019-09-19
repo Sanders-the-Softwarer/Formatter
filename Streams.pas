@@ -208,7 +208,7 @@ end;
 
 constructor TStringStream.Create(const AValue: string);
 begin
-  FValue := AValue;
+  FValue := AValue + ' ';
 end;
 
 function TStringStream.InternalEof: boolean;

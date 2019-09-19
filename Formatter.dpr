@@ -10,7 +10,9 @@ uses
   Printers_ in 'Printers_.pas',
   PLSQL in 'PLSQL.pas',
   Expressions in 'Expressions.pas',
-  DML in 'DML.pas';
+  DML in 'DML.pas',
+  Statements in 'Statements.pas',
+  DDL in 'DDL.pas';
 
 {$R *.res}
 

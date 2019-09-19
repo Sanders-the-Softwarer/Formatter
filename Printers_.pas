@@ -39,6 +39,7 @@ type
     procedure NextLine; virtual; abstract;
     procedure PaddingFrom; virtual; abstract;
     procedure PaddingTo(ALen: integer); virtual; abstract;
+    procedure PrintSpecialComment(AValue: string); virtual; abstract;
     procedure SpaceOrNextLine(AMultiLine: boolean);
   public
     class function CreateTokenizerPrinter(AStrings: TStrings): TPrinter;
@@ -46,9 +47,20 @@ type
     class function CreateFormatterPrinter(AStrings: TStrings): TPrinter;
   end;
 
+  TParserSettings = class
+  public
+    DeclarationSingleLineParamLimit: integer;
+    ArgumentSingleLineParamLimit: integer;
+    AlignSubroutineParams: boolean;
+    AlignVariables: boolean;
+    AlignCallArguments: boolean;
+    AlignCommentInsert: boolean;
+    CommentInsert: boolean;
+  end;
+
 implementation
 
-uses Tokens, Parser;
+uses Tokens, Statements;
 
 type
 
@@ -66,6 +78,7 @@ type
     procedure NextLine; override;
     procedure PaddingFrom; override;
     procedure PaddingTo(ALen: integer); override;
+    procedure PrintSpecialComment(AValue: string); override;
   end;
 
   TFormatterPrinter = class(TBasePrinter)
@@ -90,6 +103,7 @@ type
     procedure NextLine; override;
     procedure PaddingFrom; override;
     procedure PaddingTo(ALen: integer); override;
+    procedure PrintSpecialComment(AValue: string); override;
   end;
 
   TTokenizerPrinter = class(TBasePrinter)
@@ -161,6 +175,11 @@ begin
 end;
 
 procedure TBasePrinter.PrintToken(AToken: TToken);
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.PrintSpecialComment(AValue: string);
 begin
   { ничего не делаем }
 end;
@@ -295,6 +314,14 @@ var i: integer;
 begin
   for i := Builder.Length to PadPos + ALen - 1 do Builder.Append(' ');
   SPC := false;
+end;
+
+procedure TFormatterPrinter.PrintSpecialComment(AValue: string);
+var T: TToken;
+begin
+  T := TToken.Create('/*/ ' + AValue + ' /*/', -1, -1);
+  PrintToken(T);
+  T.Free;
 end;
 
 { TTokenizerPrinter }

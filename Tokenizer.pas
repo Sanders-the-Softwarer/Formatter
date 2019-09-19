@@ -416,6 +416,7 @@ initialization
   Keywords.Add('function');
   Keywords.Add('if');
   Keywords.Add('in');
+  Keywords.Add('into');
   Keywords.Add('insert');
   Keywords.Add('is');
   Keywords.Add('like');
@@ -429,11 +430,13 @@ initialization
   Keywords.Add('package');
   Keywords.Add('procedure');
   Keywords.Add('select');
+  Keywords.Add('raise');
   Keywords.Add('replace');
   Keywords.Add('return');
   Keywords.Add('then');
   Keywords.Add('true');
   Keywords.Add('update');
+  Keywords.Add('values');
   Keywords.Add('when');
   Keywords.Add('xor');
 

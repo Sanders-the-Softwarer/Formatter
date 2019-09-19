@@ -27,6 +27,13 @@ type
     Label1: TLabel;
     Label2: TLabel;
     edArgumentSingleLineParamLimit: TSpinEdit;
+    GroupBox1: TGroupBox;
+    checkAlignSubroutineParams: TCheckBox;
+    checkAlignVariables: TCheckBox;
+    checkAlignCallArguments: TCheckBox;
+    GroupBox2: TGroupBox;
+    checkCommentInsert: TCheckBox;
+    checkAlignCommentInsert: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -44,7 +51,7 @@ var
 
 implementation
 
-uses Streams, Tokens, Tokenizer;
+uses Streams, Tokens, Statements, Tokenizer;
 
 {$R *.dfm}
 
@@ -91,6 +98,11 @@ var Statements: TBufferedStream<TStatement>;
 begin
   Settings.DeclarationSingleLineParamLimit := edDeclarationSingleLineParamLimit.Value;
   Settings.ArgumentSingleLineParamLimit    := edArgumentSingleLineParamLimit.Value;
+  Settings.AlignSubroutineParams           := checkAlignSubroutineParams.Checked;
+  Settings.AlignVariables                  := checkAlignVariables.Checked;
+  Settings.AlignCallArguments              := checkAlignCallArguments.Checked;
+  Settings.AlignCommentInsert              := checkAlignCommentInsert.Checked;
+  Settings.CommentInsert                   := checkCommentInsert.Checked;
   Statements := TParser.Create(TCommentProcessor.Create(TMerger.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(edSrc.Text)))))), Settings);
   try
     CurrentPrinter.BeginPrint;
