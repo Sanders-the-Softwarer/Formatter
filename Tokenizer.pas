@@ -393,6 +393,7 @@ initialization
   Keywords.Add('in');
   Keywords.Add('insert');
   Keywords.Add('is');
+  Keywords.Add('loop');
   Keywords.Add('merge');
   Keywords.Add('nocopy');
   Keywords.Add('null');
@@ -424,7 +425,6 @@ initialization
   Keywords.Add('exceptions');
   Keywords.Add('keep');
   Keywords.Add('for');
-  Keywords.Add('loop');
   Keywords.Add('set');
   Keywords.Add('default');
   Keywords.Add('deterministic');

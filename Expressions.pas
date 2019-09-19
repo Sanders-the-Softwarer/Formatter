@@ -12,7 +12,7 @@ unit Expressions;
 
 interface
 
-uses SysUtils, System.Generics.Collections, Tokens, Parser, Printers_;
+uses SysUtils, Math, System.Generics.Collections, Tokens, Parser, Printers_;
 
 type
 
@@ -43,6 +43,7 @@ type
   public
     procedure PrintSelf(APrinter: TPrinter); override;
     function Name: string; override;
+    function MultiLine: boolean;
   end;
 
   { Аргументы вызова подпрограммы }
@@ -50,6 +51,8 @@ type
   strict protected
     function ParseStatement(out AResult: TStatement): boolean; override;
     function ParseBreak: boolean; override;
+  public
+    function MaxIdentLen: integer;
   end;
 
   { Аргумент функции }
@@ -64,6 +67,7 @@ type
   public
     procedure PrintSelf(APrinter: TPrinter); override;
     function Name: string; override;
+    function IdentLen: integer;
   end;
 
 implementation
@@ -101,27 +105,40 @@ end;
 { TFunctionCall }
 
 function TFunctionCall.InternalParse: boolean;
-var _Arg: TStatement;
 begin
   _Name := Identifier;
   _OpenBracket := Terminal('(');
   if not Assigned(_Name) or not Assigned(_OpenBracket) then exit(false);
   TArguments.Parse(Self, Source, _Arguments);
   _CloseBracket := Terminal(')');
+  Result := true;
 end;
 
 procedure TFunctionCall.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Name);
-  APrinter.Space;
+  APrinter.SpaceOrNextLine(MultiLine);
+  APrinter.Indent;
   APrinter.PrintItem(_OpenBracket);
+  APrinter.SpaceOrNextLine(MultiLine);
+  APrinter.SupressSpace;
+  APrinter.Indent;
   APrinter.PrintItem(_Arguments);
+  APrinter.Undent;
+  APrinter.SpaceOrNextLine(MultiLine);
+  APrinter.SupressSpace;
   APrinter.PrintItem(_CloseBracket);
+  APrinter.Undent;
 end;
 
 function TFunctionCall.Name: string;
 begin
   Result := '<function call>';
+end;
+
+function TFunctionCall.MultiLine: boolean;
+begin
+  Result := Assigned(_Arguments) and ((_Arguments as TStatementList).Count > 2);
 end;
 
 { TArgument }
@@ -147,15 +164,27 @@ begin
   Result := '< argument >';
 end;
 
+function TArgument.IdentLen: integer;
+begin
+  if Assigned(_Ident) and TFunctionCall(Parent.Parent).MultiLine
+    then Result := Length(_Ident.Value)
+    else Result := 0;
+end;
+
 procedure TArgument.PrintSelf(APrinter: TPrinter);
 begin
+  APrinter.PaddingFrom;
   APrinter.PrintItem(_Ident);
-  APrinter.Space;
+  if Assigned(_Ident) then
+  begin
+    APrinter.PaddingTo((Parent as TArguments).MaxIdentLen);
+    APrinter.Space;
+  end;
   APrinter.PrintItem(_Assignment);
-  APrinter.Space;
+  if Assigned(_Assignment) then APrinter.Space;
   APrinter.PrintItem(_Expression);
   APrinter.PrintItem(_Comma);
-  if Assigned(_Comma) then APrinter.Space;
+  if Assigned(_Comma) then APrinter.SpaceOrNextLine(TFunctionCall(Parent.Parent).MultiLine);
 end;
 
 { TArguments }
@@ -168,6 +197,15 @@ end;
 function TArguments.ParseBreak: boolean;
 begin
   Result := Any([Terminal(';'), Terminal(')')]);
+end;
+
+function TArguments.MaxIdentLen: integer;
+var i: integer;
+begin
+  Result := 0;
+  for i := 0 to Count - 1 do
+    if Item(i) is TArgument then
+      Result := Math.Max(Result, TArgument(Item(i)).IdentLen);
 end;
 
 end.

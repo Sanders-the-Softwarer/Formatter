@@ -86,7 +86,6 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
     function Name: string; override;
     function MultiLine: boolean;
-    procedure MultiLineSpace(APrinter: TPrinter);
   end;
 
   { Заголовок подпрограммы }
@@ -417,13 +416,6 @@ begin
   _Deterministic := Keyword('deterministic');
 end;
 
-procedure TSubroutineHeaderBase.MultiLineSpace(APrinter: TPrinter);
-begin
-  if MultiLine
-    then APrinter.NextLine
-    else APrinter.Space;
-end;
-
 procedure TSubroutineHeaderBase.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Initial);
@@ -436,11 +428,11 @@ begin
     APrinter.Indent;
   end;
   APrinter.PrintItem(_Params);
-  if Assigned(_Return) then MultiLineSpace(APrinter);
+  if Assigned(_Return) then APrinter.SpaceOrNextLine(MultiLine);
   APrinter.PrintItem(_Return);
   APrinter.Space;
   APrinter.PrintItem(_ReturnType);
-  if Assigned(_Deterministic) then MultiLineSpace(APrinter);
+  if Assigned(_Deterministic) then APrinter.SpaceOrNextLine(MultiLine);
   APrinter.PrintItem(_Deterministic);
 end;
 
@@ -546,7 +538,7 @@ begin
   APrinter.Space;
   APrinter.PrintItem(_ParamType);
   APrinter.PrintItem(_Comma);
-  (Parent.Parent as TSubroutineHeaderBase).MultiLineSpace(APrinter);
+  APrinter.SpaceOrNextLine((Parent.Parent as TSubroutineHeaderBase).MultiLine);
 end;
 
 function TParamDeclaration.ParamNameLen: integer;
@@ -829,7 +821,7 @@ end;
 procedure TSubroutineHeader.PrintSelf(APrinter: TPrinter);
 begin
   inherited;
-  MultiLineSpace(APrinter);
+  APrinter.SpaceOrNextLine(MultiLine);
   APrinter.PrintItem(_Is);
   APrinter.NextLine;
   if MultiLine then APrinter.Undent;

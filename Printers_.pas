@@ -39,6 +39,7 @@ type
     procedure NextLine; virtual; abstract;
     procedure PaddingFrom; virtual; abstract;
     procedure PaddingTo(ALen: integer); virtual; abstract;
+    procedure SpaceOrNextLine(AMultiLine: boolean);
   public
     class function CreateTokenizerPrinter(AStrings: TStrings): TPrinter;
     class function CreateSyntaxTreePrinter(ATreeView: TTreeView): TPrinter;
@@ -128,6 +129,11 @@ end;
 class function TPrinter.CreateTokenizerPrinter(AStrings: TStrings): TPrinter;
 begin
   Result := TTokenizerPrinter.Create(AStrings);
+end;
+
+procedure TPrinter.SpaceOrNextLine(AMultiLine: boolean);
+begin
+  if AMultiLine then NextLine else Space;
 end;
 
 { TBasePrinter }
