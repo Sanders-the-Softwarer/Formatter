@@ -15,11 +15,20 @@ interface
 uses Windows, System.SysUtils, System.Generics.Collections, Math, Streams, Tokens, Printers_;
 
 type
+  TParserSettings = class
+  public
+    DeclarationSingleLineParamLimit: integer;
+    ArgumentSingleLineParamLimit: integer;
+  end;
+
+type
 
   { Базовый класс синтаксических конструкций }
   TStatement = class
   strict private
     FParent: TStatement;
+    FSettings: TParserSettings;
+    function GetSettings: TParserSettings;
   strict protected
     Source: TBufferedStream<TToken>;
     function InternalParse: boolean; virtual; abstract;
@@ -29,7 +38,8 @@ type
     function Identifier: TIdent;
     function Number: TNumber;
     function Literal: TLiteral;
-    function Terminal(const ATerminal: string): TTerminal;
+    function Terminal(const ATerminal: string): TTerminal; overload;
+    function Terminal(const ATerminals: array of string): TTerminal; overload;
   public
     class function Parse(AParent: TStatement; Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
   public
@@ -37,9 +47,16 @@ type
     function Name: string; virtual;
     procedure PrintSelf(APrinter: TPrinter); virtual; abstract;
     property Parent: TStatement read FParent;
+    property Settings: TParserSettings read GetSettings write FSettings;
   end;
 
   TStatementClass = class of TStatement;
+
+  { "Пустое" выражение }
+  TEOFStatement = class(TStatement)
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
 
   { Базовый класс для списков однотипных конструкций (переменные, операторы и т. п. }
   TStatementList = class(TStatement)
@@ -60,8 +77,12 @@ type
 
   { Синтаксический анализатор }
   TParser = class(TNextStream<TToken, TStatement>)
+  strict private
+    Settings: TParserSettings;
   strict protected
     function InternalNext: TStatement; override;
+  public
+    constructor Create(AStream: TBufferedStream<TToken>; ASettings: TParserSettings);
   end;
 
   { Неожиданная лексема - класс для конструкций, которые не удалось разобрать }
@@ -94,13 +115,22 @@ uses DML, PLSQL;
 
 { TParser }
 
+constructor TParser.Create(AStream: TBufferedStream<TToken>; ASettings: TParserSettings);
+begin
+  inherited Create(AStream);
+  Settings := ASettings;
+end;
+
 function TParser.InternalNext: TStatement;
 begin
-  if not TCreateStatement.Parse(nil, Source, Result) and
-     not TPackage.Parse(nil, Source, Result) and
-     not TSubroutine.Parse(nil, Source, Result) and
-     not TDML.Parse(nil, Source, Result) then
-    TUnexpectedToken.Parse(nil, Source, Result);
+  if TCreateStatement.Parse(nil, Source, Result) or
+     TPackage.Parse(nil, Source, Result) or
+     TSubroutine.Parse(nil, Source, Result) or
+     TAnonymousBlock.Parse(nil, Source, Result) or
+     TDML.Parse(nil, Source, Result) or
+     TUnexpectedToken.Parse(nil, Source, Result)
+    then Result.Settings := Self.Settings
+    else Result := TEOFStatement.Create(nil, Source);
 end;
 
 { TUnexpectedToken }
@@ -222,16 +252,32 @@ begin
 end;
 
 function TStatement.Terminal(const ATerminal: string): TTerminal;
+begin
+  Result := Terminal([ATerminal]);
+end;
+
+function TStatement.Terminal(const ATerminals: array of string): TTerminal;
 var
   Token: TToken;
   P: TMark;
+  i: integer;
 begin
   Result := nil;
   P := Source.Mark;
   Token := NextToken;
-  if (Token is TTerminal) and SameText(ATerminal, Token.Value)
-    then Result := Token as TTerminal
-    else Source.Restore(P);
+  if Token is TTerminal then
+    for i := Low(ATerminals) to High(ATerminals) do
+      if SameText(Token.Value, ATerminals[i]) then
+        Result := Token as TTerminal;
+  if not Assigned(Result) then
+    Source.Restore(P);
+end;
+
+function TStatement.GetSettings: TParserSettings;
+begin
+  if Assigned(Parent)
+    then Result := Parent.Settings
+    else Result := FSettings;
 end;
 
 { TStatementList }
@@ -331,6 +377,13 @@ begin
   APrinter.PrintItem(_Replace);
   APrinter.Space;
   APrinter.PrintItem(_What);
+end;
+
+{ TEOFStatement }
+
+procedure TEOFStatement.PrintSelf(APrinter: TPrinter);
+begin
+  { ничего не делаем }
 end;
 
 end.

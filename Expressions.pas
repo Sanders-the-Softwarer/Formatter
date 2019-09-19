@@ -19,6 +19,24 @@ type
   { Выражение }
   TExpression = class(TStatement)
   strict private
+    _OpenBracket: TTerminal;
+    _PrefixOperation: TTerminal;
+    _Term: TStatement;
+    _InfixOperation: TTerminal;
+    _InfixOperation2: TKeyword;
+    _Rest: TStatement;
+    _PostfixOperation: TKeyword;
+    _CloseBracket: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function Name: string; override;
+  end;
+
+  { Элемент выражения }
+  TTerm = class(TStatement)
+  strict private
     _Number: TNumber;
     _Literal: TLiteral;
     _Identifier: TIdent;
@@ -52,6 +70,7 @@ type
     function ParseStatement(out AResult: TStatement): boolean; override;
     function ParseBreak: boolean; override;
   public
+    function Name: string; override;
     function MaxIdentLen: integer;
   end;
 
@@ -74,7 +93,7 @@ implementation
 
 { TExpression }
 
-function TExpression.InternalParse: boolean;
+function TTerm.InternalParse: boolean;
 begin
   Result := false;
   _Number := Number;
@@ -88,6 +107,38 @@ begin
   if Assigned(_Identifier) then exit(true);
 end;
 
+function TTerm.Name: string;
+begin
+  Result := '< term >';
+end;
+
+procedure TTerm.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Number);
+  APrinter.PrintItem(_Literal);
+  APrinter.PrintItem(_Identifier);
+  APrinter.PrintItem(_KeywordValue);
+  APrinter.PrintItem(_FunctionCall);
+end;
+
+{ TExpression }
+
+function TExpression.InternalParse: boolean;
+begin
+  { Выражение распознано, если распознан первый аргумент }
+  _OpenBracket := Terminal('(');
+  _PrefixOperation := Terminal('-');
+  if not TTerm.Parse(Self, Source, _Term) then exit(false);
+  Result := true;
+  _InfixOperation := Terminal(['+', '-', '*', '/', '||', '=', '<', '>', '<=', '>=', '<>', '!=', '^=']);
+  if not Assigned(_InfixOperation) then
+    _InfixOperation2 := Keyword(['and', 'or', 'xor', 'like', 'not like']);
+  if Assigned(_InfixOperation) or Assigned(_InfixOperation2)
+    then TExpression.Parse(Self, Source, _Rest)
+    else _PostfixOperation := Keyword(['is null', 'is not null']);
+  if Assigned(_OpenBracket) then _CloseBracket := Terminal(')');
+end;
+
 function TExpression.Name: string;
 begin
   Result := '< expression >';
@@ -95,11 +146,17 @@ end;
 
 procedure TExpression.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Number);
-  APrinter.PrintItem(_Literal);
-  APrinter.PrintItem(_Identifier);
-  APrinter.PrintItem(_KeywordValue);
-  APrinter.PrintItem(_FunctionCall);
+  APrinter.PrintItem(_OpenBracket);
+  APrinter.PrintItem(_PrefixOperation);
+  APrinter.PrintItem(_Term);
+  APrinter.Space;
+  APrinter.PrintItem(_InfixOperation);
+  APrinter.PrintItem(_InfixOperation2);
+  APrinter.Space;
+  APrinter.PrintItem(_PostfixOperation);
+  APrinter.PrintItem(_Rest);
+  APrinter.SupressSpace;
+  APrinter.PrintItem(_CloseBracket);
 end;
 
 { TFunctionCall }
@@ -138,7 +195,7 @@ end;
 
 function TFunctionCall.MultiLine: boolean;
 begin
-  Result := Assigned(_Arguments) and ((_Arguments as TStatementList).Count > 2);
+  Result := Assigned(_Arguments) and ((_Arguments as TStatementList).Count > Settings.ArgumentSingleLineParamLimit);
 end;
 
 { TArgument }
@@ -151,8 +208,8 @@ begin
   _Assignment := Terminal('=>');
   if not Assigned(_Ident) or not Assigned(_Assignment) then
   begin
-    FreeAndNil(_Ident);
-    FreeAndNil(_Assignment);
+    _Ident := nil;
+    _Assignment := nil;
     Source.Restore(P);
   end;
   Result := TExpression.Parse(Self, Source, _Expression);
@@ -197,6 +254,11 @@ end;
 function TArguments.ParseBreak: boolean;
 begin
   Result := Any([Terminal(';'), Terminal(')')]);
+end;
+
+function TArguments.Name: string;
+begin
+  Result := '< arguments >';
 end;
 
 function TArguments.MaxIdentLen: integer;

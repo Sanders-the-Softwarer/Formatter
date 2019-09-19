@@ -34,7 +34,7 @@ type
     _Declarations: TStatement;
     _Begin: TKeyword;
     _Operators: TStatement;
-    _Exceptions: TKeyword;
+    _Exception: TKeyword;
     _ExceptionHandlers: TStatement;
     _End: TKeyword;
     _EndName: TIdent;
@@ -46,6 +46,24 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
+    function Name: string; override;
+  end;
+
+  { Заголовок анонимного блока }
+  TAnonymousHeader = class(TStatement)
+  strict private
+    _Declare: TKeyword;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function Name: string; override;
+  end;
+
+  { Анонимный блок }
+  TAnonymousBlock = class(TProgramBlock)
+  protected
+    function GetHeaderClass: TStatementClass; override;
     function Name: string; override;
   end;
 
@@ -251,6 +269,7 @@ type
   TProcedureCall = class(TOperator)
   strict private
     _FunctionCall: TStatement;
+    _Ident: TIdent;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -263,6 +282,28 @@ type
   strict private
     _Return: TKeyword;
     _Value: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function Name: string; override;
+  end;
+
+  { Оператор null }
+  TNull = class(TOperator)
+  strict private
+    _Null: TKeyword;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function Name: string; override;
+  end;
+
+  { Оператор raise }
+  TRaise = class(TOperator)
+  strict private
+    _Raise: TKeyword;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -287,6 +328,29 @@ type
     function Name: string; override;
   end;
 
+  { Блок обработки исключений }
+  TExceptionHandler = class(TStatement)
+  strict private
+    _When: TKeyword;
+    _Condition: TStatement;
+    _Then: TKeyword;
+    _Statements: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function Name: string; override;
+  end;
+
+  { Список обработчиков исключений }
+  TExceptionHandlers = class(TStatementList)
+  strict protected
+    function ParseStatement(out AResult: TStatement): boolean; override;
+    function ParseBreak: boolean; override;
+  public
+    function Name: string; override;
+  end;
+
 implementation
 
 { TProgramBlock }
@@ -302,8 +366,8 @@ begin
   _Begin := Keyword('begin');
   if Assigned(_Begin) then TOperators.Parse(Self, Source, _Operators);
   { Если нашли exception, распознаём обработчики исключений }
-{  _Exceptions := Keyword('exceptions');
-  if Assigned(_Exceptions) then TExceptionHandlers.Parse(Self, Source, _ExceptionHandlers);}
+  _Exception := Keyword('exception');
+  if Assigned(_Exception) then TExceptionHandlers.Parse(Self, Source, _ExceptionHandlers);
   { end и завершающие символы после него }
   _End := Keyword('end');
   if Assigned(_End) then
@@ -331,13 +395,15 @@ begin
   APrinter.Indent;
   APrinter.PrintItem(_Operators);
   APrinter.Undent;
-  APrinter.PrintItem(_Exceptions);
+  APrinter.PrintItem(_Exception);
+  APrinter.NextLine;
   APrinter.Indent;
   APrinter.PrintItem(_ExceptionHandlers);
   APrinter.Undent;
   APrinter.PrintItem(_End);
   APrinter.Space;
   APrinter.PrintItem(_EndName);
+  APrinter.SupressSpace;
   APrinter.PrintItem(_Semicolon);
   APrinter.NextLine;
   APrinter.PrintItem(_Slash);
@@ -445,7 +511,7 @@ end;
 
 function TSubroutineHeaderBase.MultiLine: boolean;
 begin
-  Result := Assigned(_Params) and ((_Params as TStatementList).Count >= 3);
+  Result := Assigned(_Params) and ((_Params as TStatementList).Count > Settings.DeclarationSingleLineParamLimit);
 end;
 
 { TTypeRef }
@@ -710,9 +776,12 @@ begin
   Result :=
     TAssignment.Parse(AParent, Tokens, AResult) or
     TReturn.Parse(AParent, Tokens, AResult) or
+    TNull.Parse(AParent, Tokens, AResult) or
+    TRaise.Parse(AParent, Tokens, AResult) or
     TIf.Parse(AParent, Tokens, AResult) or
     TDML.Parse(AParent, Tokens, AResult) or
-    TProcedureCall.Parse(AParent, Tokens, AResult);
+    TProcedureCall.Parse(AParent, Tokens, AResult) or
+    TAnonymousBlock.Parse(AParent, Tokens, AResult);
 end;
 
 function TOperator.InternalParse: boolean;
@@ -731,19 +800,27 @@ end;
 { TProcedureCall }
 
 function TProcedureCall.InternalParse: boolean;
+var P: TMark;
 begin
-  Result := TFunctionCall.Parse(Self, Source, _FunctionCall);
+  P := Source.Mark;
+  if not TFunctionCall.Parse(Self, Source, _FunctionCall) then
+  begin
+    Source.Restore(P);
+    _Ident := Identifier;
+  end;
+  Result := Assigned(_Ident) or Assigned(_FunctionCall);
   inherited;
 end;
 
 function TProcedureCall.Name: string;
 begin
-  Result := 'procedure call';
+  Result := '< procedure call >';
 end;
 
 procedure TProcedureCall.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_FunctionCall);
+  APrinter.PrintItem(_Ident);
   inherited;
 end;
 
@@ -854,7 +931,7 @@ end;
 
 function TOperators.ParseBreak: boolean;
 begin
-  Result := Any([Keyword(['end', 'exceptions'])]);
+  Result := Any([Keyword(['end', 'exception'])]);
 end;
 
 function TOperators.Name: string;
@@ -909,6 +986,124 @@ end;
 function TIfOperators.ParseBreak: boolean;
 begin
   Result := Any([Keyword(['else', 'elsif', 'end if'])]) or inherited ParseBreak;
+end;
+
+{ TAnonymousHeader }
+
+function TAnonymousHeader.InternalParse: boolean;
+begin
+  _Declare := Keyword('declare');
+  Result := Assigned(_Declare);
+end;
+
+procedure TAnonymousHeader.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Declare);
+  APrinter.NextLine;
+  APrinter.Indent;
+end;
+
+function TAnonymousHeader.Name: string;
+begin
+  Result := '< header >';
+end;
+
+{ TAnonymousBlock }
+
+function TAnonymousBlock.GetHeaderClass: TStatementClass;
+begin
+  Result := TAnonymousHeader;
+end;
+
+function TAnonymousBlock.Name: string;
+begin
+  Result := '< anonymous block >';
+end;
+
+{ TExceptionHandler }
+
+function TExceptionHandler.InternalParse: boolean;
+begin
+  _When := Keyword('when');
+  Result := Assigned(_When) and TExpression.Parse(Self, Source, _Condition);
+  if not Result then exit;
+  _Then := Keyword('then');
+  TOperators.Parse(Self, Source, _Statements);
+end;
+
+function TExceptionHandler.Name: string;
+begin
+  Result := '< exception handler >';
+end;
+
+procedure TExceptionHandler.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_When);
+  APrinter.Space;
+  APrinter.PrintItem(_Condition);
+  APrinter.Space;
+  APrinter.PrintItem(_Then);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_Statements);
+  APrinter.Undent;
+end;
+
+{ TExceptionHandlers }
+
+function TExceptionHandlers.Name: string;
+begin
+  Result := '< exception handlers >';
+end;
+
+function TExceptionHandlers.ParseStatement(out AResult: TStatement): boolean;
+begin
+  Result := TExceptionHandler.Parse(Self, Source, AResult);
+end;
+
+function TExceptionHandlers.ParseBreak: boolean;
+begin
+  Result := Any([Keyword(['when', 'end'])]);
+end;
+
+{ TNull }
+
+function TNull.InternalParse: boolean;
+begin
+  _Null := Keyword('null');
+  Result := Assigned(_Null);
+  inherited;
+end;
+
+function TNull.Name: string;
+begin
+  Result := '< null >' ;
+end;
+
+procedure TNull.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Null);
+  inherited;
+end;
+
+{ TRaise }
+
+function TRaise.InternalParse: boolean;
+begin
+  _Raise := Keyword('raise');
+  Result := Assigned(_Raise);
+  inherited;
+end;
+
+function TRaise.Name: string;
+begin
+  Result := '< raise >';
+end;
+
+procedure TRaise.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Raise);
+  inherited;
 end;
 
 end.

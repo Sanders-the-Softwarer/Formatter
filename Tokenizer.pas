@@ -60,7 +60,7 @@ type
   end;
 
   { Дополнительный класс склеивает комбинации типа 'end' 'if' в общий 'end if' }
-  TEndMerger = class(TNextStream<TToken, TToken>)
+  TMerger = class(TNextStream<TToken, TToken>)
   strict protected
     function InternalNext: TToken; override;
   end;
@@ -356,19 +356,42 @@ end;
 
 { TEndMerger }
 
-function TEndMerger.InternalNext: TToken;
-var
-  Additional: TToken;
-begin
-  Result := Transit(Source.Next);
-  if (Result is TKeyword) and SameText(Result.Value, 'end') and not Source.Eof then
+function TMerger.InternalNext: TToken;
+
+  var
+    T1, T2, T3: TToken;
+    P2, P3: TMark;
+
+  function Check(var AResult: TToken; const S1, S2: string; const S3: string = ''): boolean;
+  var S: string;
   begin
-    Source.SaveMark;
-    Additional := Source.Next;
-    if (Additional is TKeyword) and (SameText(Additional.Value, 'if') or SameText(Additional.Value, 'loop'))
-      then Result := TKeyword.Create(Result.Value + ' ' + Additional.Value, Result.Line, Result.Col)
-      else Source.Restore;
+    if not (T1 is TKeyword) or not SameText(S1, T1.Value) then exit(false);
+    if not (T2 is TKeyword) or not SameText(S2, T2.Value) then exit(false);
+    if (S3 <> '') and not (T3 is TKeyword) and not SameText(S3, T3.Value) then exit(false);
+    S := S1 + ' ' + S2;
+    if S3 <> ''
+      then S := S + ' ' + S3
+      else Source.Restore(P3);
+    AResult := TKeyword.Create(S, T1.Line, T1.Col);
+    Result := true;
   end;
+
+begin
+  { Прочитаем три лексемы }
+  T1 := Source.Next;
+  P2 := Source.Mark;
+  if not Source.Eof then T2 := Source.Next else T2 := nil;
+  P3 := Source.Mark;
+  if not Source.Eof then T3 := Source.Next else T3 := nil;
+  { И попробуем их скомбинировать }
+  if Check(Result, 'end', 'if') then exit;
+  if Check(Result, 'end', 'loop') then exit;
+  if Check(Result, 'is', 'null') then exit;
+  if Check(Result, 'is', 'not', 'null') then exit;
+  if Check(Result, 'not', 'like') then exit;
+  { Раз не удалось - возвращаем первую лексему }
+  Source.Restore(P2);
+  Result := Transit(T1);
 end;
 
 initialization
@@ -377,6 +400,7 @@ initialization
   Keywords.Duplicates := dupIgnore;
   Keywords.CaseSensitive := false;
 
+  Keywords.Add('and');
   Keywords.Add('as');
   Keywords.Add('begin');
   Keywords.Add('body');
@@ -387,15 +411,18 @@ initialization
   Keywords.Add('delete');
   Keywords.Add('else');
   Keywords.Add('end');
+  Keywords.Add('exception');
   Keywords.Add('false');
   Keywords.Add('function');
   Keywords.Add('if');
   Keywords.Add('in');
   Keywords.Add('insert');
   Keywords.Add('is');
+  Keywords.Add('like');
   Keywords.Add('loop');
   Keywords.Add('merge');
   Keywords.Add('nocopy');
+  Keywords.Add('not');
   Keywords.Add('null');
   Keywords.Add('or');
   Keywords.Add('out');
@@ -407,6 +434,8 @@ initialization
   Keywords.Add('then');
   Keywords.Add('true');
   Keywords.Add('update');
+  Keywords.Add('when');
+  Keywords.Add('xor');
 
 (*
   Keywords.Add('declare');
@@ -419,9 +448,7 @@ initialization
   Keywords.Add('within');
   Keywords.Add('cast');
   Keywords.Add('case');
-  Keywords.Add('when');
   Keywords.Add('elsif');
-  Keywords.Add('exception');
   Keywords.Add('exceptions');
   Keywords.Add('keep');
   Keywords.Add('for');
