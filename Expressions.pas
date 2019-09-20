@@ -139,9 +139,9 @@ begin
   _PrefixOperation := Terminal('-');
   if not TTerm.Parse(Self, Source, _Term) then exit(false);
   Result := true;
-  _InfixOperation := Terminal(['+', '-', '*', '/', '||', '=', '<', '>', '<=', '>=', '<>', '!=', '^=']);
+  _InfixOperation := Terminal(['+', '-', '*', '/', '||', '=', '<', '>', '<=', '>=', '<>', '!=', '^=', ',']);
   if not Assigned(_InfixOperation) then
-    _InfixOperation2 := Keyword(['and', 'or', 'xor', 'like', 'not like']);
+    _InfixOperation2 := Keyword(['and', 'or', 'xor', 'like', 'not like', 'in']);
   if Assigned(_InfixOperation) or Assigned(_InfixOperation2)
     then TExpression.Parse(Self, Source, _Rest)
     else _PostfixOperation := Keyword(['is null', 'is not null']);
