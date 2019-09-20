@@ -31,7 +31,7 @@ type
 
 implementation
 
-uses DDL, DML, PLSQL;
+uses DDL, DML, PLSQL, Expressions;
 
 type
 
@@ -52,7 +52,9 @@ end;
 
 class function TParser.ParseDML(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
-  Result := TInsert.Parse(AParent, ASource, AResult) or
+  Result := TSelect.Parse(AParent, ASource, AResult) or
+            TInsert.Parse(AParent, ASource, AResult) or
+            TDelete.Parse(AParent, ASource, AResult) or
             TDML.Parse(AParent, ASource, AResult);
 end;
 
@@ -80,7 +82,8 @@ begin
   Result := ParseOperator(AParent, ASource, AResult) or
             ParseCreation(AParent, ASource, AResult) or
             TCreateStatement.Parse(AParent, ASource, AResult) or
-            TAnonymousBlock.Parse(AParent, ASource, AResult);
+            TAnonymousBlock.Parse(AParent, ASource, AResult) or
+            TExpression.Parse(AParent, ASource, AResult);
 end;
 
 function TParser.InternalNext: TStatement;

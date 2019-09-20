@@ -37,6 +37,7 @@ type
     procedure Space; virtual; abstract;
     procedure SupressSpace; virtual; abstract;
     procedure NextLine; virtual; abstract;
+    procedure SupressNextLine; virtual; abstract;
     procedure PaddingFrom; virtual; abstract;
     procedure PaddingTo(ALen: integer); virtual; abstract;
     procedure PrintSpecialComment(AValue: string); virtual; abstract;
@@ -76,6 +77,7 @@ type
     procedure Space; override;
     procedure SupressSpace; override;
     procedure NextLine; override;
+    procedure SupressNextLine; override;
     procedure PaddingFrom; override;
     procedure PaddingTo(ALen: integer); override;
     procedure PrintSpecialComment(AValue: string); override;
@@ -88,8 +90,8 @@ type
     Shift:   integer;
     BOL:     boolean;
     SPC:     boolean;
-    PadPos:  integer;
     PAD:     boolean;
+    PadPos:  integer;
   public
     constructor Create(AStrings: TStrings);
     procedure BeginPrint; override;
@@ -101,6 +103,7 @@ type
     procedure Space; override;
     procedure SupressSpace; override;
     procedure NextLine; override;
+    procedure SupressNextLine; override;
     procedure PaddingFrom; override;
     procedure PaddingTo(ALen: integer); override;
     procedure PrintSpecialComment(AValue: string); override;
@@ -214,6 +217,11 @@ begin
   { ничего не делаем }
 end;
 
+procedure TBasePrinter.SupressNextLine;
+begin
+  { ничего не делаем }
+end;
+
 procedure TBasePrinter.PaddingFrom;
 begin
   { ничего не делаем }
@@ -237,7 +245,6 @@ begin
   inherited;
   Builder := TStringBuilder.Create;
   Shift   := 0;
-  BOL     := true;
 end;
 
 procedure TFormatterPrinter.EndPrint;
@@ -261,6 +268,7 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
 begin
   if BOL then
   begin
+    Builder.AppendLine;
     Builder.Append(StringOfChar(' ', Shift));
     BOL := false;
     SPC := false;
@@ -290,8 +298,12 @@ end;
 
 procedure TFormatterPrinter.NextLine;
 begin
-  Builder.AppendLine;
   BOL := true;
+end;
+
+procedure TFormatterPrinter.SupressNextLine;
+begin
+  BOL := false;
 end;
 
 procedure TFormatterPrinter.Space;
@@ -389,7 +401,7 @@ end;
 procedure TSyntaxTreePrinter.PrintToken(AToken: TToken);
 begin
   with AToken do
-    TreeView.Items.AddChild(Parents.Peek, Format('%s [%s]', [TokenType, Value]));
+    TreeView.Items.AddChild(Parents.Peek, Format('%s [ %s ]', [TokenType, Value]));
 end;
 
 end.

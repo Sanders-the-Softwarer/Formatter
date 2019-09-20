@@ -413,6 +413,7 @@ initialization
   Keywords.Add('end');
   Keywords.Add('exception');
   Keywords.Add('false');
+  Keywords.Add('from');
   Keywords.Add('function');
   Keywords.Add('if');
   Keywords.Add('in');
@@ -438,12 +439,11 @@ initialization
   Keywords.Add('update');
   Keywords.Add('values');
   Keywords.Add('when');
+  Keywords.Add('where');
   Keywords.Add('xor');
 
 (*
   Keywords.Add('declare');
-  Keywords.Add('from');
-  Keywords.Add('where');
   Keywords.Add('into');
   Keywords.Add('group');
   Keywords.Add('by');

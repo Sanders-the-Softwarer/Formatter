@@ -19,6 +19,8 @@ type
   { Выражение }
   TExpression = class(TStatement)
   strict private
+    class var AllowCommaList: boolean;
+  strict private
     _OpenBracket: TTerminal;
     _PrefixOperation: TTerminal;
     _Term: TStatement;
@@ -67,10 +69,11 @@ type
   end;
 
   { Аргументы вызова подпрограммы }
-  TArguments = class(TStatementList)
+  TArguments = class(TCommaList)
   strict protected
     function ParseStatement(out AResult: TStatement): boolean; override;
     function ParseBreak: boolean; override;
+    function MultiLine: boolean; override;
   public
     function Name: string; override;
     function MaxIdentLen: integer;
@@ -82,7 +85,6 @@ type
     _Ident: TIdent;
     _Assignment: TTerminal;
     _Expression: TStatement;
-    _Comma: TTerminal;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -139,9 +141,12 @@ begin
   _PrefixOperation := Terminal('-');
   if not TTerm.Parse(Self, Source, _Term) then exit(false);
   Result := true;
-  _InfixOperation := Terminal(['+', '-', '*', '/', '||', '=', '<', '>', '<=', '>=', '<>', '!=', '^=', ',']);
+  _InfixOperation := Terminal(['+', '-', '*', '/', '||', '=', '<', '>', '<=', '>=', '<>', '!=', '^=']);
+  if AllowCommaList and not Assigned(_InfixOperation) then
+    _InfixOperation := Terminal(',');
   if not Assigned(_InfixOperation) then
     _InfixOperation2 := Keyword(['and', 'or', 'xor', 'like', 'not like', 'in']);
+  AllowCommaList := (Assigned(_InfixOperation2) and (_InfixOperation2.Value = 'in')) or (AllowCommaList and Assigned(_InfixOperation) and (_InfixOperation.Value = ','));
   if Assigned(_InfixOperation) or Assigned(_InfixOperation2)
     then TExpression.Parse(Self, Source, _Rest)
     else _PostfixOperation := Keyword(['is null', 'is not null']);
@@ -192,6 +197,7 @@ begin
   APrinter.PrintItem(_Name);
   APrinter.SpaceOrNextLine(MultiLine);
   APrinter.Indent;
+  APrinter.SupressSpace;
   APrinter.PrintItem(_OpenBracket);
   APrinter.SpaceOrNextLine(MultiLine);
   APrinter.SupressSpace;
@@ -229,7 +235,6 @@ begin
     Source.Restore(P);
   end;
   Result := TExpression.Parse(Self, Source, _Expression);
-  if Result then _Comma := Terminal(',');
 end;
 
 function TArgument.Name: string;
@@ -256,8 +261,6 @@ begin
   APrinter.PrintItem(_Assignment);
   if Assigned(_Assignment) then APrinter.Space;
   APrinter.PrintItem(_Expression);
-  APrinter.PrintItem(_Comma);
-  if Assigned(_Comma) then APrinter.SpaceOrNextLine(TFunctionCall(Parent.Parent).MultiLine);
 end;
 
 { TArguments }
@@ -270,6 +273,11 @@ end;
 function TArguments.ParseBreak: boolean;
 begin
   Result := Any([Terminal(';'), Terminal(')')]);
+end;
+
+function TArguments.MultiLine: boolean;
+begin
+  Result := (Parent as TFunctionCall).MultiLine;
 end;
 
 function TArguments.Name: string;

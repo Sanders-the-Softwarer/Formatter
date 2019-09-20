@@ -75,14 +75,17 @@ type
     property Settings: TParserSettings read GetSettings write FSettings;
   end;
 
-  { Базовый класс для списков однотипных конструкций (переменные, операторы и т. п. }
+  { Базовый класс для списков однотипных конструкций (переменные, операторы и т. п.) }
   TStatementList = class(TStatement)
   strict private
-    FList: TList<TStatement>;
+    FStatements: TList<TStatement>;
+    FDelimiters: TList<TToken>;
   strict protected
     function InternalParse: boolean; override;
     function ParseStatement(out AResult: TStatement): boolean; virtual; abstract;
+    function ParseDelimiter(out AResult: TToken): boolean; virtual;
     function ParseBreak: boolean; virtual; abstract;
+    function MultiLine: boolean; virtual;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -90,6 +93,13 @@ type
     function Count: integer;
     function Item(Index: integer): TStatement;
     function Any(Found: array of TObject): boolean;
+  end;
+
+  { Базовый класс для списка однотипных конструкций, разделённых запятыми }
+  TCommaList = class(TStatementList)
+  strict
+  private
+    function ParseDelimiter(out AResult: TToken): boolean; override;
   end;
 
   { Неожиданная лексема - класс для конструкций, которые не удалось разобрать }
@@ -115,7 +125,7 @@ begin
 end;
 
 class function TStatement.Parse(AParent: TStatement; Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-var SavedPosition: TMark; S: string;
+var SavedPosition: TMark;
 begin
   AResult := Self.Create(AParent, Tokens);
   SavedPosition := Tokens.Mark;
@@ -129,7 +139,7 @@ end;
 
 function TStatement.Name: string;
 begin
-  Result := Self.ClassName;
+  raise Exception.CreateFmt('Method %s.Name should be declared', [ClassName]);
 end;
 
 function TStatement.NextToken: TToken;
@@ -234,19 +244,22 @@ end;
 procedure TStatementList.AfterConstruction;
 begin
   inherited;
-  FList := TList<TStatement>.Create;
+  FStatements := TList<TStatement>.Create;
+  FDelimiters := TList<TToken>.Create;
 end;
 
 procedure TStatementList.BeforeDestruction;
 begin
   inherited;
-  FreeAndNil(FList);
+  FreeAndNil(FStatements);
+  FreeAndNil(FDelimiters);
 end;
 
 function TStatementList.InternalParse: boolean;
 var
   P: TMark;
   S: TStatement;
+  T: TToken;
   B: boolean;
 begin
   repeat
@@ -254,8 +267,15 @@ begin
     { Если успешно разобрали конструкцию - работаем дальше }
     if ParseStatement(S) then
     begin
-      FList.Add(S);
-      continue;
+      P := Source.Mark;
+      FStatements.Add(S);
+      if ParseDelimiter(T) then
+        begin
+          FDelimiters.Add(T);
+          continue;
+        end
+      else
+        FDelimiters.Add(nil);
     end;
     { Если встретили завершающую конструкцию - выходим }
     Source.Restore(P);
@@ -264,7 +284,7 @@ begin
     if B then break;
     { Если ни то, ни другое - фиксируем неожиданную конструкцию и дальше ждём завершающей конструкции }
     if TUnexpectedToken.Parse(Self, Source, S)
-      then FList.Add(S)
+      then begin FStatements.Add(S); FDelimiters.Add(nil); end
       else break;
   until false;
   Result := (Count > 0);
@@ -273,17 +293,33 @@ end;
 procedure TStatementList.PrintSelf(APrinter: TPrinter);
 var i: integer;
 begin
-  for i := 0 to FList.Count - 1 do APrinter.PrintItem(FList[i]);
+  for i := 0 to Count - 1 do
+  begin
+    APrinter.PrintItem(FStatements[i]);
+    APrinter.PrintItem(FDelimiters[i]);
+    if MultiLine then APrinter.NextLine else APrinter.Space;
+  end;
+end;
+
+function TStatementList.ParseDelimiter(out AResult: TToken): boolean;
+begin
+  Result := true;
+  AResult := nil;
+end;
+
+function TStatementList.MultiLine: boolean;
+begin
+  Result := true;
 end;
 
 function TStatementList.Count: integer;
 begin
-  Result := FList.Count;
+  Result := FStatements.Count;
 end;
 
 function TStatementList.Item(Index: integer): TStatement;
 begin
-  Result := FList[Index];
+  Result := FStatements[Index];
 end;
 
 function TStatementList.Any(Found: array of TObject): boolean;
@@ -291,6 +327,14 @@ var i: integer;
 begin
   Result := false;
   for i := Low(Found) to High(Found) do Result := Result or Assigned(Found[i]);
+end;
+
+{ TCommaList }
+
+function TCommaList.ParseDelimiter(out AResult: TToken): boolean;
+begin
+  AResult := Terminal(',');
+  Result  := Assigned(AResult);
 end;
 
 { TUnexpectedToken }
@@ -318,4 +362,3 @@ begin
 end;
 
 end.
-

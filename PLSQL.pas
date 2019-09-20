@@ -161,7 +161,7 @@ type
   end;
 
   { Блок параметров подпрограммы }
-  TParamsDeclaration = class(TStatementList)
+  TParamsDeclaration = class(TCommaList)
   strict private
     _OpenBracket: TTerminal;
     _CloseBracket: TTerminal;
@@ -169,6 +169,7 @@ type
     function InternalParse: boolean; override;
     function ParseStatement(out AResult: TStatement): boolean; override;
     function ParseBreak: boolean; override;
+    function MultiLine: boolean; override;
   public
     function Name: string; override;
     procedure PrintSelf(APrinter: TPrinter); override;
@@ -184,7 +185,6 @@ type
     _Out: TKeyword;
     _Nocopy: TKeyword;
     _ParamType: TStatement;
-    _Comma: TTerminal;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -230,10 +230,24 @@ type
     function NameLen: integer;
   end;
 
+  { Объявление исключения }
+  TExceptionDeclaration = class(TStatement)
+  strict private
+    _Name: TIdent;
+    _Exception: TKeyword;
+    _Semicolon: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function Name: string; override;
+  end;
+
   { Список операторов }
   TOperators = class(TStatementList)
   strict protected
     function ParseStatement(out AResult: TStatement): boolean; override;
+    function ParseDelimiter(out AToken: TToken): boolean; override;
     function ParseBreak: boolean; override;
   public
     function Name: string; override;
@@ -247,13 +261,8 @@ type
 
   { Оператор }
   TOperator = class(TStatement)
-  strict private
-    _Semicolon: TTerminal;
-  strict protected
-    function InternalParse: boolean; override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override; final;
+    function Name: string; override;
   end;
 
   { Присваивание }
@@ -277,6 +286,7 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
+    function Name: string; override;
   end;
 
   { Оператор return }
@@ -581,9 +591,8 @@ begin
   _Out := Keyword('out');
   _Nocopy := Keyword('nocopy');
   TTypeRef.Parse(Self, Source, _ParamType);
-  _Comma := Terminal(',');
   Result := Assigned(_ParamName) or Assigned(_In) or Assigned(_Out) or
-    Assigned(_Nocopy) or Assigned(_ParamType) or Assigned(_Comma);
+    Assigned(_Nocopy) or Assigned(_ParamType);
 end;
 
 function TParamDeclaration.Name: string;
@@ -608,8 +617,6 @@ begin
   APrinter.PaddingTo((Parent as TParamsDeclaration).ModifiersMax);
   APrinter.Space;
   APrinter.PrintItem(_ParamType);
-  APrinter.PrintItem(_Comma);
-  APrinter.SpaceOrNextLine((Parent.Parent as TSubroutineHeaderBase).MultiLine);
 end;
 
 function TParamDeclaration.ParamNameLen: integer;
@@ -645,6 +652,11 @@ begin
   Result := Any([Terminal(')')]);
 end;
 
+function TParamsDeclaration.MultiLine: boolean;
+begin
+  Result := (Parent as TSubroutineHeaderBase).MultiLine;
+end;
+
 function TParamsDeclaration.Name: string;
 begin
   Result := '< parameters >';
@@ -653,7 +665,7 @@ end;
 procedure TParamsDeclaration.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_OpenBracket);
-  if (Parent as TSubroutineHeaderBase).MultiLine then APrinter.NextLine;
+  if MultiLine then APrinter.NextLine;
   APrinter.Indent;
   inherited;
   APrinter.Undent;
@@ -687,6 +699,7 @@ function TDeclarations.ParseStatement(out AResult: TStatement): boolean;
 begin
   Result := TSubroutineForwardDeclaration.Parse(Self, Source, AResult) or
             TSubroutine.Parse(Self, Source, AResult) or
+            TExceptionDeclaration.Parse(Self, Source, AResult) or
             TVariableDeclarations.Parse(Self, Source, AResult);
 end;
 
@@ -776,19 +789,6 @@ end;
 
 { TOperator }
 
-function TOperator.InternalParse: boolean;
-begin
-  _Semicolon := Terminal(';');
-  Result := Assigned(_Semicolon);
-end;
-
-procedure TOperator.PrintSelf(APrinter: TPrinter);
-begin
-  APrinter.SupressSpace;
-  APrinter.PrintItem(_Semicolon);
-  APrinter.NextLine;
-end;
-
 function TOperator.Name: string;
 begin
   Result := '< ' + LowerCase(ClassName.SubString(1)) + ' >';
@@ -814,6 +814,11 @@ begin
   APrinter.PrintItem(_FunctionCall);
   APrinter.PrintItem(_Ident);
   inherited;
+end;
+
+function TProcedureCall.Name: string;
+begin
+  Result := '< procedure call >';
 end;
 
 { TAssignment }
@@ -885,9 +890,8 @@ procedure TSubroutineHeader.PrintSelf(APrinter: TPrinter);
 begin
   inherited;
   APrinter.SpaceOrNextLine(MultiLine);
-  APrinter.PrintItem(_Is);
-  APrinter.NextLine;
   if MultiLine then APrinter.Undent;
+  APrinter.PrintItem(_Is);
 end;
 
 { TSubroutineForwardDeclaration }
@@ -918,6 +922,12 @@ end;
 function TOperators.ParseStatement(out AResult: TStatement): boolean;
 begin
   Result := TParser.ParseOperator(Self, Source, AResult);
+end;
+
+function TOperators.ParseDelimiter(out AToken: TToken): boolean;
+begin
+  AToken := Terminal(';');
+  Result := Assigned(AToken);
 end;
 
 function TOperators.ParseBreak: boolean;
@@ -1084,6 +1094,31 @@ procedure TRaise.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Raise);
   inherited;
+end;
+
+{ TExceptionDeclaration }
+
+function TExceptionDeclaration.InternalParse: boolean;
+begin
+  _Name := Identifier;
+  _Exception := Keyword('exception');
+  _Semicolon := Terminal(';');
+  Result := Assigned(_Name) and Assigned(_Exception);
+end;
+
+function TExceptionDeclaration.Name: string;
+begin
+  Result := '< exception';
+  if Assigned(_Name) then Result := Result + ' ' + _Name.Value;
+  Result := Result + ' >';
+end;
+
+procedure TExceptionDeclaration.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Name);
+  APrinter.Space;
+  APrinter.PrintItem(_Exception);
+  APrinter.PrintItem(_Semicolon);
 end;
 
 end.
