@@ -54,6 +54,7 @@ class function TParser.ParseDML(AParent: TStatement; ASource: TBufferedStream<TT
 begin
   Result := TSelect.Parse(AParent, ASource, AResult) or
             TInsert.Parse(AParent, ASource, AResult) or
+            TUpdate.Parse(AParent, ASource, AResult) or
             TDelete.Parse(AParent, ASource, AResult) or
             TDML.Parse(AParent, ASource, AResult);
 end;

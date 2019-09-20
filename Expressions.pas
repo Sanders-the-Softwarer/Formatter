@@ -73,10 +73,9 @@ type
   strict protected
     function ParseStatement(out AResult: TStatement): boolean; override;
     function ParseBreak: boolean; override;
-    function MultiLine: boolean; override;
   public
     function Name: string; override;
-    function MaxIdentLen: integer;
+    function MultiLine: boolean; override;
   end;
 
   { Аргумент функции }
@@ -90,7 +89,6 @@ type
   public
     procedure PrintSelf(APrinter: TPrinter); override;
     function Name: string; override;
-    function IdentLen: integer;
   end;
 
 implementation
@@ -242,20 +240,12 @@ begin
   Result := '< argument >';
 end;
 
-function TArgument.IdentLen: integer;
-begin
-  if Assigned(_Ident) and TFunctionCall(Parent.Parent).MultiLine
-    then Result := Length(_Ident.Value)
-    else Result := 0;
-end;
-
 procedure TArgument.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PaddingFrom;
   APrinter.PrintItem(_Ident);
   if Assigned(_Ident) then
   begin
-    APrinter.PaddingTo((Parent as TArguments).MaxIdentLen);
+    APrinter.Ruler('argument', TArguments(Parent).MultiLine and Settings.AlignCallArguments);
     APrinter.Space;
   end;
   APrinter.PrintItem(_Assignment);
@@ -283,16 +273,6 @@ end;
 function TArguments.Name: string;
 begin
   Result := '< arguments >';
-end;
-
-function TArguments.MaxIdentLen: integer;
-var i: integer;
-begin
-  Result := 0;
-  if not Settings.AlignCallArguments then exit;
-  for i := 0 to Count - 1 do
-    if Item(i) is TArgument then
-      Result := Math.Max(Result, TArgument(Item(i)).IdentLen);
 end;
 
 end.

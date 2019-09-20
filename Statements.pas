@@ -71,6 +71,7 @@ type
     constructor Create(AParent: TStatement; ASource: TBufferedStream<TToken>);
     function Name: string; virtual;
     procedure PrintSelf(APrinter: TPrinter); virtual; abstract;
+    function Aligned: boolean; virtual;
     property Parent: TStatement read FParent;
     property Settings: TParserSettings read GetSettings write FSettings;
   end;
@@ -140,6 +141,11 @@ end;
 function TStatement.Name: string;
 begin
   raise Exception.CreateFmt('Method %s.Name should be declared', [ClassName]);
+end;
+
+function TStatement.Aligned: boolean;
+begin
+  Result := false;
 end;
 
 function TStatement.NextToken: TToken;

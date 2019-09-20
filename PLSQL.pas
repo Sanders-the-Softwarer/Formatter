@@ -22,7 +22,8 @@ unit PLSQL;
 
 interface
 
-uses Windows, SysUtils, Math, Streams, Tokens, Statements, Expressions, Printers_;
+uses Windows, SysUtils, Math, Streams, Tokens, Statements, Expressions,
+  Printers_, Attributes;
 
 type
 
@@ -172,9 +173,8 @@ type
     function MultiLine: boolean; override;
   public
     function Name: string; override;
+    function Aligned: boolean; override;
     procedure PrintSelf(APrinter: TPrinter); override;
-    function ParamNameMax: integer;
-    function ModifiersMax: integer;
   end;
 
   { Параметр подпрограммы }
@@ -210,7 +210,7 @@ type
     function ParseBreak: boolean; override;
   public
     function Name: string; override;
-    function MaxNameLen: integer;
+    function Aligned: boolean; override;
   end;
 
   { Объявление переменной }
@@ -227,7 +227,6 @@ type
   public
     procedure PrintSelf(APrinter: TPrinter); override;
     function Name: string; override;
-    function NameLen: integer;
   end;
 
   { Объявление исключения }
@@ -604,17 +603,15 @@ end;
 
 procedure TParamDeclaration.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PaddingFrom;
   APrinter.PrintItem(_ParamName);
-  APrinter.PaddingTo((Parent as TParamsDeclaration).ParamNameMax);
-  APrinter.PaddingFrom;
+  APrinter.Ruler('modifiers', Settings.AlignSubroutineParams and (Parent.Parent as TSubroutineHeaderBase).MultiLine);
   APrinter.Space;
   APrinter.PrintItem(_In);
   APrinter.Space;
   APrinter.PrintItem(_Out);
   APrinter.Space;
   APrinter.PrintItem(_Nocopy);
-  APrinter.PaddingTo((Parent as TParamsDeclaration).ModifiersMax);
+  APrinter.Ruler('type', Settings.AlignSubroutineParams and (Parent.Parent as TSubroutineHeaderBase).MultiLine);
   APrinter.Space;
   APrinter.PrintItem(_ParamType);
 end;
@@ -662,6 +659,11 @@ begin
   Result := '< parameters >';
 end;
 
+function TParamsDeclaration.Aligned: boolean;
+begin
+  Aligned := true;
+end;
+
 procedure TParamsDeclaration.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_OpenBracket);
@@ -671,26 +673,6 @@ begin
   APrinter.Undent;
   APrinter.SupressSpace;
   APrinter.PrintItem(_CloseBracket);
-end;
-
-function TParamsDeclaration.ParamNameMax: integer;
-var i: integer;
-begin
-  Result := 0;
-  if (Parent as TSubroutineHeaderBase).MultiLine and Settings.AlignSubroutineParams then
-    for i := 0 to Count - 1 do
-      if Item(i) is TParamDeclaration then
-        Result := Math.Max(Result, TParamDeclaration(Item(i)).ParamNameLen);
-end;
-
-function TParamsDeclaration.ModifiersMax: integer;
-var i: integer;
-begin
-  Result := 0;
-  if (Parent as TSubroutineHeaderBase).MultiLine and Settings.AlignSubroutineParams then
-    for i := 0 to Count - 1 do
-      if Item(i) is TParamDeclaration then
-        Result := Math.Max(Result, TParamDeclaration(Item(i)).ModifiersLen);
 end;
 
 { TDeclarations }
@@ -735,23 +717,16 @@ begin
   if Assigned(_Name) then Result := Result + ' ' + _Name.Value;
 end;
 
-function TVariableDeclaration.NameLen: integer;
-begin
-  if Assigned(_Name)
-    then Result := Length(_Name.Value)
-    else Result := 0;
-end;
-
 procedure TVariableDeclaration.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PaddingFrom;
   APrinter.PrintItem(_Name);
-  APrinter.PaddingTo((Parent as TVariableDeclarations).MaxNameLen);
+  APrinter.Ruler('name', Settings.AlignVariables);
   APrinter.Space;
   APrinter.PrintItem(_Constant);
   APrinter.Space;
   APrinter.PrintItem(_Type);
   APrinter.Space;
+  APrinter.Ruler('type', Settings.AlignVariables);
   APrinter.PrintItem(_Assignment);
   APrinter.Space;
   APrinter.PrintItem(_Value);
@@ -777,14 +752,9 @@ begin
   Result := '< variables >';
 end;
 
-function TVariableDeclarations.MaxNameLen: integer;
-var i: integer;
+function TVariableDeclarations.Aligned: boolean;
 begin
-  Result := 0;
-  if Settings.AlignVariables then
-    for i := 0 to Count - 1 do
-      if Item(i) is TVariableDeclaration then
-        Result := Math.Max(Result, TVariableDeclaration(Item(i)).NameLen);
+  Result := true;
 end;
 
 { TOperator }

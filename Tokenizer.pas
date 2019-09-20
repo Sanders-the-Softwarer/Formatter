@@ -430,10 +430,11 @@ initialization
   Keywords.Add('out');
   Keywords.Add('package');
   Keywords.Add('procedure');
-  Keywords.Add('select');
   Keywords.Add('raise');
   Keywords.Add('replace');
   Keywords.Add('return');
+  Keywords.Add('select');
+  Keywords.Add('set');
   Keywords.Add('then');
   Keywords.Add('true');
   Keywords.Add('update');
@@ -455,7 +456,6 @@ initialization
   Keywords.Add('exceptions');
   Keywords.Add('keep');
   Keywords.Add('for');
-  Keywords.Add('set');
   Keywords.Add('default');
   Keywords.Add('deterministic');
 *)

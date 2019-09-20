@@ -24,6 +24,24 @@ interface
 uses Math, Tokens, Statements, PLSQL, Printers_;
 
 type
+
+  { Оператор select }
+  TSelect = class(TOperator)
+  strict private
+    _Select: TKeyword;
+    _Fields: TStatement;
+    _Into: TKeyword;
+    _Targets: TStatement;
+    _From: TKeyword;
+    _Tables: TStatement;
+    _Where: TKeyword;
+    _Condition: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
   { Оператор insert }
   TInsert = class(TOperator)
   strict private
@@ -43,12 +61,14 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Оператор delete }
-  TDelete = class(TOperator)
+  { Оператор update }
+  TUpdate = class(TOperator)
   strict private
-    _Delete: TKeyword;
-    _From: TKeyword;
+    _Update: TKeyword;
     _TableName: TIdent;
+    _Alias: TIdent;
+    _Set: TKeyword;
+    _Assignments: TStatement;
     _Where: TKeyword;
     _Condition: TStatement;
   strict protected
@@ -57,15 +77,12 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Оператор select }
-  TSelect = class(TOperator)
+  { Оператор delete }
+  TDelete = class(TOperator)
   strict private
-    _Select: TKeyword;
-    _Fields: TStatement;
-    _Into: TKeyword;
-    _Targets: TStatement;
+    _Delete: TKeyword;
     _From: TKeyword;
-    _Tables: TStatement;
+    _TableName: TIdent;
     _Where: TKeyword;
     _Condition: TStatement;
   strict protected
@@ -96,6 +113,29 @@ type
     function Name: string; override;
   end;
 
+  { Список присвоений в update }
+  TUpdateAssignments = class(TCommaList)
+  strict protected
+    function ParseStatement(out AResult: TStatement): boolean; override;
+    function ParseBreak: boolean; override;
+  public
+    function Name: string; override;
+    function Aligned: boolean; override;
+  end;
+
+  { Присвоение в update }
+  TUpdateAssignment = class(TStatement)
+  strict private
+    _Target: TIdent;
+    _Assignment: TTerminal;
+    _Value: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function Name: string; override;
+  end;
+
   { Список выражений через запятую }
   TFieldList = class(TStatementList)
   strict protected
@@ -103,7 +143,7 @@ type
     function ParseBreak: boolean; override;
   public
     function Name: string; override;
-    function IdentMaxLen: integer;
+    function Aligned: boolean; override;
   end;
 
   { Выражение для списка }
@@ -143,7 +183,7 @@ uses Expressions;
 
 function TDML.InternalParse: boolean;
 begin
-  _Keyword := Keyword(['update', 'merge']);
+  _Keyword := Keyword(['merge']);
   Result := Assigned(_Keyword);
   inherited;
 end;
@@ -229,6 +269,41 @@ begin
   APrinter.Undent;
 end;
 
+{ TUpdate }
+
+function TUpdate.InternalParse: boolean;
+begin
+  Result := true;
+  _Update := Keyword('update');
+  if not Assigned(_Update) then exit(false);
+  _TableName := Identifier;
+  _Alias := Identifier;
+  _Set := Keyword('set');
+  TUpdateAssignments.Parse(Self, Source, _Assignments);
+  _Where := Keyword('where');
+  if Assigned(_Where) then TExpression.Parse(Self, Source, _Condition);
+end;
+
+procedure TUpdate.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Update);
+  APrinter.Space;
+  APrinter.PrintItem(_TableName);
+  APrinter.Space;
+  APrinter.PrintItem(_Alias);
+  APrinter.Space;
+  APrinter.PrintItem(_Set);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_Assignments);
+  APrinter.Undent;
+  APrinter.PrintItem(_Where);
+  if Assigned(_Where) then APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_Condition);
+  APrinter.Undent;
+end;
+
 { TDelete }
 
 function TDelete.InternalParse: boolean;
@@ -272,13 +347,9 @@ begin
   Result := '< fields >';
 end;
 
-function TFieldList.IdentMaxLen: integer;
-var i: integer;
+function TFieldList.Aligned: boolean;
 begin
-  Result := 0;
-  for i := 0 to Count - 1 do
-    if Item(i) is TField then
-      Result := Math.Max(Result, Length(TField(Item(i)).Ident));
+  Aligned := true;
 end;
 
 function TFieldList.ParseBreak: boolean;
@@ -314,8 +385,8 @@ end;
 procedure TField.PrintSelf(APrinter: TPrinter);
 var C: string;
 begin
-  if Settings.AlignCommentInsert then APrinter.PaddingFrom;
   APrinter.PrintItem(_Expression);
+  APrinter.Ruler('expression');
   APrinter.Space;
   APrinter.PrintItem(_As);
   APrinter.Space;
@@ -325,9 +396,8 @@ begin
   APrinter.Space;
   if _Match is TField then
   begin
-    if Settings.AlignCommentInsert then APrinter.PaddingTo(TFieldList(Parent).IdentMaxLen + 2);
+    APrinter.Ruler('comment', Settings.AlignCommentInsert);
     C := TField(_Match).Ident;
-    if Settings.AlignCommentInsert then C := C + StringOfChar(' ', TFieldList(TField(_Match).Parent).IdentMaxLen - Length(C));
     if C <> '' then APrinter.PrintSpecialComment('=> ' + C);
   end;
   APrinter.NextLine;
@@ -429,6 +499,55 @@ begin
     APrinter.Undent;
   end;
   APrinter.SupressNextLine;
+end;
+
+{ TUpdateAssignments }
+
+function TUpdateAssignments.ParseStatement(out AResult: TStatement): boolean;
+begin
+  Result := TUpdateAssignment.Parse(Self, Source, AResult);
+end;
+
+function TUpdateAssignments.Name: string;
+begin
+  Result := '< update assignment >';
+end;
+
+function TUpdateAssignments.Aligned: boolean;
+begin
+  Result := true;
+end;
+
+function TUpdateAssignments.ParseBreak: boolean;
+begin
+  Result := Any([Terminal(';'), Keyword('where')]);
+end;
+
+{ TUpdateAssignment }
+
+function TUpdateAssignment.InternalParse: boolean;
+begin
+  _Target := Identifier;
+  _Assignment := Terminal('=');
+  Result := Assigned(_Target) and Assigned(_Assignment);
+  if Result then TExpression.Parse(Self, Source, _Value);
+end;
+
+function TUpdateAssignment.Name: string;
+begin
+  if Assigned(_Target)
+    then Result := _Target.Value
+    else Result := '< update assignment >';
+end;
+
+procedure TUpdateAssignment.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Target);
+  APrinter.Space;
+  APrinter.Ruler('assignment');
+  APrinter.PrintItem(_Assignment);
+  APrinter.Space;
+  APrinter.PrintItem(_Value);
 end;
 
 end.

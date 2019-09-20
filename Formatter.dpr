@@ -12,7 +12,8 @@ uses
   Expressions in 'Expressions.pas',
   DML in 'DML.pas',
   Statements in 'Statements.pas',
-  DDL in 'DDL.pas';
+  DDL in 'DDL.pas',
+  Attributes in 'Attributes.pas';
 
 {$R *.res}
 
