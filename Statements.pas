@@ -70,7 +70,7 @@ type
   public
     constructor Create(AParent: TStatement; ASource: TBufferedStream<TToken>);
     function Name: string; virtual;
-    procedure PrintSelf(APrinter: TPrinter); virtual; abstract;
+    procedure PrintSelf(APrinter: TPrinter); virtual;
     function Aligned: boolean; virtual;
     property Parent: TStatement read FParent;
     property Settings: TParserSettings read GetSettings write FSettings;
@@ -98,9 +98,14 @@ type
 
   { Базовый класс для списка однотипных конструкций, разделённых запятыми }
   TCommaList = class(TStatementList)
-  strict
-  private
+  strict protected
     function ParseDelimiter(out AResult: TToken): boolean; override;
+  end;
+
+  { Он же, параметризованный }
+  TCommaList<T: TStatement> = class(TStatementList)
+  strict protected
+    function ParseStatement(out AResult: TStatement): boolean; override;
   end;
 
   { Неожиданная лексема - класс для конструкций, которые не удалось разобрать }
@@ -141,6 +146,11 @@ end;
 function TStatement.Name: string;
 begin
   raise Exception.CreateFmt('Method %s.Name should be declared', [ClassName]);
+end;
+
+procedure TStatement.PrintSelf(APrinter: TPrinter);
+begin
+  raise Exception.CreateFmt('Cannot print %s - PrintSelf is absent', [ClassName]);
 end;
 
 function TStatement.Aligned: boolean;
@@ -365,6 +375,13 @@ begin
   APrinter.Space;
   APrinter.PrintItem(_Token);
   APrinter.NextLine;
+end;
+
+{ TCommaList<T> }
+
+function TCommaList<T>.ParseStatement(out AResult: TStatement): boolean;
+begin
+  Result := T.Parse(Self, Source, AResult);
 end;
 
 end.

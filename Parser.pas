@@ -56,7 +56,7 @@ begin
             TInsert.Parse(AParent, ASource, AResult) or
             TUpdate.Parse(AParent, ASource, AResult) or
             TDelete.Parse(AParent, ASource, AResult) or
-            TDML.Parse(AParent, ASource, AResult);
+             TMerge.Parse(AParent, ASource, AResult);
 end;
 
 class function TParser.ParseCreation(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;

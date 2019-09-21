@@ -783,7 +783,6 @@ procedure TProcedureCall.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_FunctionCall);
   APrinter.PrintItem(_Ident);
-  inherited;
 end;
 
 function TProcedureCall.Name: string;
@@ -810,7 +809,6 @@ begin
   APrinter.PrintItem(_Assignment);
   APrinter.Space;
   APrinter.PrintItem(_Expression);
-  inherited;
 end;
 
 { TReturn }
@@ -829,7 +827,6 @@ begin
   APrinter.PrintItem(_Return);
   APrinter.Space;
   APrinter.PrintItem(_Value);
-  inherited;
 end;
 
 { TSubroutine }
@@ -943,8 +940,6 @@ begin
   APrinter.PrintItem(_ElseStatements);
   APrinter.Undent;
   APrinter.PrintItem(_EndIf);
-  APrinter.Space;
-  inherited;
 end;
 
 { TIfOperators }
@@ -1048,7 +1043,6 @@ end;
 procedure TNull.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Null);
-  inherited;
 end;
 
 { TRaise }
@@ -1063,7 +1057,6 @@ end;
 procedure TRaise.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Raise);
-  inherited;
 end;
 
 { TExceptionDeclaration }

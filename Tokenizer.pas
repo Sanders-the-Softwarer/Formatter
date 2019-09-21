@@ -359,36 +359,44 @@ end;
 function TMerger.InternalNext: TToken;
 
   var
-    T1, T2, T3: TToken;
-    P2, P3: TMark;
+    T1, T2, T3, T4: TToken;
+    P2, P3, P4: TMark;
 
-  function Check(var AResult: TToken; const S1, S2: string; const S3: string = ''): boolean;
+  function Check(var AResult: TToken; const S1, S2: string; const S3: string = ''; const S4: string = ''): boolean;
   var S: string;
   begin
     if not (T1 is TKeyword) or not SameText(S1, T1.Value) then exit(false);
     if not (T2 is TKeyword) or not SameText(S2, T2.Value) then exit(false);
     if (S3 <> '') and not (T3 is TKeyword) and not SameText(S3, T3.Value) then exit(false);
+    if (S4 <> '') and not (T4 is TKeyword) and not SameText(S4, T4.Value) then exit(false);
     S := S1 + ' ' + S2;
     if S3 <> ''
       then S := S + ' ' + S3
       else Source.Restore(P3);
+    if S4 <> ''
+      then S := S + ' ' + S4
+      else Source.Restore(P4);
     AResult := TKeyword.Create(S, T1.Line, T1.Col);
     Result := true;
   end;
 
 begin
-  { Прочитаем три лексемы }
+  { Прочитаем лексемы }
   T1 := Source.Next;
   P2 := Source.Mark;
   if not Source.Eof then T2 := Source.Next else T2 := nil;
   P3 := Source.Mark;
   if not Source.Eof then T3 := Source.Next else T3 := nil;
+  P4 := Source.Mark;
+  if not Source.Eof then T4 := Source.Next else T4 := nil;
   { И попробуем их скомбинировать }
   if Check(Result, 'end', 'if') then exit;
   if Check(Result, 'end', 'loop') then exit;
   if Check(Result, 'is', 'null') then exit;
   if Check(Result, 'is', 'not', 'null') then exit;
   if Check(Result, 'not', 'like') then exit;
+  if Check(Result, 'when', 'matched', 'then') then exit;
+  if Check(Result, 'when', 'not', 'matched', 'then') then exit;
   { Раз не удалось - возвращаем первую лексему }
   Source.Restore(P2);
   Result := Transit(T1);
@@ -422,10 +430,12 @@ initialization
   Keywords.Add('is');
   Keywords.Add('like');
   Keywords.Add('loop');
+  Keywords.Add('matched');
   Keywords.Add('merge');
   Keywords.Add('nocopy');
   Keywords.Add('not');
   Keywords.Add('null');
+  Keywords.Add('on');
   Keywords.Add('or');
   Keywords.Add('out');
   Keywords.Add('package');
@@ -438,6 +448,7 @@ initialization
   Keywords.Add('then');
   Keywords.Add('true');
   Keywords.Add('update');
+  Keywords.Add('using');
   Keywords.Add('values');
   Keywords.Add('when');
   Keywords.Add('where');
@@ -445,7 +456,6 @@ initialization
 
 (*
   Keywords.Add('declare');
-  Keywords.Add('into');
   Keywords.Add('group');
   Keywords.Add('by');
   Keywords.Add('order');
