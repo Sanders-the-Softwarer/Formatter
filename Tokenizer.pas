@@ -197,6 +197,8 @@ function TTokenizer.InternalNext: TToken;
     Result := TCharacter.IsDigit(NextChar);
     if not Result then exit;
     repeat until not TCharacter.IsDigit(NextChar);
+    if LastChar = '.' then
+      repeat until not TCharacter.IsDigit(NextChar);
     RefuseLastChar;
   end;
 
@@ -224,8 +226,8 @@ function TTokenizer.InternalNext: TToken;
   { —читывание многосимвольных лексем }
   function ParseTerminal: boolean;
   const
-    N = 25;
-    Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=', '=>', '.', ',', ';', '(', ')', '+', '-', '*', '/', '%', '@', '=', '<', '>', '(+)', '%type', '%rowtype');
+    N = 26;
+    Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=', '=>', '.', ',', ';', '(', ')', '+', '-', '*', '/', '%', '@', '=', '<', '>', '(+)', '%type', '%rowtype', '%rowcount');
   var
     Value: string;
     Starts, Exact, PrevExact: boolean;    
@@ -375,7 +377,8 @@ function TMerger.InternalNext: TToken;
       else Source.Restore(P3);
     if S4 <> ''
       then S := S + ' ' + S4
-      else Source.Restore(P4);
+      else
+        if S3 <> '' then Source.Restore(P4);
     AResult := TKeyword.Create(S, T1.Line, T1.Col);
     Result := true;
   end;
@@ -413,6 +416,7 @@ initialization
   Keywords.Add('begin');
   Keywords.Add('body');
   Keywords.Add('byte');
+  Keywords.Add('case');
   Keywords.Add('char');
   Keywords.Add('constant');
   Keywords.Add('create');
@@ -422,12 +426,14 @@ initialization
   Keywords.Add('exception');
   Keywords.Add('false');
   Keywords.Add('from');
+  Keywords.Add('full');
   Keywords.Add('function');
   Keywords.Add('if');
   Keywords.Add('in');
   Keywords.Add('into');
   Keywords.Add('insert');
   Keywords.Add('is');
+  Keywords.Add('join');
   Keywords.Add('like');
   Keywords.Add('loop');
   Keywords.Add('matched');
@@ -443,8 +449,10 @@ initialization
   Keywords.Add('raise');
   Keywords.Add('replace');
   Keywords.Add('return');
+  Keywords.Add('returning');
   Keywords.Add('select');
   Keywords.Add('set');
+  Keywords.Add('table');
   Keywords.Add('then');
   Keywords.Add('true');
   Keywords.Add('update');
@@ -452,23 +460,6 @@ initialization
   Keywords.Add('values');
   Keywords.Add('when');
   Keywords.Add('where');
-  Keywords.Add('xor');
-
-(*
-  Keywords.Add('declare');
-  Keywords.Add('group');
-  Keywords.Add('by');
-  Keywords.Add('order');
-  Keywords.Add('within');
-  Keywords.Add('cast');
-  Keywords.Add('case');
-  Keywords.Add('elsif');
-  Keywords.Add('exceptions');
-  Keywords.Add('keep');
-  Keywords.Add('for');
-  Keywords.Add('default');
-  Keywords.Add('deterministic');
-*)
 
 finalization
   FreeAndNil(Keywords);

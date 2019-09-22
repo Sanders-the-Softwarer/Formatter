@@ -315,9 +315,10 @@ begin
 end;
 
 procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
+var OldShift: integer;
 begin
   { Если задан режим печати с выравниваниями }
-  if {Attributes.HasAttribute(AStatement.ClassType, AlignedAttribute)} AStatement.Aligned then
+  if AStatement.Aligned then
     begin
       if Mode <> fpmNormal then raise Exception.Create('Recursive ruler not supported');
       { Сохраним конфигурацию }
@@ -346,7 +347,12 @@ begin
       Rulers.Clear;
     end
   else
-    inherited;
+    begin
+      OldShift := Shift;
+      inherited;
+      if Shift <> OldShift then
+        raise Exception.CreateFmt('Invalid indents into %s - was %d but %d now', [AStatement.ClassName, OldShift, Shift]);
+    end;
 end;
 
 procedure TFormatterPrinter.Indent;

@@ -39,10 +39,8 @@ object FormMain: TFormMain
     Align = alClient
     TabOrder = 0
     OnChange = UpdateRequired
-    ExplicitWidth = 736
     object tabTokenizer: TTabSheet
       Caption = #1051#1077#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
-      ExplicitWidth = 728
       object edTokenizer: TMemo
         AlignWithMargins = True
         Left = 5
@@ -57,13 +55,11 @@ object FormMain: TFormMain
         ReadOnly = True
         ScrollBars = ssVertical
         TabOrder = 0
-        ExplicitWidth = 718
       end
     end
     object tabParser: TTabSheet
       Caption = #1057#1080#1085#1090#1072#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
       ImageIndex = 1
-      ExplicitWidth = 728
       object treeParser: TTreeView
         AlignWithMargins = True
         Left = 5
@@ -77,13 +73,11 @@ object FormMain: TFormMain
         Align = alClient
         Indent = 19
         TabOrder = 0
-        ExplicitWidth = 718
       end
     end
     object tabResult: TTabSheet
       Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090
       ImageIndex = 2
-      ExplicitWidth = 728
       object edResult: TMemo
         AlignWithMargins = True
         Left = 5
@@ -104,7 +98,6 @@ object FormMain: TFormMain
         ReadOnly = True
         ScrollBars = ssBoth
         TabOrder = 0
-        ExplicitWidth = 718
       end
     end
   end
@@ -129,14 +122,8 @@ object FormMain: TFormMain
       ActivePage = tabSrc
       Align = alClient
       TabOrder = 0
-      ExplicitLeft = 7
-      ExplicitTop = 15
-      ExplicitWidth = 176
-      ExplicitHeight = 36
       object tabSrc: TTabSheet
         Caption = #1048#1089#1093#1086#1076#1085#1080#1082
-        ExplicitWidth = 168
-        ExplicitHeight = 8
         object edSrc: TMemo
           AlignWithMargins = True
           Left = 5
@@ -154,10 +141,9 @@ object FormMain: TFormMain
           Font.Name = 'Courier New'
           Font.Style = []
           ParentFont = False
+          ScrollBars = ssBoth
           TabOrder = 0
           OnChange = UpdateRequired
-          ExplicitWidth = 158
-          ExplicitHeight = 0
         end
       end
     end
@@ -175,11 +161,8 @@ object FormMain: TFormMain
     ActivePage = tabSettings
     Align = alTop
     TabOrder = 2
-    ExplicitWidth = 919
     object tabSettings: TTabSheet
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
-      ExplicitTop = 27
-      ExplicitWidth = 911
       object Label1: TLabel
         Left = 5
         Top = 15

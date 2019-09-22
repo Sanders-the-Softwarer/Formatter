@@ -21,7 +21,7 @@ unit DML;
 
 interface
 
-uses Math, Tokens, Statements, PLSQL, Printers_;
+uses Math, Tokens, Statements, PLSQL, Printers_, Attributes;
 
 type
 
@@ -31,7 +31,7 @@ type
     _Select: TKeyword;
     _Fields: TStatement;
     _Into: TKeyword;
-    _Targets: TStatement;
+    _IntoFields: TStatement;
     _From: TKeyword;
     _Tables: TStatement;
     _Where: TKeyword;
@@ -53,7 +53,7 @@ type
     _CloseBracket: TTerminal;
     _Values: TKeyword;
     _OpenBracket2: TTerminal;
-    _Expressions: TStatement;
+    _ValueList: TStatement;
     _CloseBracket2: TTerminal;
   strict protected
     function InternalParse: boolean; override;
@@ -71,6 +71,10 @@ type
     _Assignments: TStatement;
     _Where: TKeyword;
     _Condition: TStatement;
+    _Returning: TKeyword;
+    _ReturningFields: TStatement;
+    _Into: TKeyword;
+    _Targets: TStatement;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -96,17 +100,16 @@ type
   strict private
     _Merge: TKeyword;
     _Into: TKeyword;
-    _TableName: TIdent;
+    _DestSelect: TStatement;
+    _DestTable: TIdent;
     _DestAlias: TIdent;
     _Using: TKeyword;
-    _Source: TStatement;
+    _SourceSelect: TStatement;
+    _SourceTable: TIdent;
     _SourceAlias: TIdent;
     _On: TKeyword;
     _Condition: TStatement;
-    _WhenMatchedThen: TKeyword;
-    _Update: TStatement;
-    _WhenNotMatchedThen: TKeyword;
-    _Insert: TStatement;
+    _Sections: TStatement;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -126,15 +129,6 @@ type
     function Name: string; override;
   end;
 
-  { Список полей в select }
-  TSelectFields = class(TCommaList)
-  strict protected
-    function ParseStatement(out AResult: TStatement): boolean; override;
-    function ParseBreak: boolean; override;
-  public
-    function Name: string; override;
-  end;
-
   { Поле в select }
   TSelectField = class(TStatement)
   strict private
@@ -148,10 +142,64 @@ type
     function Name: string; override;
   end;
 
+  { Список полей в select }
+  TSelectFields = class(TCommaList<TSelectField>)
+  strict protected
+    function ParseBreak: boolean; override;
+  public
+    function Name: string; override;
+  end;
+
+  { Идентификатор как поле в insert, select into итп }
+  TIdentField = class(TStatement)
+  strict private
+    _FieldName: TIdent;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function Name: string; override;
+    function FieldName: string;
+  end;
+
+  { Список идентификаторов }
+  TIdentFields = class(TCommaList<TIdentField>)
+  strict protected
+    function ParseBreak: boolean; override;
+  public
+    function Name: string; override;
+  end;
+
+  { Значение в insert }
+  TInsertValue = class(TStatement)
+  strict private
+    _Value: TStatement;
+    _Match: TIdentField;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function Name: string; override;
+    property Match: TIdentField read _Match write _Match;
+  end;
+
+  { Значения в insert }
+  [Aligned]
+  TInsertValues = class(TCommaList<TInsertValue>)
+  strict protected
+    function ParseBreak: boolean; override;
+  public
+    function Name: string; override;
+    procedure Match(AFields: TIdentFields);
+  end;
+
   { Таблица в select }
   TSelectTable = class(TStatement)
   strict private
+    _Table: TKeyword;
+    _OpenBracket: TTerminal;
     _TableName: TIdent;
+    _CloseBracket: TTerminal;
     _Alias: TIdent;
   strict protected
     function InternalParse: boolean; override;
@@ -168,16 +216,6 @@ type
     function Name: string; override;
   end;
 
-  { Список присвоений в update }
-  TUpdateAssignments = class(TCommaList)
-  strict protected
-    function ParseStatement(out AResult: TStatement): boolean; override;
-    function ParseBreak: boolean; override;
-  public
-    function Name: string; override;
-    function Aligned: boolean; override;
-  end;
-
   { Присвоение в update }
   TUpdateAssignment = class(TStatement)
   strict private
@@ -191,31 +229,33 @@ type
     function Name: string; override;
   end;
 
-  { Список выражений через запятую }
-  TFieldList = class(TStatementList)
+  { Список присвоений в update }
+  [Aligned]
+  TUpdateAssignments = class(TCommaList<TUpdateAssignment>)
   strict protected
-    function ParseStatement(out  AResult: TStatement): boolean; override;
     function ParseBreak: boolean; override;
   public
     function Name: string; override;
-    function Aligned: boolean; override;
   end;
 
-  { Выражение для списка }
-  TField = class(TStatement)
+  { Секция в merge }
+  TMergeSection = class(TStatement)
   strict private
-    _Expression: TStatement;
-    _As: TKeyword;
-    _Alias: TIdent;
-    _Comma: TTerminal;
-    _Match: TField;
+    _Section: TKeyword;
+    _DML: TStatement;
   strict protected
     function InternalParse: boolean; override;
   public
-    property Match: TField read _Match write _Match;
     function Name: string; override;
-    function Ident: string;
     procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Секции операторов в merge }
+  TMergeSections = class(TStatementList<TMergeSection>)
+  strict protected
+    function ParseBreak: boolean; override;
+  public
+    function Name: string; override;
   end;
 
 implementation
@@ -232,22 +272,17 @@ begin
   _Into := Keyword('into');
   _TableName := Identifier;
   _OpenBracket := Terminal('(');
-  TFieldList.Parse(Self, Source, _Fields);
+  TIdentFields.Parse(Self, Source, _Fields);
   _CloseBracket := Terminal(')');
   _Values := Keyword('values');
   _OpenBracket2 := Terminal('(');
-  TFieldList.Parse(Self, Source, _Expressions);
+  TInsertValues.Parse(Self, Source, _ValueList);
   _CloseBracket2 := Terminal(')');
-  inherited;
+  if (_ValueList is TInsertValues) and (_Fields is TIdentFields) then TInsertValues(_ValueList).Match(TIdentFields(_Fields));
 end;
 
 procedure TInsert.PrintSelf(APrinter: TPrinter);
-var i: integer;
 begin
-  if Settings.CommentInsert and Assigned(_Expressions) and Assigned(_Fields) then
-    for i := 0 to TStatementList(_Fields).Count - 1 do
-      if TStatementList(_Expressions).Count > i then
-        (TStatementList(_Expressions).Item(i) as TField).Match := TStatementList(_Fields).Item(i) as TField;
   APrinter.PrintItem(_Insert);
   APrinter.NextLine;
   APrinter.PrintItem(_Into);
@@ -270,7 +305,7 @@ begin
   APrinter.PrintItem(_OpenBracket2);
   APrinter.NextLine;
   APrinter.Indent;
-  APrinter.PrintItem(_Expressions);
+  APrinter.PrintItem(_ValueList);
   APrinter.NextLine;
   APrinter.Undent;
   APrinter.PrintItem(_CloseBracket2);
@@ -290,6 +325,10 @@ begin
   TUpdateAssignments.Parse(Self, Source, _Assignments);
   _Where := Keyword('where');
   if Assigned(_Where) then TExpression.Parse(Self, Source, _Condition);
+  _Returning := Keyword('returning');
+  if Assigned(_Returning) then TIdentFields.Parse(Self, Source, _ReturningFields);
+  _Into := Keyword('into');
+  if Assigned(_Into) then TIdentFields.Parse(Self, Source, _Targets);
 end;
 
 procedure TUpdate.PrintSelf(APrinter: TPrinter);
@@ -309,6 +348,19 @@ begin
   if Assigned(_Where) then APrinter.NextLine;
   APrinter.Indent;
   APrinter.PrintItem(_Condition);
+  APrinter.NextLine;
+  APrinter.Undent;
+  APrinter.PrintItem(_Returning);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_ReturningFields);
+  APrinter.NextLine;
+  APrinter.Undent;
+  APrinter.PrintItem(_Into);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_Targets);
+  APrinter.NextLine;
   APrinter.Undent;
 end;
 
@@ -318,11 +370,10 @@ function TDelete.InternalParse: boolean;
 begin
   _Delete := Keyword('delete');
   _From   := Keyword('from');
+  if not Assigned(_Delete) or not Assigned(_From) then exit(false);
   _TableName := Identifier;
   _Where  := Keyword('where');
-  TExpression.Parse(Self, Source, _Condition);
-  inherited;
-  Result := Assigned(_Delete) and Assigned(_From);
+  Result := true;
 end;
 
 procedure TDelete.PrintSelf(APrinter: TPrinter);
@@ -342,72 +393,220 @@ begin
   APrinter.Undent;
 end;
 
-{ TFieldList }
+{ TIdentFields }
 
-function TFieldList.ParseStatement(out AResult: TStatement): boolean;
+function TIdentFields.Name: string;
 begin
-  Result := TField.Parse(Self, Source, AResult);
+  Result := '< identifiers >';
 end;
 
-function TFieldList.Name: string;
+function TIdentFields.ParseBreak: boolean;
 begin
-  Result := '< fields >';
+  Result := not (NextToken is TIdent);
 end;
 
-function TFieldList.Aligned: boolean;
+{ TInsertValue }
+
+function TInsertValue.InternalParse: boolean;
 begin
-  Aligned := true;
+  Result := TExpression.Parse(Self, Source, _Value);
 end;
 
-function TFieldList.ParseBreak: boolean;
+function TInsertValue.Name: string;
 begin
-  Result := Any([Terminal([')', ';']), Keyword(['from'])]);
+  Result := '< insert value >';
 end;
 
-{ TField }
+procedure TInsertValue.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Value);
+  if Assigned(_Match) then
+  begin
+    APrinter.Ruler('match', Settings.AlignCommentInsert and Settings.CommentInsert);
+    if Settings.CommentInsert then APrinter.PrintSpecialComment('=> ' + TIdentField(_Match).FieldName);
+  end;
+end;
 
-function TField.InternalParse: boolean;
+{ TInsertValues }
+
+function TInsertValues.Name: string;
+begin
+  Name := '< insert values >';
+end;
+
+function TInsertValues.ParseBreak: boolean;
+begin
+  Result := Any([Terminal([')', ';'])]) or (NextToken is TKeyword);
+end;
+
+procedure TInsertValues.Match(AFields: TIdentFields);
+var i: integer;
+begin
+  for i := 0 to Math.Min(Self.Count, AFields.Count) - 1 do
+    if (Item(i) is TInsertValue) and (AFields.Item(i) is TIdentField) then
+      TInsertValue(Item(i)).Match := TIdentField(AFields.Item(i));
+end;
+
+{ TSelect }
+
+function TSelect.InternalParse: boolean;
+begin
+  _Select := Keyword('select');
+  if not Assigned(_Select) then exit(false);
+  TSelectFields.Parse(Self, Source, _Fields);
+  _Into := Keyword('into');
+  TIdentFields.Parse(Self, Source, _IntoFields);
+  _From := Keyword('from');
+  TSelectTables.Parse(Self, Source, _Tables);
+  _Where := Keyword('where');
+  TExpression.Parse(Self, Source, _Condition);
+  Result := true;
+end;
+
+procedure TSelect.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Select);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_Fields);
+  APrinter.NextLine;
+  APrinter.Undent;
+  APrinter.PrintItem(_Into);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_IntoFields);
+  APrinter.NextLine;
+  APrinter.Undent;
+  APrinter.PrintItem(_From);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_Tables);
+  APrinter.NextLine;
+  APrinter.Undent;
+  APrinter.PrintItem(_Where);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_Condition);
+  APrinter.NextLine;
+  APrinter.Undent;
+end;
+
+{ TMerge }
+
+function TMerge.InternalParse: boolean;
 begin
   Result := true;
-  if not TExpression.Parse(Self, Source, _Expression) then exit(false);
-  _As := Keyword('as');
-  _Alias := Identifier;
-  _Comma := Terminal(',');
+  _Merge := Keyword('merge');
+  _Into  := Keyword('into');
+  if not Assigned(_Merge) or not Assigned(_Into) then exit(false);
+  if not TInnerSelect.Parse(Self, Source, _DestSelect) then _DestTable := Identifier;
+  _DestAlias := Identifier;
+  _Using := Keyword('using');
+  if not TInnerSelect.Parse(Self, Source, _SourceSelect) then _SourceTable := Identifier;
+  _SourceAlias := Identifier;
+  _On    := Keyword('on');
+  TExpression.Parse(Self, Source, _Condition);
+  TMergeSections.Parse(Self, Source, _Sections);
 end;
 
-function TField.Name: string;
+procedure TMerge.PrintSelf(APrinter: TPrinter);
 begin
-  if Assigned(_Alias)
-    then Result := _Alias.Value
-    else Result := '< field >';
-end;
-
-function TField.Ident: string;
-begin
-  if _Expression is TExpression
-    then Result := TExpression(_Expression).Ident
-    else Result := '';
-end;
-
-procedure TField.PrintSelf(APrinter: TPrinter);
-var C: string;
-begin
-  APrinter.PrintItem(_Expression);
-  APrinter.Ruler('expression');
+  APrinter.PrintItem(_Merge);
   APrinter.Space;
-  APrinter.PrintItem(_As);
+  APrinter.PrintItem(_Into);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_DestSelect);
+  APrinter.PrintItem(_DestTable);
+  APrinter.Space;
+  APrinter.PrintItem(_DestAlias);
+  APrinter.NextLine;
+  APrinter.Undent;
+  APrinter.PrintItem(_Using);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_SourceSelect);
+  APrinter.PrintItem(_SourceTable);
+  APrinter.Space;
+  APrinter.PrintItem(_SourceAlias);
+  APrinter.NextLine;
+  APrinter.Undent;
+  APrinter.PrintItem(_On);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_Condition);
+  APrinter.NextLine;
+  APrinter.Undent;
+  APrinter.PrintItem(_Sections);
+end;
+
+{ TInnerSelect }
+
+function TInnerSelect.InternalParse: boolean;
+begin
+  _OpenBracket := Terminal('(');
+  TSelect.Parse(Self, Source, _Select);
+  _CloseBracket := Terminal(')');
+  Result := Assigned(_OpenBracket) and Assigned(_Select);
+end;
+
+function TInnerSelect.Name: string;
+begin
+  Result := '< inner select >';
+end;
+
+procedure TInnerSelect.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_OpenBracket);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_Select);
+  APrinter.Undent;
+  APrinter.NextLine;
+  APrinter.PrintItem(_CloseBracket);
+end;
+
+{ TSelectTable }
+
+function TSelectTable.InternalParse: boolean;
+begin
+  _Table := Keyword('table');
+  if Assigned(_Table) then _OpenBracket := Terminal('(');
+  _TableName := Identifier;
+  if Assigned(_Table) then _CloseBracket := Terminal(')');
+  _Alias := Identifier;
+  Result := Assigned(_Table) or Assigned(_TableName);
+end;
+
+function TSelectTable.Name: string;
+begin
+  if Assigned(_TableName)
+    then Result := _TableName.Value
+    else Result := 'table';
+  if Assigned(_Alias) then Result := _Alias.Value + ' => ' + Result;
+  Result := '< ' + Result + ' >';
+end;
+
+procedure TSelectTable.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Table);
+  APrinter.PrintItem(_OpenBracket);
+  APrinter.PrintItem(_TableName);
+  APrinter.PrintItem(_CloseBracket);
   APrinter.Space;
   APrinter.PrintItem(_Alias);
-  APrinter.SupressSpace;
-  APrinter.PrintItem(_Comma);
-  APrinter.Space;
-  if _Match is TField then
-  begin
-    APrinter.Ruler('comment', Settings.AlignCommentInsert);
-    C := TField(_Match).Ident;
-    if C <> '' then APrinter.PrintSpecialComment('=> ' + C);
-  end;
-  APrinter.NextLine;
+end;
+
+{ TSelectTables }
+
+function TSelectTables.ParseBreak: boolean;
+begin
+  Result := Any([Keyword(['where', 'having', 'group by', 'order by']), Terminal(')')]);
+end;
+
+function TSelectTables.Name: string;
+begin
+  Result := '< source tables >';
 end;
 
 { TSelectField }
@@ -439,14 +638,9 @@ end;
 
 { TSelectFields }
 
-function TSelectFields.ParseStatement(out AResult: TStatement): boolean;
-begin
-  Result := TSelectField.Parse(Self, Source, AResult);
-end;
-
 function TSelectFields.ParseBreak: boolean;
 begin
-  Result := Any([Keyword(['from', 'into', 'where']), Terminal([';'])]);
+  Result := Any([Terminal([';'])]) or (Source.Next is TKeyword);
 end;
 
 function TSelectFields.Name: string;
@@ -454,80 +648,27 @@ begin
   Result := '< field list >';
 end;
 
-{ TSelect }
+{ TIdentField }
 
-function TSelect.InternalParse: boolean;
+function TIdentField.InternalParse: boolean;
 begin
-  _Select := Keyword('select');
-  if not Assigned(_Select) then exit(false);
-  TSelectFields.Parse(Self, Source, _Fields);
-  _Into := Keyword('into');
-  if Assigned(_Into) then TSelectFields.Parse(Self, Source, _Targets);
-  _From := Keyword('from');
-  TSelectTables.Parse(Self, Source, _Tables);
-  _Where := Keyword('where');
-  TExpression.Parse(Self, Source, _Condition);
-  Result := true;
+  _FieldName := Identifier;
+  Result := Assigned(_FieldName);
 end;
 
-procedure TSelect.PrintSelf(APrinter: TPrinter);
+function TIdentField.Name: string;
 begin
-  { select }
-  APrinter.PrintItem(_Select);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Fields);
-  APrinter.Undent;
-  { into }
-  if Assigned(_Into) then
-  begin
-    APrinter.PrintItem(_Into);
-    APrinter.NextLine;
-    APrinter.Indent;
-    APrinter.PrintItem(_Targets);
-    APrinter.Undent;
-  end;
-  { from }
-  if Assigned(_From) then
-  begin
-    APrinter.PrintItem(_From);
-    APrinter.NextLine;
-    APrinter.Indent;
-    APrinter.PrintItem(_Tables);
-    APrinter.Undent;
-  end;
-  { where }
-  if Assigned(_Where) then
-  begin
-    APrinter.PrintItem(_Where);
-    APrinter.NextLine;
-    APrinter.Indent;
-    APrinter.PrintItem(_Condition);
-    APrinter.Undent;
-  end;
-  APrinter.SupressNextLine;
+  Result := '< ' + FieldName + ' >';
 end;
 
-{ TUpdateAssignments }
-
-function TUpdateAssignments.ParseStatement(out AResult: TStatement): boolean;
+function TIdentField.FieldName: string;
 begin
-  Result := TUpdateAssignment.Parse(Self, Source, AResult);
+  Result := _FieldName.Value;
 end;
 
-function TUpdateAssignments.Name: string;
+procedure TIdentField.PrintSelf(APrinter: TPrinter);
 begin
-  Result := '< update assignment >';
-end;
-
-function TUpdateAssignments.Aligned: boolean;
-begin
-  Result := true;
-end;
-
-function TUpdateAssignments.ParseBreak: boolean;
-begin
-  Result := Any([Terminal(';'), Keyword('where')]);
+  APrinter.PrintItem(_FieldName);
 end;
 
 { TUpdateAssignment }
@@ -557,111 +698,55 @@ begin
   APrinter.PrintItem(_Value);
 end;
 
-{ TMerge }
+{ TUpdateAssignments }
 
-function TMerge.InternalParse: boolean;
+function TUpdateAssignments.Name: string;
 begin
+  Result := '< update assignment >';
+end;
+
+function TUpdateAssignments.ParseBreak: boolean;
+begin
+  Result := Any([Terminal(';')]) or (Source.Next is TKeyword);
+end;
+
+{ TMergeSection }
+
+function TMergeSection.InternalParse: boolean;
+begin
+  _Section := Keyword(['when matched then', 'when not matched then']);
+  if not Assigned(_Section) then exit(false);
   Result := true;
-  _Merge := Keyword('merge');
-  _Into  := Keyword('into');
-  if not Assigned(_Merge) or not Assigned(_Into) then exit(false);
-  _TableName := Identifier;
-  _DestAlias := Identifier;
-  _Using := Keyword('using');
-  TInnerSelect.Parse(Self, Source, _Source);
-  _SourceAlias := Identifier;
-  _On    := Keyword('on');
-  TExpression.Parse(Self, Source, _Condition);
-  _WhenMatchedThen := Keyword('when matched then');
-  if Assigned(_WhenMatchedThen) then TUpdate.Parse(Self, Source, _Update);
-  _WhenNotMatchedThen := Keyword('when not matched then');
-  if Assigned(_WhenNotMatchedThen) then TInsert.Parse(Self, Source, _Update);
+  if not TInsert.Parse(Self, Source, _DML) and
+     not TUpdate.Parse(Self, Source, _DML) and
+     not TUnexpectedToken.Parse(Self, Source, _DML) then { ничего не делаем } ;
 end;
 
-procedure TMerge.PrintSelf(APrinter: TPrinter);
+function TMergeSection.Name: string;
 begin
-  APrinter.PrintItem(_Merge);
-  APrinter.Space;
-  APrinter.PrintItem(_Into);
+  Result := _Section.Value;
+end;
+
+procedure TMergeSection.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Section);
   APrinter.NextLine;
   APrinter.Indent;
-  APrinter.PrintItem(_TableName);
-  APrinter.Space;
-  APrinter.PrintItem(_DestAlias);
+  APrinter.PrintItem(_DML);
   APrinter.NextLine;
   APrinter.Undent;
-  APrinter.PrintItem(_Using);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Source);
-  APrinter.Space;
-  APrinter.PrintItem(_SourceAlias);
-  APrinter.NextLine;
-  APrinter.Undent;
-  APrinter.PrintItem(_On);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Condition);
 end;
 
-{ TInnerSelect }
+{ TMergeSections }
 
-function TInnerSelect.InternalParse: boolean;
+function TMergeSections.Name: string;
 begin
-  _OpenBracket := Terminal('(');
-  TSelect.Parse(Self, Source, _Select);
-  _CloseBracket := Terminal(')');
-  Result := Assigned(_OpenBracket) and Assigned(_Select) and Assigned(_CloseBracket);
+  Result := '< merge sections >';
 end;
 
-function TInnerSelect.Name: string;
+function TMergeSections.ParseBreak: boolean;
 begin
-  Result := '< inner select >';
-end;
-
-procedure TInnerSelect.PrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItem(_OpenBracket);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Select);
-  APrinter.Undent;
-  APrinter.NextLine;
-  APrinter.PrintItem(_CloseBracket);
-end;
-
-{ TSelectTable }
-
-function TSelectTable.InternalParse: boolean;
-begin
-  _TableName := Identifier;
-  _Alias := Identifier;
-  Result := Assigned(_TableName);
-end;
-
-function TSelectTable.Name: string;
-begin
-  Result := _TableName.Value;
-  if Assigned(_Alias) then Result := _Alias.Value + ' => ' + Result;
-end;
-
-procedure TSelectTable.PrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItem(_TableName);
-  APrinter.Space;
-  APrinter.PrintItem(_Alias);
-end;
-
-{ TSelectTables }
-
-function TSelectTables.ParseBreak: boolean;
-begin
-  Result := Any([Keyword(['where', 'having', 'group by', 'order by']), Terminal(')')]);
-end;
-
-function TSelectTables.Name: string;
-begin
-  Result := '< source tables >';
+  Result := not Assigned(Keyword(['when matched then', 'when not matched then']));
 end;
 
 end.

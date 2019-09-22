@@ -161,22 +161,6 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Блок параметров подпрограммы }
-  TParamsDeclaration = class(TCommaList)
-  strict private
-    _OpenBracket: TTerminal;
-    _CloseBracket: TTerminal;
-  strict protected
-    function InternalParse: boolean; override;
-    function ParseStatement(out AResult: TStatement): boolean; override;
-    function ParseBreak: boolean; override;
-    function MultiLine: boolean; override;
-  public
-    function Name: string; override;
-    function Aligned: boolean; override;
-    procedure PrintSelf(APrinter: TPrinter); override;
-  end;
-
   { Параметр подпрограммы }
   TParamDeclaration = class(TStatement)
   strict private
@@ -194,23 +178,28 @@ type
     function ModifiersLen: integer;
   end;
 
-  { Блок деклараций }
-  TDeclarations = class(TStatementList)
+  { Блок параметров подпрограммы }
+  [Aligned]
+  TParamsDeclaration = class(TCommaList<TParamDeclaration>)
+  strict private
+    _OpenBracket: TTerminal;
+    _CloseBracket: TTerminal;
   strict protected
-    function ParseStatement(out AResult: TStatement): boolean; override;
+    function InternalParse: boolean; override;
     function ParseBreak: boolean; override;
+    function MultiLine: boolean; override;
   public
     function Name: string; override;
+    procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Блок переменных }
-  TVariableDeclarations = class(TStatementList)
+  { Блок деклараций }
+  TDeclarations = class(TStatementList<TStatement>)
   strict protected
     function ParseStatement(out AResult: TStatement): boolean; override;
     function ParseBreak: boolean; override;
   public
     function Name: string; override;
-    function Aligned: boolean; override;
   end;
 
   { Объявление переменной }
@@ -229,6 +218,15 @@ type
     function Name: string; override;
   end;
 
+  { Блок переменных }
+  [Aligned]
+  TVariableDeclarations = class(TStatementList<TVariableDeclaration>)
+  strict protected
+    function ParseBreak: boolean; override;
+  public
+    function Name: string; override;
+  end;
+
   { Объявление исключения }
   TExceptionDeclaration = class(TStatement)
   strict private
@@ -242,11 +240,17 @@ type
     function Name: string; override;
   end;
 
+  { Оператор }
+  TOperator = class(TStatement)
+  public
+    function Name: string; override;
+  end;
+
   { Список операторов }
-  TOperators = class(TStatementList)
+  TOperators = class(TStatementList<TOperator>)
   strict protected
     function ParseStatement(out AResult: TStatement): boolean; override;
-    function ParseDelimiter(out AToken: TToken): boolean; override;
+    function ParseDelimiter(out AResult: TToken): boolean; override;
     function ParseBreak: boolean; override;
   public
     function Name: string; override;
@@ -256,12 +260,6 @@ type
   TIfOperators = class(TOperators)
   strict protected
     function ParseBreak: boolean; override;
-  end;
-
-  { Оператор }
-  TOperator = class(TStatement)
-  public
-    function Name: string; override;
   end;
 
   { Присваивание }
@@ -350,9 +348,8 @@ type
   end;
 
   { Список обработчиков исключений }
-  TExceptionHandlers = class(TStatementList)
+  TExceptionHandlers = class(TStatementList<TExceptionHandler>)
   strict protected
-    function ParseStatement(out AResult: TStatement): boolean; override;
     function ParseBreak: boolean; override;
   public
     function Name: string; override;
@@ -525,7 +522,7 @@ end;
 
 function TSubroutineHeaderBase.MultiLine: boolean;
 begin
-  Result := Assigned(_Params) and ((_Params as TStatementList).Count > Settings.DeclarationSingleLineParamLimit);
+  Result := Assigned(_Params) and ((_Params as TCommaList<TParamDeclaration>).Count > Settings.DeclarationSingleLineParamLimit);
 end;
 
 { TTypeRef }
@@ -639,14 +636,9 @@ begin
   if Result then _CloseBracket := Terminal(')');
 end;
 
-function TParamsDeclaration.ParseStatement(out AResult: TStatement): boolean;
-begin
-  Result := TParamDeclaration.Parse(Self, Source, AResult);
-end;
-
 function TParamsDeclaration.ParseBreak: boolean;
 begin
-  Result := Any([Terminal(')')]);
+  Result := Any([Terminal(')')]) or (Source.Next is TKeyword);
 end;
 
 function TParamsDeclaration.MultiLine: boolean;
@@ -657,11 +649,6 @@ end;
 function TParamsDeclaration.Name: string;
 begin
   Result := '< parameters >';
-end;
-
-function TParamsDeclaration.Aligned: boolean;
-begin
-  Aligned := true;
 end;
 
 procedure TParamsDeclaration.PrintSelf(APrinter: TPrinter);
@@ -713,8 +700,9 @@ end;
 
 function TVariableDeclaration.Name: string;
 begin
-  Result := 'variable';
-  if Assigned(_Name) then Result := Result + ' ' + _Name.Value;
+  Result := '< ';
+  if Assigned(_Name) then Result := Result + _Name.Value else Result := Result + 'variable';
+  Result := Result + ' >';
 end;
 
 procedure TVariableDeclaration.PrintSelf(APrinter: TPrinter);
@@ -723,10 +711,11 @@ begin
   APrinter.Ruler('name', Settings.AlignVariables);
   APrinter.Space;
   APrinter.PrintItem(_Constant);
+  APrinter.Ruler('constant', Settings.AlignVariables);
   APrinter.Space;
   APrinter.PrintItem(_Type);
+  APrinter.Ruler('type', Settings.AlignVariables and Assigned(_Assignment));
   APrinter.Space;
-  APrinter.Ruler('type', Settings.AlignVariables);
   APrinter.PrintItem(_Assignment);
   APrinter.Space;
   APrinter.PrintItem(_Value);
@@ -737,11 +726,6 @@ end;
 
 { TVariableDeclarations }
 
-function TVariableDeclarations.ParseStatement(out AResult: TStatement): boolean;
-begin
-  Result := TVariableDeclaration.Parse(Self, Source, AResult);
-end;
-
 function TVariableDeclarations.ParseBreak: boolean;
 begin
   Result := Any([Keyword(['begin', 'end', 'type', 'cursor', 'procedure', 'function'])]);
@@ -750,11 +734,6 @@ end;
 function TVariableDeclarations.Name: string;
 begin
   Result := '< variables >';
-end;
-
-function TVariableDeclarations.Aligned: boolean;
-begin
-  Result := true;
 end;
 
 { TOperator }
@@ -891,10 +870,10 @@ begin
   Result := TParser.ParseOperator(Self, Source, AResult);
 end;
 
-function TOperators.ParseDelimiter(out AToken: TToken): boolean;
+function TOperators.ParseDelimiter(out AResult: TToken): boolean;
 begin
-  AToken := Terminal(';');
-  Result := Assigned(AToken);
+  AResult := Terminal(';');
+  Result  := Assigned(AResult);
 end;
 
 function TOperators.ParseBreak: boolean;
@@ -920,7 +899,6 @@ begin
   if Assigned(_Else) then TIfOperators.Parse(Self, Source, _ElseStatements);
   _EndIf := Keyword('end if');
   Result := true;
-  inherited;
 end;
 
 procedure TIf.PrintSelf(APrinter: TPrinter);
@@ -965,7 +943,6 @@ procedure TAnonymousHeader.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Declare);
   APrinter.NextLine;
-  APrinter.Indent;
 end;
 
 function TAnonymousHeader.Name: string;
@@ -1019,11 +996,6 @@ end;
 function TExceptionHandlers.Name: string;
 begin
   Result := '< exception handlers >';
-end;
-
-function TExceptionHandlers.ParseStatement(out AResult: TStatement): boolean;
-begin
-  Result := TExceptionHandler.Parse(Self, Source, AResult);
 end;
 
 function TExceptionHandlers.ParseBreak: boolean;

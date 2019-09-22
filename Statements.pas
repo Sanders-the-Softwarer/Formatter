@@ -49,6 +49,7 @@ uses SysUtils, System.Generics.Collections, Streams, Tokens, Printers_;
 type
 
   { Базовый класс синтаксических конструкций }
+  {$TypeInfo On}
   TStatement = class
   strict private
     FParent: TStatement;
@@ -75,17 +76,18 @@ type
     property Parent: TStatement read FParent;
     property Settings: TParserSettings read GetSettings write FSettings;
   end;
+  {$TypeInfo Off}
 
   { Базовый класс для списков однотипных конструкций (переменные, операторы и т. п.) }
-  TStatementList = class(TStatement)
+  TStatementList<S: TStatement> = class(TStatement)
   strict private
-    FStatements: TList<TStatement>;
-    FDelimiters: TList<TToken>;
+    Statements: TList<TStatement>;
+    Delimiters: TList<TToken>;
   strict protected
     function InternalParse: boolean; override;
-    function ParseStatement(out AResult: TStatement): boolean; virtual; abstract;
+    function ParseStatement(out AResult: TStatement): boolean; virtual;
     function ParseDelimiter(out AResult: TToken): boolean; virtual;
-    function ParseBreak: boolean; virtual; abstract;
+    function ParseBreak: boolean; virtual;
     function MultiLine: boolean; virtual;
   public
     procedure AfterConstruction; override;
@@ -97,15 +99,9 @@ type
   end;
 
   { Базовый класс для списка однотипных конструкций, разделённых запятыми }
-  TCommaList = class(TStatementList)
+  TCommaList<S: TStatement> = class(TStatementList<S>)
   strict protected
     function ParseDelimiter(out AResult: TToken): boolean; override;
-  end;
-
-  { Он же, параметризованный }
-  TCommaList<T: TStatement> = class(TStatementList)
-  strict protected
-    function ParseStatement(out AResult: TStatement): boolean; override;
   end;
 
   { Неожиданная лексема - класс для конструкций, которые не удалось разобрать }
@@ -121,6 +117,8 @@ type
   end;
 
 implementation
+
+uses Attributes;
 
 { TStatement }
 
@@ -155,7 +153,7 @@ end;
 
 function TStatement.Aligned: boolean;
 begin
-  Result := false;
+  Result := Attributes.HasAttribute(ClassType, AlignedAttribute);
 end;
 
 function TStatement.NextToken: TToken;
@@ -257,41 +255,42 @@ end;
 
 { TStatementList }
 
-procedure TStatementList.AfterConstruction;
+procedure TStatementList<S>.AfterConstruction;
 begin
   inherited;
-  FStatements := TList<TStatement>.Create;
-  FDelimiters := TList<TToken>.Create;
+  Statements := TList<TStatement>.Create;
+  Delimiters := TList<TToken>.Create;
 end;
 
-procedure TStatementList.BeforeDestruction;
+procedure TStatementList<S>.BeforeDestruction;
 begin
   inherited;
-  FreeAndNil(FStatements);
-  FreeAndNil(FDelimiters);
+  FreeAndNil(Statements);
+  FreeAndNil(Delimiters);
 end;
 
-function TStatementList.InternalParse: boolean;
+function TStatementList<S>.InternalParse: boolean;
 var
   P: TMark;
-  S: TStatement;
-  T: TToken;
+  Statement: TStatement;
+  Delimiter: TToken;
   B: boolean;
+  UnexpectedToken: TStatement;
 begin
   repeat
     P := Source.Mark;
     { Если успешно разобрали конструкцию - работаем дальше }
-    if ParseStatement(S) then
+    if ParseStatement(Statement) then
     begin
       P := Source.Mark;
-      FStatements.Add(S);
-      if ParseDelimiter(T) then
+      Statements.Add(Statement);
+      if ParseDelimiter(Delimiter) then
         begin
-          FDelimiters.Add(T);
+          Delimiters.Add(Delimiter);
           continue;
         end
       else
-        FDelimiters.Add(nil);
+        Delimiters.Add(nil);
     end;
     { Если встретили завершающую конструкцию - выходим }
     Source.Restore(P);
@@ -299,46 +298,69 @@ begin
     Source.Restore(P);
     if B then break;
     { Если ни то, ни другое - фиксируем неожиданную конструкцию и дальше ждём завершающей конструкции }
-    if TUnexpectedToken.Parse(Self, Source, S)
-      then begin FStatements.Add(S); FDelimiters.Add(nil); end
+    if TUnexpectedToken.Parse(Self, Source, UnexpectedToken)
+      then begin Statements.Add(UnexpectedToken); Delimiters.Add(nil); end
       else break;
   until false;
   Result := (Count > 0);
 end;
 
-procedure TStatementList.PrintSelf(APrinter: TPrinter);
-var i: integer;
+procedure TStatementList<S>.PrintSelf(APrinter: TPrinter);
+var
+  i: integer;
+  D: TToken;
 begin
   for i := 0 to Count - 1 do
   begin
-    APrinter.PrintItem(FStatements[i]);
-    APrinter.PrintItem(FDelimiters[i]);
-    if MultiLine then APrinter.NextLine else APrinter.Space;
+    APrinter.PrintItem(Statements[i]);
+    D := Delimiters[i];
+    if (D is TTerminal) and ((D.Value = ',') or (D.Value = ';')) then
+      begin
+        APrinter.SupressSpace;
+        APrinter.SupressNextLine;
+      end
+    else
+      APrinter.Space;
+    APrinter.PrintItem(D);
+    if MultiLine then
+      APrinter.NextLine
+    else if i < Count - 1 then
+      APrinter.Space;
   end;
 end;
 
-function TStatementList.ParseDelimiter(out AResult: TToken): boolean;
+function TStatementList<S>.ParseStatement(out AResult: TStatement): boolean;
+begin
+  Result := S.Parse(Self, Source, AResult);
+end;
+
+function TStatementList<S>.ParseDelimiter(out AResult: TToken): boolean;
 begin
   Result := true;
   AResult := nil;
 end;
 
-function TStatementList.MultiLine: boolean;
+function TStatementList<S>.ParseBreak: boolean;
+begin
+  raise Exception.CreateFmt('%s has no break condition', [ClassName]);
+end;
+
+function TStatementList<S>.MultiLine: boolean;
 begin
   Result := true;
 end;
 
-function TStatementList.Count: integer;
+function TStatementList<S>.Count: integer;
 begin
-  Result := FStatements.Count;
+  Result := Statements.Count;
 end;
 
-function TStatementList.Item(Index: integer): TStatement;
+function TStatementList<S>.Item(Index: integer): TStatement;
 begin
-  Result := FStatements[Index];
+  Result := Statements[Index];
 end;
 
-function TStatementList.Any(Found: array of TObject): boolean;
+function TStatementList<S>.Any(Found: array of TObject): boolean;
 var i: integer;
 begin
   Result := false;
@@ -347,7 +369,7 @@ end;
 
 { TCommaList }
 
-function TCommaList.ParseDelimiter(out AResult: TToken): boolean;
+function TCommaList<S>.ParseDelimiter(out AResult: TToken): boolean;
 begin
   AResult := Terminal(',');
   Result  := Assigned(AResult);
@@ -357,11 +379,7 @@ end;
 
 function TUnexpectedToken.Name: string;
 begin
-  try
-    Result := Format('*** НЕОЖИДАННАЯ КОНСТРУКЦИЯ *** [%s ''%s'']', [Token.TokenType, Token.Value]);
-  except
-    Result := '*** НЕОЖИДАННАЯ КОНСТРУКЦИЯ ***';
-  end;
+  Result := Format('*** НЕОЖИДАННАЯ КОНСТРУКЦИЯ *** [%s ''%s'']', [Token.TokenType, Token.Value]);
 end;
 
 function TUnexpectedToken.InternalParse: boolean;
@@ -375,13 +393,6 @@ begin
   APrinter.Space;
   APrinter.PrintItem(_Token);
   APrinter.NextLine;
-end;
-
-{ TCommaList<T> }
-
-function TCommaList<T>.ParseStatement(out AResult: TStatement): boolean;
-begin
-  Result := T.Parse(Self, Source, AResult);
 end;
 
 end.
