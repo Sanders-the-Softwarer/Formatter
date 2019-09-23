@@ -73,6 +73,7 @@ begin
             TNull.Parse(AParent, ASource, AResult) or
             TRaise.Parse(AParent, ASource, AResult) or
             TIf.Parse(AParent, ASource, AResult) or
+            TOpenFor.Parse(AParent, ASource, AResult) or
             TProcedureCall.Parse(AParent, ASource, AResult) or
             TAnonymousBlock.Parse(AParent, ASource, AResult);
 end;

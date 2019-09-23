@@ -12,13 +12,14 @@ unit Expressions;
 
 interface
 
-uses SysUtils, Math, Tokens, Statements, Printers_;
+uses SysUtils, Math, Tokens, Statements, Printers_, Attributes;
 
 type
 
   { Элемент выражения }
   TTerm = class(TStatement)
   strict private
+    _Not: TKeyword;
     _Prefix: TTerminal;
     _Number: TNumber;
     _Literal: TLiteral;
@@ -131,9 +132,11 @@ implementation
 
 function TTerm.InternalParse: boolean;
 begin
+  Result := false;
+  { Префиксы }
+  _Not := Keyword('not');
   _Prefix := Terminal('-');
   try
-    Result := false;
     { Слагаемое может быть числом }
     _Number := Number;
     if Assigned(_Number) then exit(true);
@@ -162,6 +165,7 @@ begin
     { Выражением case }
     if TCase.Parse(Self, Source, _Case) then exit(true);
   finally
+    { Суффиксы }
     _Postfix := Keyword(['is null', 'is not null']);
   end;
 end;
@@ -180,6 +184,8 @@ end;
 
 procedure TTerm.PrintSelf(APrinter: TPrinter);
 begin
+  APrinter.PrintItem(_Not);
+  if Assigned(_Not) then APrinter.Space;
   APrinter.PrintItem(_Prefix);
   APrinter.PrintItem(_Number);
   APrinter.PrintItem(_Literal);
@@ -201,7 +207,7 @@ end;
 function TExpression.ParseDelimiter(out AResult: TToken): boolean;
 begin
   AResult := Terminal(['+', '-', '*', '/', '||', '=', '<', '>', '<=', '>=', '<>', '!=', '^=']);
-  if not Assigned(AResult) then AResult := Keyword(['like', 'not like', 'in', 'and', 'or']);
+  if not Assigned(AResult) then AResult := Keyword(['like', 'not like', 'in', 'and', 'or', 'between']);
   if not Assigned(AResult) and AllowComma then AResult := Terminal(',');
   Result := Assigned(AResult);
   AllowComma := Assigned(AResult) and ((AResult.Value = ',') or (AResult.Value = 'in'));
@@ -373,7 +379,6 @@ begin
   APrinter.PrintItem(_Condition);
   APrinter.Space;
   APrinter.PrintItem(_Then);
-  APrinter.SupressSpace;
   APrinter.PrintItem(_Else);
   APrinter.Space;
   APrinter.PrintItem(_Value);

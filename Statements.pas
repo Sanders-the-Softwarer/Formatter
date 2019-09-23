@@ -393,6 +393,7 @@ begin
   APrinter.Space;
   APrinter.PrintItem(_Token);
   APrinter.NextLine;
+  APrinter.PrintSpecialComment('!!! SHIT HAPPENS !!!');
 end;
 
 end.

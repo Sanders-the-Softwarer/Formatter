@@ -29,6 +29,7 @@ type
   TSelect = class(TOperator)
   strict private
     _Select: TKeyword;
+    _Star: TTerminal;
     _Fields: TStatement;
     _Into: TKeyword;
     _IntoFields: TStatement;
@@ -200,7 +201,10 @@ type
     _OpenBracket: TTerminal;
     _TableName: TIdent;
     _CloseBracket: TTerminal;
+    _Select: TStatement;
     _Alias: TIdent;
+    _On: TKeyword;
+    _JoinCondition: TStatement;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -211,6 +215,7 @@ type
   { Список таблиц в select }
   TSelectTables = class(TCommaList<TSelectTable>)
   strict protected
+    function ParseDelimiter(out AResult: TToken): boolean; override;
     function ParseBreak: boolean; override;
   public
     function Name: string; override;
@@ -453,7 +458,8 @@ function TSelect.InternalParse: boolean;
 begin
   _Select := Keyword('select');
   if not Assigned(_Select) then exit(false);
-  TSelectFields.Parse(Self, Source, _Fields);
+  _Star := Terminal('*');
+  if not Assigned(_Star) then TSelectFields.Parse(Self, Source, _Fields);
   _Into := Keyword('into');
   TIdentFields.Parse(Self, Source, _IntoFields);
   _From := Keyword('from');
@@ -468,6 +474,7 @@ begin
   APrinter.PrintItem(_Select);
   APrinter.NextLine;
   APrinter.Indent;
+  APrinter.PrintItem(_Star);
   APrinter.PrintItem(_Fields);
   APrinter.NextLine;
   APrinter.Undent;
@@ -570,12 +577,18 @@ end;
 
 function TSelectTable.InternalParse: boolean;
 begin
-  _Table := Keyword('table');
-  if Assigned(_Table) then _OpenBracket := Terminal('(');
-  _TableName := Identifier;
-  if Assigned(_Table) then _CloseBracket := Terminal(')');
+  if not TInnerSelect.Parse(Self, Source, _Select) then
+  begin
+    _Table := Keyword('table');
+    if Assigned(_Table) then _OpenBracket := Terminal('(');
+    _TableName := Identifier;
+    if not Assigned(_Table) and not Assigned(_TableName) then exit(false);
+    if Assigned(_Table) then _CloseBracket := Terminal(')');
+  end;
   _Alias := Identifier;
-  Result := Assigned(_Table) or Assigned(_TableName);
+  _On := Keyword('on');
+  if Assigned(_On) then TExpression.Parse(Self, Source, _JoinCondition);
+  Result := true;
 end;
 
 function TSelectTable.Name: string;
@@ -589,15 +602,35 @@ end;
 
 procedure TSelectTable.PrintSelf(APrinter: TPrinter);
 begin
+  APrinter.PrintItem(_Select);
   APrinter.PrintItem(_Table);
   APrinter.PrintItem(_OpenBracket);
   APrinter.PrintItem(_TableName);
   APrinter.PrintItem(_CloseBracket);
   APrinter.Space;
   APrinter.PrintItem(_Alias);
+  if Assigned(_On) then
+  begin
+    APrinter.NextLine;
+    APrinter.Indent;
+    APrinter.PrintItem(_On);
+    APrinter.Space;
+    APrinter.PrintItem(_JoinCondition);
+    APrinter.Undent;
+  end;
 end;
 
 { TSelectTables }
+
+function TSelectTables.ParseDelimiter(out AResult: TToken): boolean;
+begin
+  Result := inherited ParseDelimiter(AResult);
+  if not Result then
+  begin
+    AResult := Keyword('full join');
+    Result  := Assigned(AResult);
+  end;
+end;
 
 function TSelectTables.ParseBreak: boolean;
 begin

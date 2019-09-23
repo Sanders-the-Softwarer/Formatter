@@ -400,6 +400,7 @@ begin
   if Check(Result, 'not', 'like') then exit;
   if Check(Result, 'when', 'matched', 'then') then exit;
   if Check(Result, 'when', 'not', 'matched', 'then') then exit;
+  if Check(Result, 'full', 'join') then exit;
   { –аз не удалось - возвращаем первую лексему }
   Source.Restore(P2);
   Result := Transit(T1);
@@ -414,6 +415,7 @@ initialization
   Keywords.Add('and');
   Keywords.Add('as');
   Keywords.Add('begin');
+  Keywords.Add('between');
   Keywords.Add('body');
   Keywords.Add('byte');
   Keywords.Add('case');
@@ -422,9 +424,11 @@ initialization
   Keywords.Add('create');
   Keywords.Add('delete');
   Keywords.Add('else');
+  Keywords.Add('elsif');
   Keywords.Add('end');
   Keywords.Add('exception');
   Keywords.Add('false');
+  Keywords.Add('for');
   Keywords.Add('from');
   Keywords.Add('full');
   Keywords.Add('function');
@@ -442,6 +446,7 @@ initialization
   Keywords.Add('not');
   Keywords.Add('null');
   Keywords.Add('on');
+  Keywords.Add('open');
   Keywords.Add('or');
   Keywords.Add('out');
   Keywords.Add('package');

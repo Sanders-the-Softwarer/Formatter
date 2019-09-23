@@ -322,15 +322,34 @@ type
   strict private
     _If: TKeyword;
     _Condition: TStatement;
-    _Then: TKeyword;
-    _ThenStatements: TStatement;
-    _Else: TKeyword;
-    _ElseStatements: TStatement;
+    _Sections: TStatement;
     _EndIf: TKeyword;
   strict protected
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Секция оператора if }
+  TIfSection = class(TStatement)
+  strict private
+    _Keyword: TKeyword;
+    _Condition: TStatement;
+    _Then: TKeyword;
+    _Statements: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    function Name: string; override;
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Секции оператора if }
+  TIfSections = class(TStatementList<TIfSection>)
+  strict protected
+    function ParseBreak: boolean; override;
+  public
+    function Name: string; override;
   end;
 
   { Блок обработки исключений }
@@ -355,9 +374,23 @@ type
     function Name: string; override;
   end;
 
+  { Оператор open for }
+  TOpenFor = class(TStatement)
+  strict private
+    _Open: TKeyword;
+    _Cursor: TIdent;
+    _For: TKeyword;
+    _Select: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    function Name: string; override;
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
 implementation
 
-uses Parser;
+uses Parser, DML;
 
 { TProgramBlock }
 
@@ -893,10 +926,7 @@ begin
   _If := Keyword('if');
   if not Assigned(_If) then exit(false);
   TExpression.Parse(Self, Source, _Condition);
-  _Then := Keyword('then');
-  TIfOperators.Parse(Self, Source, _ThenStatements);
-  _Else := Keyword('else');
-  if Assigned(_Else) then TIfOperators.Parse(Self, Source, _ElseStatements);
+  TIfSections.Parse(Self, Source, _Sections);
   _EndIf := Keyword('end if');
   Result := true;
 end;
@@ -907,16 +937,7 @@ begin
   APrinter.Space;
   APrinter.PrintItem(_Condition);
   APrinter.Space;
-  APrinter.PrintItem(_Then);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_ThenStatements);
-  APrinter.Undent;
-  APrinter.PrintItem(_Else);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_ElseStatements);
-  APrinter.Undent;
+  APrinter.PrintItem(_Sections);
   APrinter.PrintItem(_EndIf);
 end;
 
@@ -1054,6 +1075,82 @@ begin
   APrinter.Space;
   APrinter.PrintItem(_Exception);
   APrinter.PrintItem(_Semicolon);
+end;
+
+{ TIfSection }
+
+function TIfSection.InternalParse: boolean;
+begin
+  _Keyword := Keyword(['then', 'elsif', 'else']);
+  if not Assigned(_Keyword) then exit(false);
+  if _Keyword.Value = 'elsif' then
+  begin
+    TExpression.Parse(Self, Source, _Condition);
+    _Then := Keyword('then');
+  end;
+  TIfOperators.Parse(Self, Source, _Statements);
+  Result := true;
+end;
+
+function TIfSection.Name: string;
+begin
+  Result := '< ' + _Keyword.Value + ' >';
+end;
+
+procedure TIfSection.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Keyword);
+  APrinter.Space;
+  APrinter.PrintItem(_Condition);
+  APrinter.Space;
+  APrinter.PrintItem(_Then);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_Statements);
+  APrinter.NextLine;
+  APrinter.Undent;
+end;
+
+{ TIfSections }
+
+function TIfSections.ParseBreak: boolean;
+begin
+  Result := Assigned(Keyword('end if'));
+end;
+
+function TIfSections.Name: string;
+begin
+  Result := '< if sections >';
+end;
+
+{ TOpenFor }
+
+function TOpenFor.InternalParse: boolean;
+begin
+  _Open := Keyword('open');
+  if not Assigned(_Open) then exit(false);
+  _Cursor := Identifier;
+  _For := Keyword('for');
+  TSelect.Parse(Self, Source, _Select);
+  Result := true;
+end;
+
+function TOpenFor.Name: string;
+begin
+  Name := '< open for >';
+end;
+
+procedure TOpenFor.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Open);
+  APrinter.Space;
+  APrinter.PrintItem(_Cursor);
+  APrinter.NextLine;
+  APrinter.PrintItem(_For);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_Select);
+  APrinter.Undent;
 end;
 
 end.
