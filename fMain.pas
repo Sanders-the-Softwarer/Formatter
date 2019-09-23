@@ -106,7 +106,7 @@ begin
   Settings.AlignCommentInsert              := checkAlignCommentInsert.Checked;
   Settings.CommentInsert                   := checkCommentInsert.Checked;
   Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
-  Statements := TParser.Create(TCommentProcessor.Create(TMerger.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(edSrc.Text)))))), Settings);
+  Statements := TParser.Create(TCommentProcessor.Create(TMerger.Create(TProcedureDeleteStream.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(edSrc.Text))))))), Settings);
   try
     CurrentPrinter.BeginPrint;
     while not Statements.Eof do CurrentPrinter.PrintItem(Statements.Next);

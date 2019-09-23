@@ -167,7 +167,8 @@ type
     _Out: TKeyword;
     _Nocopy: TKeyword;
     _ParamType: TStatement;
-    _Assignment: TTerminal;
+    _TAssignment: TTerminal;
+    _KAssignment: TKeyword;
     _DefaultValue: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -208,7 +209,8 @@ type
     _Name: TIdent;
     _Constant: TKeyword;
     _Type: TStatement;
-    _Assignment: TTerminal;
+    _TAssignment: TTerminal;
+    _KAssignment: TKeyword;
     _Value: TStatement;
     _Semicolon: TTerminal;
   strict protected
@@ -624,8 +626,9 @@ begin
   _Nocopy := Keyword('nocopy');
   TTypeRef.Parse(Self, Source, _ParamType);
   if not Assigned(_ParamName) and not Assigned(_In) and not Assigned(_Out) and not Assigned(_Nocopy) and not Assigned(_ParamType) then exit(false);
-  _Assignment := Terminal([':=', 'default']);
-  if Assigned(_Assignment) then TExpression.Parse(Self, Source, _DefaultValue);
+  _TAssignment := Terminal(':=');
+  if not Assigned(_TAssignment) then _KAssignment := Keyword('default');
+  if Assigned(_TAssignment) or Assigned(_KAssignment) then TExpression.Parse(Self, Source, _DefaultValue);
   Result := true;
 end;
 
@@ -652,8 +655,9 @@ begin
   APrinter.Space;
   APrinter.PrintItem(_ParamType);
   APrinter.Space;
-  APrinter.Ruler('default', NeedRuler and Assigned(_Assignment));
-  APrinter.PrintItem(_Assignment);
+  APrinter.Ruler('default', NeedRuler and (Assigned(_TAssignment) or Assigned(_KAssignment)));
+  APrinter.PrintItem(_TAssignment);
+  APrinter.PrintItem(_KAssignment);
   APrinter.Space;
   APrinter.PrintItem(_DefaultValue);
 end;
@@ -739,8 +743,9 @@ begin
   _Constant := Keyword('constant');
   { Теперь тип и значение }
   if not TTypeRef.Parse(Self, Source, _Type) then exit;
-  _Assignment := Terminal([':=', 'default']);
-  if Assigned(_Assignment) then TExpression.Parse(Self, Source, _Value);
+  _TAssignment := Terminal(':=');
+  if not Assigned(_TAssignment) then _KAssignment := Keyword('default');
+  if Assigned(_TAssignment) or Assigned (_KAssignment) then TExpression.Parse(Self, Source, _Value);
   _Semicolon := Terminal(';');
 end;
 
@@ -760,9 +765,10 @@ begin
   APrinter.Ruler('constant', Settings.AlignVariables);
   APrinter.Space;
   APrinter.PrintItem(_Type);
-  APrinter.Ruler('type', Settings.AlignVariables and Assigned(_Assignment));
+  APrinter.Ruler('type', Settings.AlignVariables and (Assigned(_TAssignment) or Assigned(_KAssignment)));
   APrinter.Space;
-  APrinter.PrintItem(_Assignment);
+  APrinter.PrintItem(_TAssignment);
+  APrinter.PrintItem(_KAssignment);
   APrinter.Space;
   APrinter.PrintItem(_Value);
   APrinter.SupressSpace;

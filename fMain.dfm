@@ -44,6 +44,8 @@ object FormMain: TFormMain
     ExplicitHeight = 492
     object tabTokenizer: TTabSheet
       Caption = #1051#1077#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
+      ExplicitLeft = 0
+      ExplicitTop = 0
       ExplicitWidth = 927
       ExplicitHeight = 464
       object edTokenizer: TMemo
@@ -67,6 +69,8 @@ object FormMain: TFormMain
     object tabParser: TTabSheet
       Caption = #1057#1080#1085#1090#1072#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
       ExplicitWidth = 927
       ExplicitHeight = 464
       object treeParser: TTreeView
@@ -89,6 +93,8 @@ object FormMain: TFormMain
     object tabResult: TTabSheet
       Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
       ExplicitWidth = 927
       ExplicitHeight = 464
       object edResult: TMemo
@@ -140,6 +146,8 @@ object FormMain: TFormMain
       ExplicitWidth = 180
       object tabSrc: TTabSheet
         Caption = #1048#1089#1093#1086#1076#1085#1080#1082
+        ExplicitLeft = 0
+        ExplicitTop = 0
         ExplicitWidth = 172
         ExplicitHeight = 464
         object edSrc: TMemo
@@ -168,6 +176,8 @@ object FormMain: TFormMain
       end
       object tabSettings: TTabSheet
         Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
+        ExplicitLeft = 0
+        ExplicitTop = 0
         ExplicitWidth = 172
         ExplicitHeight = 464
         object Label1: TLabel

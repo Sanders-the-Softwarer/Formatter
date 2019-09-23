@@ -26,11 +26,14 @@ type
     _Identifier: TIdent;
     _Suffix: TTerminal;
     _KeywordValue: TKeyword;
+    _Select: TStatement;
     _FunctionCall: TStatement;
     _OpenBracket: TTerminal;
     _Expression: TStatement;
     _CloseBracket: TTerminal;
     _Case: TStatement;
+    _Cast: TStatement;
+    _OuterJoin: TTerminal;
     _Postfix: TKeyword;
   strict protected
     function InternalParse: boolean; override;
@@ -67,7 +70,13 @@ type
     function MultiLine: boolean;
   end;
 
-  { Аргумент вызова подпрограммы }
+implementation
+
+uses DML, PLSQL;
+
+type
+
+    { Аргумент вызова подпрограммы }
   TArgument = class(TStatement)
   strict private
     _Ident: TIdent;
@@ -126,7 +135,21 @@ type
     function Name: string; override;
   end;
 
-implementation
+  { Выражение cast }
+  TCast = class(TStatement)
+  strict private
+    _Cast: TKeyword;
+    _OpenBracket: TTerminal;
+    _Expression: TStatement;
+    _As: TKeyword;
+    _TypeRef: TStatement;
+    _CloseBracket: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    function Name: string; override;
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
 
 { TExpression }
 
@@ -148,6 +171,9 @@ begin
     if Assigned(_KeywordValue) then exit(true);
     { Вызовом функции }
     if TFunctionCall.Parse(Self, Source, _FunctionCall) then exit(true);
+    { Вложенным запросом }
+    if TInnerSelect.Parse(Self, Source, _Select) then exit(true);
+    { Идентификатором }
     _Identifier := Identifier;
     if Assigned(_Identifier) then
     begin
@@ -164,8 +190,11 @@ begin
     end;
     { Выражением case }
     if TCase.Parse(Self, Source, _Case) then exit(true);
+    { Выражением cast }
+    if TCast.Parse(Self, Source, _Cast) then exit(true);
   finally
     { Суффиксы }
+    _OuterJoin := Terminal('(+)');
     _Postfix := Keyword(['is null', 'is not null']);
   end;
 end;
@@ -193,13 +222,17 @@ begin
   APrinter.PrintItem(_Suffix);
   APrinter.PrintItem(_KeywordValue);
   APrinter.PrintItem(_FunctionCall);
+  APrinter.PrintItem(_Select);
   APrinter.PrintItem(_OpenBracket);
   APrinter.PrintItem(_Expression);
   APrinter.SupressSpace;
   APrinter.PrintItem(_CloseBracket);
   APrinter.PrintItem(_Case);
   APrinter.Space;
+  APrinter.PrintItem(_OuterJoin);
+  APrinter.Space;
   APrinter.PrintItem(_Postfix);
+  APrinter.SupressSpace;
 end;
 
 { TExpression }
@@ -405,6 +438,37 @@ end;
 function TCaseSections.Name: string;
 begin
   Result := '< cases >';
+end;
+
+{ TCast }
+
+function TCast.InternalParse: boolean;
+begin
+  _Cast := Keyword('cast');
+  if not Assigned(_Cast) then exit(false);
+  _OpenBracket := Terminal('(');
+  TExpression.Parse(Self, Source, _Expression);
+  _As := Keyword('as');
+  TTypeRef.Parse(Self, Source, _TypeRef);
+  _CloseBracket := Terminal(')');
+  Result := true;
+end;
+
+function TCast.Name: string;
+begin
+  Result := '< cast >';
+end;
+
+procedure TCast.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Cast);
+  APrinter.PrintItem(_OpenBracket);
+  APrinter.PrintItem(_Expression);
+  APrinter.Space;
+  APrinter.PrintItem(_As);
+  APrinter.Space;
+  APrinter.PrintItem(_TypeRef);
+  APrinter.PrintItem(_CloseBracket);
 end;
 
 end.

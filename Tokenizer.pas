@@ -35,6 +35,11 @@ unit Tokenizer;
   числе в случае ошибок парсинга анализ программного блока не завершается на
   первом попавшемся end, что позволяет корректнее продолжить обработку.
 
+  Какой-то извращенец назвал одну из пакетных процедур delete. Для того, чтобы
+  с минимальными усилиями обработать этот случай, добавлен поток, который
+  отлавливает подобные места и превращает delete из ключевого слова в
+  идентификатор.
+
 ------------------------------------------------------------------------------ }
 
 interface
@@ -72,6 +77,14 @@ type
     procedure Process;
   strict protected
     function InternalEof: boolean; override;
+    function InternalNext: TToken; override;
+  end;
+
+  { Класс обрабатывает идиотский случай "procedure delete" }
+  TProcedureDeleteStream = class(TNextStream<TToken, TToken>)
+  strict private
+    PrevProcedure: boolean;
+  strict protected
     function InternalNext: TToken; override;
   end;
 
@@ -226,8 +239,8 @@ function TTokenizer.InternalNext: TToken;
   { Считывание многосимвольных лексем }
   function ParseTerminal: boolean;
   const
-    N = 27;
-    Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=', '=>', '.', ',', ';', '(', ')', '+', '-', '*', '/', '%', '@', '=', '<', '>', '(+)', '%type', '%rowtype', '%rowcount', 'default');
+    N = 26;
+    Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=', '=>', '.', ',', ';', '(', ')', '+', '-', '*', '/', '%', '@', '=', '<', '>', '(+)', '%type', '%rowtype', '%rowcount');
   var
     Value: string;
     Starts, Exact, PrevExact: boolean;    
@@ -401,9 +414,24 @@ begin
   if Check(Result, 'when', 'matched', 'then') then exit;
   if Check(Result, 'when', 'not', 'matched', 'then') then exit;
   if Check(Result, 'full', 'join') then exit;
+  if Check(Result, 'order', 'by') then exit;
+  if Check(Result, 'group', 'by') then exit;
   { Раз не удалось - возвращаем первую лексему }
   Source.Restore(P2);
   Result := Transit(T1);
+end;
+
+{ TProcedureDeleteStream }
+
+function TProcedureDeleteStream.InternalNext: TToken;
+begin
+  Result := Source.Next;
+  { Если предыдущее слово procedure, заменим delete на идентификатор, а всё остальное оставим как есть }
+  if PrevProcedure and (Result is TKeyword) and SameText(Result.Value, 'delete')
+    then Result := TIdent.Create(Result.Value, Result.Line, Result.Col)
+    else Transit(Result);
+  { Взведём флаг для следующей лексемы }
+  PrevProcedure := (Result is TKeyword) and SameText(Result.Value, 'procedure');
 end;
 
 initialization
@@ -411,33 +439,39 @@ initialization
   Keywords.Sorted := true;
   Keywords.Duplicates := dupIgnore;
   Keywords.CaseSensitive := false;
-
+  { Заполним список ключевых слов }
   Keywords.Add('and');
   Keywords.Add('as');
   Keywords.Add('begin');
   Keywords.Add('between');
   Keywords.Add('body');
+  Keywords.Add('by');
   Keywords.Add('byte');
   Keywords.Add('case');
+  Keywords.Add('cast');
   Keywords.Add('char');
   Keywords.Add('constant');
   Keywords.Add('create');
+  Keywords.Add('default');
   Keywords.Add('delete');
   Keywords.Add('else');
   Keywords.Add('elsif');
   Keywords.Add('end');
   Keywords.Add('exception');
   Keywords.Add('false');
+  Keywords.Add('first');
   Keywords.Add('for');
   Keywords.Add('from');
   Keywords.Add('full');
   Keywords.Add('function');
+  Keywords.Add('group');
   Keywords.Add('if');
   Keywords.Add('in');
   Keywords.Add('into');
   Keywords.Add('insert');
   Keywords.Add('is');
   Keywords.Add('join');
+  Keywords.Add('last');
   Keywords.Add('like');
   Keywords.Add('loop');
   Keywords.Add('matched');
@@ -445,9 +479,11 @@ initialization
   Keywords.Add('nocopy');
   Keywords.Add('not');
   Keywords.Add('null');
+  Keywords.Add('nulls');
   Keywords.Add('on');
   Keywords.Add('open');
   Keywords.Add('or');
+  Keywords.Add('order');
   Keywords.Add('out');
   Keywords.Add('package');
   Keywords.Add('pragma');
