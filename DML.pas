@@ -593,9 +593,12 @@ end;
 
 function TSelectTable.Name: string;
 begin
-  if Assigned(_TableName)
-    then Result := _TableName.Value
-    else Result := 'table';
+  if Assigned(_TableName) then
+    Result := _TableName.Value
+  else if Assigned(_Select) then
+    Result := 'inner select'
+  else
+    Result := 'table';
   if Assigned(_Alias) then Result := _Alias.Value + ' => ' + Result;
   Result := '< ' + Result + ' >';
 end;
@@ -655,7 +658,7 @@ end;
 function TSelectField.Name: string;
 begin
   if Assigned(_Alias)
-    then Result := _Alias.Value
+    then Result := '< ' + _Alias.Value + ' >'
     else Result := '< field >';
 end;
 

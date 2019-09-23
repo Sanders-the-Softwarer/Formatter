@@ -31,8 +31,23 @@ uses Classes, SysUtils, Math, ComCtrls, System.Generics.Collections;
 
 type
 
+  { Настройки вывода }
+  TFormatSettings = class
+  public
+    DeclarationSingleLineParamLimit: integer;
+    ArgumentSingleLineParamLimit: integer;
+    AlignSubroutineParams: boolean;
+    AlignVariables: boolean;
+    AlignCallArguments: boolean;
+    AlignCommentInsert: boolean;
+    CommentInsert: boolean;
+    ReplaceDefault: boolean;
+  end;
+
   { Интерфейс вывода на принтер }
   TPrinter = class
+  private
+    FSettings: TFormatSettings;
   public
     procedure BeginPrint; virtual; abstract;
     procedure PrintItem(AItem: TObject); virtual; abstract;
@@ -47,20 +62,11 @@ type
     procedure Ruler(const ARuler: string; Enabled: boolean = true); virtual; abstract;
     procedure SpaceOrNextLine(AMultiLine: boolean);
   public
+    property Settings: TFormatSettings read FSettings write FSettings;
+  public
     class function CreateTokenizerPrinter(AStrings: TStrings): TPrinter;
     class function CreateSyntaxTreePrinter(ATreeView: TTreeView): TPrinter;
     class function CreateFormatterPrinter(AStrings: TStrings): TPrinter;
-  end;
-
-  TParserSettings = class
-  public
-    DeclarationSingleLineParamLimit: integer;
-    ArgumentSingleLineParamLimit: integer;
-    AlignSubroutineParams: boolean;
-    AlignVariables: boolean;
-    AlignCallArguments: boolean;
-    AlignCommentInsert: boolean;
-    CommentInsert: boolean;
   end;
 
 implementation
@@ -309,7 +315,10 @@ begin
   end;
   if Assigned(AToken) then
   begin
-    if Assigned(Builder) then Builder.Append(AToken.Value);
+    if Assigned(Builder) then
+      if (AToken is TTerminal) and SameText(AToken.Value, 'default') and Settings.ReplaceDefault
+        then Builder.Append(':=')
+        else Builder.Append(AToken.Value);
     Inc(Col, AToken.Value.Length);
   end;
 end;

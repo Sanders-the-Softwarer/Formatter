@@ -20,7 +20,6 @@ type
     pgSrc: TPageControl;
     tabSrc: TTabSheet;
     edSrc: TMemo;
-    pgSettings: TPageControl;
     tabSettings: TTabSheet;
     spVert: TSplitter;
     edDeclarationSingleLineParamLimit: TSpinEdit;
@@ -34,13 +33,15 @@ type
     GroupBox2: TGroupBox;
     checkCommentInsert: TCheckBox;
     checkAlignCommentInsert: TCheckBox;
+    GroupBox3: TGroupBox;
+    checkReplaceDefault: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
   private
     TokenizerPrinter, SyntaxTreePrinter, ResultPrinter: TPrinter;
-    Settings: TParserSettings;
+    Settings: TFormatSettings;
     function CurrentPrinter: TPrinter;
     procedure UpdateData;
   public
@@ -61,7 +62,8 @@ begin
   SyntaxTreePrinter := TPrinter.CreateSyntaxTreePrinter(treeParser);
   ResultPrinter     := TPrinter.CreateFormatterPrinter(edResult.Lines);
   Self.WindowState  := wsMaximized;
-  Settings := TParserSettings.Create;
+  Settings := TFormatSettings.Create;
+  ResultPrinter.Settings := Settings;
 end;
 
 procedure TFormMain.UpdateRequired(Sender: TObject);
@@ -103,6 +105,7 @@ begin
   Settings.AlignCallArguments              := checkAlignCallArguments.Checked;
   Settings.AlignCommentInsert              := checkAlignCommentInsert.Checked;
   Settings.CommentInsert                   := checkCommentInsert.Checked;
+  Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
   Statements := TParser.Create(TCommentProcessor.Create(TMerger.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(edSrc.Text)))))), Settings);
   try
     CurrentPrinter.BeginPrint;

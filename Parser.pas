@@ -18,11 +18,11 @@ type
   { Синтаксический анализатор }
   TParser = class(TNextStream<TToken, TStatement>)
   strict private
-    Settings: TParserSettings;
+    Settings: TFormatSettings;
   strict protected
     function InternalNext: TStatement; override;
   public
-    constructor Create(AStream: TBufferedStream<TToken>; ASettings: TParserSettings);
+    constructor Create(AStream: TBufferedStream<TToken>; ASettings: TFormatSettings);
     class function ParseDML(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseCreation(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseOperator(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
@@ -44,7 +44,7 @@ type
 
 { TParser }
 
-constructor TParser.Create(AStream: TBufferedStream<TToken>; ASettings: TParserSettings);
+constructor TParser.Create(AStream: TBufferedStream<TToken>; ASettings: TFormatSettings);
 begin
   inherited Create(AStream);
   Settings := ASettings;

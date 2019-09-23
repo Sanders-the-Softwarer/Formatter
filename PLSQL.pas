@@ -152,8 +152,6 @@ type
     _Size: TNumber;
     _Unit: TKeyword;
     _CloseBracket: TTerminal;
-    _Default: TKeyword;
-    _Value: TStatement;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -169,6 +167,8 @@ type
     _Out: TKeyword;
     _Nocopy: TKeyword;
     _ParamType: TStatement;
+    _Assignment: TTerminal;
+    _DefaultValue: TStatement;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -388,6 +388,19 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Декларация pragma }
+  TPragma = class(TStatement)
+  strict private
+    _Pragma: TKeyword;
+    _Body: TStatement;
+    _Semicolon: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    function Name: string; override;
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
 implementation
 
 uses Parser, DML;
@@ -579,9 +592,6 @@ begin
     _Unit := Keyword(['char', 'byte']);
     _CloseBracket := Terminal(')');
   end;
-  { Проверим значение по умолчанию }
-  _Default := Keyword('default');
-  if Assigned(_Default) then TExpression.Parse(Self, Source, _Value);
 end;
 
 function TTypeRef.Name: string;
@@ -602,13 +612,6 @@ begin
   APrinter.PrintItem(_Unit);
   APrinter.SupressSpace;
   APrinter.PrintItem(_CloseBracket);
-  if Assigned(_Default) then
-  begin
-    APrinter.Space;
-    APrinter.PrintItem(_Default);
-    APrinter.Space;
-    APrinter.PrintItem(_Value);
-  end;
 end;
 
 { TParamDeclaration }
@@ -620,8 +623,10 @@ begin
   _Out := Keyword('out');
   _Nocopy := Keyword('nocopy');
   TTypeRef.Parse(Self, Source, _ParamType);
-  Result := Assigned(_ParamName) or Assigned(_In) or Assigned(_Out) or
-    Assigned(_Nocopy) or Assigned(_ParamType);
+  if not Assigned(_ParamName) and not Assigned(_In) and not Assigned(_Out) and not Assigned(_Nocopy) and not Assigned(_ParamType) then exit(false);
+  _Assignment := Terminal([':=', 'default']);
+  if Assigned(_Assignment) then TExpression.Parse(Self, Source, _DefaultValue);
+  Result := true;
 end;
 
 function TParamDeclaration.Name: string;
@@ -632,18 +637,25 @@ begin
 end;
 
 procedure TParamDeclaration.PrintSelf(APrinter: TPrinter);
+var NeedRuler: boolean;
 begin
+  NeedRuler := Settings.AlignSubroutineParams and (Parent.Parent as TSubroutineHeaderBase).MultiLine;
   APrinter.PrintItem(_ParamName);
-  APrinter.Ruler('modifiers', Settings.AlignSubroutineParams and (Parent.Parent as TSubroutineHeaderBase).MultiLine);
+  APrinter.Ruler('modifiers', NeedRuler);
   APrinter.Space;
   APrinter.PrintItem(_In);
   APrinter.Space;
   APrinter.PrintItem(_Out);
   APrinter.Space;
   APrinter.PrintItem(_Nocopy);
-  APrinter.Ruler('type', Settings.AlignSubroutineParams and (Parent.Parent as TSubroutineHeaderBase).MultiLine);
+  APrinter.Ruler('type', NeedRuler);
   APrinter.Space;
   APrinter.PrintItem(_ParamType);
+  APrinter.Space;
+  APrinter.Ruler('default', NeedRuler and Assigned(_Assignment));
+  APrinter.PrintItem(_Assignment);
+  APrinter.Space;
+  APrinter.PrintItem(_DefaultValue);
 end;
 
 function TParamDeclaration.ParamNameLen: integer;
@@ -701,6 +713,7 @@ function TDeclarations.ParseStatement(out AResult: TStatement): boolean;
 begin
   Result := TSubroutineForwardDeclaration.Parse(Self, Source, AResult) or
             TSubroutine.Parse(Self, Source, AResult) or
+            TPragma.Parse(Self, Source, AResult) or
             TExceptionDeclaration.Parse(Self, Source, AResult) or
             TVariableDeclarations.Parse(Self, Source, AResult);
 end;
@@ -726,7 +739,7 @@ begin
   _Constant := Keyword('constant');
   { Теперь тип и значение }
   if not TTypeRef.Parse(Self, Source, _Type) then exit;
-  _Assignment := Terminal(':=');
+  _Assignment := Terminal([':=', 'default']);
   if Assigned(_Assignment) then TExpression.Parse(Self, Source, _Value);
   _Semicolon := Terminal(';');
 end;
@@ -1151,6 +1164,30 @@ begin
   APrinter.Indent;
   APrinter.PrintItem(_Select);
   APrinter.Undent;
+end;
+
+{ TPragma }
+
+function TPragma.InternalParse: boolean;
+begin
+  _Pragma := Keyword('pragma');
+  if not Assigned(_Pragma) then exit(false);
+  TFunctionCall.Parse(Self, Source, _Body);
+  _Semicolon := Terminal(';');
+  Result := true;
+end;
+
+function TPragma.Name: string;
+begin
+  Result := '< pragma >';
+end;
+
+procedure TPragma.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Pragma);
+  APrinter.Space;
+  APrinter.PrintItem(_Body);
+  APrinter.PrintItem(_Semicolon);
 end;
 
 end.

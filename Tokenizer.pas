@@ -226,8 +226,8 @@ function TTokenizer.InternalNext: TToken;
   { Считывание многосимвольных лексем }
   function ParseTerminal: boolean;
   const
-    N = 26;
-    Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=', '=>', '.', ',', ';', '(', ')', '+', '-', '*', '/', '%', '@', '=', '<', '>', '(+)', '%type', '%rowtype', '%rowcount');
+    N = 27;
+    Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=', '=>', '.', ',', ';', '(', ')', '+', '-', '*', '/', '%', '@', '=', '<', '>', '(+)', '%type', '%rowtype', '%rowcount', 'default');
   var
     Value: string;
     Starts, Exact, PrevExact: boolean;    
@@ -260,20 +260,20 @@ begin
   { В зависимости от первого символа }
   if ParseWhitespace then
     Result := TWhitespace.Create(TokenValue, Start)
-  else if ParseIdent then
-    if Keywords.IndexOf(TokenValue) >= 0
-      then Result := TKeyword.Create(TokenValue, Start)
-      else Result := TIdent.Create(TokenValue, Start)
   else if ParseLineComment then
     Result := TComment.Create(TokenValue, Start)
   else if ParseBracedComment then
     Result := TComment.Create(TokenValue, Start)
+  else if ParseTerminal then { должен идти до ParseIdent, чтобы default распознавался как терминал }
+    Result := TTerminal.Create(TokenValue, Start)
+  else if ParseIdent then
+    if Keywords.IndexOf(TokenValue) >= 0
+      then Result := TKeyword.Create(TokenValue, Start)
+      else Result := TIdent.Create(TokenValue, Start)
   else if ParseNumber then
     Result := TNumber.Create(TokenValue, Start)
   else if ParseLiteral then
     Result := TLiteral.Create(TokenValue, Start)
-  else if ParseTerminal then
-    Result := TTerminal.Create(TokenValue, Start)
   else
     begin
       Restore;
@@ -450,6 +450,7 @@ initialization
   Keywords.Add('or');
   Keywords.Add('out');
   Keywords.Add('package');
+  Keywords.Add('pragma');
   Keywords.Add('procedure');
   Keywords.Add('raise');
   Keywords.Add('replace');

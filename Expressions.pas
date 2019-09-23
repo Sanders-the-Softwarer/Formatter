@@ -214,8 +214,14 @@ begin
 end;
 
 function TExpression.ParseBreak: boolean;
+var T: TToken;
 begin
-  Result := (not AllowComma and Assigned(Terminal(','))) or Any([Terminal([';', ')'])]) or (NextToken is TKeyword);
+  Result := (not AllowComma and Assigned(Terminal(','))) or Any([Terminal([';', ')'])]);
+  if not Result then
+  begin
+    T := NextToken;
+    Result := (T is TKeyword) or (T is TIdent);
+  end;
 end;
 
 function TExpression.Name: string;

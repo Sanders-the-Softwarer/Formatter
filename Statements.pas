@@ -53,8 +53,8 @@ type
   TStatement = class
   strict private
     FParent: TStatement;
-    FSettings: TParserSettings;
-    function GetSettings: TParserSettings;
+    FSettings: TFormatSettings;
+    function GetSettings: TFormatSettings;
   strict protected
     Source: TBufferedStream<TToken>;
     function InternalParse: boolean; virtual; abstract;
@@ -74,7 +74,7 @@ type
     procedure PrintSelf(APrinter: TPrinter); virtual;
     function Aligned: boolean; virtual;
     property Parent: TStatement read FParent;
-    property Settings: TParserSettings read GetSettings write FSettings;
+    property Settings: TFormatSettings read GetSettings write FSettings;
   end;
   {$TypeInfo Off}
 
@@ -246,7 +246,7 @@ begin
     Source.Restore(P);
 end;
 
-function TStatement.GetSettings: TParserSettings;
+function TStatement.GetSettings: TFormatSettings;
 begin
   if Assigned(Parent)
     then Result := Parent.Settings
