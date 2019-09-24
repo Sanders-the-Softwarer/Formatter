@@ -467,7 +467,7 @@ end;
 
 procedure TSyntaxTreePrinter.PrintStatement(AStatement: TStatement);
 begin
-  Parents.Push(TreeView.Items.AddChild(Parents.Peek, AStatement.Name));
+  Parents.Push(TreeView.Items.AddChild(Parents.Peek, '< ' + Trim(AStatement.Name) + ' >'));
   try
     inherited;
   finally

@@ -39,7 +39,6 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
     function Ident: string;
   end;
 
@@ -51,8 +50,6 @@ type
     function ParseDelimiter(out AResult: TToken): boolean; override;
     function ParseBreak: boolean; override;
     function MultiLine: boolean; override;
-  public
-    function Name: string; override;
   end;
 
   { Вызов функции }
@@ -66,7 +63,6 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
     function MultiLine: boolean;
   end;
 
@@ -86,7 +82,6 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
   end;
 
   { Аргументы вызова подпрограммы }
@@ -94,7 +89,6 @@ type
   strict protected
     function ParseBreak: boolean; override;
   public
-    function Name: string; override;
     function MultiLine: boolean; override;
   end;
 
@@ -107,7 +101,6 @@ type
   strict protected
     function InternalParse: boolean; override;
   public
-    function Name: string; override;
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
@@ -122,8 +115,8 @@ type
   strict protected
     function InternalParse: boolean; override;
   public
-    function Name: string; override;
     procedure PrintSelf(APrinter: TPrinter); override;
+    function StatementName: string; override;
   end;
 
   { Секции выражения case }
@@ -131,8 +124,6 @@ type
   strict protected
     function ParseBreak: boolean; override;
     function MultiLine: boolean; override;
-  public
-    function Name: string; override;
   end;
 
   { Выражение cast }
@@ -147,7 +138,6 @@ type
   strict protected
     function InternalParse: boolean; override;
   public
-    function Name: string; override;
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
@@ -197,11 +187,6 @@ begin
     _OuterJoin := Terminal('(+)');
     _Postfix := Keyword(['is null', 'is not null']);
   end;
-end;
-
-function TTerm.Name: string;
-begin
-  Result := '< term >';
 end;
 
 function TTerm.Ident: string;
@@ -257,11 +242,6 @@ begin
   end;
 end;
 
-function TExpression.Name: string;
-begin
-  Result := '< expression >';
-end;
-
 function TExpression.MultiLine: boolean;
 begin
   Result := false;
@@ -297,11 +277,6 @@ begin
   APrinter.Undent;
 end;
 
-function TFunctionCall.Name: string;
-begin
-  Result := '<function call>';
-end;
-
 function TFunctionCall.MultiLine: boolean;
 begin
   Result := Assigned(_Arguments) and ((_Arguments as TCommaList<TArgument>).Count > Settings.ArgumentSingleLineParamLimit);
@@ -322,11 +297,6 @@ begin
     Source.Restore(P);
   end;
   Result := TExpression.Parse(Self, Source, _Expression);
-end;
-
-function TArgument.Name: string;
-begin
-  Result := '< argument >';
 end;
 
 procedure TArgument.PrintSelf(APrinter: TPrinter);
@@ -354,11 +324,6 @@ begin
   Result := (Parent as TFunctionCall).MultiLine;
 end;
 
-function TArguments.Name: string;
-begin
-  Result := '< arguments >';
-end;
-
 { TCase }
 
 function TCase.InternalParse: boolean;
@@ -368,11 +333,6 @@ begin
   TCaseSections.Parse(Self, Source, _Sections);
   _End := Keyword('end');
   Result := true;
-end;
-
-function TCase.Name: string;
-begin
-  Result := '< case expression >';
 end;
 
 procedure TCase.PrintSelf(APrinter: TPrinter);
@@ -401,14 +361,14 @@ begin
   Result := true;
 end;
 
-function TCaseSection.Name: string;
+function TCaseSection.StatementName: string;
 begin
   if Assigned(_When) then
     Result := '< when >'
   else if Assigned(_Else) then
     Result := '< else >'
   else
-    Result := '< case section >';
+    Result := inherited;
 end;
 
 procedure TCaseSection.PrintSelf(APrinter: TPrinter);
@@ -435,11 +395,6 @@ begin
   Result := false;
 end;
 
-function TCaseSections.Name: string;
-begin
-  Result := '< cases >';
-end;
-
 { TCast }
 
 function TCast.InternalParse: boolean;
@@ -452,11 +407,6 @@ begin
   TTypeRef.Parse(Self, Source, _TypeRef);
   _CloseBracket := Terminal(')');
   Result := true;
-end;
-
-function TCast.Name: string;
-begin
-  Result := '< cast >';
 end;
 
 procedure TCast.PrintSelf(APrinter: TPrinter);

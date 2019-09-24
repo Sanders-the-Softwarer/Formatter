@@ -170,7 +170,7 @@ function TTokenizer.InternalNext: TToken;
       else
         begin
           RefuseLastChar;
-          exit(false);
+          exit(TokenValue <> '');
         end;
     until C <> '.';
     RefuseLastChar;
@@ -502,6 +502,7 @@ initialization
   Keywords.Add('values');
   Keywords.Add('when');
   Keywords.Add('where');
+  Keywords.Add('while');
 
 finalization
   FreeAndNil(Keywords);

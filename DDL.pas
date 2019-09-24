@@ -17,15 +17,15 @@ uses Tokens, Statements, Printers_;
 type
 
   { Команда create [or replace] }
-  TCreateStatement = class(TStatement)
+  TCreate = class(TStatement)
   strict private
     _Create, _Or, _Replace, _Force: TKeyword;
     _What: TStatement;
   strict protected
     function InternalParse: boolean; override;
   public
-    function Name: string; override;
     procedure PrintSelf(APrinter: TPrinter); override;
+    function StatementName: string; override;
   end;
 
 implementation
@@ -34,7 +34,7 @@ uses Parser;
 
 { TCreateStatement }
 
-function TCreateStatement.InternalParse: boolean;
+function TCreate.InternalParse: boolean;
 begin
   { Если распознали слово create, то распознали конструкцию }
   _Create := Keyword('create');
@@ -50,13 +50,7 @@ begin
   Result := true;
 end;
 
-function TCreateStatement.Name: string;
-begin
-  Result := 'create';
-  if Assigned(_What) then Result := Result + ' ' + _What.Name;
-end;
-
-procedure TCreateStatement.PrintSelf(APrinter: TPrinter);
+procedure TCreate.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Create);
   APrinter.Space;
@@ -65,6 +59,12 @@ begin
   APrinter.PrintItem(_Replace);
   APrinter.Space;
   APrinter.PrintItem(_What);
+end;
+
+function TCreate.StatementName: string;
+begin
+  Result := _What.StatementName;
+  if Result <> '' then Result := 'create ' + Result;
 end;
 
 end.

@@ -70,11 +70,14 @@ type
     class function Parse(AParent: TStatement; Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
   public
     constructor Create(AParent: TStatement; ASource: TBufferedStream<TToken>);
-    function Name: string; virtual;
     procedure PrintSelf(APrinter: TPrinter); virtual;
     function Aligned: boolean; virtual;
     property Parent: TStatement read FParent;
     property Settings: TFormatSettings read GetSettings write FSettings;
+  public
+    function Name: string; virtual;
+    function StatementType: string; virtual;
+    function StatementName: string; virtual;
   end;
   {$TypeInfo Off}
 
@@ -111,7 +114,7 @@ type
   strict protected
     function InternalParse: boolean; override;
   public
-    function Name: string; override;
+    function StatementName: string; override;
     procedure PrintSelf(APrinter: TPrinter); override;
     property Token: TToken read _Token;
   end;
@@ -141,9 +144,41 @@ begin
   end;
 end;
 
+{ Конструирование названия выражения, выводимого в синтаксическое дерево }
 function TStatement.Name: string;
 begin
-  raise Exception.CreateFmt('Method %s.Name should be declared', [ClassName]);
+  try
+    Result := StatementName;
+    if Result = '' then Result := StatementType;
+  except
+    Result := StatementType;
+  end;
+end;
+
+{ Вычисление "типа выражения" из имени класса }
+function TStatement.StatementType: string; 
+var
+  S, U, L: string;
+  i: integer;
+begin
+  S := Self.ClassName;
+  if S[1] = 'T' then S := S.Substring(1);
+  U := S.ToUpper;
+  L := S.ToLower;
+  Result := '';
+  for i := 1 to Length(S) do
+    if S[i] = L[i] then
+      Result := Result + L[i]
+    else if S[i] = U[i] then
+      Result := Result + ' ' + L[i]
+    else
+      raise Exception.CreateFmt('Cannot make statement name for class %s', [Self.ClassName]);
+end;
+
+{ Выражение по умолчанию не имеет собственного имени }
+function TStatement.StatementName: string; 
+begin
+  Result := '';
 end;
 
 procedure TStatement.PrintSelf(APrinter: TPrinter);
@@ -377,7 +412,7 @@ end;
 
 { TUnexpectedToken }
 
-function TUnexpectedToken.Name: string;
+function TUnexpectedToken.StatementName: string;
 begin
   Result := Format('*** НЕОЖИДАННАЯ КОНСТРУКЦИЯ *** [%s ''%s'']', [Token.TokenType, Token.Value]);
 end;

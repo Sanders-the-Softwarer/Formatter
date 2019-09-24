@@ -17,7 +17,7 @@ uses Math, Tokens, Statements, PLSQL, Printers_, Attributes;
 type
 
   { Оператор select }
-  TSelect = class(TOperator)
+  TSelect = class(TStatement)
   strict private
     _Select: TKeyword;
     _Star: TTerminal;
@@ -38,7 +38,7 @@ type
   end;
 
   { Оператор insert }
-  TInsert = class(TOperator)
+  TInsert = class(TStatement)
   strict private
     _Insert: TKeyword;
     _Into: TKeyword;
@@ -58,7 +58,7 @@ type
   end;
 
   { Оператор update }
-  TUpdate = class(TOperator)
+  TUpdate = class(TStatement)
   strict private
     _Update: TKeyword;
     _TableName: TIdent;
@@ -78,7 +78,7 @@ type
   end;
 
   { Оператор delete }
-  TDelete = class(TOperator)
+  TDelete = class(TStatement)
   strict private
     _Delete: TKeyword;
     _From: TKeyword;
@@ -92,7 +92,7 @@ type
   end;
 
   { Оператор merge }
-  TMerge = class(TOperator)
+  TMerge = class(TStatement)
   strict private
     _Merge: TKeyword;
     _Into: TKeyword;
@@ -122,7 +122,6 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
   end;
 
 implementation
@@ -141,7 +140,7 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
+    function StatementName: string; override;
   end;
 
   { Список присвоений в update }
@@ -149,8 +148,6 @@ type
   TUpdateAssignments = class(TCommaList<TUpdateAssignment>)
   strict protected
     function ParseBreak: boolean; override;
-  public
-    function Name: string; override;
   end;
 
   { Секция в merge }
@@ -161,7 +158,7 @@ type
   strict protected
     function InternalParse: boolean; override;
   public
-    function Name: string; override;
+    function StatementName: string; override;
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
@@ -169,8 +166,6 @@ type
   TMergeSections = class(TStatementList<TMergeSection>)
   strict protected
     function ParseBreak: boolean; override;
-  public
-    function Name: string; override;
   end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,16 +184,13 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
-    function FieldName: string;
+    function StatementName: string; override;
   end;
 
   { Список идентификаторов }
   TIdentFields = class(TCommaList<TIdentField>)
   strict protected
     function ParseBreak: boolean; override;
-  public
-    function Name: string; override;
   end;
 
   { Выражение как поле в group by, insert values и т. п. }
@@ -210,7 +202,6 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
     property Match: TIdentField read _Match write _Match;
   end;
 
@@ -220,8 +211,18 @@ type
   strict protected
     function ParseBreak: boolean; override;
   public
-    function Name: string; override;
     procedure Match(AFields: TIdentFields);
+  end;
+
+  { Конструкция where }
+  TWhere = class(TStatement)
+  strict private
+    _Where: TKeyword;
+    _Condition: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
   { Указание таблицы - в select, merge, delete и т. п. }
@@ -238,8 +239,8 @@ type
   strict protected
     function InternalParse: boolean; override;
   public
-    function Name: string; override;
     procedure PrintSelf(APrinter: TPrinter); override;
+    function StatementName: string; override;
   end;
 
 { TIdentField }
@@ -250,12 +251,7 @@ begin
   Result := Assigned(_FieldName);
 end;
 
-function TIdentField.Name: string;
-begin
-  Result := '< ' + FieldName + ' >';
-end;
-
-function TIdentField.FieldName: string;
+function TIdentField.StatementName: string;
 begin
   Result := _FieldName.Value;
 end;
@@ -266,11 +262,6 @@ begin
 end;
 
 { TIdentFields }
-
-function TIdentFields.Name: string;
-begin
-  Result := '< identifiers >';
-end;
 
 function TIdentFields.ParseBreak: boolean;
 begin
@@ -284,18 +275,13 @@ begin
   Result := TExpression.Parse(Self, Source, _Expression);
 end;
 
-function TExpressionField.Name: string;
-begin
-  Result := '< value >';
-end;
-
 procedure TExpressionField.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Expression);
   if Assigned(_Match) then
   begin
     APrinter.Ruler('match', Settings.AlignCommentInsert and Settings.CommentInsert);
-    if Settings.CommentInsert then APrinter.PrintSpecialComment('=> ' + TIdentField(_Match).FieldName);
+    if Settings.CommentInsert then APrinter.PrintSpecialComment('=> ' + TIdentField(_Match).Name);
   end;
 end;
 
@@ -304,11 +290,6 @@ end;
 function TExpressionFields.ParseBreak: boolean;
 begin
   Result := not (NextToken is TIdent);
-end;
-
-function TExpressionFields.Name: string;
-begin
-  Result := '< expressions >';
 end;
 
 procedure TExpressionFields.Match(AFields: TIdentFields);
@@ -336,7 +317,7 @@ begin
   Result := true;
 end;
 
-function TTableClause.Name: string;
+function TTableClause.StatementName: string;
 begin
   if Assigned(_TableName) then
     Result := _TableName.Value
@@ -345,7 +326,6 @@ begin
   else
     Result := 'table';
   if Assigned(_Alias) then Result := _Alias.Value + ' => ' + Result;
-  Result := '< ' + Result + ' >';
 end;
 
 procedure TTableClause.PrintSelf(APrinter: TPrinter);
@@ -376,15 +356,13 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
+    function StatementName: string; override;
   end;
 
   { Список полей в select }
   TSelectFields = class(TExpressionFields)
   strict protected
     function ParseStatement(out AResult: TStatement): boolean; override;
-  public
-    function Name: string; override;
   end;
 
   { Указание таблицы в select }
@@ -403,8 +381,6 @@ type
   strict protected
     function ParseDelimiter(out AResult: TToken): boolean; override;
     function ParseBreak: boolean; override;
-  public
-    function Name: string; override;
   end;
 
   { Выражение group by }
@@ -416,7 +392,6 @@ type
     function ParseBreak: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function Name: string; override;
   end;
 
   { Строка выражения order by }
@@ -428,7 +403,6 @@ type
   strict protected
     function InternalParse: boolean; override;
   public
-    function Name: string; override;
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
@@ -440,7 +414,6 @@ type
     function InternalParse: boolean; override;
     function ParseBreak: boolean; override;
   public
-    function Name: string; override;
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
@@ -510,7 +483,7 @@ begin
   _Alias := Identifier;
 end;
 
-function TSelectField.Name: string;
+function TSelectField.StatementName: string;
 begin
   if Assigned(_Alias)
     then Result := '< ' + _Alias.Value + ' >'
@@ -532,11 +505,6 @@ end;
 function TSelectFields.ParseStatement(out AResult: TStatement): boolean;
 begin
   Result := TSelectField.Parse(Self, Source, AResult);
-end;
-
-function TSelectFields.Name: string;
-begin
-  Result := '< field list >';
 end;
 
 { TSelectTableClause }
@@ -579,11 +547,6 @@ begin
   Result := Any([Keyword(['where', 'having', 'group by', 'order by']), Terminal([')', ';'])]);
 end;
 
-function TSelectTables.Name: string;
-begin
-  Result := '< source tables >';
-end;
-
 { TGroupBy }
 
 function TGroupBy.InternalParse: boolean;
@@ -596,11 +559,6 @@ end;
 function TGroupBy.ParseBreak: boolean;
 begin
   Result := Any([Terminal([';', ')'])]) or (Source.Next is TKeyword);
-end;
-
-function TGroupBy.Name: string;
-begin
-  Result := '< group by >';
 end;
 
 procedure TGroupBy.PrintSelf(APrinter: TPrinter);
@@ -623,11 +581,6 @@ begin
   Result := true;
 end;
 
-function TOrderByItem.Name: string;
-begin
-  Result := '< order by item >';
-end;
-
 procedure TOrderByItem.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Expression);
@@ -644,11 +597,6 @@ begin
   _OrderBy := Keyword('order by');
   if not Assigned(_OrderBy) then exit(false);
   Result := inherited InternalParse;
-end;
-
-function TOrderBy.Name: string;
-begin
-  Result := '< order by >';
 end;
 
 function TOrderBy.ParseBreak: boolean;
@@ -863,11 +811,6 @@ begin
   Result := Assigned(_OpenBracket) and Assigned(_Select);
 end;
 
-function TInnerSelect.Name: string;
-begin
-  Result := '< inner select >';
-end;
-
 procedure TInnerSelect.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_OpenBracket);
@@ -889,7 +832,7 @@ begin
   if Result then TExpression.Parse(Self, Source, _Value);
 end;
 
-function TUpdateAssignment.Name: string;
+function TUpdateAssignment.StatementName: string;
 begin
   if Assigned(_Target)
     then Result := _Target.Value
@@ -908,11 +851,6 @@ end;
 
 { TUpdateAssignments }
 
-function TUpdateAssignments.Name: string;
-begin
-  Result := '< update assignment >';
-end;
-
 function TUpdateAssignments.ParseBreak: boolean;
 begin
   Result := Any([Terminal(';')]) or (Source.Next is TKeyword);
@@ -930,7 +868,7 @@ begin
      not TUnexpectedToken.Parse(Self, Source, _DML) then { ничего не делаем } ;
 end;
 
-function TMergeSection.Name: string;
+function TMergeSection.StatementName: string;
 begin
   Result := _Section.Value;
 end;
@@ -947,14 +885,24 @@ end;
 
 { TMergeSections }
 
-function TMergeSections.Name: string;
-begin
-  Result := '< merge sections >';
-end;
-
 function TMergeSections.ParseBreak: boolean;
 begin
   Result := not Assigned(Keyword(['when matched then', 'when not matched then']));
+end;
+
+{ TWhere }
+
+function TWhere.InternalParse: boolean;
+begin
+  _Where := Keyword('where');
+  TExpression.Parse(Self, Source, _Condition);
+  Result := Assigned(_Where);
+end;
+
+procedure TWhere.PrintSelf(APrinter: TPrinter);
+begin
+  inherited;
+
 end;
 
 end.

@@ -73,6 +73,9 @@ begin
             TNull.Parse(AParent, ASource, AResult) or
             TRaise.Parse(AParent, ASource, AResult) or
             TIf.Parse(AParent, ASource, AResult) or
+            TLoop.Parse(AParent, ASource, AResult) or
+            TFor.Parse(AParent, ASource, AResult) or
+            TWhile.Parse(AParent, ASource, AResult) or
             TOpenFor.Parse(AParent, ASource, AResult) or
             TProcedureCall.Parse(AParent, ASource, AResult) or
             TAnonymousBlock.Parse(AParent, ASource, AResult);
@@ -83,7 +86,7 @@ class function TParser.ParseAny(AParent: TStatement; ASource: TBufferedStream<TT
 begin
   Result := ParseOperator(AParent, ASource, AResult) or
             ParseCreation(AParent, ASource, AResult) or
-            TCreateStatement.Parse(AParent, ASource, AResult) or
+            TCreate.Parse(AParent, ASource, AResult) or
             TAnonymousBlock.Parse(AParent, ASource, AResult) or
             TExpression.Parse(AParent, ASource, AResult);
 end;
