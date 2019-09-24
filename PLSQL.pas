@@ -354,6 +354,21 @@ type
     function Name: string; override;
   end;
 
+  { Оператор for }
+  TFor = class(TStatement)
+  strict private
+    _For: TKeyword;
+    _Variable: TIdent;
+    _In: TKeyword;
+    _Reverse: TKeyword;
+    _Low: TStatement;
+    _To: TTerminal;
+    _High: TStatement;
+    _Loop: TKeyword;
+    _Body: TOperators;
+    _EndLoop: TKeyword;
+  end;
+
   { Блок обработки исключений }
   TExceptionHandler = class(TStatement)
   strict private
@@ -422,8 +437,10 @@ begin
   { Если нашли exception, распознаём обработчики исключений }
   _Exception := Keyword('exception');
   if Assigned(_Exception) then TExceptionHandlers.Parse(Self, Source, _ExceptionHandlers);
-  { end и завершающие символы после него }
+  { end }
   _End := Keyword('end');
+  { Если это блок верхнего уровня, то загребём и завершающие символы после него }
+  if Parent is TOperators then exit;
   if Assigned(_End) then
   begin
     _EndName := Identifier;
