@@ -23,7 +23,7 @@ type
     _Prefix: TTerminal;
     _Number: TNumber;
     _Literal: TLiteral;
-    _Identifier: TIdent;
+    _LValue: TStatement;
     _Suffix: TTerminal;
     _KeywordValue: TKeyword;
     _Select: TStatement;
@@ -39,7 +39,6 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function Ident: string;
   end;
 
   { Выражение }
@@ -64,6 +63,26 @@ type
   public
     procedure PrintSelf(APrinter: TPrinter); override;
     function MultiLine: boolean;
+  end;
+
+  { Понятие компилятора LVALUE (переменная, элемент таблицы и прочее, что может быть присвоено }
+
+  TLValueItem = class(TStatement)
+  strict private
+    _Ident: TIdent;
+    _FunctionCall: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  TLValue = class(TStatementList<TLValueItem>)
+  strict protected
+    function ParseDelimiter(out AResult: TToken): boolean; override;
+    function ParseBreak: boolean; override;
+    procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TToken); override;
+    function MultiLine: boolean; override;
   end;
 
 implementation
@@ -159,17 +178,15 @@ begin
     { Ключевым словом null, true или false }
     _KeywordValue := Keyword(['null', 'false', 'true']);
     if Assigned(_KeywordValue) then exit(true);
-    { Вызовом функции }
-    if TFunctionCall.Parse(Self, Source, _FunctionCall) then exit(true);
-    { Вложенным запросом }
-    if TInnerSelect.Parse(Self, Source, _Select) then exit(true);
-    { Идентификатором }
-    _Identifier := Identifier;
-    if Assigned(_Identifier) then
+    { Идентификатором или подобным выражением }
+    TLValue.Parse(Self, Source, _LValue);
+    if Assigned(_LValue) then
     begin
       _Suffix := Terminal('%rowcount');
       exit(true);
     end;
+    { Вложенным запросом }
+    if TInnerSelect.Parse(Self, Source, _Select) then exit(true);
     { Выраженим в скобках }
     _OpenBracket := Terminal('(');
     if Assigned(_OpenBracket) then
@@ -189,13 +206,6 @@ begin
   end;
 end;
 
-function TTerm.Ident: string;
-begin
-  if Assigned(_Identifier)
-    then Result := _Identifier.Value
-    else Result := '';
-end;
-
 procedure TTerm.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Not);
@@ -203,7 +213,7 @@ begin
   APrinter.PrintItem(_Prefix);
   APrinter.PrintItem(_Number);
   APrinter.PrintItem(_Literal);
-  APrinter.PrintItem(_Identifier);
+  APrinter.PrintItem(_LValue);
   APrinter.PrintItem(_Suffix);
   APrinter.PrintItem(_KeywordValue);
   APrinter.PrintItem(_FunctionCall);
@@ -232,14 +242,8 @@ begin
 end;
 
 function TExpression.ParseBreak: boolean;
-var T: TToken;
 begin
-  Result := (not AllowComma and Assigned(Terminal(','))) or Any([Terminal([';', ')'])]);
-  if not Result then
-  begin
-    T := NextToken;
-    Result := (T is TKeyword) or (T is TIdent);
-  end;
+  Result := true;
 end;
 
 function TExpression.MultiLine: boolean;
@@ -419,6 +423,44 @@ begin
   APrinter.Space;
   APrinter.PrintItem(_TypeRef);
   APrinter.PrintItem(_CloseBracket);
+end;
+
+{ TLValueItem }
+
+function TLValueItem.InternalParse: boolean;
+begin
+  TFunctionCall.Parse(Self, Source, _FunctionCall);
+  if not Assigned(_FunctionCall) then _Ident := Identifier;
+  Result := Assigned(_FunctionCall) or Assigned(_Ident);
+end;
+
+procedure TLValueItem.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_FunctionCall);
+  APrinter.PrintItem(_Ident);
+end;
+
+{ TLValue }
+
+function TLValue.ParseDelimiter(out AResult: TToken): boolean;
+begin
+  AResult := Terminal('.');
+  Result  := Assigned(AResult);
+end;
+
+function TLValue.ParseBreak: boolean;
+begin
+  Result := not (NextToken is TIdent);
+end;
+
+procedure TLValue.PrintDelimiter(APrinter: TPrinter; ADelimiter: TToken);
+begin
+  APrinter.PrintItem(ADelimiter);
+end;
+
+function TLValue.MultiLine: boolean;
+begin
+  Result := false;
 end;
 
 end.

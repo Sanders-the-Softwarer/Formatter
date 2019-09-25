@@ -92,6 +92,7 @@ type
     function ParseDelimiter(out AResult: TToken): boolean; virtual;
     function ParseBreak: boolean; virtual;
     function MultiLine: boolean; virtual;
+    procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TToken); virtual;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -341,27 +342,27 @@ begin
 end;
 
 procedure TStatementList<S>.PrintSelf(APrinter: TPrinter);
-var
-  i: integer;
-  D: TToken;
+var i: integer;
 begin
   for i := 0 to Count - 1 do
   begin
     APrinter.PrintItem(Statements[i]);
-    D := Delimiters[i];
-    if (D is TTerminal) and ((D.Value = ',') or (D.Value = ';')) then
-      begin
-        APrinter.SupressSpace;
-        APrinter.SupressNextLine;
-      end
-    else
-      APrinter.Space;
-    APrinter.PrintItem(D);
-    if MultiLine then
-      APrinter.NextLine
-    else if i < Count - 1 then
-      APrinter.Space;
+    PrintDelimiter(APrinter, Delimiters[i]);
   end;
+  APrinter.SupressSpace;
+end;
+
+procedure TStatementList<S>.PrintDelimiter(APrinter: TPrinter; ADelimiter: TToken);
+begin
+  if (ADelimiter is TTerminal) and ((ADelimiter.Value = ',') or (ADelimiter.Value = ';')) then
+    begin
+      APrinter.SupressSpace;
+      APrinter.SupressNextLine;
+    end
+  else
+    APrinter.Space;
+  APrinter.PrintItem(ADelimiter);
+  APrinter.SpaceOrNextLine(MultiLine);
 end;
 
 function TStatementList<S>.ParseStatement(out AResult: TStatement): boolean;

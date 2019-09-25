@@ -41,7 +41,7 @@ type
   strict private
     _Insert: TKeyword;
     _Into: TKeyword;
-    _TableName: TIdent;
+    _Table: TStatement;
     _OpenBracket: TTerminal;
     _Fields: TStatement;
     _CloseBracket: TTerminal;
@@ -60,7 +60,7 @@ type
   TUpdate = class(TStatement)
   strict private
     _Update: TKeyword;
-    _TableName: TIdent;
+    _Table: TStatement;
     _Alias: TIdent;
     _Set: TKeyword;
     _Assignments: TStatement;
@@ -233,7 +233,7 @@ type
   end;
 
   { Указание таблицы - в select, merge, delete и т. п. }
-  TTableClause = class(TStatement)
+  TTableRef = class(TStatement)
   strict private
     _Select: TStatement;
     _Table: TKeyword;
@@ -345,7 +345,7 @@ end;
 
 { TTableClause }
 
-function TTableClause.InternalParse: boolean;
+function TTableRef.InternalParse: boolean;
 begin
   if not TInnerSelect.Parse(Self, Source, _Select) then
   begin
@@ -359,7 +359,7 @@ begin
   Result := true;
 end;
 
-function TTableClause.StatementName: string;
+function TTableRef.StatementName: string;
 begin
   if Assigned(_TableName) then
     Result := _TableName.Value
@@ -370,7 +370,7 @@ begin
   if Assigned(_Alias) then Result := _Alias.Value + ' => ' + Result;
 end;
 
-procedure TTableClause.PrintSelf(APrinter: TPrinter);
+procedure TTableRef.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Select);
   APrinter.PrintItem(_Table);
@@ -408,7 +408,7 @@ type
   end;
 
   { Указание таблицы в select }
-  TSelectTableClause = class(TTableClause)
+  TSelectTableClause = class(TTableRef)
   strict private
     _On: TKeyword;
     _JoinCondition: TStatement;
@@ -428,7 +428,8 @@ type
   { Выражение group by }
   TGroupBy = class(TCommaList<TExpressionField>)
   strict private
-    _GroupBy: TKeyword;
+    _Group: TKeyword;
+    _By: TKeyword;
   strict protected
     function InternalParse: boolean; override;
     function ParseBreak: boolean; override;
@@ -451,7 +452,8 @@ type
   { Выражение order by }
   TOrderBy = class(TCommaList<TOrderByItem>)
   strict private
-    _OrderBy: TKeyword;
+    _Order: TKeyword;
+    _By: TKeyword;
   strict protected
     function InternalParse: boolean; override;
     function ParseBreak: boolean; override;
@@ -573,8 +575,9 @@ end;
 
 function TGroupBy.InternalParse: boolean;
 begin
-  _GroupBy := Keyword('group by');
-  if not Assigned(_GroupBy) then exit(false);
+  _Group := Keyword('group');
+  _By    := Keyword('by');
+  if not Assigned(_Group) then exit(false);
   Result := inherited InternalParse;
 end;
 
@@ -585,7 +588,9 @@ end;
 
 procedure TGroupBy.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_GroupBy);
+  APrinter.PrintItem(_Group);
+  APrinter.Space;
+  APrinter.PrintItem(_By);
   APrinter.NextLine;
   APrinter.Indent;
   inherited PrintSelf(APrinter);
@@ -616,8 +621,9 @@ end;
 
 function TOrderBy.InternalParse: boolean;
 begin
-  _OrderBy := Keyword('order by');
-  if not Assigned(_OrderBy) then exit(false);
+  _Order := Keyword('order');
+  _By    := Keyword('by');
+  if not Assigned(_Order) then exit(false);
   Result := inherited InternalParse;
 end;
 
@@ -628,7 +634,9 @@ end;
 
 procedure TOrderBy.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_OrderBy);
+  APrinter.PrintItem(_Order);
+  APrinter.Space;
+  APrinter.PrintItem(_By);
   APrinter.NextLine;
   APrinter.Indent;
   inherited;
@@ -643,7 +651,7 @@ begin
   _Insert := Keyword('insert');
   if not Assigned(_Insert) then exit(false);
   _Into := Keyword('into');
-  _TableName := Identifier;
+  TTableRef.Parse(Self, Source, _Table);
   _OpenBracket := Terminal('(');
   TIdentFields.Parse(Self, Source, _Fields);
   _CloseBracket := Terminal(')');
@@ -667,7 +675,7 @@ begin
   APrinter.PrintItem(_Into);
   APrinter.NextLine;
   APrinter.Indent;
-  APrinter.PrintItem(_TableName);
+  APrinter.PrintItem(_Table);
   APrinter.NextLine;
   APrinter.PrintItem(_OpenBracket);
   APrinter.PrintIndented(_Fields);
@@ -690,8 +698,7 @@ function TUpdate.InternalParse: boolean;
 begin
   _Update := Keyword('update');
   if not Assigned(_Update) then exit(false);
-  _TableName := Identifier;
-  _Alias := Identifier;
+  TTableRef.Parse(Self, Source, _Table);
   _Set := Keyword('set');
   TUpdateAssignments.Parse(Self, Source, _Assignments);
   TWhere.Parse(Self, Source, _Where);
@@ -702,9 +709,7 @@ end;
 procedure TUpdate.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Update);
-  APrinter.PrintIndented(_TableName);
-  APrinter.Space;
-  APrinter.PrintItem(_Alias);
+  APrinter.PrintIndented(_Table);
   APrinter.NextLine;
   APrinter.PrintItem(_Set);
   APrinter.PrintIndented(_Assignments);
@@ -719,7 +724,7 @@ begin
   _Delete := Keyword('delete');
   _From   := Keyword('from');
   if not Assigned(_Delete) or not Assigned(_From) then exit(false);
-  TTableClause.Parse(Self, Source, _Table);
+  TTableRef.Parse(Self, Source, _Table);
   TWhere.Parse(Self, Source, _Where);
   Result := true;
 end;

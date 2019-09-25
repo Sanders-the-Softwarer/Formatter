@@ -143,6 +143,8 @@ type
     _RowType: TTerminal;
     _OpenBracket: TTerminal;
     _Size: TNumber;
+    _Comma: TTerminal;
+    _Precision: TNumber;
     _Unit: TKeyword;
     _CloseBracket: TTerminal;
   strict protected
@@ -227,23 +229,17 @@ type
   end;
 
   { Список операторов }
-  TOperators = class(TStatementList<TStatement>)
+  TStatements = class(TStatementList<TStatement>)
   strict protected
     function ParseStatement(out AResult: TStatement): boolean; override;
     function ParseDelimiter(out AResult: TToken): boolean; override;
     function ParseBreak: boolean; override;
   end;
 
-  { Список операторов в секциях then/else }
-  TIfOperators = class(TOperators)
-  strict protected
-    function ParseBreak: boolean; override;
-  end;
-
   { Присваивание }
   TAssignment = class(TStatement)
   strict private
-    _Ident: TIdent;
+    _Target: TStatement;
     _Assignment: TTerminal;
     _Expression: TStatement;
   strict protected
@@ -255,8 +251,7 @@ type
   { Вызов процедуры }
   TProcedureCall = class(TStatement)
   strict private
-    _FunctionCall: TStatement;
-    _Ident: TIdent;
+    _LValue: TStatement;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -327,8 +322,32 @@ type
     function ParseBreak: boolean; override;
   end;
 
+  { Секция оператора case }
+  TCaseSection = class(TStatement)
+  strict private
+    _When, _Then, _Else: TKeyword;
+    _Condition: TStatement;
+    _Body: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Оператор case }
+  TCase = class(TStatementList<TCaseSection>)
+  strict private
+    _Case, _EndCase: TKeyword;
+    _Condition: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function ParseBreak: boolean; override;
+  end;
+
   { Оператор loop }
-  TLoop = class(TOperators)
+  TLoop = class(TStatements)
   strict private
     _Loop, _EndLoop: TKeyword;
   strict protected
@@ -363,6 +382,24 @@ type
     _While: TKeyword;
     _Condition: TStatement;
     _Loop: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Оператор forall }
+  TForAll = class(TStatement)
+  strict private
+    _ForAll: TKeyword;
+    _Variable: TIdent;
+    _In: TKeyword;
+    _Low: TStatement;
+    _To: TTerminal;
+    _High: TStatement;
+    _Save: TKeyword;
+    _Exceptions: TKeyword;
+    _DML: TStatement;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -413,6 +450,49 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Декларация типа }
+  TType = class(TStatement)
+  strict private
+    _Type: TKeyword;
+    _TypeName: TIdent;
+    _Is: TKeyword;
+    _Body: TStatement;
+    _Semicolon: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function StatementName: string; override;
+  end;
+
+  { Декларация записи }
+  [Aligned]
+  TRecord = class(TCommaList<TVariableDeclaration>)
+  strict private
+    _Record: TKeyword;
+    _OpenBracket, _CloseBracket: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+    function ParseBreak: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Декларация табличного типа }
+  TTable = class(TStatement)
+  strict private
+    _Table: TKeyword;
+    _Of: TKeyword;
+    _TypeRef: TStatement;
+    _Index: TKeyword;
+    _By: TKeyword;
+    _IndexType: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
 implementation
 
 uses Parser, DML;
@@ -428,14 +508,14 @@ begin
   TDeclarations.Parse(Self, Source, _Declarations);
   { Если нашли begin, распознаём операторы }
   _Begin := Keyword('begin');
-  if Assigned(_Begin) then TOperators.Parse(Self, Source, _Operators);
+  if Assigned(_Begin) then TStatements.Parse(Self, Source, _Operators);
   { Если нашли exception, распознаём обработчики исключений }
   _Exception := Keyword('exception');
   if Assigned(_Exception) then TExceptionHandlers.Parse(Self, Source, _ExceptionHandlers);
   { end }
   _End := Keyword('end');
   { Если это блок верхнего уровня, то загребём и завершающие символы после него }
-  if Parent is TOperators then exit;
+  if Parent is TStatements then exit;
   if Assigned(_End) then
   begin
     _EndName := Identifier;
@@ -584,6 +664,8 @@ begin
   begin
     _Size := Number;
     _Unit := Keyword(['char', 'byte']);
+    if not Assigned(_Unit) then _Comma := Terminal(',');
+    if Assigned(_Comma) then _Precision := Number;
     _CloseBracket := Terminal(')');
   end;
 end;
@@ -597,6 +679,8 @@ begin
   APrinter.PrintItem(_RowType);
   APrinter.PrintItem(_OpenBracket);
   APrinter.PrintItem(_Size);
+  APrinter.PrintItem(_Comma);
+  APrinter.PrintItem(_Precision);
   APrinter.Space;
   APrinter.PrintItem(_Unit);
   APrinter.SupressSpace;
@@ -682,11 +766,7 @@ end;
 
 function TDeclarations.ParseStatement(out AResult: TStatement): boolean;
 begin
-  Result := TSubroutineForwardDeclaration.Parse(Self, Source, AResult) or
-            TSubroutine.Parse(Self, Source, AResult) or
-            TPragma.Parse(Self, Source, AResult) or
-            TExceptionDeclaration.Parse(Self, Source, AResult) or
-            TVariableDeclarations.Parse(Self, Source, AResult);
+  Result := TParser.ParseDeclaration(Self, Source, AResult);
 end;
 
 function TDeclarations.ParseBreak: boolean;
@@ -740,37 +820,28 @@ end;
 
 function TVariableDeclarations.ParseBreak: boolean;
 begin
-  Result := Any([Keyword(['begin', 'end', 'type', 'cursor', 'procedure', 'function'])]);
+  Result := (NextToken is TKeyword);
 end;
 
 { TProcedureCall }
 
 function TProcedureCall.InternalParse: boolean;
-var P: TMark;
 begin
-  P := Source.Mark;
-  if not TFunctionCall.Parse(Self, Source, _FunctionCall) then
-  begin
-    Source.Restore(P);
-    _Ident := Identifier;
-  end;
-  Result := Assigned(_Ident) or Assigned(_FunctionCall);
-  inherited;
+  Result := TLValue.Parse(Self, Source, _LValue);
 end;
 
 procedure TProcedureCall.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_FunctionCall);
-  APrinter.PrintItem(_Ident);
+  APrinter.PrintItem(_LValue);
 end;
 
 { TAssignment }
 
 function TAssignment.InternalParse: boolean;
 begin
-  _Ident := Identifier;
+  TLValue.Parse(Self, Source, _Target);
   _Assignment := Terminal(':=');
-  Result := Assigned(_Ident) and Assigned(_Assignment);
+  Result := Assigned(_Target) and Assigned(_Assignment);
   if not Result then exit;
   TExpression.Parse(Self, Source, _Expression);
   inherited;
@@ -778,7 +849,7 @@ end;
 
 procedure TAssignment.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Ident);
+  APrinter.PrintItem(_Target);
   APrinter.Space;
   APrinter.PrintItem(_Assignment);
   APrinter.Space;
@@ -856,20 +927,20 @@ end;
 
 { TOperators }
 
-function TOperators.ParseStatement(out AResult: TStatement): boolean;
+function TStatements.ParseStatement(out AResult: TStatement): boolean;
 begin
   Result := TParser.ParseOperator(Self, Source, AResult);
 end;
 
-function TOperators.ParseDelimiter(out AResult: TToken): boolean;
+function TStatements.ParseDelimiter(out AResult: TToken): boolean;
 begin
   AResult := Terminal(';');
   Result  := Assigned(AResult);
 end;
 
-function TOperators.ParseBreak: boolean;
+function TStatements.ParseBreak: boolean;
 begin
-  Result := Any([Keyword(['end', 'end if', 'end loop', 'exception'])]);
+  Result := Any([Keyword(['end', 'end if', 'end loop', 'end case', 'exception', 'else', 'when'])]);
 end;
 
 { TIf }
@@ -892,13 +963,6 @@ begin
   APrinter.Space;
   APrinter.PrintItem(_Sections);
   APrinter.PrintItem(_EndIf);
-end;
-
-{ TIfOperators }
-
-function TIfOperators.ParseBreak: boolean;
-begin
-  Result := Any([Keyword(['else', 'elsif', 'end if'])]) or inherited ParseBreak;
 end;
 
 { TAnonymousHeader }
@@ -934,7 +998,7 @@ begin
   Result := Assigned(_When) and TExpression.Parse(Self, Source, _Condition);
   if not Result then exit;
   _Then := Keyword('then');
-  TOperators.Parse(Self, Source, _Statements);
+  TStatements.Parse(Self, Source, _Statements);
 end;
 
 procedure TExceptionHandler.PrintSelf(APrinter: TPrinter);
@@ -1014,7 +1078,7 @@ begin
     TExpression.Parse(Self, Source, _Condition);
     _Then := Keyword('then');
   end;
-  TIfOperators.Parse(Self, Source, _Statements);
+  TStatements.Parse(Self, Source, _Statements);
   Result := true;
 end;
 
@@ -1160,6 +1224,7 @@ begin
   if not Assigned(_While) then exit(false);
   TExpression.Parse(Self, Source, _Condition);
   TLoop.Parse(Self, Source, _Loop);
+  Result := true;
 end;
 
 procedure TWhile.PrintSelf(APrinter: TPrinter);
@@ -1169,6 +1234,188 @@ begin
   APrinter.PrintItem(_Condition);
   APrinter.Space;
   APrinter.PrintItem(_Loop);
+end;
+
+{ TType }
+
+function TType.InternalParse: boolean;
+begin
+  _Type := Keyword('type');
+  if not Assigned(_Type) then exit(false);
+  _TypeName := Identifier;
+  _Is := Keyword('is');
+  TParser.ParseType(Self, Source, _Body);
+  _Semicolon := Terminal(';');
+  Result := true;
+end;
+
+procedure TType.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Type);
+  APrinter.Space;
+  APrinter.PrintItem(_TypeName);
+  APrinter.Space;
+  APrinter.PrintItem(_Is);
+  APrinter.Space;
+  APrinter.PrintItem(_Body);
+  APrinter.PrintItem(_Semicolon);
+end;
+
+function TType.StatementName: string;
+begin
+  Result := _Type.Value + ' ' + _TypeName.Value;
+end;
+
+{ TRecord }
+
+function TRecord.InternalParse: boolean;
+begin
+  _Record := Keyword('record');
+  if not Assigned(_Record) then exit(false);
+  _OpenBracket := Terminal('(');
+  inherited;
+  _CloseBracket := Terminal(')');
+  Result := true;
+end;
+
+function TRecord.ParseBreak: boolean;
+begin
+  Result := Any([Terminal([';', ')'])]) or (NextToken is TKeyword);
+end;
+
+procedure TRecord.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Record);
+  APrinter.Space;
+  APrinter.PrintItem(_OpenBracket);
+  APrinter.NextLine;
+  APrinter.Indent;
+  inherited;
+  APrinter.NextLine;
+  APrinter.Undent;
+  APrinter.PrintItem(_CloseBracket);
+end;
+
+{ TTable }
+
+function TTable.InternalParse: boolean;
+begin
+  _Table := Keyword('table');
+  if not Assigned(_Table) then exit(false);
+  _Of := Keyword('of');
+  TTypeRef.Parse(Self, Source, _TypeRef);
+  _Index := Keyword('index');
+  _By := Keyword('by');
+  TTypeRef.Parse(Self, Source, _IndexType);
+  Result := true;
+end;
+
+procedure TTable.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Table);
+  APrinter.Space;
+  APrinter.PrintItem(_Of);
+  APrinter.Space;
+  APrinter.PrintItem(_TypeRef);
+  APrinter.Space;
+  APrinter.PrintItem(_Index);
+  APrinter.Space;
+  APrinter.PrintItem(_By);
+  APrinter.Space;
+  APrinter.PrintItem(_IndexType);
+  APrinter.SupressSpace;
+end;
+
+{ TForall }
+
+function TForAll.InternalParse: boolean;
+begin
+  _ForAll := Keyword('forall');
+  if not Assigned(_ForAll) then exit(false);
+  _Variable := Identifier;
+  _In := Keyword('in');
+  TExpression.Parse(Self, Source, _Low);
+  _To := Terminal('..');
+  TExpression.Parse(Self, Source, _High);
+  _Save := Keyword('save');
+  _Exceptions := Keyword('exceptions');
+  TParser.ParseDML(Self, Source, _DML);
+  Result := true;
+end;
+
+procedure TForall.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_ForAll);
+  APrinter.Space;
+  APrinter.PrintItem(_Variable);
+  APrinter.Space;
+  APrinter.PrintItem(_In);
+  APrinter.Space;
+  APrinter.PrintItem(_Low);
+  APrinter.Space;
+  APrinter.PrintItem(_To);
+  APrinter.Space;
+  APrinter.PrintItem(_High);
+  APrinter.Space;
+  APrinter.PrintItem(_Save);
+  APrinter.Space;
+  APrinter.PrintItem(_Exceptions);
+  APrinter.PrintIndented(_DML);
+end;
+
+{ TCaseSection }
+
+function TCaseSection.InternalParse: boolean;
+begin
+  _When := Keyword('when');
+  if Assigned(_When) then
+    begin
+      TExpression.Parse(Self, Source, _Condition);
+      _Then := Keyword('then');
+    end
+  else
+    _Else := Keyword('else');
+  if not Assigned(_When) and not Assigned(_Else) then exit(false);
+  TStatements.Parse(Self, Source, _Body);
+  Result := true;
+end;
+
+procedure TCaseSection.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_When);
+  APrinter.Space;
+  APrinter.PrintItem(_Condition);
+  APrinter.Space;
+  APrinter.PrintItem(_Then);
+  APrinter.SupressSpace;
+  APrinter.PrintItem(_Else);
+  APrinter.PrintIndented(_Body);
+end;
+
+{ TCase }
+
+function TCase.InternalParse: boolean;
+begin
+  _Case := Keyword('case');
+  if not Assigned(_Case) then exit(false);
+  TExpression.Parse(Self, Source, _Condition);
+  inherited;
+  _EndCase := Keyword('end case');
+  Result := true;
+end;
+
+function TCase.ParseBreak: boolean;
+begin
+  Result := Any([Keyword('end case')]);
+end;
+
+procedure TCase.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Case);
+  APrinter.PrintIndented(_Condition);
+  APrinter.NextLine;
+  inherited;
+  APrinter.PrintItem(_EndCase);
 end;
 
 end.

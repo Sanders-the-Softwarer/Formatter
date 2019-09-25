@@ -26,6 +26,8 @@ type
     class function ParseDML(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseCreation(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseOperator(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+    class function ParseDeclaration(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+    class function ParseType(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseAny(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
   end;
 
@@ -36,7 +38,6 @@ uses DDL, DML, PLSQL, Expressions;
 type
 
   { "Пустое" выражение }
-
   TEOFStatement = class(TStatement)
   public
     procedure PrintSelf(APrinter: TPrinter); override;
@@ -73,19 +74,37 @@ begin
             TNull.Parse(AParent, ASource, AResult) or
             TRaise.Parse(AParent, ASource, AResult) or
             TIf.Parse(AParent, ASource, AResult) or
+            TCase.Parse(AParent, ASource, AResult) or
             TLoop.Parse(AParent, ASource, AResult) or
             TFor.Parse(AParent, ASource, AResult) or
             TWhile.Parse(AParent, ASource, AResult) or
+            TForAll.Parse(AParent,ASource, AResult) or
             TOpenFor.Parse(AParent, ASource, AResult) or
             TProcedureCall.Parse(AParent, ASource, AResult) or
             TAnonymousBlock.Parse(AParent, ASource, AResult);
 end;
 
+class function TParser.ParseDeclaration(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+begin
+  Result := TSubroutineForwardDeclaration.Parse(AParent, ASource, AResult) or
+            TSubroutine.Parse(AParent, ASource, AResult) or
+            TPragma.Parse(AParent, ASource, AResult) or
+            TType.Parse(AParent, ASource, AResult) or
+            TExceptionDeclaration.Parse(AParent, ASource, AResult) or
+            TVariableDeclarations.Parse(AParent, ASource, AResult);
+end;
+
+class function TParser.ParseType(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+begin
+  Result := TRecord.Parse(AParent, ASource, AResult) or
+            TTable.Parse(AParent, ASource, AResult);
+end;
 
 class function TParser.ParseAny(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
   Result := ParseOperator(AParent, ASource, AResult) or
             ParseCreation(AParent, ASource, AResult) or
+            ParseType(AParent, ASource, AResult) or
             TCreate.Parse(AParent, ASource, AResult) or
             TAnonymousBlock.Parse(AParent, ASource, AResult) or
             TExpression.Parse(AParent, ASource, AResult);

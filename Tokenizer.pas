@@ -239,8 +239,8 @@ function TTokenizer.InternalNext: TToken;
   { Считывание многосимвольных лексем }
   function ParseTerminal: boolean;
   const
-    N = 26;
-    Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=', '=>', '.', ',', ';', '(', ')', '+', '-', '*', '/', '%', '@', '=', '<', '>', '(+)', '%type', '%rowtype', '%rowcount');
+    N = 27;
+    Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=', '=>', '..', '.', ',', ';', '(', ')', '+', '-', '*', '/', '%', '@', '=', '<', '>', '(+)', '%type', '%rowtype', '%rowcount');
   var
     Value: string;
     Starts, Exact, PrevExact: boolean;    
@@ -408,14 +408,13 @@ begin
   { И попробуем их скомбинировать }
   if Check(Result, 'end', 'if') then exit;
   if Check(Result, 'end', 'loop') then exit;
+  if Check(Result, 'end', 'case') then exit;
   if Check(Result, 'is', 'null') then exit;
   if Check(Result, 'is', 'not', 'null') then exit;
   if Check(Result, 'not', 'like') then exit;
   if Check(Result, 'when', 'matched', 'then') then exit;
   if Check(Result, 'when', 'not', 'matched', 'then') then exit;
   if Check(Result, 'full', 'join') then exit;
-  if Check(Result, 'order', 'by') then exit;
-  if Check(Result, 'group', 'by') then exit;
   { Раз не удалось - возвращаем первую лексему }
   Source.Restore(P2);
   Result := Transit(T1);
@@ -458,15 +457,18 @@ initialization
   Keywords.Add('elsif');
   Keywords.Add('end');
   Keywords.Add('exception');
+  Keywords.Add('exceptions');
   Keywords.Add('false');
   Keywords.Add('first');
   Keywords.Add('for');
+  Keywords.Add('forall');
   Keywords.Add('from');
   Keywords.Add('full');
   Keywords.Add('function');
   Keywords.Add('group');
   Keywords.Add('if');
   Keywords.Add('in');
+  Keywords.Add('index');
   Keywords.Add('into');
   Keywords.Add('insert');
   Keywords.Add('is');
@@ -480,6 +482,7 @@ initialization
   Keywords.Add('not');
   Keywords.Add('null');
   Keywords.Add('nulls');
+  Keywords.Add('of');
   Keywords.Add('on');
   Keywords.Add('open');
   Keywords.Add('or');
@@ -489,14 +492,17 @@ initialization
   Keywords.Add('pragma');
   Keywords.Add('procedure');
   Keywords.Add('raise');
+  Keywords.Add('record');
   Keywords.Add('replace');
   Keywords.Add('return');
   Keywords.Add('returning');
+  Keywords.Add('save');
   Keywords.Add('select');
   Keywords.Add('set');
   Keywords.Add('table');
   Keywords.Add('then');
   Keywords.Add('true');
+  Keywords.Add('type');
   Keywords.Add('update');
   Keywords.Add('using');
   Keywords.Add('values');
