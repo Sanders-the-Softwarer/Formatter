@@ -60,7 +60,9 @@ type
     procedure SupressNextLine; virtual; abstract;
     procedure PrintSpecialComment(AValue: string); virtual; abstract;
     procedure Ruler(const ARuler: string; Enabled: boolean = true); virtual; abstract;
+  public
     procedure SpaceOrNextLine(AMultiLine: boolean);
+    procedure PrintIndented(AItem: TObject);
   public
     property Settings: TFormatSettings read FSettings write FSettings;
   public
@@ -186,6 +188,14 @@ end;
 procedure TPrinter.SpaceOrNextLine(AMultiLine: boolean);
 begin
   if AMultiLine then NextLine else Space;
+end;
+
+procedure TPrinter.PrintIndented(AItem: TObject);
+begin
+  NextLine;
+  Indent;
+  PrintItem(AItem);
+  Undent;
 end;
 
 { TBasePrinter }

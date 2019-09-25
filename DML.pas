@@ -26,8 +26,7 @@ type
     _IntoFields: TStatement;
     _From: TKeyword;
     _Tables: TStatement;
-    _Where: TKeyword;
-    _Condition: TStatement;
+    _Where: TStatement;
     _GroupBy: TStatement;
     _OrderBy: TStatement;
   strict protected
@@ -65,12 +64,8 @@ type
     _Alias: TIdent;
     _Set: TKeyword;
     _Assignments: TStatement;
-    _Where: TKeyword;
-    _Condition: TStatement;
-    _Returning: TKeyword;
-    _ReturningFields: TStatement;
-    _Into: TKeyword;
-    _Targets: TStatement;
+    _Where: TStatement;
+    _Returning: TStatement;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -83,8 +78,7 @@ type
     _Delete: TKeyword;
     _From: TKeyword;
     _Table: TStatement;
-    _Where: TKeyword;
-    _Condition: TStatement;
+    _Where: TStatement;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -225,6 +219,19 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Конструкция returning }
+  TReturning = class(TStatement)
+  strict private
+    _Returning: TKeyword;
+    _ReturningFields: TStatement;
+    _Into: TKeyword;
+    _Targets: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
   { Указание таблицы - в select, merge, delete и т. п. }
   TTableClause = class(TStatement)
   strict private
@@ -234,8 +241,6 @@ type
     _TableName: TIdent;
     _CloseBracket: TTerminal;
     _Alias: TIdent;
-    _On: TKeyword;
-    _JoinCondition: TStatement;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -295,10 +300,47 @@ end;
 procedure TExpressionFields.Match(AFields: TIdentFields);
 var i: integer;
 begin
-  if not Assigned(AFields) then exit;
+  if not Assigned(Self) or not Assigned(AFields) then exit;
   for i := 0 to Math.Min(Self.Count, AFields.Count) - 1 do
     if (Self.Item(i) is TExpressionField) and (AFields.Item(i) is TIdentField) then
       TExpressionField(Self.Item(i)).Match := TIdentField(AFields.Item(i));
+end;
+
+{ TWhere }
+
+function TWhere.InternalParse: boolean;
+begin
+  _Where := Keyword('where');
+  TExpression.Parse(Self, Source, _Condition);
+  Result := Assigned(_Where);
+end;
+
+procedure TWhere.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Where);
+  APrinter.PrintIndented(_Condition);
+end;
+
+{ TReturning }
+
+function TReturning.InternalParse: boolean;
+begin
+  _Returning := Keyword('returning');
+  if not Assigned(_Returning) then exit(false);
+  TExpressionFields.Parse(Self, Source, _ReturningFields);
+  _Into := Keyword('into');
+  TIdentFields.Parse(Self, Source, _Targets);
+  TExpressionFields(_ReturningFields).Match(TIdentFields(_Targets));
+  Result := true;
+end;
+
+procedure TReturning.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.NextLine;
+  APrinter.PrintItem(_Returning);
+  APrinter.PrintIndented(_ReturningFields);
+  APrinter.PrintItem(_Into);
+  APrinter.PrintIndented(_Targets);
 end;
 
 { TTableClause }
@@ -429,40 +471,23 @@ begin
   TIdentFields.Parse(Self, Source, _IntoFields);
   _From := Keyword('from');
   TSelectTables.Parse(Self, Source, _Tables);
-  _Where := Keyword('where');
-  TExpression.Parse(Self, Source, _Condition);
+  TWhere.Parse(Self, Source, _Where);
   TGroupBy.Parse(Self, Source, _GroupBy);
   TOrderBy.Parse(Self, Source, _OrderBy);
   Result := true;
+  TExpressionFields(_Fields).Match(TIdentFields(_IntoFields));
 end;
 
 procedure TSelect.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Select);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Star);
-  APrinter.PrintItem(_Fields);
-  APrinter.NextLine;
-  APrinter.Undent;
+  APrinter.PrintIndented(_Star);
+  APrinter.PrintIndented(_Fields);
   APrinter.PrintItem(_Into);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_IntoFields);
-  APrinter.NextLine;
-  APrinter.Undent;
+  APrinter.PrintIndented(_IntoFields);
   APrinter.PrintItem(_From);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Tables);
-  APrinter.NextLine;
-  APrinter.Undent;
+  APrinter.PrintIndented(_Tables);
   APrinter.PrintItem(_Where);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Condition);
-  APrinter.NextLine;
-  APrinter.Undent;
   APrinter.PrintItem(_GroupBy);
   APrinter.PrintItem(_OrderBy);
 end;
@@ -521,12 +546,9 @@ begin
   inherited;
   if Assigned(_On) then
   begin
-    APrinter.NextLine;
-    APrinter.Indent;
-    APrinter.PrintItem(_On);
+    APrinter.PrintIndented(_On);
     APrinter.Space;
     APrinter.PrintItem(_JoinCondition);
-    APrinter.Undent;
   end;
 end;
 
@@ -648,11 +670,7 @@ begin
   APrinter.PrintItem(_TableName);
   APrinter.NextLine;
   APrinter.PrintItem(_OpenBracket);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Fields);
-  APrinter.Undent;
-  APrinter.NextLine;
+  APrinter.PrintIndented(_Fields);
   APrinter.PrintItem(_CloseBracket);
   APrinter.Undent;
   APrinter.NextLine;
@@ -661,11 +679,7 @@ begin
   APrinter.NextLine;
   APrinter.Indent;
   APrinter.PrintItem(_OpenBracket2);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_ValueList);
-  APrinter.NextLine;
-  APrinter.Undent;
+  APrinter.PrintIndented(_ValueList);
   APrinter.PrintItem(_CloseBracket2);
   APrinter.Undent;
 end;
@@ -674,52 +688,28 @@ end;
 
 function TUpdate.InternalParse: boolean;
 begin
-  Result := true;
   _Update := Keyword('update');
   if not Assigned(_Update) then exit(false);
   _TableName := Identifier;
   _Alias := Identifier;
   _Set := Keyword('set');
   TUpdateAssignments.Parse(Self, Source, _Assignments);
-  _Where := Keyword('where');
-  if Assigned(_Where) then TExpression.Parse(Self, Source, _Condition);
-  _Returning := Keyword('returning');
-  if Assigned(_Returning) then TIdentFields.Parse(Self, Source, _ReturningFields);
-  _Into := Keyword('into');
-  if Assigned(_Into) then TIdentFields.Parse(Self, Source, _Targets);
+  TWhere.Parse(Self, Source, _Where);
+  TReturning.Parse(Self, Source, _Returning);
+  Result := true;
 end;
 
 procedure TUpdate.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Update);
-  APrinter.Space;
-  APrinter.PrintItem(_TableName);
+  APrinter.PrintIndented(_TableName);
   APrinter.Space;
   APrinter.PrintItem(_Alias);
-  APrinter.Space;
+  APrinter.NextLine;
   APrinter.PrintItem(_Set);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Assignments);
-  APrinter.Undent;
+  APrinter.PrintIndented(_Assignments);
   APrinter.PrintItem(_Where);
-  if Assigned(_Where) then APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Condition);
-  APrinter.NextLine;
-  APrinter.Undent;
   APrinter.PrintItem(_Returning);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_ReturningFields);
-  APrinter.NextLine;
-  APrinter.Undent;
-  APrinter.PrintItem(_Into);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Targets);
-  APrinter.NextLine;
-  APrinter.Undent;
 end;
 
 { TDelete }
@@ -730,8 +720,7 @@ begin
   _From   := Keyword('from');
   if not Assigned(_Delete) or not Assigned(_From) then exit(false);
   TTableClause.Parse(Self, Source, _Table);
-  _Where  := Keyword('where');
-  if Assigned(_Where) then TExpression.Parse(Self, Source, _Condition);
+  TWhere.Parse(Self, Source, _Where);
   Result := true;
 end;
 
@@ -740,16 +729,8 @@ begin
   APrinter.PrintItem(_Delete);
   APrinter.NextLine;
   APrinter.PrintItem(_From);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Table);
-  APrinter.NextLine;
-  APrinter.Undent;
+  APrinter.PrintIndented(_Table);
   APrinter.PrintItem(_Where);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Condition);
-  APrinter.Undent;
 end;
 
 { TMerge }
@@ -773,31 +754,23 @@ end;
 procedure TMerge.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Merge);
-  APrinter.Space;
+  APrinter.NextLine;
   APrinter.PrintItem(_Into);
   APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_DestSelect);
-  APrinter.PrintItem(_DestTable);
+  APrinter.PrintIndented(_DestSelect);
+  APrinter.PrintIndented(_DestTable);
   APrinter.Space;
   APrinter.PrintItem(_DestAlias);
   APrinter.NextLine;
-  APrinter.Undent;
   APrinter.PrintItem(_Using);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_SourceSelect);
-  APrinter.PrintItem(_SourceTable);
+  APrinter.PrintIndented(_SourceSelect);
+  APrinter.PrintIndented(_SourceTable);
   APrinter.Space;
   APrinter.PrintItem(_SourceAlias);
   APrinter.NextLine;
-  APrinter.Undent;
   APrinter.PrintItem(_On);
+  APrinter.PrintIndented(_Condition);
   APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Condition);
-  APrinter.NextLine;
-  APrinter.Undent;
   APrinter.PrintItem(_Sections);
 end;
 
@@ -814,11 +787,7 @@ end;
 procedure TInnerSelect.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_OpenBracket);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Select);
-  APrinter.Undent;
-  APrinter.NextLine;
+  APrinter.PrintIndented(_Select);
   APrinter.PrintItem(_CloseBracket);
 end;
 
@@ -876,11 +845,7 @@ end;
 procedure TMergeSection.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Section);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_DML);
-  APrinter.NextLine;
-  APrinter.Undent;
+  APrinter.PrintIndented(_DML);
 end;
 
 { TMergeSections }
@@ -888,21 +853,6 @@ end;
 function TMergeSections.ParseBreak: boolean;
 begin
   Result := not Assigned(Keyword(['when matched then', 'when not matched then']));
-end;
-
-{ TWhere }
-
-function TWhere.InternalParse: boolean;
-begin
-  _Where := Keyword('where');
-  TExpression.Parse(Self, Source, _Condition);
-  Result := Assigned(_Where);
-end;
-
-procedure TWhere.PrintSelf(APrinter: TPrinter);
-begin
-  inherited;
-
 end;
 
 end.
