@@ -91,11 +91,11 @@ type
     function ParseStatement(out AResult: TStatement): boolean; virtual;
     function ParseDelimiter(out AResult: TToken): boolean; virtual;
     function ParseBreak: boolean; virtual;
-    function MultiLine: boolean; virtual;
     procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TToken); virtual;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
+    function MultiLine: boolean; virtual;
     procedure PrintSelf(APrinter: TPrinter); override;
     function Count: integer;
     function Item(Index: integer): TStatement;

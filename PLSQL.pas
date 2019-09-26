@@ -96,6 +96,7 @@ type
     _Return: TKeyword;
     _ReturnType: TStatement;
     _Deterministic: TKeyword;
+    _Pipelined: TKeyword;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -137,8 +138,7 @@ type
   TTypeRef = class(TStatement)
   strict private
     _Ident: TIdent;
-    _Dot: TTerminal;
-    _SecondIdent: TIdent;
+    _Char: TKeyword;
     _Type: TTerminal;
     _RowType: TTerminal;
     _OpenBracket: TTerminal;
@@ -180,9 +180,9 @@ type
   strict protected
     function InternalParse: boolean; override;
     function ParseBreak: boolean; override;
-    function MultiLine: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
+    function MultiLine: boolean; override;
   end;
 
   { Блок деклараций }
@@ -214,6 +214,23 @@ type
   TVariableDeclarations = class(TStatementList<TVariableDeclaration>)
   strict protected
     function ParseBreak: boolean; override;
+  end;
+
+  { Курсор }
+  TCursor = class(TStatement)
+  strict private
+    _Cursor: TKeyword;
+    _CursorName: TIdent;
+    _Params: TStatement;
+    _Return: TKeyword;
+    _ReturnType: TIdent;
+    _Is: TKeyword;
+    _Select: TStatement;
+    _Semicolon: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
   { Объявление исключения }
@@ -397,9 +414,74 @@ type
     _Low: TStatement;
     _To: TTerminal;
     _High: TStatement;
+    _IndicesOrValues: TKeyword;
+    _Of: TKeyword;
+    _TableName: TStatement;
     _Save: TKeyword;
     _Exceptions: TKeyword;
     _DML: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Оператор pipe row }
+  TPipeRow = class(TStatement)
+  strict private
+    _Pipe, _Row: TKeyword;
+    _Arguments: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Оператор fetch }
+  TFetch = class(TStatement)
+  strict private
+    _Fetch: TKeyword;
+    _Cursor: TStatement;
+    _Into: TKeyword;
+    _Targets: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Оператор close }
+  TClose = class(TStatement)
+  strict private
+    _Close: TKeyword;
+    _Cursor: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Оператор exit }
+  TExit = class(TStatement)
+  strict private
+    _Exit: TKeyword;
+    _When: TKeyword;
+    _Condition: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Оператор execute immediate }
+  TExecuteImmediate = class(TStatement)
+  strict private
+    _ExecuteImmediate: TKeyword;
+    _Command: TStatement;
+    _Into: TKeyword;
+    _IntoFields: TStatement;
+    _Using: TKeyword;
+    _UsingFields: TStatement;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -611,8 +693,9 @@ begin
   { Возвращаемое значение }
   _Return := Keyword('return');
   TTypeRef.Parse(Self, Source, _ReturnType);
-  { Признак deterministic }
+  { Признаки }
   _Deterministic := Keyword('deterministic');
+  _Pipelined := Keyword('pipelined');
 end;
 
 procedure TSubroutineHeaderBase.PrintSelf(APrinter: TPrinter);
@@ -633,11 +716,13 @@ begin
   APrinter.PrintItem(_ReturnType);
   if Assigned(_Deterministic) then APrinter.SpaceOrNextLine(MultiLine);
   APrinter.PrintItem(_Deterministic);
+  if Assigned(_Pipelined) then APrinter.SpaceOrNextLine(MultiLine);
+  APrinter.PrintItem(_Pipelined);
 end;
 
 function TSubroutineHeaderBase.MultiLine: boolean;
 begin
-  Result := Assigned(_Params) and ((_Params as TCommaList<TParamDeclaration>).Count > Settings.DeclarationSingleLineParamLimit);
+  Result := Assigned(_Params) and TParamsDeclaration(_Params).MultiLine;
 end;
 
 function TSubroutineHeaderBase.StatementName: string;
@@ -651,11 +736,9 @@ function TTypeRef.InternalParse: boolean;
 begin
   { Если распознали идентификатор, тип данных распознан }
   _Ident := Identifier;
-  if not Assigned(_Ident) then exit(false);
-  Result := true;
-  { Проверим точку, второй идентификатор и %[row]type }
-  _Dot := Terminal('.');
-  if Assigned(_Dot) then _SecondIdent := Identifier;
+  if not Assigned(_Ident) then _Char := Keyword('char');
+  if not Assigned(_Ident) and not Assigned(_Char) then exit(false);
+  { Проверим %[row]type }
   _Type := Terminal('%type');
   _RowType := Terminal('%rowtype');
   { Проверим указание размера }
@@ -668,13 +751,13 @@ begin
     if Assigned(_Comma) then _Precision := Number;
     _CloseBracket := Terminal(')');
   end;
+  Result := true;
 end;
 
 procedure TTypeRef.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Ident);
-  APrinter.PrintItem(_Dot);
-  APrinter.PrintItem(_SecondIdent);
+  APrinter.PrintItem(_Char);
   APrinter.PrintItem(_Type);
   APrinter.PrintItem(_RowType);
   APrinter.PrintItem(_OpenBracket);
@@ -711,7 +794,7 @@ end;
 procedure TParamDeclaration.PrintSelf(APrinter: TPrinter);
 var NeedRuler: boolean;
 begin
-  NeedRuler := Settings.AlignSubroutineParams and (Parent.Parent as TSubroutineHeaderBase).MultiLine;
+  NeedRuler := Settings.AlignVariables and (Parent as TParamsDeclaration).MultiLine;
   APrinter.PrintItem(_ParamName);
   APrinter.Ruler('modifiers', NeedRuler);
   APrinter.Space;
@@ -748,7 +831,7 @@ end;
 
 function TParamsDeclaration.MultiLine: boolean;
 begin
-  Result := (Parent as TSubroutineHeaderBase).MultiLine;
+  Result := (Count > Settings.DeclarationSingleLineParamLimit);
 end;
 
 procedure TParamsDeclaration.PrintSelf(APrinter: TPrinter);
@@ -940,7 +1023,7 @@ end;
 
 function TStatements.ParseBreak: boolean;
 begin
-  Result := Any([Keyword(['end', 'end if', 'end loop', 'end case', 'exception', 'else', 'when'])]);
+  Result := Any([Keyword(['end', 'end if', 'end loop', 'end case', 'exception', 'else', 'elsif', 'when'])]);
 end;
 
 { TIf }
@@ -1139,7 +1222,7 @@ function TPragma.InternalParse: boolean;
 begin
   _Pragma := Keyword('pragma');
   if not Assigned(_Pragma) then exit(false);
-  TFunctionCall.Parse(Self, Source, _Body);
+  TLValue.Parse(Self, Source, _Body);
   _Semicolon := Terminal(';');
   Result := true;
 end;
@@ -1187,10 +1270,12 @@ begin
   begin
     P := Source.Mark;
     TExpression.Parse(Self, Source, _Low);
-    _To := Terminal('..');
-    TExpression.Parse(Self, Source, _High);
+    if Assigned(_Low) then _To := Terminal('..');
+    if Assigned(_To)  then TExpression.Parse(Self, Source, _High);
     if not Assigned(_To) then
     begin
+      _Low := nil;
+      _High := nil;
       Source.Restore(P);
       if not TFunctionCall.Parse(Self, Source, _SCursor) then
         _ICursor := Identifier;
@@ -1207,12 +1292,21 @@ begin
   APrinter.PrintItem(_Variable);
   APrinter.Space;
   APrinter.PrintItem(_In);
-  APrinter.PrintItem(_ICursor);
-  APrinter.PrintItem(_SCursor);
-  APrinter.PrintItem(_Low);
-  APrinter.PrintItem(_To);
-  APrinter.PrintItem(_High);
   APrinter.Space;
+  if Assigned(_Select) then
+    begin
+      APrinter.PrintIndented(_Select);
+      APrinter.NextLine;
+    end
+  else
+    begin
+      APrinter.PrintItem(_ICursor);
+      APrinter.PrintItem(_SCursor);
+      APrinter.PrintItem(_Low);
+      APrinter.PrintItem(_To);
+      APrinter.PrintItem(_High);
+      APrinter.Space;
+    end;
   APrinter.PrintItem(_Loop);
 end;
 
@@ -1334,9 +1428,18 @@ begin
   if not Assigned(_ForAll) then exit(false);
   _Variable := Identifier;
   _In := Keyword('in');
-  TExpression.Parse(Self, Source, _Low);
-  _To := Terminal('..');
-  TExpression.Parse(Self, Source, _High);
+  _IndicesOrValues := Keyword(['indices', 'values']);
+  if Assigned(_IndicesOrValues) then
+    begin
+      _Of := Keyword('of');
+      TLValue.Parse(Self, Source, _TableName);
+    end
+  else
+    begin
+      TExpression.Parse(Self, Source, _Low);
+      _To := Terminal('..');
+      TExpression.Parse(Self, Source, _High);
+    end;
   _Save := Keyword('save');
   _Exceptions := Keyword('exceptions');
   TParser.ParseDML(Self, Source, _DML);
@@ -1351,10 +1454,13 @@ begin
   APrinter.Space;
   APrinter.PrintItem(_In);
   APrinter.Space;
+  APrinter.PrintItem(_IndicesOrValues);
   APrinter.PrintItem(_Low);
   APrinter.Space;
+  APrinter.PrintItem(_Of);
   APrinter.PrintItem(_To);
   APrinter.Space;
+  APrinter.PrintItem(_TableName);
   APrinter.PrintItem(_High);
   APrinter.Space;
   APrinter.PrintItem(_Save);
@@ -1416,6 +1522,147 @@ begin
   APrinter.NextLine;
   inherited;
   APrinter.PrintItem(_EndCase);
+end;
+
+{ TCursor }
+
+function TCursor.InternalParse: boolean;
+begin
+  _Cursor := Keyword('cursor');
+  if not Assigned(_Cursor) then exit(false);
+  _CursorName := Identifier;
+  TParamsDeclaration.Parse(Self, Source, _Params);
+  _Return := Keyword('return');
+  if Assigned(_Return) then _ReturnType := Identifier;
+  _Is := Keyword('is');
+  TSelect.Parse(Self, Source, _Select);
+  _Semicolon := Terminal(';');
+  Result := true;
+end;
+
+procedure TCursor.PrintSelf(APrinter: TPrinter);
+var MultiLine: boolean;
+begin
+  MultiLine := Assigned(_Params) and TParamsDeclaration(_Params).MultiLine or Assigned(_Return);
+  APrinter.PrintItem(_Cursor);
+  APrinter.Space;
+  APrinter.PrintItem(_CursorName);
+  APrinter.SpaceOrNextLine(MultiLine);
+  APrinter.Indent;
+  APrinter.PrintItem(_Params);
+  APrinter.Undent;
+  APrinter.SpaceOrNextLine(MultiLine);
+  APrinter.Indent;
+  APrinter.PrintItem(_Return);
+  APrinter.Space;
+  APrinter.PrintItem(_ReturnType);
+  APrinter.Undent;
+  APrinter.SpaceOrNextLine(MultiLine);
+  APrinter.PrintItem(_Is);
+  APrinter.PrintIndented(_Select);
+  APrinter.PrintItem(_Semicolon);
+end;
+
+{ TPipeRow }
+
+function TPipeRow.InternalParse: boolean;
+begin
+  _Pipe := Keyword('pipe');
+  _Row  := Keyword('row');
+  Result := Assigned(_Pipe) or Assigned(_Row);
+  if Result then TArguments.Parse(Self, Source, _Arguments);
+end;
+
+procedure TPipeRow.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Pipe);
+  APrinter.Space;
+  APrinter.PrintItem(_Row);
+  APrinter.Space;
+  APrinter.PrintItem(_Arguments);
+end;
+
+{ TFetch }
+
+function TFetch.InternalParse: boolean;
+begin
+  _Fetch := Keyword('fetch');
+  if not Assigned(_Fetch) then exit(false);
+  TLValue.Parse(Self, Source, _Cursor);
+  _Into := Keyword('into');
+  TIdentFields.Parse(Self, Source, _Targets);
+  Result := true;
+end;
+
+procedure TFetch.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Fetch);
+  APrinter.PrintIndented(_Cursor);
+  APrinter.NextLine;
+  APrinter.PrintItem(_Into);
+  APrinter.PrintIndented(_Targets);
+end;
+
+{ TClose }
+
+function TClose.InternalParse: boolean;
+begin
+  _Close := Keyword('close');
+  if not Assigned(_Close) then exit(false);
+  TLValue.Parse(Self, Source, _Cursor);
+  Result := true;
+end;
+
+procedure TClose.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Close);
+  APrinter.Space;
+  APrinter.PrintItem(_Cursor);
+end;
+
+{ TExit }
+
+function TExit.InternalParse: boolean;
+begin
+  _Exit := Keyword('exit');
+  if not Assigned(_Exit) then exit(false);
+  _When := Keyword('when');
+  if Assigned(_When) then TExpression.Parse(Self, Source, _Condition);
+  Result := true;
+end;
+
+procedure TExit.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Exit);
+  APrinter.Space;
+  APrinter.PrintItem(_When);
+  APrinter.Space;
+  APrinter.PrintItem(_Condition);
+end;
+
+{ TExecuteImmediate }
+
+function TExecuteImmediate.InternalParse: boolean;
+begin
+  _ExecuteImmediate := Keyword('execute immediate');
+  if not Assigned(_ExecuteImmediate) then exit(false);
+  TExpression.Parse(Self, Source, _Command);
+  _Into := Keyword('into');
+  if Assigned(_Into) then TIdentFields.Parse(Self, Source, _IntoFields);
+  _Using := Keyword('using');
+  if Assigned(_Using) then TIdentFields.Parse(Self, Source, _UsingFields);
+  Result := true;
+end;
+
+procedure TExecuteImmediate.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_ExecuteImmediate);
+  APrinter.PrintIndented(_Command);
+  APrinter.NextLine;
+  APrinter.PrintItem(_Into);
+  APrinter.PrintIndented(_IntoFields);
+  APrinter.PrintItem(_Using);
+  APrinter.PrintIndented(_UsingFields);
 end;
 
 end.

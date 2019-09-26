@@ -21,6 +21,8 @@ type
   strict private
     _Not: TKeyword;
     _Prefix: TTerminal;
+    _Distinct: TKeyword;
+    _Star: TTerminal;
     _Number: TNumber;
     _Literal: TLiteral;
     _LValue: TStatement;
@@ -33,22 +35,29 @@ type
     _CloseBracket: TTerminal;
     _Case: TStatement;
     _Cast: TStatement;
+    _Exists: TStatement;
     _OuterJoin: TTerminal;
     _Postfix: TKeyword;
   strict protected
     function InternalParse: boolean; override;
+    function AllowStar: boolean;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
   { Выражение }
   TExpression = class(TStatementList<TTerm>)
-  strict private
-    class var AllowComma: boolean;
   strict protected
     function ParseDelimiter(out AResult: TToken): boolean; override;
     function ParseBreak: boolean; override;
+  public
     function MultiLine: boolean; override;
+  end;
+
+  { Вложенное выражение }
+  TInnerExpression = class(TExpression)
+  strict protected
+    function ParseDelimiter(out AResult: TToken): boolean; override;
   end;
 
   { Вызов функции }
@@ -75,6 +84,7 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
+    function Ident: string;
   end;
 
   TLValue = class(TStatementList<TLValueItem>)
@@ -82,16 +92,12 @@ type
     function ParseDelimiter(out AResult: TToken): boolean; override;
     function ParseBreak: boolean; override;
     procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TToken); override;
+  public
+    function StatementName: string; override;
     function MultiLine: boolean; override;
   end;
 
-implementation
-
-uses DML, PLSQL;
-
-type
-
-    { Аргумент вызова подпрограммы }
+  { Аргумент вызова подпрограммы }
   TArgument = class(TStatement)
   strict private
     _Ident: TIdent;
@@ -104,6 +110,7 @@ type
   end;
 
   { Аргументы вызова подпрограммы }
+  [Aligned]
   TArguments = class(TCommaList<TArgument>)
   strict protected
     function ParseBreak: boolean; override;
@@ -111,10 +118,17 @@ type
     function MultiLine: boolean; override;
   end;
 
+implementation
+
+uses DML, PLSQL;
+
+type
+
   { Выражение case }
   TCase = class(TStatement)
   strict private
     _Case: TKeyword;
+    _Expression: TStatement;
     _Sections: TStatement;
     _End: TKeyword;
   strict protected
@@ -160,6 +174,16 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Условие exists }
+  TExists = class(TInnerSelect)
+  strict private
+    _Exists: TKeyword;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
 { TExpression }
 
 function TTerm.InternalParse: boolean;
@@ -168,6 +192,7 @@ begin
   { Префиксы }
   _Not := Keyword('not');
   _Prefix := Terminal('-');
+  _Distinct := Keyword(['distinct', 'unique']);
   try
     { Слагаемое может быть числом }
     _Number := Number;
@@ -178,11 +203,17 @@ begin
     { Ключевым словом null, true или false }
     _KeywordValue := Keyword(['null', 'false', 'true']);
     if Assigned(_KeywordValue) then exit(true);
+    { Выражением case }
+    if TCase.Parse(Self, Source, _Case) then exit(true);
+    { Выражением cast }
+    if TCast.Parse(Self, Source, _Cast) then exit(true);
+    { Выражением exists }
+    if TExists.Parse(Self, Source, _Exists) then exit(true);
     { Идентификатором или подобным выражением }
     TLValue.Parse(Self, Source, _LValue);
     if Assigned(_LValue) then
     begin
-      _Suffix := Terminal('%rowcount');
+      _Suffix := Terminal(['%rowcount', '%found', '%notfound', '%isopen']);
       exit(true);
     end;
     { Вложенным запросом }
@@ -191,14 +222,13 @@ begin
     _OpenBracket := Terminal('(');
     if Assigned(_OpenBracket) then
     begin
-      TExpression.Parse(Self, Source, _Expression);
+      TInnerExpression.Parse(Self, Source, _Expression);
       _CloseBracket := Terminal(')');
       exit(true);
     end;
-    { Выражением case }
-    if TCase.Parse(Self, Source, _Case) then exit(true);
-    { Выражением cast }
-    if TCast.Parse(Self, Source, _Cast) then exit(true);
+    { В запросах может быть также звёздочкой }
+    if AllowStar then _Star := Terminal('*');
+    if Assigned(_Star) then exit(true);
   finally
     { Суффиксы }
     _OuterJoin := Terminal('(+)');
@@ -206,23 +236,43 @@ begin
   end;
 end;
 
+function TTerm.AllowStar: boolean;
+var S: TStatement;
+begin
+  Result := false;
+  S := Self;
+  while S <> nil do
+    if S is TSelect
+      then exit(true)
+      else S := S.Parent;
+end;
+
 procedure TTerm.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Not);
-  if Assigned(_Not) then APrinter.Space;
+  APrinter.PrintItem(_Distinct);
+  if Assigned(_Not) or Assigned(_Distinct) then APrinter.Space;
   APrinter.PrintItem(_Prefix);
   APrinter.PrintItem(_Number);
   APrinter.PrintItem(_Literal);
   APrinter.PrintItem(_LValue);
   APrinter.PrintItem(_Suffix);
   APrinter.PrintItem(_KeywordValue);
+  APrinter.PrintItem(_Case);
+  APrinter.PrintItem(_Cast);
+  APrinter.PrintItem(_Exists);
   APrinter.PrintItem(_FunctionCall);
-  APrinter.PrintItem(_Select);
+  if Assigned(_Select) then
+  begin
+    APrinter.NextLine;
+    APrinter.PrintItem(_Select);
+    APrinter.NextLine;
+  end;
   APrinter.PrintItem(_OpenBracket);
   APrinter.PrintItem(_Expression);
   APrinter.SupressSpace;
   APrinter.PrintItem(_CloseBracket);
-  APrinter.PrintItem(_Case);
+  APrinter.PrintItem(_Star);
   APrinter.Space;
   APrinter.PrintItem(_OuterJoin);
   APrinter.Space;
@@ -235,10 +285,8 @@ end;
 function TExpression.ParseDelimiter(out AResult: TToken): boolean;
 begin
   AResult := Terminal(['+', '-', '*', '/', '||', '=', '<', '>', '<=', '>=', '<>', '!=', '^=']);
-  if not Assigned(AResult) then AResult := Keyword(['like', 'not like', 'in', 'and', 'or', 'between']);
-  if not Assigned(AResult) and AllowComma then AResult := Terminal(',');
+  if not Assigned(AResult) then AResult := Keyword(['like', 'not like', 'in', 'not in', 'and', 'or', 'between', 'multiset union']);
   Result := Assigned(AResult);
-  AllowComma := Assigned(AResult) and ((AResult.Value = ',') or (AResult.Value = 'in'));
 end;
 
 function TExpression.ParseBreak: boolean;
@@ -249,6 +297,14 @@ end;
 function TExpression.MultiLine: boolean;
 begin
   Result := false;
+end;
+
+{ TInnerExpression }
+
+function TInnerExpression.ParseDelimiter(out AResult: TToken): boolean;
+begin
+  AResult := Terminal(',');
+  Result  := Assigned(AResult) or inherited ParseDelimiter(AResult);
 end;
 
 { TFunctionCall }
@@ -308,7 +364,7 @@ begin
   APrinter.PrintItem(_Ident);
   if Assigned(_Ident) then
   begin
-    APrinter.Ruler('argument', TArguments(Parent).MultiLine and Settings.AlignCallArguments);
+    APrinter.Ruler('argument', TArguments(Parent).MultiLine and Settings.AlignVariables);
     APrinter.Space;
   end;
   APrinter.PrintItem(_Assignment);
@@ -325,7 +381,7 @@ end;
 
 function TArguments.MultiLine: boolean;
 begin
-  Result := (Parent as TFunctionCall).MultiLine;
+  Result := (Self.Count > Settings.ArgumentSingleLineParamLimit);
 end;
 
 { TCase }
@@ -334,6 +390,7 @@ function TCase.InternalParse: boolean;
 begin
   _Case := Keyword('case');
   if not Assigned(_Case) then exit(false);
+  TExpression.Parse(Self, Source, _Expression);
   TCaseSections.Parse(Self, Source, _Sections);
   _End := Keyword('end');
   Result := true;
@@ -342,6 +399,8 @@ end;
 procedure TCase.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Case);
+  APrinter.Space;
+  APrinter.PrintItem(_Expression);
   APrinter.Space;
   APrinter.PrintItem(_Sections);
   APrinter.Space;
@@ -440,6 +499,13 @@ begin
   APrinter.PrintItem(_Ident);
 end;
 
+function TLValueItem.Ident: string;
+begin
+  if Assigned(_Ident)
+    then Result := _Ident.Value
+    else Result := '';
+end;
+
 { TLValue }
 
 function TLValue.ParseDelimiter(out AResult: TToken): boolean;
@@ -450,7 +516,7 @@ end;
 
 function TLValue.ParseBreak: boolean;
 begin
-  Result := not (NextToken is TIdent);
+  Result := true;
 end;
 
 procedure TLValue.PrintDelimiter(APrinter: TPrinter; ADelimiter: TToken);
@@ -461,6 +527,31 @@ end;
 function TLValue.MultiLine: boolean;
 begin
   Result := false;
+end;
+
+function TLValue.StatementName: string;
+begin
+  if (Count = 1) and (Item(0) is TLValueItem)
+    then Result := TLValueItem(Item(0)).Ident
+    else Result := '';
+end;
+
+{ TExists }
+
+function TExists.InternalParse: boolean;
+begin
+  Result  := true;
+  _Exists := Keyword('exists');
+  if Assigned(_Exists)
+    then inherited
+    else Result := false;
+end;
+
+procedure TExists.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Exists);
+  APrinter.Space;
+  inherited;
 end;
 
 end.

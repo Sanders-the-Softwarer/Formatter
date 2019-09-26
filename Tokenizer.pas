@@ -239,8 +239,8 @@ function TTokenizer.InternalNext: TToken;
   { Считывание многосимвольных лексем }
   function ParseTerminal: boolean;
   const
-    N = 27;
-    Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=', '=>', '..', '.', ',', ';', '(', ')', '+', '-', '*', '/', '%', '@', '=', '<', '>', '(+)', '%type', '%rowtype', '%rowcount');
+    N = 30;
+    Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=', '=>', '..', '.', ',', ';', '(', ')', '+', '-', '*', '/', '%', '@', '=', '<', '>', '(+)', '%type', '%rowtype', '%rowcount', '%found', '%notfound', '%isopen');
   var
     Value: string;
     Starts, Exact, PrevExact: boolean;    
@@ -406,15 +406,20 @@ begin
   P4 := Source.Mark;
   if not Source.Eof then T4 := Source.Next else T4 := nil;
   { И попробуем их скомбинировать }
+  if Check(Result, 'bulk', 'collect', 'into') then exit;
+  if Check(Result, 'full', 'join') then exit;
+  if Check(Result, 'end', 'case') then exit;
   if Check(Result, 'end', 'if') then exit;
   if Check(Result, 'end', 'loop') then exit;
-  if Check(Result, 'end', 'case') then exit;
-  if Check(Result, 'is', 'null') then exit;
+  if Check(Result, 'execute', 'immediate') then exit;
   if Check(Result, 'is', 'not', 'null') then exit;
+  if Check(Result, 'is', 'null') then exit;
+  if Check(Result, 'multiset', 'union') then exit;
+  if Check(Result, 'not', 'in') then exit;
   if Check(Result, 'not', 'like') then exit;
+  if Check(Result, 'union', 'all') then exit;
   if Check(Result, 'when', 'matched', 'then') then exit;
   if Check(Result, 'when', 'not', 'matched', 'then') then exit;
-  if Check(Result, 'full', 'join') then exit;
   { Раз не удалось - возвращаем первую лексему }
   Source.Restore(P2);
   Result := Transit(T1);
@@ -439,26 +444,37 @@ initialization
   Keywords.Duplicates := dupIgnore;
   Keywords.CaseSensitive := false;
   { Заполним список ключевых слов }
+  Keywords.Add('all');
   Keywords.Add('and');
   Keywords.Add('as');
   Keywords.Add('begin');
   Keywords.Add('between');
   Keywords.Add('body');
+  Keywords.Add('bulk');
   Keywords.Add('by');
   Keywords.Add('byte');
   Keywords.Add('case');
   Keywords.Add('cast');
   Keywords.Add('char');
+  Keywords.Add('close');
+  Keywords.Add('collect');
   Keywords.Add('constant');
   Keywords.Add('create');
+  Keywords.Add('cursor');
+  Keywords.Add('declare');
   Keywords.Add('default');
   Keywords.Add('delete');
+  Keywords.Add('distinct');
   Keywords.Add('else');
   Keywords.Add('elsif');
   Keywords.Add('end');
   Keywords.Add('exception');
   Keywords.Add('exceptions');
+  Keywords.Add('execute');
+  Keywords.Add('exists');
+  Keywords.Add('exit');
   Keywords.Add('false');
+  Keywords.Add('fetch');
   Keywords.Add('first');
   Keywords.Add('for');
   Keywords.Add('forall');
@@ -466,9 +482,13 @@ initialization
   Keywords.Add('full');
   Keywords.Add('function');
   Keywords.Add('group');
+  Keywords.Add('having');
   Keywords.Add('if');
+  Keywords.Add('immediate');
   Keywords.Add('in');
   Keywords.Add('index');
+  Keywords.Add('indices');
+  Keywords.Add('intersect');
   Keywords.Add('into');
   Keywords.Add('insert');
   Keywords.Add('is');
@@ -478,6 +498,8 @@ initialization
   Keywords.Add('loop');
   Keywords.Add('matched');
   Keywords.Add('merge');
+  Keywords.Add('minus');
+  Keywords.Add('multiset');
   Keywords.Add('nocopy');
   Keywords.Add('not');
   Keywords.Add('null');
@@ -489,6 +511,8 @@ initialization
   Keywords.Add('order');
   Keywords.Add('out');
   Keywords.Add('package');
+  Keywords.Add('pipe');
+  Keywords.Add('pipelined');
   Keywords.Add('pragma');
   Keywords.Add('procedure');
   Keywords.Add('raise');
@@ -496,6 +520,7 @@ initialization
   Keywords.Add('replace');
   Keywords.Add('return');
   Keywords.Add('returning');
+  Keywords.Add('row');
   Keywords.Add('save');
   Keywords.Add('select');
   Keywords.Add('set');
@@ -503,9 +528,12 @@ initialization
   Keywords.Add('then');
   Keywords.Add('true');
   Keywords.Add('type');
+  Keywords.Add('union');
+  Keywords.Add('unique');
   Keywords.Add('update');
   Keywords.Add('using');
   Keywords.Add('values');
+  Keywords.Add('with');
   Keywords.Add('when');
   Keywords.Add('where');
   Keywords.Add('while');

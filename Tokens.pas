@@ -12,7 +12,7 @@ unit Tokens;
 
 interface
 
-uses System.SysUtils, System.Generics.Collections;
+uses System.SysUtils, System.Generics.Collections, Attributes;
 
 type
 
@@ -43,6 +43,7 @@ type
   end;
 
   { Лексема }
+  [LeftSpace(1)][RightSpace(1)]
   TToken = class(TBaseToken)
   strict private
     FValue: string;
@@ -83,12 +84,14 @@ type
   end;
 
   { Идентификатор }
+  [LowerCase]
   TIdent = class(TToken)
   strict protected
     function TokenType: string; override;
   end;
 
   { Ключевое слово }
+  [LowerCase]
   TKeyword = class(TToken)
   strict protected
     function TokenType: string; override;

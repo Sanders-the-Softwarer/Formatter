@@ -80,6 +80,11 @@ begin
             TWhile.Parse(AParent, ASource, AResult) or
             TForAll.Parse(AParent,ASource, AResult) or
             TOpenFor.Parse(AParent, ASource, AResult) or
+            TFetch.Parse(AParent, ASource, AResult) or
+            TExit.Parse(AParent, ASource, AResult) or
+            TPipeRow.Parse(AParent, ASource, AResult) or
+            TClose.Parse(AParent, ASource, AResult) or
+            TExecuteImmediate.Parse(AParent, ASource, AResult) or
             TProcedureCall.Parse(AParent, ASource, AResult) or
             TAnonymousBlock.Parse(AParent, ASource, AResult);
 end;
@@ -90,6 +95,7 @@ begin
             TSubroutine.Parse(AParent, ASource, AResult) or
             TPragma.Parse(AParent, ASource, AResult) or
             TType.Parse(AParent, ASource, AResult) or
+            TCursor.Parse(AParent, ASource, AResult) or
             TExceptionDeclaration.Parse(AParent, ASource, AResult) or
             TVariableDeclarations.Parse(AParent, ASource, AResult);
 end;

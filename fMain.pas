@@ -27,14 +27,13 @@ type
     Label2: TLabel;
     edArgumentSingleLineParamLimit: TSpinEdit;
     GroupBox1: TGroupBox;
-    checkAlignSubroutineParams: TCheckBox;
+    checkAlignFields: TCheckBox;
     checkAlignVariables: TCheckBox;
-    checkAlignCallArguments: TCheckBox;
-    GroupBox2: TGroupBox;
-    checkCommentInsert: TCheckBox;
-    checkAlignCommentInsert: TCheckBox;
+    checkAlignSpecialComments: TCheckBox;
     GroupBox3: TGroupBox;
     checkReplaceDefault: TCheckBox;
+    Label3: TLabel;
+    edMatchParamLimit: TSpinEdit;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -100,11 +99,10 @@ var Statements: TBufferedStream<TStatement>;
 begin
   Settings.DeclarationSingleLineParamLimit := edDeclarationSingleLineParamLimit.Value;
   Settings.ArgumentSingleLineParamLimit    := edArgumentSingleLineParamLimit.Value;
-  Settings.AlignSubroutineParams           := checkAlignSubroutineParams.Checked;
+  Settings.MatchParamLimit                 := edMatchParamLimit.Value;
   Settings.AlignVariables                  := checkAlignVariables.Checked;
-  Settings.AlignCallArguments              := checkAlignCallArguments.Checked;
-  Settings.AlignCommentInsert              := checkAlignCommentInsert.Checked;
-  Settings.CommentInsert                   := checkCommentInsert.Checked;
+  Settings.AlignFields                     := checkAlignFields.Checked;
+  Settings.AlignSpecialComments            := checkAlignSpecialComments.Checked;
   Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
   Statements := TParser.Create(TCommentProcessor.Create(TMerger.Create(TProcedureDeleteStream.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(edSrc.Text))))))), Settings);
   try

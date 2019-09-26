@@ -36,11 +36,10 @@ type
   public
     DeclarationSingleLineParamLimit: integer;
     ArgumentSingleLineParamLimit: integer;
-    AlignSubroutineParams: boolean;
+    MatchParamLimit: integer;
     AlignVariables: boolean;
-    AlignCallArguments: boolean;
-    AlignCommentInsert: boolean;
-    CommentInsert: boolean;
+    AlignFields: boolean;
+    AlignSpecialComments: boolean;
     ReplaceDefault: boolean;
   end;
 
@@ -115,19 +114,15 @@ type
   private
     Strings: TStrings;
     Builder: TStringBuilder;
-    Rulers:  TRulers;
     Mode:    TFormatterPrinterMode;
     Shift:   integer;
     BOL:     boolean;
     SPC:     boolean;
     Col:     integer;
     PrevCol: integer;
-    _Bldr:   TStringBuilder;
-    _Shift:  integer;
-    _BOL:    boolean;
-    _SPC:    boolean;
-    _Col:    integer;
+    Rulers:  TRulers;
     Padding: integer;
+    PrevToken: TToken;
   public
     constructor Create(AStrings: TStrings);
     procedure BeginPrint; override;
@@ -284,7 +279,6 @@ procedure TFormatterPrinter.BeginPrint;
 begin
   inherited;
   Builder := TStringBuilder.Create;
-  Rulers  := TRulers.Create;
   Shift   := 0;
   Col     := 1;
 end;
@@ -295,11 +289,15 @@ begin
   Strings.Text := Builder.ToString;
   Strings.EndUpdate;
   FreeAndNil(Builder);
-  FreeAndNil(Rulers);
   inherited;
 end;
 
 procedure TFormatterPrinter.PrintToken(AToken: TToken);
+var
+  Value: string;
+  Left: LeftSpaceAttribute;
+  Right: RightSpaceAttribute;
+  Space: integer;
 begin
   if BOL then
   begin
@@ -309,12 +307,26 @@ begin
     SPC := false;
     Col := Shift + 1;
     PrevCol := 1;
+    PrevToken := nil;
   end;
   if SPC and Assigned(AToken) then
   begin
     if Assigned(Builder) then Builder.Append(' ');
     SPC := false;
     Inc(Col);
+  end;
+  if Assigned(PrevToken) and Assigned(AToken) then
+  begin
+    Left := Attributes.GetAttribute(AToken, LeftSpaceAttribute) as LeftSpaceAttribute;
+    Right := Attributes.GetAttribute(PrevToken, RightSpaceAttribute) as RightSpaceAttribute;
+    Space := 0;
+    if Assigned(Left) then Inc(Space, Left.Priority);
+    if Assigned(Right) then Inc(Space, Right.Priority);
+    if Space > 0 then
+    begin
+      Builder.Append(' ');
+      Inc(Col);
+    end;
   end;
   if Padding > 0 then
   begin
@@ -325,52 +337,70 @@ begin
   end;
   if Assigned(AToken) then
   begin
-    if Assigned(Builder) then
-      if (AToken is TTerminal) and SameText(AToken.Value, 'default') and Settings.ReplaceDefault
-        then Builder.Append(':=')
-        else Builder.Append(AToken.Value);
-    Inc(Col, AToken.Value.Length);
+    Value := AToken.Value;
+    if (AToken is TKeyword) and SameText(AToken.Value, 'default') and Settings.ReplaceDefault
+      then Value := ':=';
+    if Attributes.HasAttribute(AToken.ClassType, LowerCaseAttribute) then
+      Value := Value.ToLower;
+    if Assigned(Builder) then Builder.Append(Value);
+    Inc(Col, Value.Length);
+    PrevToken := AToken;
   end;
 end;
 
 procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
-var OldShift: integer;
+var
+  _Mode: TFormatterPrinterMode;
+  _Shift, _Col: integer;
+  _BOL, _SPC: boolean;
+  _Builder: TStringBuilder;
+  _Rulers: TRulers;
+  _PrevToken: TToken;
 begin
   { Если задан режим печати с выравниваниями }
   if AStatement.Aligned then
     begin
-      if Mode <> fpmNormal then raise Exception.Create('Recursive ruler not supported');
       { Сохраним конфигурацию }
-      _Shift := Shift;
-      _Col   := Col;
-      _BOL   := BOL;
-      _SPC   := SPC;
-      _Bldr  := Builder;
-      Builder := nil;
+      _Shift   := Shift;
+      _Col     := Col;
+      _BOL     := BOL;
+      _SPC     := SPC;
+      _Builder := Builder;
+      _Rulers  := Rulers;
+      _PrevToken := PrevToken;
+      _Mode    := Mode;
       { Соберём информацию }
-      Rulers.Clear;
-      Mode := fpmGetRulers;
+      Builder := nil;
+      Rulers  := TRulers.Create;
+      Mode    := fpmGetRulers;
       PrevCol := Col;
-      inherited;
-      { Восстановим конфигурацию }
+      try
+        inherited;
+      except
+        { проглотим ошибку и дадим упасть на SetRulers, чтобы выдать текст на принтер }
+      end;
+      { Восстановим конфигурацию для печати }
       Shift := _Shift;
       Col   := _Col;
       BOL   := _BOL;
       SPC   := _SPC;
-      Builder := _Bldr;
+      Builder := _Builder;
+      PrevToken := _PrevToken;
+      { Напечатаем "по-настоящему" (возможно, в рамках вышестоящего fpmGetRulers)}
       Mode  := fpmSetRulers;
       PrevCol := Col;
-      { И напечатаем по-настоящему }
       inherited;
-      Mode := fpmNormal;
-      Rulers.Clear;
+      { И окончательно восстановим конфигурацию для возврата к вызвавшему }
+      FreeAndNil(Rulers);
+      Rulers := _Rulers;
+      Mode := _Mode;
     end
   else
     begin
-      OldShift := Shift;
+      _Shift := Shift;
       inherited;
-      if Shift <> OldShift then
-        raise Exception.CreateFmt('Invalid indents into %s - was %d but %d now', [AStatement.ClassName, OldShift, Shift]);
+      if Shift <> _Shift then
+        raise Exception.CreateFmt('Invalid indents into %s - was %d but %d now', [AStatement.ClassName, _Shift, Shift]);
     end;
 end;
 
@@ -396,7 +426,7 @@ end;
 
 procedure TFormatterPrinter.Space;
 begin
-  SPC := true;
+  //SPC := true;
 end;
 
 procedure TFormatterPrinter.SupressSpace;
