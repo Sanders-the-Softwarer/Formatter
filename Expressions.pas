@@ -191,7 +191,8 @@ begin
   Result := false;
   { Префиксы }
   _Not := Keyword('not');
-  _Prefix := Terminal('-');
+  _Prefix := Terminal(['-', '+']);
+  if Assigned(_Prefix) then _Prefix.OpType := otUnary;
   _Distinct := Keyword(['distinct', 'unique']);
   try
     { Слагаемое может быть числом }
@@ -249,35 +250,14 @@ end;
 
 procedure TTerm.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Not);
-  APrinter.PrintItem(_Distinct);
-  if Assigned(_Not) or Assigned(_Distinct) then APrinter.Space;
-  APrinter.PrintItem(_Prefix);
-  APrinter.PrintItem(_Number);
-  APrinter.PrintItem(_Literal);
-  APrinter.PrintItem(_LValue);
-  APrinter.PrintItem(_Suffix);
-  APrinter.PrintItem(_KeywordValue);
-  APrinter.PrintItem(_Case);
-  APrinter.PrintItem(_Cast);
-  APrinter.PrintItem(_Exists);
-  APrinter.PrintItem(_FunctionCall);
+  APrinter.PrintItems([_Not, _Distinct, _Prefix, _Number, _Literal, _LValue, _Suffix, _KeywordValue, _Case, _Cast, _Exists, _FunctionCall]);
   if Assigned(_Select) then
   begin
     APrinter.NextLine;
     APrinter.PrintItem(_Select);
     APrinter.NextLine;
   end;
-  APrinter.PrintItem(_OpenBracket);
-  APrinter.PrintItem(_Expression);
-  APrinter.SupressSpace;
-  APrinter.PrintItem(_CloseBracket);
-  APrinter.PrintItem(_Star);
-  APrinter.Space;
-  APrinter.PrintItem(_OuterJoin);
-  APrinter.Space;
-  APrinter.PrintItem(_Postfix);
-  APrinter.SupressSpace;
+  APrinter.PrintItems([_OpenBracket, _Expression, _CloseBracket, _Star, _OuterJoin, _Postfix]);
 end;
 
 { TExpression }
@@ -287,6 +267,7 @@ begin
   AResult := Terminal(['+', '-', '*', '/', '||', '=', '<', '>', '<=', '>=', '<>', '!=', '^=']);
   if not Assigned(AResult) then AResult := Keyword(['like', 'not like', 'in', 'not in', 'and', 'or', 'between', 'multiset union']);
   Result := Assigned(AResult);
+  if AResult is TTerminal then TTerminal(AResult).OpType := otBinary;
 end;
 
 function TExpression.ParseBreak: boolean;
@@ -324,15 +305,12 @@ begin
   APrinter.PrintItem(_Name);
   APrinter.SpaceOrNextLine(MultiLine);
   APrinter.Indent;
-  APrinter.SupressSpace;
   APrinter.PrintItem(_OpenBracket);
   APrinter.SpaceOrNextLine(MultiLine);
-  APrinter.SupressSpace;
   APrinter.Indent;
   APrinter.PrintItem(_Arguments);
   APrinter.Undent;
   APrinter.SpaceOrNextLine(MultiLine);
-  APrinter.SupressSpace;
   APrinter.PrintItem(_CloseBracket);
   APrinter.Undent;
 end;
@@ -363,12 +341,8 @@ procedure TArgument.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Ident);
   if Assigned(_Ident) then
-  begin
     APrinter.Ruler('argument', TArguments(Parent).MultiLine and Settings.AlignVariables);
-    APrinter.Space;
-  end;
   APrinter.PrintItem(_Assignment);
-  if Assigned(_Assignment) then APrinter.Space;
   APrinter.PrintItem(_Expression);
 end;
 
@@ -398,13 +372,7 @@ end;
 
 procedure TCase.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Case);
-  APrinter.Space;
-  APrinter.PrintItem(_Expression);
-  APrinter.Space;
-  APrinter.PrintItem(_Sections);
-  APrinter.Space;
-  APrinter.PrintItem(_End);
+  APrinter.PrintItems([_Case, _Expression, _Sections, _End]);
 end;
 
 { TCaseSection }
@@ -436,14 +404,7 @@ end;
 
 procedure TCaseSection.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_When);
-  APrinter.Space;
-  APrinter.PrintItem(_Condition);
-  APrinter.Space;
-  APrinter.PrintItem(_Then);
-  APrinter.PrintItem(_Else);
-  APrinter.Space;
-  APrinter.PrintItem(_Value);
+  APrinter.PrintItems([_When, _Condition, _Then, _Else, _Value]);
 end;
 
 { TCaseSections }
@@ -474,14 +435,7 @@ end;
 
 procedure TCast.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Cast);
-  APrinter.PrintItem(_OpenBracket);
-  APrinter.PrintItem(_Expression);
-  APrinter.Space;
-  APrinter.PrintItem(_As);
-  APrinter.Space;
-  APrinter.PrintItem(_TypeRef);
-  APrinter.PrintItem(_CloseBracket);
+  APrinter.PrintItems([_Cast, _OpenBracket, _Expression, _As, _TypeRef, _CloseBracket]);
 end;
 
 { TLValueItem }
@@ -495,8 +449,7 @@ end;
 
 procedure TLValueItem.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_FunctionCall);
-  APrinter.PrintItem(_Ident);
+  APrinter.PrintItems([_FunctionCall, _Ident]);
 end;
 
 function TLValueItem.Ident: string;
@@ -550,7 +503,6 @@ end;
 procedure TExists.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Exists);
-  APrinter.Space;
   inherited;
 end;
 

@@ -27,7 +27,7 @@ unit Printers_;
 
 interface
 
-uses Classes, SysUtils, Math, ComCtrls, System.Generics.Collections;
+uses Classes, SysUtils, Math, ComCtrls, System.Generics.Collections, Windows;
 
 type
 
@@ -53,15 +53,14 @@ type
     procedure EndPrint; virtual; abstract;
     procedure Indent; virtual; abstract;
     procedure Undent; virtual; abstract;
-    procedure Space; virtual; abstract;
-    procedure SupressSpace; virtual; abstract;
     procedure NextLine; virtual; abstract;
     procedure SupressNextLine; virtual; abstract;
     procedure PrintSpecialComment(AValue: string); virtual; abstract;
     procedure Ruler(const ARuler: string; Enabled: boolean = true); virtual; abstract;
   public
-    procedure SpaceOrNextLine(AMultiLine: boolean);
+    procedure PrintItems(AItems: array of TObject);
     procedure PrintIndented(AItem: TObject);
+    procedure SpaceOrNextLine(AMultiLine: boolean);
   public
     property Settings: TFormatSettings read FSettings write FSettings;
   public
@@ -86,8 +85,6 @@ type
     procedure EndPrint; override;
     procedure Indent; override;
     procedure Undent; override;
-    procedure Space; override;
-    procedure SupressSpace; override;
     procedure NextLine; override;
     procedure SupressNextLine; override;
     procedure PrintSpecialComment(AValue: string); override;
@@ -117,12 +114,13 @@ type
     Mode:    TFormatterPrinterMode;
     Shift:   integer;
     BOL:     boolean;
-    SPC:     boolean;
     Col:     integer;
     PrevCol: integer;
     Rulers:  TRulers;
     Padding: integer;
     PrevToken: TToken;
+  protected
+    function SpaceRequired(ALeft, ARight: TToken): boolean;
   public
     constructor Create(AStrings: TStrings);
     procedure BeginPrint; override;
@@ -131,8 +129,6 @@ type
     procedure PrintStatement(AStatement: TStatement); override;
     procedure Indent; override;
     procedure Undent; override;
-    procedure Space; override;
-    procedure SupressSpace; override;
     procedure NextLine; override;
     procedure SupressNextLine; override;
     procedure PrintSpecialComment(AValue: string); override;
@@ -182,7 +178,13 @@ end;
 
 procedure TPrinter.SpaceOrNextLine(AMultiLine: boolean);
 begin
-  if AMultiLine then NextLine else Space;
+  if AMultiLine then NextLine;
+end;
+
+procedure TPrinter.PrintItems(AItems: array of TObject);
+var i: integer;
+begin
+  for i := Low(AItems) to High(AItems) do PrintItem(AItems[i]);
 end;
 
 procedure TPrinter.PrintIndented(AItem: TObject);
@@ -247,16 +249,6 @@ begin
   { ничего не делаем }
 end;
 
-procedure TBasePrinter.Space;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.SupressSpace;
-begin
-  { ничего не делаем }
-end;
-
 procedure TBasePrinter.NextLine;
 begin
   { ничего не делаем }
@@ -292,41 +284,43 @@ begin
   inherited;
 end;
 
+function TFormatterPrinter.SpaceRequired(ALeft, ARight: TToken): boolean;
+begin
+  { Точку с запятой прижимаем справа ко всему }
+  if ARight.Value = ';' then exit(false);
+  { Запятую прижимаем справа ко всему }
+  if ARight.Value = ',' then exit(false);
+  { Открывающую скобку прижимаем справа ко всему, кроме pipe row }
+  if (ARight.Value = '(') and (ALeft.Value <> 'row') then exit(false);
+  { К открывающей скобке прижимаем справа всё }
+  if ALeft.Value = '(' then exit(false);
+  { Закрывающую скобку прижимаем справа ко всему }
+  if ARight.Value = ')' then exit(false);
+  { Суффиксы %type и подобные прижимаем справа ко всему }
+  if ARight.Value.StartsWith('%') then exit(false);
+  { Унарные операции прижимаем слева к следующему за ними }
+  if (ALeft is TTerminal) and (TTerminal(ALeft).OpType = otUnary) then exit(false);
+  { Если правила не сработали, лучше перестраховаться }
+  Result := true;
+end;
+
 procedure TFormatterPrinter.PrintToken(AToken: TToken);
 var
   Value: string;
-  Left: LeftSpaceAttribute;
-  Right: RightSpaceAttribute;
-  Space: integer;
 begin
   if BOL then
   begin
     if Assigned(Builder) then Builder.AppendLine;
     if Assigned(Builder) then Builder.Append(StringOfChar(' ', Shift));
     BOL := false;
-    SPC := false;
     Col := Shift + 1;
     PrevCol := 1;
     PrevToken := nil;
   end;
-  if SPC and Assigned(AToken) then
+  if Assigned(PrevToken) and Assigned(AToken) and SpaceRequired(PrevToken, AToken) then
   begin
     if Assigned(Builder) then Builder.Append(' ');
-    SPC := false;
     Inc(Col);
-  end;
-  if Assigned(PrevToken) and Assigned(AToken) then
-  begin
-    Left := Attributes.GetAttribute(AToken, LeftSpaceAttribute) as LeftSpaceAttribute;
-    Right := Attributes.GetAttribute(PrevToken, RightSpaceAttribute) as RightSpaceAttribute;
-    Space := 0;
-    if Assigned(Left) then Inc(Space, Left.Priority);
-    if Assigned(Right) then Inc(Space, Right.Priority);
-    if Space > 0 then
-    begin
-      Builder.Append(' ');
-      Inc(Col);
-    end;
   end;
   if Padding > 0 then
   begin
@@ -364,7 +358,6 @@ begin
       _Shift   := Shift;
       _Col     := Col;
       _BOL     := BOL;
-      _SPC     := SPC;
       _Builder := Builder;
       _Rulers  := Rulers;
       _PrevToken := PrevToken;
@@ -383,7 +376,6 @@ begin
       Shift := _Shift;
       Col   := _Col;
       BOL   := _BOL;
-      SPC   := _SPC;
       Builder := _Builder;
       PrevToken := _PrevToken;
       { Напечатаем "по-настоящему" (возможно, в рамках вышестоящего fpmGetRulers)}
@@ -422,16 +414,6 @@ end;
 procedure TFormatterPrinter.SupressNextLine;
 begin
   BOL := false;
-end;
-
-procedure TFormatterPrinter.Space;
-begin
-  //SPC := true;
-end;
-
-procedure TFormatterPrinter.SupressSpace;
-begin
-  SPC := false;
 end;
 
 procedure TFormatterPrinter.PrintSpecialComment(AValue: string);

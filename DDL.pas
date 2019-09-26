@@ -52,13 +52,7 @@ end;
 
 procedure TCreate.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Create);
-  APrinter.Space;
-  APrinter.PrintItem(_Or);
-  APrinter.Space;
-  APrinter.PrintItem(_Replace);
-  APrinter.Space;
-  APrinter.PrintItem(_What);
+  APrinter.PrintItems([_Create, _Or, _Replace, _What]);
 end;
 
 function TCreate.StatementName: string;

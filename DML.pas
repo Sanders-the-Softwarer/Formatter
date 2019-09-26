@@ -288,7 +288,6 @@ begin
   APrinter.PrintItem(_Expression);
   PrintSelfAfter(APrinter);
   if not Assigned(_Match) then exit;
-  APrinter.Space;
   APrinter.Ruler('match', Settings.AlignSpecialComments);
   APrinter.PrintSpecialComment('=> ' + TIdentField(_Match).Name);
 end;
@@ -384,13 +383,7 @@ end;
 
 procedure TTableRef.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Select);
-  APrinter.PrintItem(_Table);
-  APrinter.PrintItem(_OpenBracket);
-  APrinter.PrintItem(_TableName);
-  APrinter.PrintItem(_CloseBracket);
-  APrinter.Space;
-  APrinter.PrintItem(_Alias);
+  APrinter.PrintItems([_Select, _Table, _OpenBracket, _TableName, _CloseBracket, _Alias]);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -574,10 +567,7 @@ end;
 
 procedure TWithItem.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Alias);
-  APrinter.Space;
-  APrinter.PrintItem(_As);
-  APrinter.PrintIndented(_Select);
+  APrinter.PrintItems([_Alias, _As, _Select]);
 end;
 
 function TWithItem.StatementName: string;
@@ -630,16 +620,13 @@ procedure TSelectField.PrintSelfAfter(APrinter: TPrinter);
 begin
   if Assigned(_As) then
   begin
-    APrinter.Space;
     APrinter.Ruler('as', Settings.AlignFields);
     APrinter.PrintItem(_As);
   end;
   if Assigned(_Alias) then
   begin
-    APrinter.Space;
     APrinter.Ruler('alias', Settings.AlignFields);
     APrinter.PrintItem(_Alias);
-    APrinter.Space;
   end;
 end;
 
@@ -665,7 +652,6 @@ begin
   if Assigned(_On) then
   begin
     APrinter.PrintIndented(_On);
-    APrinter.Space;
     APrinter.PrintItem(_JoinCondition);
   end;
 end;
@@ -705,7 +691,6 @@ end;
 procedure TGroupBy.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Group);
-  APrinter.Space;
   APrinter.PrintItem(_By);
   APrinter.NextLine;
   APrinter.Indent;
@@ -743,11 +728,7 @@ end;
 
 procedure TOrderByItem.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Expression);
-  APrinter.Space;
-  APrinter.PrintItem(_Nulls);
-  APrinter.Space;
-  APrinter.PrintItem(_Position);
+  APrinter.PrintItems([_Expression, _Nulls, _Position]);
 end;
 
 { TOrderBy }
@@ -767,9 +748,7 @@ end;
 
 procedure TOrderBy.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Order);
-  APrinter.Space;
-  APrinter.PrintItem(_By);
+  APrinter.PrintItems([_Order, _By]);
   APrinter.NextLine;
   APrinter.Indent;
   inherited;
@@ -913,13 +892,11 @@ begin
   APrinter.NextLine;
   APrinter.PrintIndented(_DestSelect);
   APrinter.PrintIndented(_DestTable);
-  APrinter.Space;
   APrinter.PrintItem(_DestAlias);
   APrinter.NextLine;
   APrinter.PrintItem(_Using);
   APrinter.PrintIndented(_SourceSelect);
   APrinter.PrintIndented(_SourceTable);
-  APrinter.Space;
   APrinter.PrintItem(_SourceAlias);
   APrinter.NextLine;
   APrinter.PrintItem(_On);
@@ -965,10 +942,8 @@ end;
 procedure TUpdateAssignment.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Target);
-  APrinter.Space;
   APrinter.Ruler('assignment');
   APrinter.PrintItem(_Assignment);
-  APrinter.Space;
   APrinter.PrintItem(_Value);
 end;
 

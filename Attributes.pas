@@ -28,24 +28,6 @@ type
     constructor Create;
   end;
 
-  { —ообщает принтеру о степени приоритетности пробелов слева }
-  LeftSpaceAttribute = class(TCustomAttribute)
-  private
-    FPriority: integer;
-  public
-    constructor Create(APriority: integer);
-    property Priority: integer read FPriority;
-  end;
-
-  { —ообщает принтеру о степени приоритетности пробелов справа }
-  RightSpaceAttribute = class(TCustomAttribute)
-  private
-    FPriority: integer;
-  public
-    constructor Create(APriority: integer);
-    property Priority: integer read FPriority;
-  end;
-
   TCustomAttributeClass = class of TCustomAttribute;
 
 { ѕолучение атрибута из класса }
@@ -110,20 +92,6 @@ end;
 
 constructor LowerCaseAttribute.Create;
 begin
-end;
-
-{ LeftSpaceAttribute }
-
-constructor LeftSpaceAttribute.Create(APriority: integer);
-begin
-  FPriority := APriority;
-end;
-
-{ RightSpaceAttribute }
-
-constructor RightSpaceAttribute.Create(APriority: integer);
-begin
-  FPriority := APriority;
 end;
 
 initialization

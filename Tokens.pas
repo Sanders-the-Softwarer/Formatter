@@ -43,7 +43,6 @@ type
   end;
 
   { Лексема }
-  [LeftSpace(1)][RightSpace(1)]
   TToken = class(TBaseToken)
   strict private
     FValue: string;
@@ -73,51 +72,57 @@ type
 
   { Незначащие символы }
   TWhitespace = class(TToken)
-  strict protected
+  public
     function TokenType: string; override;
   end;
 
+  { Различие между унарными и бинарными операциями }
+  TOpType = (otNone, otUnary, otBinary);
+
   { Символьная лексема }
   TTerminal = class(TToken)
-  strict protected
+  private
+    FOpType: TOpType;
+  public
     function TokenType: string; override;
+    property OpType: TOpType read FOpType write FOpType;
   end;
 
   { Идентификатор }
   [LowerCase]
   TIdent = class(TToken)
-  strict protected
+  public
     function TokenType: string; override;
   end;
 
   { Ключевое слово }
   [LowerCase]
   TKeyword = class(TToken)
-  strict protected
+  public
     function TokenType: string; override;
   end;
 
   { Комментарий }
   TComment = class(TToken)
-  strict protected
+  public
     function TokenType: string; override;
   end;
 
   { Число }
   TNumber = class(TToken)
-  strict protected
+  public
     function TokenType: string; override;
   end;
 
   { Литерал }
   TLiteral = class(TToken)
-  strict protected
+  public
     function TokenType: string; override;
   end;
 
   { Неожиданный конец входного файла }
   TUnexpectedEOF = class(TToken)
-  strict protected
+  public
     function TokenType: string; override;
   end;
 

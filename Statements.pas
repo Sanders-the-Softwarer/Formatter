@@ -349,18 +349,12 @@ begin
     APrinter.PrintItem(Statements[i]);
     PrintDelimiter(APrinter, Delimiters[i]);
   end;
-  APrinter.SupressSpace;
 end;
 
 procedure TStatementList<S>.PrintDelimiter(APrinter: TPrinter; ADelimiter: TToken);
 begin
   if (ADelimiter is TTerminal) and ((ADelimiter.Value = ',') or (ADelimiter.Value = ';')) then
-    begin
-      APrinter.SupressSpace;
-      APrinter.SupressNextLine;
-    end
-  else
-    APrinter.Space;
+    APrinter.SupressNextLine;
   APrinter.PrintItem(ADelimiter);
   APrinter.SpaceOrNextLine(MultiLine);
 end;
@@ -426,7 +420,6 @@ end;
 
 procedure TUnexpectedToken.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.Space;
   APrinter.PrintItem(_Token);
   APrinter.NextLine;
   APrinter.PrintSpecialComment('!!! SHIT HAPPENS !!!');

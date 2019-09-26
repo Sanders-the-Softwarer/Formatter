@@ -624,9 +624,7 @@ begin
   APrinter.PrintItem(_ExceptionHandlers);
   APrinter.Undent;
   APrinter.PrintItem(_End);
-  APrinter.Space;
   APrinter.PrintItem(_EndName);
-  APrinter.SupressSpace;
   APrinter.PrintItem(_Semicolon);
   APrinter.NextLine;
   APrinter.PrintItem(_Slash);
@@ -651,13 +649,7 @@ end;
 
 procedure TPackageHeader.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Package);
-  APrinter.Space;
-  APrinter.PrintItem(_Body);
-  APrinter.Space;
-  APrinter.PrintItem(_PackageName);
-  APrinter.Space;
-  APrinter.PrintItem(_Is);
+  APrinter.PrintItems([_Package, _Body, _PackageName, _Is]);
   APrinter.NextLine;
 end;
 
@@ -700,10 +692,7 @@ end;
 
 procedure TSubroutineHeaderBase.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Initial);
-  APrinter.Space;
-  APrinter.PrintItem(_Name);
-  APrinter.Space;
+  APrinter.PrintItems([_Initial, _Name]);
   if MultiLine then
   begin
     APrinter.NextLine;
@@ -711,9 +700,7 @@ begin
   end;
   APrinter.PrintItem(_Params);
   if Assigned(_Return) then APrinter.SpaceOrNextLine(MultiLine);
-  APrinter.PrintItem(_Return);
-  APrinter.Space;
-  APrinter.PrintItem(_ReturnType);
+  APrinter.PrintItems([_Return, _ReturnType]);
   if Assigned(_Deterministic) then APrinter.SpaceOrNextLine(MultiLine);
   APrinter.PrintItem(_Deterministic);
   if Assigned(_Pipelined) then APrinter.SpaceOrNextLine(MultiLine);
@@ -756,18 +743,7 @@ end;
 
 procedure TTypeRef.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Ident);
-  APrinter.PrintItem(_Char);
-  APrinter.PrintItem(_Type);
-  APrinter.PrintItem(_RowType);
-  APrinter.PrintItem(_OpenBracket);
-  APrinter.PrintItem(_Size);
-  APrinter.PrintItem(_Comma);
-  APrinter.PrintItem(_Precision);
-  APrinter.Space;
-  APrinter.PrintItem(_Unit);
-  APrinter.SupressSpace;
-  APrinter.PrintItem(_CloseBracket);
+  APrinter.PrintItems([_Ident, _Char, _Type, _RowType, _OpenBracket, _Size, _Comma, _Precision, _Unit, _CloseBracket]);
 end;
 
 { TParamDeclaration }
@@ -797,21 +773,11 @@ begin
   NeedRuler := Settings.AlignVariables and (Parent as TParamsDeclaration).MultiLine;
   APrinter.PrintItem(_ParamName);
   APrinter.Ruler('modifiers', NeedRuler);
-  APrinter.Space;
-  APrinter.PrintItem(_In);
-  APrinter.Space;
-  APrinter.PrintItem(_Out);
-  APrinter.Space;
-  APrinter.PrintItem(_Nocopy);
+  APrinter.PrintItems([_In, _Out, _Nocopy]);
   APrinter.Ruler('type', NeedRuler);
-  APrinter.Space;
   APrinter.PrintItem(_ParamType);
-  APrinter.Space;
   APrinter.Ruler('default', NeedRuler and (Assigned(_TAssignment) or Assigned(_KAssignment)));
-  APrinter.PrintItem(_TAssignment);
-  APrinter.PrintItem(_KAssignment);
-  APrinter.Space;
-  APrinter.PrintItem(_DefaultValue);
+  APrinter.PrintItems([_TAssignment, _KAssignment, _DefaultValue]);
 end;
 
 { TParamsDeclaration }
@@ -841,7 +807,6 @@ begin
   APrinter.Indent;
   inherited;
   APrinter.Undent;
-  APrinter.SupressSpace;
   APrinter.PrintItem(_CloseBracket);
 end;
 
@@ -883,19 +848,11 @@ procedure TVariableDeclaration.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Name);
   APrinter.Ruler('name', Settings.AlignVariables);
-  APrinter.Space;
   APrinter.PrintItem(_Constant);
   APrinter.Ruler('constant', Settings.AlignVariables);
-  APrinter.Space;
   APrinter.PrintItem(_Type);
   APrinter.Ruler('type', Settings.AlignVariables and (Assigned(_TAssignment) or Assigned(_KAssignment)));
-  APrinter.Space;
-  APrinter.PrintItem(_TAssignment);
-  APrinter.PrintItem(_KAssignment);
-  APrinter.Space;
-  APrinter.PrintItem(_Value);
-  APrinter.SupressSpace;
-  APrinter.PrintItem(_Semicolon);
+  APrinter.PrintItems([_TAssignment, _KAssignment, _Value, _Semicolon]);
   APrinter.NextLine;
 end;
 
@@ -932,11 +889,7 @@ end;
 
 procedure TAssignment.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Target);
-  APrinter.Space;
-  APrinter.PrintItem(_Assignment);
-  APrinter.Space;
-  APrinter.PrintItem(_Expression);
+  APrinter.PrintItems([_Target, _Assignment, _Expression]);
 end;
 
 { TReturn }
@@ -952,9 +905,7 @@ end;
 
 procedure TReturn.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Return);
-  APrinter.Space;
-  APrinter.PrintItem(_Value);
+  APrinter.PrintItems([_Return, _Value]);
 end;
 
 { TSubroutine }
@@ -1002,7 +953,6 @@ end;
 procedure TSubroutineForwardDeclaration.PrintSelf(APrinter: TPrinter);
 begin
   inherited;
-  APrinter.SupressSpace;
   APrinter.PrintItem(_Semicolon);
   APrinter.NextLine;
   if MultiLine then APrinter.Undent;
@@ -1040,12 +990,7 @@ end;
 
 procedure TIf.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_If);
-  APrinter.Space;
-  APrinter.PrintItem(_Condition);
-  APrinter.Space;
-  APrinter.PrintItem(_Sections);
-  APrinter.PrintItem(_EndIf);
+  APrinter.PrintItems([_If, _Condition, _Sections, _EndIf]);
 end;
 
 { TAnonymousHeader }
@@ -1086,11 +1031,7 @@ end;
 
 procedure TExceptionHandler.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_When);
-  APrinter.Space;
-  APrinter.PrintItem(_Condition);
-  APrinter.Space;
-  APrinter.PrintItem(_Then);
+  APrinter.PrintItems([_When, _Condition, _Then]);
   APrinter.NextLine;
   APrinter.Indent;
   APrinter.PrintItem(_Statements);
@@ -1144,10 +1085,7 @@ end;
 
 procedure TExceptionDeclaration.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Name);
-  APrinter.Space;
-  APrinter.PrintItem(_Exception);
-  APrinter.PrintItem(_Semicolon);
+  APrinter.PrintItems([_Name, _Exception, _Semicolon]);
 end;
 
 { TIfSection }
@@ -1172,11 +1110,7 @@ end;
 
 procedure TIfSection.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Keyword);
-  APrinter.Space;
-  APrinter.PrintItem(_Condition);
-  APrinter.Space;
-  APrinter.PrintItem(_Then);
+  APrinter.PrintItems([_Keyword, _Condition, _Then]);
   APrinter.NextLine;
   APrinter.Indent;
   APrinter.PrintItem(_Statements);
@@ -1206,7 +1140,6 @@ end;
 procedure TOpenFor.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Open);
-  APrinter.Space;
   APrinter.PrintItem(_Cursor);
   APrinter.NextLine;
   APrinter.PrintItem(_For);
@@ -1229,10 +1162,7 @@ end;
 
 procedure TPragma.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Pragma);
-  APrinter.Space;
-  APrinter.PrintItem(_Body);
-  APrinter.PrintItem(_Semicolon);
+  APrinter.PrintItems([_Pragma, _Body, _Semicolon]);
 end;
 
 { TLoop }
@@ -1287,26 +1217,14 @@ end;
 
 procedure TFor.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_For);
-  APrinter.Space;
-  APrinter.PrintItem(_Variable);
-  APrinter.Space;
-  APrinter.PrintItem(_In);
-  APrinter.Space;
+  APrinter.PrintItems([_For, _Variable, _In]);
   if Assigned(_Select) then
     begin
       APrinter.PrintIndented(_Select);
       APrinter.NextLine;
     end
   else
-    begin
-      APrinter.PrintItem(_ICursor);
-      APrinter.PrintItem(_SCursor);
-      APrinter.PrintItem(_Low);
-      APrinter.PrintItem(_To);
-      APrinter.PrintItem(_High);
-      APrinter.Space;
-    end;
+    APrinter.PrintItems([_ICursor, _SCursor, _Low, _To, _High]);
   APrinter.PrintItem(_Loop);
 end;
 
@@ -1323,11 +1241,7 @@ end;
 
 procedure TWhile.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_While);
-  APrinter.Space;
-  APrinter.PrintItem(_Condition);
-  APrinter.Space;
-  APrinter.PrintItem(_Loop);
+  APrinter.PrintItems([_While, _Condition, _Loop]);
 end;
 
 { TType }
@@ -1345,14 +1259,7 @@ end;
 
 procedure TType.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Type);
-  APrinter.Space;
-  APrinter.PrintItem(_TypeName);
-  APrinter.Space;
-  APrinter.PrintItem(_Is);
-  APrinter.Space;
-  APrinter.PrintItem(_Body);
-  APrinter.PrintItem(_Semicolon);
+  APrinter.PrintItems([_Type, _TypeName, _Is, _Body, _Semicolon]);
 end;
 
 function TType.StatementName: string;
@@ -1379,9 +1286,7 @@ end;
 
 procedure TRecord.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Record);
-  APrinter.Space;
-  APrinter.PrintItem(_OpenBracket);
+  APrinter.PrintItems([_Record, _OpenBracket]);
   APrinter.NextLine;
   APrinter.Indent;
   inherited;
@@ -1406,18 +1311,7 @@ end;
 
 procedure TTable.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Table);
-  APrinter.Space;
-  APrinter.PrintItem(_Of);
-  APrinter.Space;
-  APrinter.PrintItem(_TypeRef);
-  APrinter.Space;
-  APrinter.PrintItem(_Index);
-  APrinter.Space;
-  APrinter.PrintItem(_By);
-  APrinter.Space;
-  APrinter.PrintItem(_IndexType);
-  APrinter.SupressSpace;
+  APrinter.PrintItems([_Table, _Of, _TypeRef, _Index, _By, _IndexType]);
 end;
 
 { TForall }
@@ -1448,24 +1342,7 @@ end;
 
 procedure TForall.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_ForAll);
-  APrinter.Space;
-  APrinter.PrintItem(_Variable);
-  APrinter.Space;
-  APrinter.PrintItem(_In);
-  APrinter.Space;
-  APrinter.PrintItem(_IndicesOrValues);
-  APrinter.PrintItem(_Low);
-  APrinter.Space;
-  APrinter.PrintItem(_Of);
-  APrinter.PrintItem(_To);
-  APrinter.Space;
-  APrinter.PrintItem(_TableName);
-  APrinter.PrintItem(_High);
-  APrinter.Space;
-  APrinter.PrintItem(_Save);
-  APrinter.Space;
-  APrinter.PrintItem(_Exceptions);
+  APrinter.PrintItems([_ForAll, _Variable, _In, _IndicesOrValues, _Low, _Of, _To, _TableName, _High, _Save, _Exceptions]);
   APrinter.PrintIndented(_DML);
 end;
 
@@ -1488,13 +1365,7 @@ end;
 
 procedure TCaseSection.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_When);
-  APrinter.Space;
-  APrinter.PrintItem(_Condition);
-  APrinter.Space;
-  APrinter.PrintItem(_Then);
-  APrinter.SupressSpace;
-  APrinter.PrintItem(_Else);
+  APrinter.PrintItems([_When, _Condition, _Then, _Else]);
   APrinter.PrintIndented(_Body);
 end;
 
@@ -1544,18 +1415,14 @@ procedure TCursor.PrintSelf(APrinter: TPrinter);
 var MultiLine: boolean;
 begin
   MultiLine := Assigned(_Params) and TParamsDeclaration(_Params).MultiLine or Assigned(_Return);
-  APrinter.PrintItem(_Cursor);
-  APrinter.Space;
-  APrinter.PrintItem(_CursorName);
+  APrinter.PrintItems([_Cursor, _CursorName]);
   APrinter.SpaceOrNextLine(MultiLine);
   APrinter.Indent;
   APrinter.PrintItem(_Params);
   APrinter.Undent;
   APrinter.SpaceOrNextLine(MultiLine);
   APrinter.Indent;
-  APrinter.PrintItem(_Return);
-  APrinter.Space;
-  APrinter.PrintItem(_ReturnType);
+  APrinter.PrintItems([_Return, _ReturnType]);
   APrinter.Undent;
   APrinter.SpaceOrNextLine(MultiLine);
   APrinter.PrintItem(_Is);
@@ -1575,11 +1442,7 @@ end;
 
 procedure TPipeRow.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Pipe);
-  APrinter.Space;
-  APrinter.PrintItem(_Row);
-  APrinter.Space;
-  APrinter.PrintItem(_Arguments);
+  APrinter.PrintItems([_Pipe, _Row, _Arguments]);
 end;
 
 { TFetch }
@@ -1615,9 +1478,7 @@ end;
 
 procedure TClose.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Close);
-  APrinter.Space;
-  APrinter.PrintItem(_Cursor);
+  APrinter.PrintItems([_Close, _Cursor]);
 end;
 
 { TExit }
@@ -1633,11 +1494,7 @@ end;
 
 procedure TExit.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Exit);
-  APrinter.Space;
-  APrinter.PrintItem(_When);
-  APrinter.Space;
-  APrinter.PrintItem(_Condition);
+  APrinter.PrintItems([_Exit, _When, _Condition]);
 end;
 
 { TExecuteImmediate }
