@@ -17,7 +17,9 @@ unit Printers_;
   отформатированный текст, приложение поддерживает дополнительные для
   выдачи отладочной информации - соль решения в том, что это оказывается
   доступным бесплатно, без нагрузки классов анализатора дополнительными
-  методами.
+  методами. Получившееся решение настолько универсально, что принтер лексем,
+  например, одинаково хорошо работает, имея на входе как поток лексического,
+  так и поток синтаксического анализатора.
 
   Класс TPrinter - это, по сути, интерфейс вывода на принтер. Пустая реализация
   спрятана в классе TBasePrinter; их не следует объединять, поскольку тогда
@@ -31,11 +33,19 @@ unit Printers_;
   предусмотрен специальный AlarmPrinter, задача которого - отлавливать
   пропущенные лексемы и бить о них в барабан.
 
+  В приложении широко используется возможность выравнивания соседних однотипных
+  конструкций по ширине. Для этого в принтере используется специальный режим
+  примерки, когда реальный вывод отключён, но счётчики текущего положения
+  модифицируются, позволяя оценить, как будет напечатан последующий текст
+  и рассчитать необходимое для выравнивания блока количество пробелов.
+
 ------------------------------------------------------------------------------ }
 
 interface
 
-uses Classes, SysUtils, Math, StdCtrls, ComCtrls, System.Generics.Collections, Tokens, Windows;
+uses
+  Classes, SysUtils, Math, StdCtrls, ComCtrls, System.Generics.Collections,
+  Tokens, Windows;
 
 type
 
@@ -94,6 +104,10 @@ procedure SendSyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
 implementation
 
 uses Statements, Attributes;
+
+type
+  { Тип лексемы для вывода специальных комментариев }
+  TSpecialComment = class(TComment);
 
 { Отправка извещения о необходимости синхронизации интерфейса }
 procedure SendSyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
@@ -216,7 +230,11 @@ type
     constructor Create(AListBox: TListBox; ATabSheet: TTabSheet);
   end;
 
-{ TPrinter }
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//      Интерфейс вывода на принтер и фабрики создания реальных принтеров     //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 class function TPrinter.CreateFormatterPrinter(AMemo: TMemo): TPrinter;
 begin
@@ -257,7 +275,11 @@ begin
   Undent;
 end;
 
-{ TBasePrinter }
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                   Дефолтовая (пустая) реализация принтера                  //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 procedure TBasePrinter.BeginPrint;
 begin
@@ -269,6 +291,7 @@ begin
   { ничего не делаем }
 end;
 
+{ Разбиваем PrintItem на PrintToken и PrintStatement }
 procedure TBasePrinter.PrintItem(AItem: TObject);
 begin
   if not Assigned(AItem) then
@@ -331,7 +354,11 @@ begin
   { ничего не делаем }
 end;
 
-{ TFormatterPrinter }
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                  Принтер для печати форматированного текста                //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 constructor TFormatterPrinter.Create(AMemo: TMemo);
 begin
@@ -348,6 +375,7 @@ begin
   inherited;
 end;
 
+{ Инициализация перед началом печати }
 procedure TFormatterPrinter.BeginPrint;
 begin
   inherited;
@@ -360,6 +388,7 @@ begin
   TokenLen.Clear;
 end;
 
+{ Вывод готового результата }
 procedure TFormatterPrinter.EndPrint;
 begin
   Memo.Lines.BeginUpdate;
@@ -369,6 +398,7 @@ begin
   inherited;
 end;
 
+{ Проверка, нужен ли пробел между двумя лексемами }
 function TFormatterPrinter.SpaceRequired(ALeft, ARight: TToken): boolean;
 begin
   { Точку с запятой прижимаем справа ко всему }
@@ -389,10 +419,12 @@ begin
   Result := true;
 end;
 
+{ Вывод очередной лексемы с навешиванием всех наворотов по форматированию }
 procedure TFormatterPrinter.PrintToken(AToken: TToken);
 var
   Value: string;
 begin
+  { Обработаем переход на новую строку }
   if BOL then
   begin
     if Assigned(Builder) then Builder.AppendLine;
@@ -402,11 +434,13 @@ begin
     PrevCol := 1;
     PrevToken := nil;
   end;
+  { Если нужно, внедрим пробел между предыдущей и новой лексемами }
   if Assigned(PrevToken) and Assigned(AToken) and SpaceRequired(PrevToken, AToken) then
   begin
     if Assigned(Builder) then Builder.Append(' ');
     Inc(Col);
   end;
+  { Если задано выравнивание, вставим соответствующее количество пробелов }
   if Padding > 0 then
   begin
     Builder.Append(StringOfChar(' ', Padding));
@@ -414,19 +448,25 @@ begin
     Inc(PrevCol, Padding);
     Padding := 0;
   end;
+  { И, наконец, если задана лексема - напечатаем её }
   if Assigned(AToken) then
   begin
     Value := AToken.Value;
+    { Учтём настройки замены лексем на синонимы и вывод в нижнем регистре }
     if (AToken is TKeyword) and SameText(AToken.Value, 'default') and Settings.ReplaceDefault
       then Value := ':=';
     if (AToken is TKeyword) and SameText(AToken.Value, 'as') and Settings.ReplaceAsIs
       then Value := 'is';
     if Attributes.HasAttribute(AToken.ClassType, LowerCaseAttribute)
       then Value := Value.ToLower;
+    { В режиме реальной печати - напечатаем лексему, иначе только учтём сдвиг позиции }
     if Assigned(Builder) then
     begin
-      TokenPos.Add(AToken, Builder.Length);
-      TokenLen.Add(AToken, Value.Length);
+      if not (AToken is TSpecialComment) then
+      begin
+        TokenPos.Add(AToken, Builder.Length);
+        TokenLen.Add(AToken, Value.Length);
+      end;
       Builder.Append(Value);
       AToken.Printed := true;
     end;
@@ -435,6 +475,7 @@ begin
   end;
 end;
 
+{ Вывод синтаксической конструкции с расстановкой выравниваний }
 procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
 var
   _Mode: TFormatterPrinterMode;
@@ -463,7 +504,7 @@ begin
       try
         inherited;
       except
-        { проглотим ошибку и дадим упасть на SetRulers, чтобы выдать текст на принтер }
+        { проглотим ошибку и дадим аналогично упасть на SetRulers, чтобы выдать проблемный текст на принтер }
       end;
       { Восстановим конфигурацию для печати }
       Shift := _Shift;
@@ -482,12 +523,15 @@ begin
     end
   else
     begin
+      { Без выравниваний - просто напечатаем и проверим, что не забыли сбалансировать Indent/Undent-ы }
       _Shift := Shift;
       inherited;
       if Shift <> _Shift then
         raise Exception.CreateFmt('Invalid indents into %s - was %d but %d now', [AStatement.ClassName, _Shift, Shift]);
     end;
 end;
+
+{ Управление отступами }
 
 procedure TFormatterPrinter.Indent;
 begin
@@ -499,6 +543,8 @@ begin
   if Shift >= 4 then Dec(Shift, 4);
 end;
 
+{ Переход на следующую строку и его подавление }
+
 procedure TFormatterPrinter.NextLine;
 begin
   BOL := true;
@@ -509,25 +555,28 @@ begin
   BOL := false;
 end;
 
+{ Вывод на принтер специального комментария (отсутствующего в исходном тексте)}
 procedure TFormatterPrinter.PrintSpecialComment(AValue: string);
 var T: TToken;
 begin
-  T := TToken.Create('/*/ ' + AValue + ' /*/', -1, -1);
+  T := TSpecialComment.Create('/*/ ' + AValue + ' /*/', -1, -1);
   PrintToken(T);
   T.Free;
 end;
 
+{ Установка "линейки" для выравнивания }
 procedure TFormatterPrinter.Ruler(const ARuler: string; Enabled: boolean = true);
 begin
   if not Enabled then exit;
   PrintToken(nil);
   case Mode of
-    fpmGetRulers: Rulers.Ruler(ARuler, Col - PrevCol);
-    fpmSetRulers: Padding := Rulers.Padding(ARuler, Col - PrevCol);
+    fpmGetRulers: Rulers.Ruler(ARuler, Col - PrevCol); { В режиме примерки запомним ширину фрагмента }
+    fpmSetRulers: Padding := Rulers.Padding(ARuler, Col - PrevCol); { В режиме разметки рассчитаем необходимое количество пробелов }
   end;
   PrevCol := Col;
 end;
 
+{ Реакция на действия пользователя в привязанном к принтере Memo }
 procedure TFormatterPrinter.ControlChanged;
 var
   P: integer;
@@ -536,6 +585,7 @@ begin
   if IntoSync then exit;
   try
     IntoSync := true;
+    { Найдём лексему под курсором и пошлём другим оповещение о синхронизации }
     P := Memo.SelStart;
     for T in TokenPos.Keys do
       if (TokenPos[T] <= P) and (TokenPos[T] + TokenLen[T] >= P) then
@@ -545,16 +595,19 @@ begin
   end;
 end;
 
+{ Обработка оповещения о синхронизации от других элементов интерфейса }
 procedure TFormatterPrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
 var T: TToken;
 begin
   if IntoSync then exit;
   try
     IntoSync := true;
+    { Если лексема не указана - найдём подходящую по позиции }
     if not Assigned(AToken) then
       for T in TokenPos.Keys do
         if (T.Line = ALine) and (T.Col <= ACol) and (T.Col + T.Value.Length > ACol) then
           AToken := T;
+    { И выделим её в тексте }
     if not TokenPos.ContainsKey(AToken) then exit;
     Memo.SelStart := TokenPos[AToken];
     Memo.SelLength := TokenLen[AToken];
@@ -563,7 +616,11 @@ begin
   end;
 end;
 
-{ TTokenizerPrinter }
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//              Принтер для печати вывода лексического анализатора            //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 constructor TTokenizerPrinter.Create(AListBox: TListBox);
 begin
@@ -581,6 +638,7 @@ begin
   inherited;
 end;
 
+{ Инициализация и подготовка к печати }
 procedure TTokenizerPrinter.BeginPrint;
 begin
   inherited;
@@ -590,6 +648,7 @@ begin
   LineNumbers.Clear;
 end;
 
+{ Вывод очередной лексемы }
 procedure TTokenizerPrinter.PrintToken(AToken: TToken);
 var
   Str: string;
@@ -607,29 +666,38 @@ begin
   LineNumbers.Add(AToken, i);
 end;
 
+{ Завершение печати }
 procedure TTokenizerPrinter.EndPrint;
 begin
   ListBox.Items.EndUpdate;
   inherited;
 end;
 
+{ Реакция на изменения в привязанном листбоксе }
 procedure TTokenizerPrinter.ControlChanged;
 begin
   SendSyncNotification(Tokens[ListBox.ItemIndex], 0, 0, 0);
 end;
 
+{ Реакция на оповещения от других элементов интерфейса }
 procedure TTokenizerPrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
 var T: TToken;
 begin
+  { Если не указана лексема, найдём подходящую по позиции в тексте }
   if not Assigned(AToken) then
     for T in LineNumbers.Keys do
       if (T.Line = ALine) and (T.Col <= ACol) and (T.Col + T.Value.Length > ACol) then
         AToken := T;
+  { И сфокусируемся на неё }
   if Assigned(AToken) and LineNumbers.ContainsKey(AToken) then
     ListBox.ItemIndex := LineNumbers[AToken];
 end;
 
-{ TSyntaxTreePrinter }
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                   Принтер для выдачи синтаксического дерева                //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 constructor TSyntaxTreePrinter.Create(ATreeView: TTreeView);
 begin
@@ -644,6 +712,7 @@ begin
   inherited;
 end;
 
+{ Инициализация и подготовка к печати }
 procedure TSyntaxTreePrinter.BeginPrint;
 begin
   inherited;
@@ -654,6 +723,7 @@ begin
   Parents.Push(nil);
 end;
 
+{ Завершение печати и вывод результата }
 procedure TSyntaxTreePrinter.EndPrint;
 begin
   FreeAndNil(Parents);
@@ -661,6 +731,25 @@ begin
   inherited;
 end;
 
+{ Печать выражения - делаем каждый объект TStatement узлом дерева и привязываем к нему дочерние }
+procedure TSyntaxTreePrinter.PrintStatement(AStatement: TStatement);
+begin
+  Parents.Push(TreeView.Items.AddChild(Parents.Peek, '< ' + Trim(AStatement.Name) + ' >'));
+  try
+    inherited;
+  finally
+    Parents.Pop;
+  end;
+end;
+
+{ Печать лексемы - делаем каждый объект TToken листом дерева }
+procedure TSyntaxTreePrinter.PrintToken(AToken: TToken);
+begin
+  Tokens.Add(AToken, TreeView.Items.AddChildObject(Parents.Peek, Format('%s [ %s ]', [AToken.TokenType, AToken.Value]), AToken));
+end;
+
+
+{ Реакция на действия пользователя в дереве }
 procedure TSyntaxTreePrinter.ControlChanged;
 var Ptr: pointer;
 begin
@@ -674,14 +763,14 @@ begin
   end;
 end;
 
+{ Обработка оповещений от других элементов интерфейса }
 procedure TSyntaxTreePrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
-var
-  i: Integer;
-  T: TToken;
+var T: TToken;
 begin
   if IntoSync then exit;
   try
     IntoSync := true;
+    { Найдём подходящую лексему и сфокусируемся на соответствующем ей узле дерева }
     for T in Tokens.Keys do
     begin
       if (T = AToken) or (T.Line = ALine) and (T.Col <= ACol) and (T.Col + T.Value.Length > ACol) then
@@ -689,6 +778,7 @@ begin
         TreeView.Items.BeginUpdate;
         TreeView.FullCollapse;
         TreeView.Selected := Tokens[T];
+        exit;
       finally
         TreeView.Items.EndUpdate;
       end;
@@ -696,21 +786,6 @@ begin
   finally
     IntoSync := false;
   end;
-end;
-
-procedure TSyntaxTreePrinter.PrintStatement(AStatement: TStatement);
-begin
-  Parents.Push(TreeView.Items.AddChild(Parents.Peek, '< ' + Trim(AStatement.Name) + ' >'));
-  try
-    inherited;
-  finally
-    Parents.Pop;
-  end;
-end;
-
-procedure TSyntaxTreePrinter.PrintToken(AToken: TToken);
-begin
-  Tokens.Add(AToken, TreeView.Items.AddChildObject(Parents.Peek, Format('%s [ %s ]', [AToken.TokenType, AToken.Value]), AToken));
 end;
 
 { TAlarmPrinter }

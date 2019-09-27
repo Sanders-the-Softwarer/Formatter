@@ -10,6 +10,19 @@
 
 unit Parser;
 
+{ ----- Примечания -------------------------------------------------------------
+
+  Синтаксический анализатор является потоком достаточно формально. Он
+  возвращает конструкции верхнего уровня, каждая из которых содержит под
+  собой целое дерево из вложенных элементов. Также он достаточно формально
+  является анализатором - поскольку его роль сводится к тому, чтобы
+  перебрать возможные конструкции верхнего уровня, спросив каждую, не
+  согласится ли она разобрать входной поток с текущего места. Весь анализ
+  проходит в файлах DDL, DML, PLSQL, Expressions, а модуль Parser и класс
+  TParser являются по сути только точкой входа.
+
+------------------------------------------------------------------------------ }
+
 interface
 
 uses Windows, System.SysUtils, Streams, Tokens, Statements, Printers_;
@@ -36,7 +49,6 @@ implementation
 uses DDL, DML, PLSQL, Expressions;
 
 type
-
   { "Пустое" выражение }
   TEOFStatement = class(TStatement)
   public
@@ -51,6 +63,7 @@ begin
   Settings := ASettings;
 end;
 
+{ Разбор поддерживаемых конструкций DML }
 class function TParser.ParseDML(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
   Result := TSelect.Parse(AParent, ASource, AResult) or
@@ -60,12 +73,14 @@ begin
              TMerge.Parse(AParent, ASource, AResult);
 end;
 
+{ Разбор объектов, создаваемых командой create }
 class function TParser.ParseCreation(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
   Result := TPackage.Parse(AParent, ASource, AResult) or
             TSubroutine.Parse(AParent, ASource, AResult);
 end;
 
+{ Разбор операторов PL/SQL }
 class function TParser.ParseOperator(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
   Result := ParseDML(AParent, ASource, AResult) or
@@ -89,6 +104,7 @@ begin
             TAnonymousBlock.Parse(AParent, ASource, AResult);
 end;
 
+{ Разбор деклараций (переменных, процедур, типов, курсоров, прагм и т. п. }
 class function TParser.ParseDeclaration(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
   Result := TSubroutineForwardDeclaration.Parse(AParent, ASource, AResult) or
@@ -100,12 +116,14 @@ begin
             TVariableDeclarations.Parse(AParent, ASource, AResult);
 end;
 
+{ Разбор типов, описываемых предложением type }
 class function TParser.ParseType(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
   Result := TRecord.Parse(AParent, ASource, AResult) or
             TTable.Parse(AParent, ASource, AResult);
 end;
 
+{ Разбор произвольной заранее неизвестной конструкции }
 class function TParser.ParseAny(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
   Result := ParseOperator(AParent, ASource, AResult) or
@@ -116,6 +134,7 @@ begin
             TExpression.Parse(AParent, ASource, AResult);
 end;
 
+{ Вычисление очередного выходного символа сводится к вызову ParseAny }
 function TParser.InternalNext: TStatement;
 begin
   if ParseAny(nil, Source, Result) or

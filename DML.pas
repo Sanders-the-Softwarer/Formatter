@@ -141,46 +141,6 @@ implementation
 
 uses Expressions;
 
-type
-
-  { Присвоение в update }
-  TUpdateAssignment = class(TStatement)
-  strict private
-    _Target: TIdent;
-    _Assignment: TTerminal;
-    _Value: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
-    function StatementName: string; override;
-  end;
-
-  { Список присвоений в update }
-  [Aligned]
-  TUpdateAssignments = class(TCommaList<TUpdateAssignment>)
-  strict protected
-    function ParseBreak: boolean; override;
-  end;
-
-  { Секция в merge }
-  TMergeSection = class(TStatement)
-  strict private
-    _Section: TKeyword;
-    _DML: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-  public
-    function StatementName: string; override;
-    procedure PrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Секции операторов в merge }
-  TMergeSections = class(TStatementList<TMergeSection>)
-  strict protected
-    function ParseBreak: boolean; override;
-  end;
-
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //                         Общие элементы конструкций                         //
@@ -555,6 +515,23 @@ begin
     TExpressionFields(_Fields).Match(AFields as TIdentFields);
 end;
 
+{ TInnerSelect }
+
+function TInnerSelect.InternalParse: boolean;
+begin
+  _OpenBracket := Terminal('(');
+  TSelect.Parse(Self, Source, _Select);
+  _CloseBracket := Terminal(')');
+  Result := Assigned(_OpenBracket) and Assigned(_Select);
+end;
+
+procedure TInnerSelect.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_OpenBracket);
+  APrinter.PrintIndented(_Select);
+  APrinter.PrintItem(_CloseBracket);
+end;
+
 { TWithItem }
 
 function TWithItem.InternalParse: boolean;
@@ -771,7 +748,11 @@ begin
   inherited;
 end;
 
-{ TInsert }
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                               Оператор INSERT                              //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 function TInsert.InternalParse: boolean;
 begin
@@ -819,6 +800,34 @@ begin
   APrinter.PrintItem(_Returning);
 end;
 
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                               Оператор UPDATE                              //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+type
+
+  { Присвоение в update }
+  TUpdateAssignment = class(TStatement)
+  strict private
+    _Target: TIdent;
+    _Assignment: TTerminal;
+    _Value: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function StatementName: string; override;
+  end;
+
+  { Список присвоений в update }
+  [Aligned]
+  TUpdateAssignments = class(TCommaList<TUpdateAssignment>)
+  strict protected
+    function ParseBreak: boolean; override;
+  end;
+
 { TUpdate }
 
 function TUpdate.InternalParse: boolean;
@@ -844,7 +853,43 @@ begin
   APrinter.PrintItem(_Returning);
 end;
 
-{ TDelete }
+{ TUpdateAssignment }
+
+function TUpdateAssignment.InternalParse: boolean;
+begin
+  _Target := Identifier;
+  _Assignment := Terminal('=');
+  Result := Assigned(_Target) and Assigned(_Assignment);
+  if Result then TExpression.Parse(Self, Source, _Value);
+end;
+
+function TUpdateAssignment.StatementName: string;
+begin
+  if Assigned(_Target)
+    then Result := _Target.Value
+    else Result := '< update assignment >';
+end;
+
+procedure TUpdateAssignment.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Target);
+  APrinter.Ruler('assignment');
+  APrinter.PrintItem(_Assignment);
+  APrinter.PrintItem(_Value);
+end;
+
+{ TUpdateAssignments }
+
+function TUpdateAssignments.ParseBreak: boolean;
+begin
+  Result := Any([Terminal(';')]) or (Source.Next is TKeyword);
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                               Оператор DELETE                              //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 function TDelete.InternalParse: boolean;
 begin
@@ -865,6 +910,32 @@ begin
   APrinter.NextLine;
   APrinter.PrintItem(_Where);
 end;
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                               Оператор MERGE                               //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+type
+
+  { Секция в merge }
+  TMergeSection = class(TStatement)
+  strict private
+    _Section: TKeyword;
+    _DML: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    function StatementName: string; override;
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Секции операторов в merge }
+  TMergeSections = class(TStatementList<TMergeSection>)
+  strict protected
+    function ParseBreak: boolean; override;
+  end;
 
 { TMerge }
 
@@ -903,55 +974,6 @@ begin
   APrinter.PrintIndented(_Condition);
   APrinter.NextLine;
   APrinter.PrintItem(_Sections);
-end;
-
-{ TInnerSelect }
-
-function TInnerSelect.InternalParse: boolean;
-begin
-  _OpenBracket := Terminal('(');
-  TSelect.Parse(Self, Source, _Select);
-  _CloseBracket := Terminal(')');
-  Result := Assigned(_OpenBracket) and Assigned(_Select);
-end;
-
-procedure TInnerSelect.PrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItem(_OpenBracket);
-  APrinter.PrintIndented(_Select);
-  APrinter.PrintItem(_CloseBracket);
-end;
-
-{ TUpdateAssignment }
-
-function TUpdateAssignment.InternalParse: boolean;
-begin
-  _Target := Identifier;
-  _Assignment := Terminal('=');
-  Result := Assigned(_Target) and Assigned(_Assignment);
-  if Result then TExpression.Parse(Self, Source, _Value);
-end;
-
-function TUpdateAssignment.StatementName: string;
-begin
-  if Assigned(_Target)
-    then Result := _Target.Value
-    else Result := '< update assignment >';
-end;
-
-procedure TUpdateAssignment.PrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItem(_Target);
-  APrinter.Ruler('assignment');
-  APrinter.PrintItem(_Assignment);
-  APrinter.PrintItem(_Value);
-end;
-
-{ TUpdateAssignments }
-
-function TUpdateAssignments.ParseBreak: boolean;
-begin
-  Result := Any([Terminal(';')]) or (Source.Next is TKeyword);
 end;
 
 { TMergeSection }
