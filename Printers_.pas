@@ -23,11 +23,19 @@ unit Printers_;
   спрятана в классе TBasePrinter; их не следует объединять, поскольку тогда
   получится циклическая ссылка между модулями Printers, Tokens и Statements.
 
+  В ходе работы оказалось, что после правильного синтаксического разбора
+  конструкции я нередко забываю напечатать какую-нибудь мелкую лексему и она
+  пропадает. Это очень неприятная тенденция, так как она не только выдаёт
+  некомпилируемый код, но и может погубить работу пользователя, грохнув
+  что-то существенное в том, что он форматировал. Поэтому среди инструментов
+  предусмотрен специальный AlarmPrinter, задача которого - отлавливать
+  пропущенные лексемы и бить о них в барабан.
+
 ------------------------------------------------------------------------------ }
 
 interface
 
-uses Classes, SysUtils, Math, ComCtrls, System.Generics.Collections, Windows;
+uses Classes, SysUtils, Math, StdCtrls, ComCtrls, System.Generics.Collections, Tokens, Windows;
 
 type
 
@@ -41,6 +49,7 @@ type
     AlignFields: boolean;
     AlignSpecialComments: boolean;
     ReplaceDefault: boolean;
+    ReplaceAsIs: boolean;
   end;
 
   { Интерфейс вывода на принтер }
@@ -57,6 +66,8 @@ type
     procedure SupressNextLine; virtual; abstract;
     procedure PrintSpecialComment(AValue: string); virtual; abstract;
     procedure Ruler(const ARuler: string; Enabled: boolean = true); virtual; abstract;
+    procedure ControlChanged; virtual; abstract;
+    procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); virtual; abstract;
   public
     procedure PrintItems(AItems: array of TObject);
     procedure PrintIndented(AItem: TObject);
@@ -64,14 +75,32 @@ type
   public
     property Settings: TFormatSettings read FSettings write FSettings;
   public
-    class function CreateTokenizerPrinter(AStrings: TStrings): TPrinter;
+    class function CreateTokenizerPrinter(AListBox: TListBox): TPrinter;
     class function CreateSyntaxTreePrinter(ATreeView: TTreeView): TPrinter;
-    class function CreateFormatterPrinter(AStrings: TStrings): TPrinter;
+    class function CreateFormatterPrinter(AMemo: TMemo): TPrinter;
+    class function CreateAlarmPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
   end;
+
+  { Тип извещения о необходимости синхронизации интерфейса }
+  TSyncNotification = procedure (AToken: TToken; ALine, ACol, ALen: integer) of object;
+
+var
+  { Извещение о необходимости синхронизации интерфейса }
+  SyncNotification: TSyncNotification;
+
+{ Отправка извещения о необходимости синхронизации интерфейса }
+procedure SendSyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
 
 implementation
 
-uses Tokens, Statements, Attributes;
+uses Statements, Attributes;
+
+{ Отправка извещения о необходимости синхронизации интерфейса }
+procedure SendSyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
+begin
+  if Assigned(SyncNotification) then
+    SyncNotification(AToken, ALine, ACol, ALen);
+end;
 
 type
 
@@ -89,6 +118,8 @@ type
     procedure SupressNextLine; override;
     procedure PrintSpecialComment(AValue: string); override;
     procedure Ruler(const ARuler: string; Enabled: boolean = true); override;
+    procedure ControlChanged; override;
+    procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
   end;
 
   { Информация о выравниваниях }
@@ -109,7 +140,7 @@ type
   { Принтер для вывода форматированного текста }
   TFormatterPrinter = class(TBasePrinter)
   private
-    Strings: TStrings;
+    Memo:    TMemo;
     Builder: TStringBuilder;
     Mode:    TFormatterPrinterMode;
     Shift:   integer;
@@ -119,10 +150,13 @@ type
     Rulers:  TRulers;
     Padding: integer;
     PrevToken: TToken;
+    IntoSync: boolean;
+    TokenPos, TokenLen: TDictionary<TToken, integer>;
   protected
     function SpaceRequired(ALeft, ARight: TToken): boolean;
   public
-    constructor Create(AStrings: TStrings);
+    constructor Create(AMemo: TMemo);
+    destructor Destroy; override;
     procedure BeginPrint; override;
     procedure EndPrint; override;
     procedure PrintToken(AToken: TToken); override;
@@ -133,17 +167,24 @@ type
     procedure SupressNextLine; override;
     procedure PrintSpecialComment(AValue: string); override;
     procedure Ruler(const ARuler: string; Enabled: boolean = true); override;
+    procedure ControlChanged; override;
+    procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
   end;
 
   { Принтер для вывода последовательности лексем }
   TTokenizerPrinter = class(TBasePrinter)
   private
-    Strings: TStrings;
+    ListBox: TListBox;
+    Tokens: TDictionary<integer, TToken>;
+    LineNumbers: TDictionary<TToken, integer>;
   public
-    constructor Create(AStrings: TStrings);
+    constructor Create(AListBox: TListBox);
+    destructor Destroy; override;
     procedure BeginPrint; override;
     procedure PrintToken(AToken: TToken); override;
     procedure EndPrint; override;
+    procedure ControlChanged; override;
+    procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
   end;
 
   { Принтер для построения синтаксического дерева }
@@ -151,19 +192,35 @@ type
   private
     TreeView: TTreeView;
     Parents: TStack<TTreeNode>;
+    IntoSync: boolean;
+    Tokens: TDictionary<TToken, TTreeNode>;
   public
     constructor Create(ATreeView: TTreeView);
+    destructor Destroy; override;
     procedure BeginPrint; override;
     procedure PrintToken(AToken: TToken); override;
     procedure PrintStatement(AStatement: TStatement); override;
     procedure EndPrint; override;
+    procedure ControlChanged; override;
+    procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
+  end;
+
+  { Отладочный принтер для вывода пропущенных лексем }
+  TAlarmPrinter = class(TTokenizerPrinter)
+  private
+    TabSheet: TTabSheet;
+  protected
+    procedure BeginPrint; override;
+    procedure PrintToken(AToken: TToken); override;
+  public
+    constructor Create(AListBox: TListBox; ATabSheet: TTabSheet);
   end;
 
 { TPrinter }
 
-class function TPrinter.CreateFormatterPrinter(AStrings: TStrings): TPrinter;
+class function TPrinter.CreateFormatterPrinter(AMemo: TMemo): TPrinter;
 begin
-  Result := TFormatterPrinter.Create(AStrings);
+  Result := TFormatterPrinter.Create(AMemo);
 end;
 
 class function TPrinter.CreateSyntaxTreePrinter(ATreeView: TTreeView): TPrinter;
@@ -171,9 +228,14 @@ begin
   Result := TSyntaxTreePrinter.Create(ATreeView);
 end;
 
-class function TPrinter.CreateTokenizerPrinter(AStrings: TStrings): TPrinter;
+class function TPrinter.CreateTokenizerPrinter(AListBox: TListBox): TPrinter;
 begin
-  Result := TTokenizerPrinter.Create(AStrings);
+  Result := TTokenizerPrinter.Create(AListBox);
+end;
+
+class function TPrinter.CreateAlarmPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
+begin
+  Result := TAlarmPrinter.Create(AListBox, ATabSheet);
 end;
 
 procedure TPrinter.SpaceOrNextLine(AMultiLine: boolean);
@@ -234,6 +296,16 @@ begin
   { ничего не делаем }
 end;
 
+procedure TBasePrinter.ControlChanged;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
+begin
+  { ничего не делаем }
+end;
+
 procedure TBasePrinter.PrintStatement(AStatement: TStatement);
 begin
   AStatement.PrintSelf(Self);
@@ -261,10 +333,19 @@ end;
 
 { TFormatterPrinter }
 
-constructor TFormatterPrinter.Create(AStrings: TStrings);
+constructor TFormatterPrinter.Create(AMemo: TMemo);
 begin
-  Strings := AStrings;
+  Memo     := AMemo;
   inherited Create;
+  TokenPos := TDictionary<TToken, integer>.Create;
+  TokenLen := TDictionary<TToken, integer>.Create;
+end;
+
+destructor TFormatterPrinter.Destroy;
+begin
+  FreeAndNil(TokenPos);
+  FreeAndNil(TokenLen);
+  inherited;
 end;
 
 procedure TFormatterPrinter.BeginPrint;
@@ -273,13 +354,17 @@ begin
   Builder := TStringBuilder.Create;
   Shift   := 0;
   Col     := 1;
+  BOL     := false;
+  Padding := 0;
+  TokenPos.Clear;
+  TokenLen.Clear;
 end;
 
 procedure TFormatterPrinter.EndPrint;
 begin
-  Strings.BeginUpdate;
-  Strings.Text := Builder.ToString;
-  Strings.EndUpdate;
+  Memo.Lines.BeginUpdate;
+  Memo.Text := Builder.ToString;
+  Memo.Lines.EndUpdate;
   FreeAndNil(Builder);
   inherited;
 end;
@@ -334,9 +419,17 @@ begin
     Value := AToken.Value;
     if (AToken is TKeyword) and SameText(AToken.Value, 'default') and Settings.ReplaceDefault
       then Value := ':=';
-    if Attributes.HasAttribute(AToken.ClassType, LowerCaseAttribute) then
-      Value := Value.ToLower;
-    if Assigned(Builder) then Builder.Append(Value);
+    if (AToken is TKeyword) and SameText(AToken.Value, 'as') and Settings.ReplaceAsIs
+      then Value := 'is';
+    if Attributes.HasAttribute(AToken.ClassType, LowerCaseAttribute)
+      then Value := Value.ToLower;
+    if Assigned(Builder) then
+    begin
+      TokenPos.Add(AToken, Builder.Length);
+      TokenLen.Add(AToken, Value.Length);
+      Builder.Append(Value);
+      AToken.Printed := true;
+    end;
     Inc(Col, Value.Length);
     PrevToken := AToken;
   end;
@@ -346,7 +439,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
 var
   _Mode: TFormatterPrinterMode;
   _Shift, _Col: integer;
-  _BOL, _SPC: boolean;
+  _BOL: boolean;
   _Builder: TStringBuilder;
   _Rulers: TRulers;
   _PrevToken: TToken;
@@ -435,32 +528,105 @@ begin
   PrevCol := Col;
 end;
 
+procedure TFormatterPrinter.ControlChanged;
+var
+  P: integer;
+  T: TToken;
+begin
+  if IntoSync then exit;
+  try
+    IntoSync := true;
+    P := Memo.SelStart;
+    for T in TokenPos.Keys do
+      if (TokenPos[T] <= P) and (TokenPos[T] + TokenLen[T] >= P) then
+        SendSyncNotification(T, T.Line, T.Col, T.Value.Length);
+  finally
+    IntoSync := false;
+  end;
+end;
+
+procedure TFormatterPrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
+var T: TToken;
+begin
+  if IntoSync then exit;
+  try
+    IntoSync := true;
+    if not Assigned(AToken) then
+      for T in TokenPos.Keys do
+        if (T.Line = ALine) and (T.Col <= ACol) and (T.Col + T.Value.Length > ACol) then
+          AToken := T;
+    if not TokenPos.ContainsKey(AToken) then exit;
+    Memo.SelStart := TokenPos[AToken];
+    Memo.SelLength := TokenLen[AToken];
+  finally
+    IntoSync := false;
+  end;
+end;
+
 { TTokenizerPrinter }
 
-constructor TTokenizerPrinter.Create(AStrings: TStrings);
+constructor TTokenizerPrinter.Create(AListBox: TListBox);
 begin
-  Assert(AStrings <> nil);
+  Assert(AListBox <> nil);
   inherited Create;
-  Strings := AStrings;
+  ListBox := AListBox;
+  Tokens := TDictionary<integer, TToken>.Create;
+  LineNumbers := TDictionary<TToken, integer>.Create;
+end;
+
+destructor TTokenizerPrinter.Destroy;
+begin
+  FreeAndNil(Tokens);
+  FreeAndNil(LineNumbers);
+  inherited;
 end;
 
 procedure TTokenizerPrinter.BeginPrint;
 begin
   inherited;
-  Strings.BeginUpdate;
-  Strings.Clear;
+  ListBox.Items.BeginUpdate;
+  ListBox.Items.Clear;
+  Tokens.Clear;
+  LineNumbers.Clear;
 end;
 
 procedure TTokenizerPrinter.PrintToken(AToken: TToken);
+var
+  Str: string;
+  i: integer;
 begin
+  { Выдадим лексему в листбокс }
   with AToken do
-    Strings.Add(Format('%s "%s", строка %d, позиция %d', [TokenType, Value, Line, Col]));
+  begin
+    Str := Format('%s "%s", строка %d, позиция %d', [TokenType, Value, Line, Col]);
+    if not Printed then Str := '>>>>> NOT PRINTED >>>>> ' + Str + ' <<<<< NOT PRINTED <<<<<';
+  end;
+  i := ListBox.Items.Add(Str);
+  { Запомним размещение лексемы }
+  Tokens.Add(i, AToken);
+  LineNumbers.Add(AToken, i);
 end;
 
 procedure TTokenizerPrinter.EndPrint;
 begin
-  Strings.EndUpdate;
+  ListBox.Items.EndUpdate;
   inherited;
+end;
+
+procedure TTokenizerPrinter.ControlChanged;
+begin
+  SendSyncNotification(Tokens[ListBox.ItemIndex], 0, 0, 0);
+end;
+
+procedure TTokenizerPrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
+var T: TToken;
+begin
+  if not Assigned(AToken) then
+    for T in LineNumbers.Keys do
+      if (T.Line = ALine) and (T.Col <= ACol) and (T.Col + T.Value.Length > ACol) then
+        AToken := T;
+  if Assigned(AToken) and LineNumbers.ContainsKey(AToken) then
+    ListBox.ItemIndex := LineNumbers[AToken];
 end;
 
 { TSyntaxTreePrinter }
@@ -469,6 +635,13 @@ constructor TSyntaxTreePrinter.Create(ATreeView: TTreeView);
 begin
   TreeView := ATreeView;
   inherited Create;
+  Tokens := TDictionary<TToken, TTreeNode>.Create;
+end;
+
+destructor TSyntaxTreePrinter.Destroy;
+begin
+  FreeAndNil(Tokens);
+  inherited;
 end;
 
 procedure TSyntaxTreePrinter.BeginPrint;
@@ -476,6 +649,7 @@ begin
   inherited;
   TreeView.Items.BeginUpdate;
   TreeView.Items.Clear;
+  Tokens.Clear;
   Parents := TStack<TTreeNode>.Create;
   Parents.Push(nil);
 end;
@@ -485,6 +659,43 @@ begin
   FreeAndNil(Parents);
   TreeView.Items.EndUpdate;
   inherited;
+end;
+
+procedure TSyntaxTreePrinter.ControlChanged;
+var Ptr: pointer;
+begin
+  if IntoSync then exit;
+  try
+    IntoSync := true;
+    Ptr := TreeView.Selected.Data;
+    if Assigned(Ptr) then SendSyncNotification(TToken(Ptr), 0, 0, 0);
+  finally
+    IntoSync := false;
+  end;
+end;
+
+procedure TSyntaxTreePrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
+var
+  i: Integer;
+  T: TToken;
+begin
+  if IntoSync then exit;
+  try
+    IntoSync := true;
+    for T in Tokens.Keys do
+    begin
+      if (T = AToken) or (T.Line = ALine) and (T.Col <= ACol) and (T.Col + T.Value.Length > ACol) then
+      try
+        TreeView.Items.BeginUpdate;
+        TreeView.FullCollapse;
+        TreeView.Selected := Tokens[T];
+      finally
+        TreeView.Items.EndUpdate;
+      end;
+    end;
+  finally
+    IntoSync := false;
+  end;
 end;
 
 procedure TSyntaxTreePrinter.PrintStatement(AStatement: TStatement);
@@ -499,8 +710,29 @@ end;
 
 procedure TSyntaxTreePrinter.PrintToken(AToken: TToken);
 begin
-  with AToken do
-    TreeView.Items.AddChild(Parents.Peek, Format('%s [ %s ]', [TokenType, Value]));
+  Tokens.Add(AToken, TreeView.Items.AddChildObject(Parents.Peek, Format('%s [ %s ]', [AToken.TokenType, AToken.Value]), AToken));
+end;
+
+{ TAlarmPrinter }
+
+constructor TAlarmPrinter.Create(AListBox: TListBox; ATabSheet: TTabSheet);
+begin
+  TabSheet := ATabSheet;
+  inherited Create(AListBox);
+  TabSheet.TabVisible := false;
+end;
+
+procedure TAlarmPrinter.BeginPrint;
+begin
+  TabSheet.TabVisible := false;
+  inherited;
+end;
+
+procedure TAlarmPrinter.PrintToken(AToken: TToken);
+begin
+  if AToken.Printed then exit;
+  inherited;
+  TabSheet.TabVisible := true;
 end;
 
 { TRulerInfo }

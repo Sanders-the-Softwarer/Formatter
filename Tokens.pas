@@ -47,6 +47,7 @@ type
   strict private
     FValue: string;
     FLine, FCol: integer;
+    FPrinted: boolean;
     FCommentsAbove, FCommentsBelow, FCommentsBefore, FCommentsAfter: TList<TComment>;
   public
     function TokenType: string; virtual; abstract;
@@ -62,6 +63,7 @@ type
     property Value: string read FValue;
     property Line: integer read FLine;
     property Col: integer read FCol;
+    property Printed: boolean read FPrinted write FPrinted;
   end;
 
   { Неожиданная или неизвестная лексема - встретился символ, с которого не может начинаться лексема }

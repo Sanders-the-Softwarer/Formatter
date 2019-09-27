@@ -1140,13 +1140,10 @@ end;
 procedure TOpenFor.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Open);
-  APrinter.PrintItem(_Cursor);
+  APrinter.PrintIndented(_Cursor);
   APrinter.NextLine;
   APrinter.PrintItem(_For);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Select);
-  APrinter.Undent;
+  APrinter.PrintIndented(_Select);
 end;
 
 { TPragma }

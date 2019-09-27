@@ -1,17 +1,40 @@
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                           Форматизатор исходников                          //
+//                                                                            //
+//              Главная и единственная форма тестового приложения             //
+//                                                                            //
+//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
 unit fMain;
+
+{ ----- Примечания -------------------------------------------------------------
+
+  Форма синхронизирует положение курсора в полях входного текста и визуальных
+  представлениях различных принтеров так, чтобы они по возможности указывали
+  на одну и ту же лексему. Для этого форму и принтеры связывает механизм
+  SyncNotification.
+
+  Компонент TMemo не умеет оповещать о навигации по тексту, поэтому форма
+  в таймере проверяет положение каретки, и если оно изменилось - инициирует
+  синхронизацию.
+
+------------------------------------------------------------------------------ }
 
 interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, Printers_,
-  Vcl.ExtCtrls, Vcl.Samples.Spin, Parser;
+  Vcl.ExtCtrls, Vcl.Samples.Spin, Parser, Streams, Tokens, Statements, Tokenizer;
 
 type
   TFormMain = class(TForm)
     pgDest: TPageControl;
     tabTokenizer: TTabSheet;
-    edTokenizer: TMemo;
+    edTokenizer: TListBox;
     tabParser: TTabSheet;
     treeParser: TTreeView;
     tabResult: TTabSheet;
@@ -34,15 +57,30 @@ type
     checkReplaceDefault: TCheckBox;
     Label3: TLabel;
     edMatchParamLimit: TSpinEdit;
+    checkReplaceAsIs: TCheckBox;
+    tabAlarm: TTabSheet;
+    edAlarm: TListBox;
+    tmMemo: TTimer;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure edTokenizerClick(Sender: TObject);
+    procedure edAlarmClick(Sender: TObject);
+    procedure treeParserChange(Sender: TObject; Node: TTreeNode);
+    procedure tmMemoTimer(Sender: TObject);
+    procedure pgDestChange(Sender: TObject);
   private
-    TokenizerPrinter, SyntaxTreePrinter, ResultPrinter: TPrinter;
+    TokenizerPrinter, SyntaxTreePrinter, ResultPrinter, AlarmPrinter: TPrinter;
+    TokenStream: TBufferedStream<TToken>;
+    StatementStream: TBufferedStream<TStatement>;
     Settings: TFormatSettings;
-    function CurrentPrinter: TPrinter;
+    PrevSrcCaret, PrevResultCaret: integer;
+    IntoSync: boolean;
     procedure UpdateData;
+    procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
+    procedure CoordsToCaret(Memo: TMemo; const Line, Col: integer; out Pos: integer);
+    procedure CaretToCoords(Memo: TMemo; out Line, Col: integer; Pos: integer);
   public
   end;
 
@@ -51,52 +89,13 @@ var
 
 implementation
 
-uses Streams, Tokens, Statements, Tokenizer;
-
 {$R *.dfm}
 
-procedure TFormMain.FormShow(Sender: TObject);
-begin
-  TokenizerPrinter  := TPrinter.CreateTokenizerPrinter(edTokenizer.Lines);
-  SyntaxTreePrinter := TPrinter.CreateSyntaxTreePrinter(treeParser);
-  ResultPrinter     := TPrinter.CreateFormatterPrinter(edResult.Lines);
-  Self.WindowState  := wsMaximized;
-  Settings := TFormatSettings.Create;
-  ResultPrinter.Settings := Settings;
-end;
-
-procedure TFormMain.UpdateRequired(Sender: TObject);
-begin
-  UpdateData;
-end;
-
-procedure TFormMain.FormDestroy(Sender: TObject);
-begin
-  FreeAndNil(TokenizerPrinter);
-  FreeAndNil(SyntaxTreePrinter);
-  FreeAndNil(ResultPrinter);
-  FreeAndNil(Settings);
-end;
-
-procedure TFormMain.FormResize(Sender: TObject);
-begin
-  panSrc.Width := (Self.ClientWidth - spVert.Width) div 2;
-end;
-
-function TFormMain.CurrentPrinter: TPrinter;
-begin
-  if pgDest.ActivePage = tabTokenizer then
-    Result := TokenizerPrinter
-  else if pgDest.ActivePage = tabParser then
-    Result := SyntaxTreePrinter
-  else
-    Result := ResultPrinter;
-end;
-
+{ Подготовка и распечатка форматированного текста }
 procedure TFormMain.UpdateData;
-var Statements: TBufferedStream<TStatement>;
-//var Statements: TBufferedStream<TToken>;
 begin
+  FreeAndNil(StatementStream);
+  { Скопируем настройки }
   Settings.DeclarationSingleLineParamLimit := edDeclarationSingleLineParamLimit.Value;
   Settings.ArgumentSingleLineParamLimit    := edArgumentSingleLineParamLimit.Value;
   Settings.MatchParamLimit                 := edMatchParamLimit.Value;
@@ -104,14 +103,141 @@ begin
   Settings.AlignFields                     := checkAlignFields.Checked;
   Settings.AlignSpecialComments            := checkAlignSpecialComments.Checked;
   Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
-  Statements := TParser.Create(TCommentProcessor.Create(TMerger.Create(TProcedureDeleteStream.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(edSrc.Text))))))), Settings);
+  Settings.ReplaceAsIs                     := checkReplaceAsIs.Checked;
+  { Создадим потоки }
+  TokenStream     := TMerger.Create(TProcedureDeleteStream.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(edSrc.Text))))));
+  StatementStream := TParser.Create(TCommentProcessor.Create(TokenStream), Settings);
+  { Напечатаем данные }
+  StatementStream.PrintAll(ResultPrinter);
+  StatementStream.PrintAll(SyntaxTreePrinter);
+  { Сюда можно печатать и из StatementStream, но тогда не будут видны пропуски синтаксического анализа }
+  TokenStream.PrintAll(TokenizerPrinter);
+  TokenStream.PrintAll(AlarmPrinter);
+  { Толкнём синхронизацию }
+  PrevSrcCaret := -1;
+end;
+
+{ Рассылка оповещений для синхронизации движения по различным представлениям текста }
+procedure TFormMain.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
+var Caret, i: integer;
+begin
+  if IntoSync then exit;
   try
-    CurrentPrinter.BeginPrint;
-    while not Statements.Eof do CurrentPrinter.PrintItem(Statements.Next);
+    IntoSync := true;
+    { Если указана лексема - сигнал от принтера, синхронизируем исходник }
+    if Assigned(AToken) then
+    begin
+      CoordsToCaret(edSrc, AToken.Line, AToken.Col, Caret);
+      edSrc.SelStart := Caret;
+      edSrc.SelLength := AToken.Value.Length;
+    end;
+    { Известим активный принтер, прочие для скорости оставим }
+    if pgDest.ActivePage = tabTokenizer then TokenizerPrinter.SyncNotification(AToken, ALine, ACol, ALen);
+    if pgDest.ActivePage = tabParser then SyntaxTreePrinter.SyncNotification(AToken, ALine, ACol, ALen);
+    if pgDest.ActivePage = tabResult then ResultPrinter.SyncNotification(AToken, ALine, ACol, ALen);
+    if pgDest.ActivePage = tabAlarm then AlarmPrinter.SyncNotification(AToken, ALine, ACol, ALen);
   finally
-    CurrentPrinter.EndPrint;
-    FreeAndNil(Statements);
+    IntoSync := false;
   end;
+end;
+
+{ При создании формы создаются принтеры и настройки, а также настраиваются оповещения }
+procedure TFormMain.FormShow(Sender: TObject);
+begin
+  TokenizerPrinter  := TPrinter.CreateTokenizerPrinter(edTokenizer);
+  SyntaxTreePrinter := TPrinter.CreateSyntaxTreePrinter(treeParser);
+  ResultPrinter     := TPrinter.CreateFormatterPrinter(edResult);
+  AlarmPrinter      := TPrinter.CreateAlarmPrinter(edAlarm, tabAlarm);
+  Self.WindowState  := wsMaximized;
+  Settings := TFormatSettings.Create;
+  ResultPrinter.Settings := Settings;
+  Printers_.SyncNotification := Self.SyncNotification;
+end;
+
+{ При синхронизации обновляется только активная страница, поэтому при смене страницы
+  принудительно инициируем синхронизацию }
+procedure TFormMain.pgDestChange(Sender: TObject);
+begin
+  PrevSrcCaret := -1;
+end;
+
+{ Реакция на действия, требующие заново напечатать текст }
+procedure TFormMain.UpdateRequired(Sender: TObject);
+begin
+  UpdateData;
+end;
+
+{ Оповещение принтера о движении пользователя по списку непропечатанных лексем }
+procedure TFormMain.edAlarmClick(Sender: TObject);
+begin
+  AlarmPrinter.ControlChanged;
+end;
+
+{ Оповещение принтера о движении пользователя по списку лексем }
+procedure TFormMain.edTokenizerClick(Sender: TObject);
+begin
+  TokenizerPrinter.ControlChanged;
+end;
+
+{ Оповещение принтера о движении пользователя по синтаксическому дереву }
+procedure TFormMain.treeParserChange(Sender: TObject; Node: TTreeNode);
+begin
+  SyntaxTreePrinter.ControlChanged;
+end;
+
+{ Оповещение о движении пользователя по исходникам либо форматированному выводу }
+procedure TFormMain.tmMemoTimer(Sender: TObject);
+var Line, Col: integer;
+begin
+  if edSrc.SelStart <> PrevSrcCaret then
+  begin
+    PrevSrcCaret := edSrc.SelStart;
+    CaretToCoords(edSrc, Line, Col, edSrc.SelStart);
+    SyncNotification(nil, Line, Col, 1);
+  end;
+  if edResult.SelStart <> PrevResultCaret then
+  begin
+    PrevResultCaret := edResult.SelStart;
+    ResultPrinter.ControlChanged;
+  end;
+end;
+
+{ Уничтожение объектов, созданных формой, при завершении приложения }
+procedure TFormMain.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(TokenizerPrinter);
+  FreeAndNil(SyntaxTreePrinter);
+  FreeAndNil(ResultPrinter);
+  FreeAndNil(AlarmPrinter);
+  FreeAndNil(StatementStream);
+  FreeAndNil(Settings);
+end;
+
+{ Настройка размеров при ресайзе окна }
+procedure TFormMain.FormResize(Sender: TObject);
+begin
+  panSrc.Width := (Self.ClientWidth - spVert.Width) div 2;
+end;
+
+{ Пересчёт координат строка-колонка в положение каретки }
+procedure TFormMain.CoordsToCaret(Memo: TMemo; const Line, Col: integer; out Pos: integer);
+var i: integer;
+begin
+  Pos := 0;
+  for i := 0 to Line - 2 do Inc(Pos, Memo.Lines[i].Length + 2);
+  Inc(Pos, Col - 1);
+end;
+
+{ Пересчёт положения каретки в координаты строка-колонка }
+procedure TFormMain.CaretToCoords(Memo: TMemo; out Line, Col: integer; Pos: integer);
+begin
+  Line := 1;
+  while Pos > Memo.Lines[Line - 1].Length do
+  begin
+    Dec(Pos, Memo.Lines[Line - 1].Length + 2);
+    Inc(Line);
+  end;
+  Col := Pos + 1;
 end;
 
 end.

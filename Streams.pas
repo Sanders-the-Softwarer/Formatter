@@ -36,7 +36,7 @@ unit Streams;
 
 interface
 
-uses SysUtils, System.Generics.Collections, Tokens, Windows;
+uses SysUtils, System.Generics.Collections, Tokens, Windows, Printers_;
 
 type
 
@@ -80,6 +80,8 @@ type
     destructor Destroy; override;
     function Eof: boolean; override; final;
     function Next: T; override; final;
+    procedure First;
+    procedure PrintAll(APrinter: TPrinter);
   end;
 
   { Класс чтения строки }
@@ -169,6 +171,22 @@ begin
   Inc(RepeatMark);
 end;
 
+procedure TBufferedStream<T>.First;
+begin
+  Restore(0);
+end;
+
+procedure TBufferedStream<T>.PrintAll(APrinter: TPrinter);
+begin
+  First;
+  try
+    APrinter.BeginPrint;
+    while not Eof do APrinter.PrintItem(Next);
+  finally
+    APrinter.EndPrint;
+  end;
+end;
+
 function TBufferedStream<T>.Mark: TMark;
 begin
   if Assigned(Output)
@@ -183,7 +201,7 @@ end;
 
 procedure TBufferedStream<T>.Restore(AMark: TMark);
 begin
-  if AMark > Output.Count
+  if Assigned(Output) and (AMark > Output.Count) or not Assigned(Output) and (AMark > 0)
     then raise Exception.Create('Invalid stream mark')
     else RepeatMark := AMark;
 end;

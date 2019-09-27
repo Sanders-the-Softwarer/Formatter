@@ -37,10 +37,10 @@ object FormMain: TFormMain
     ActivePage = tabResult
     Align = alClient
     TabOrder = 0
-    OnChange = UpdateRequired
+    OnChange = pgDestChange
     object tabTokenizer: TTabSheet
       Caption = #1051#1077#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
-      object edTokenizer: TMemo
+      object edTokenizer: TListBox
         AlignWithMargins = True
         Left = 5
         Top = 5
@@ -51,9 +51,9 @@ object FormMain: TFormMain
         Margins.Right = 5
         Margins.Bottom = 5
         Align = alClient
-        ReadOnly = True
-        ScrollBars = ssVertical
+        ItemHeight = 13
         TabOrder = 0
+        OnClick = edTokenizerClick
       end
     end
     object tabParser: TTabSheet
@@ -70,8 +70,11 @@ object FormMain: TFormMain
         Margins.Right = 5
         Margins.Bottom = 5
         Align = alClient
+        HideSelection = False
         Indent = 19
+        ReadOnly = True
         TabOrder = 0
+        OnChange = treeParserChange
       end
     end
     object tabResult: TTabSheet
@@ -93,10 +96,30 @@ object FormMain: TFormMain
         Font.Height = -11
         Font.Name = 'Courier New'
         Font.Style = []
+        HideSelection = False
         ParentFont = False
         ReadOnly = True
         ScrollBars = ssBoth
         TabOrder = 0
+      end
+    end
+    object tabAlarm: TTabSheet
+      Caption = '>>> '#1058#1056#1045#1042#1054#1043#1040' <<<'
+      ImageIndex = 3
+      object edAlarm: TListBox
+        AlignWithMargins = True
+        Left = 5
+        Top = 5
+        Width = 752
+        Height = 564
+        Margins.Left = 5
+        Margins.Top = 5
+        Margins.Right = 5
+        Margins.Bottom = 5
+        Align = alClient
+        ItemHeight = 13
+        TabOrder = 0
+        OnClick = edAlarmClick
       end
     end
   end
@@ -139,6 +162,7 @@ object FormMain: TFormMain
           Font.Height = -11
           Font.Name = 'Courier New'
           Font.Style = []
+          HideSelection = False
           ParentFont = False
           ScrollBars = ssBoth
           TabOrder = 0
@@ -200,7 +224,7 @@ object FormMain: TFormMain
           object checkAlignFields: TCheckBox
             Left = 13
             Top = 26
-            Width = 148
+            Width = 128
             Height = 17
             Caption = #1055#1086#1083#1103
             Checked = True
@@ -211,7 +235,7 @@ object FormMain: TFormMain
           object checkAlignVariables: TCheckBox
             Left = 13
             Top = 49
-            Width = 89
+            Width = 128
             Height = 17
             Caption = #1055#1077#1088#1077#1084#1077#1085#1085#1099#1077
             Checked = True
@@ -220,9 +244,9 @@ object FormMain: TFormMain
             OnClick = UpdateRequired
           end
           object checkAlignSpecialComments: TCheckBox
-            Left = 19
+            Left = 13
             Top = 72
-            Width = 131
+            Width = 128
             Height = 17
             Caption = #1057#1086#1087#1086#1089#1090#1072#1074#1083#1077#1085#1080#1103
             Checked = True
@@ -241,12 +265,23 @@ object FormMain: TFormMain
           object checkReplaceDefault: TCheckBox
             Left = 13
             Top = 26
-            Width = 83
+            Width = 128
             Height = 17
             Caption = 'default '#1085#1072' :='
             Checked = True
             State = cbChecked
             TabOrder = 0
+            OnClick = UpdateRequired
+          end
+          object checkReplaceAsIs: TCheckBox
+            Left = 13
+            Top = 49
+            Width = 128
+            Height = 17
+            Caption = 'as '#1085#1072' is'
+            Checked = True
+            State = cbChecked
+            TabOrder = 1
             OnClick = UpdateRequired
           end
         end
@@ -263,5 +298,11 @@ object FormMain: TFormMain
         end
       end
     end
+  end
+  object tmMemo: TTimer
+    Interval = 20
+    OnTimer = tmMemoTimer
+    Left = 100
+    Top = 105
   end
 end
