@@ -66,6 +66,7 @@ type
     function Literal: TLiteral;
     function Terminal(const ATerminal: string): TTerminal; overload;
     function Terminal(const ATerminals: array of string): TTerminal; overload;
+    function Concat(Params: array of TToken): string;
   public
     class function Parse(AParent: TStatement; Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
   public
@@ -280,6 +281,17 @@ begin
         Result := Token as TTerminal;
   if not Assigned(Result) then
     Source.Restore(P);
+end;
+
+function TStatement.Concat(Params: array of TToken): string;
+var i: integer;
+begin
+  Result := '';
+  for i := Low(Params) to High(Params) do
+    if Assigned(Params[i]) then
+      if Result = ''
+        then Result := Params[i].Value
+        else Result := Trim(Result + ' ' + Params[i].Value);
 end;
 
 function TStatement.GetSettings: TFormatSettings;

@@ -40,6 +40,7 @@ type
     _Operators: TStatement;
     _Exception: TKeyword;
     _ExceptionHandlers: TStatement;
+    _ExceptionBlock: TStatement;
     _End: TKeyword;
     _EndName: TIdent;
     _Semicolon: TTerminal;
@@ -301,6 +302,7 @@ type
   TRaise = class(TStatement)
   strict private
     _Raise: TKeyword;
+    _ExceptionName: TIdent;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -438,6 +440,19 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Оператор open for }
+  TOpenFor = class(TStatement)
+  strict private
+    _Open: TKeyword;
+    _Cursor: TIdent;
+    _For: TKeyword;
+    _Select: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
   { Оператор fetch }
   TFetch = class(TStatement)
   strict private
@@ -506,19 +521,6 @@ type
   TExceptionHandlers = class(TStatementList<TExceptionHandler>)
   strict protected
     function ParseBreak: boolean; override;
-  end;
-
-  { Оператор open for }
-  TOpenFor = class(TStatement)
-  strict private
-    _Open: TKeyword;
-    _Cursor: TIdent;
-    _For: TKeyword;
-    _Select: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
   { Декларация pragma }
@@ -594,7 +596,9 @@ begin
   if Assigned(_Begin) then TStatements.Parse(Self, Source, _Operators);
   { Если нашли exception, распознаём обработчики исключений }
   _Exception := Keyword('exception');
-  if Assigned(_Exception) then TExceptionHandlers.Parse(Self, Source, _ExceptionHandlers);
+  if Assigned(_Exception) then
+    if not TExceptionHandlers.Parse(Self, Source, _ExceptionHandlers) then
+      TStatements.Parse(Self, Source, _ExceptionBlock);
   { end }
   _End := Keyword('end');
   { Если это блок верхнего уровня, то загребём и завершающие символы после него }
@@ -623,6 +627,7 @@ begin
   APrinter.NextLine;
   APrinter.Indent;
   APrinter.PrintItem(_ExceptionHandlers);
+  APrinter.PrintItem(_ExceptionBlock);
   APrinter.Undent;
   APrinter.PrintItem(_End);
   APrinter.PrintItem(_EndName);
@@ -715,7 +720,7 @@ end;
 
 function TSubroutineHeaderBase.StatementName: string;
 begin
-  Result := _Initial.Value + ' ' + _Name.Value;
+  Result := Concat([_Initial, _Name]);
 end;
 
 { TTypeRef }
@@ -1065,13 +1070,13 @@ end;
 function TRaise.InternalParse: boolean;
 begin
   _Raise := Keyword('raise');
+  _ExceptionName := Identifier;
   Result := Assigned(_Raise);
-  inherited;
 end;
 
 procedure TRaise.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Raise);
+  APrinter.PrintItems([_Raise, _ExceptionName]);
 end;
 
 { TExceptionDeclaration }
@@ -1123,7 +1128,7 @@ end;
 
 function TIfSections.ParseBreak: boolean;
 begin
-  Result := Assigned(Keyword('end if'));
+  Result := Any([Keyword(['end if', 'end'])]);
 end;
 
 { TOpenFor }
@@ -1215,7 +1220,7 @@ end;
 
 procedure TFor.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_For, _Variable, _In]);
+  APrinter.PrintItems([_For, _Variable, _In, _Reverse]);
   if Assigned(_Select) then
     begin
       APrinter.PrintIndented(_Select);
@@ -1381,7 +1386,7 @@ end;
 
 function TCase.ParseBreak: boolean;
 begin
-  Result := Any([Keyword('end case')]);
+  Result := Any([Keyword(['end case', 'end'])]);
 end;
 
 procedure TCase.PrintSelf(APrinter: TPrinter);

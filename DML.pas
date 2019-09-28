@@ -21,6 +21,7 @@ type
   strict private
     _With: TStatement;
     _Select: TKeyword;
+    _Mode: TKeyword;
     _Fields: TStatement;
     _Into: TKeyword;
     _IntoFields: TStatement;
@@ -201,7 +202,7 @@ type
     _Select: TStatement;
     _Table: TKeyword;
     _OpenBracket: TTerminal;
-    _TableName: TStatement;
+    _TableName: TIdent;
     _CloseBracket: TTerminal;
     _Alias: TIdent;
   strict protected
@@ -322,7 +323,7 @@ begin
   begin
     _Table := Keyword('table');
     if Assigned(_Table) then _OpenBracket := Terminal('(');
-    TLValue.Parse(Self, Source, _TableName);
+    _TableName := Identifier;
     if not Assigned(_Table) and not Assigned(_TableName) then exit(false);
     if Assigned(_Table) then _CloseBracket := Terminal(')');
   end;
@@ -333,7 +334,7 @@ end;
 function TTableRef.StatementName: string;
 begin
   if Assigned(_TableName) then
-    Result := _TableName.StatementName
+    Result := _TableName.Value
   else if Assigned(_Select) then
     Result := _Select.StatementName
   else
@@ -402,6 +403,10 @@ type
   strict private
     _On: TKeyword;
     _JoinCondition: TStatement;
+    _Using: TKeyword;
+    _OpenBracket: TTerminal;
+    _Fields: TStatement;
+    _CloseBracket: TTerminal;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -444,6 +449,7 @@ type
     _Expression: TStatement;
     _Nulls: TKeyword;
     _Position: TKeyword;
+    _Direction: TKeyword;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -479,6 +485,7 @@ begin
   TWith.Parse(Self, Source, _With);
   _Select := Keyword('select');
   if not Assigned(_Select) then exit(false);
+  _Mode := Keyword(['distinct', 'unique', 'all']);
   TSelectFields.Parse(Self, Source, _Fields);
   _Into := Keyword(['into', 'bulk collect into']);
   TIdentFields.Parse(Self, Source, _IntoFields);
@@ -497,6 +504,7 @@ begin
   TExpressionFields(_Fields).Match(TIdentFields(_IntoFields));
   APrinter.PrintItem(_With);
   APrinter.PrintItem(_Select);
+  APrinter.PrintItem(_Mode);
   APrinter.PrintIndented(_Fields);
   APrinter.PrintItem(_Into);
   APrinter.PrintIndented(_IntoFields);
@@ -564,7 +572,7 @@ end;
 
 function TWith.ParseBreak: boolean;
 begin
-  Result := Any([Keyword('select')]);
+  Result := Any([Keyword('select'), Terminal([')', ';'])]);
 end;
 
 procedure TWith.PrintSelf(APrinter: TPrinter);
@@ -621,16 +629,19 @@ begin
   Result := inherited InternalParse;
   if Result then _On := Keyword('on');
   if Assigned(_On) then TExpression.Parse(Self, Source, _JoinCondition);
+  if not Assigned(_On) then _Using := Keyword('using');
+  if Assigned(_Using) then
+  begin
+    _OpenBracket := Terminal('(');
+    TIdentFields.Parse(Self, Source, _Fields);
+    _CloseBracket := Terminal(')');
+  end;
 end;
 
 procedure TSelectTableClause.PrintSelf(APrinter: TPrinter);
 begin
   inherited;
-  if Assigned(_On) then
-  begin
-    APrinter.PrintIndented(_On);
-    APrinter.PrintItem(_JoinCondition);
-  end;
+  APrinter.PrintItems([_On, _JoinCondition, _Using, _OpenBracket, _Fields, _CloseBracket]);
 end;
 
 { TSelectTables }
@@ -640,7 +651,7 @@ begin
   Result := inherited ParseDelimiter(AResult);
   if not Result then
   begin
-    AResult := Keyword('full join');
+    AResult := Keyword(['join', 'inner join', 'full join', 'full outer join', 'left join', 'left outer join', 'right join', 'right outer join']);
     Result  := Assigned(AResult);
   end;
 end;
@@ -698,6 +709,7 @@ end;
 function TOrderByItem.InternalParse: boolean;
 begin
   if not TExpression.Parse(Self, Source, _Expression) then exit(false);
+  _Direction := Keyword(['asc', 'desc']);
   _Nulls := Keyword('nulls');
   _Position := Keyword(['first', 'last']);
   Result := true;
@@ -705,7 +717,7 @@ end;
 
 procedure TOrderByItem.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Expression, _Nulls, _Position]);
+  APrinter.PrintItems([_Expression, _Direction, _Nulls, _Position]);
 end;
 
 { TOrderBy }
@@ -867,7 +879,7 @@ function TUpdateAssignment.StatementName: string;
 begin
   if Assigned(_Target)
     then Result := _Target.Value
-    else Result := '< update assignment >';
+    else Result := '';
 end;
 
 procedure TUpdateAssignment.PrintSelf(APrinter: TPrinter);

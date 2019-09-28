@@ -207,11 +207,17 @@ function TTokenizer.InternalNext: TToken;
   function ParseNumber: boolean;
   begin
     Restore;
+    { Число должно начинаться с цифры }
     Result := TCharacter.IsDigit(NextChar);
     if not Result then exit;
+    { Прочитаем целую часть числа }
     repeat until not TCharacter.IsDigit(NextChar);
+    { Если за ней следует точка, нужно тщательно отделить вещественное число от конструкции for i in 1..10 }
     if LastChar = '.' then
+    begin
+      if not TCharacter.IsDigit(NextChar) then Restore;
       repeat until not TCharacter.IsDigit(NextChar);
+    end;
     RefuseLastChar;
   end;
 
@@ -232,7 +238,8 @@ function TTokenizer.InternalNext: TToken;
           PrevPrevApo := PrevApo;
           PrevApo := (LastChar = '''');
         end;
-    { Если достигнут конец файла, будем интерпретировать это как неожиданно кончившийся литерал - так лучше чем как неизвестную лексему }
+    { Если достигнут конец файла, будем интерпретировать это как неожиданно
+      кончившийся литерал - так лучше чем как неизвестную лексему }
     RefuseLastChar;
   end;
 
@@ -240,7 +247,11 @@ function TTokenizer.InternalNext: TToken;
   function ParseTerminal: boolean;
   const
     N = 30;
-    Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=', '=>', '..', '.', ',', ';', '(', ')', '+', '-', '*', '/', '%', '@', '=', '<', '>', '(+)', '%type', '%rowtype', '%rowcount', '%found', '%notfound', '%isopen');
+    Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=',
+                                      '=>', '..', '.', ',', ';', '(', ')', '+',
+                                      '-', '*', '/', '%', '@', '=', '<', '>',
+                                      '(+)', '%type', '%rowtype', '%rowcount',
+                                      '%found', '%notfound', '%isopen');
   var
     Value: string;
     Starts, Exact, PrevExact: boolean;    
@@ -408,15 +419,29 @@ begin
   { И попробуем их скомбинировать }
   if Check(Result, 'bulk', 'collect', 'into') then exit;
   if Check(Result, 'full', 'join') then exit;
+  if Check(Result, 'full', 'outer', 'join') then exit;
   if Check(Result, 'end', 'case') then exit;
   if Check(Result, 'end', 'if') then exit;
   if Check(Result, 'end', 'loop') then exit;
   if Check(Result, 'execute', 'immediate') then exit;
+  if Check(Result, 'inner', 'join') then exit;
   if Check(Result, 'is', 'not', 'null') then exit;
   if Check(Result, 'is', 'null') then exit;
+  if Check(Result, 'left', 'join') then exit;
+  if Check(Result, 'left', 'outer', 'join') then exit;
+  if Check(Result, 'multiset', 'except') then exit;
+  if Check(Result, 'multiset', 'except', 'all') then exit;
+  if Check(Result, 'multiset', 'except', 'distinct') then exit;
+  if Check(Result, 'multiset', 'intersect') then exit;
+  if Check(Result, 'multiset', 'intersect', 'all') then exit;
+  if Check(Result, 'multiset', 'intersect', 'distinct') then exit;
   if Check(Result, 'multiset', 'union') then exit;
+  if Check(Result, 'multiset', 'union', 'all') then exit;
+  if Check(Result, 'multiset', 'union', 'distinct') then exit;
   if Check(Result, 'not', 'in') then exit;
   if Check(Result, 'not', 'like') then exit;
+  if Check(Result, 'right', 'join') then exit;
+  if Check(Result, 'right', 'outer', 'join') then exit;
   if Check(Result, 'union', 'all') then exit;
   if Check(Result, 'when', 'matched', 'then') then exit;
   if Check(Result, 'when', 'not', 'matched', 'then') then exit;
@@ -447,6 +472,7 @@ initialization
   Keywords.Add('all');
   Keywords.Add('and');
   Keywords.Add('as');
+  Keywords.Add('asc');
   Keywords.Add('begin');
   Keywords.Add('between');
   Keywords.Add('body');
@@ -464,10 +490,12 @@ initialization
   Keywords.Add('declare');
   Keywords.Add('default');
   Keywords.Add('delete');
+  Keywords.Add('desc');
   Keywords.Add('distinct');
   Keywords.Add('else');
   Keywords.Add('elsif');
   Keywords.Add('end');
+  Keywords.Add('except');
   Keywords.Add('exception');
   Keywords.Add('exceptions');
   Keywords.Add('execute');
@@ -488,12 +516,14 @@ initialization
   Keywords.Add('in');
   Keywords.Add('index');
   Keywords.Add('indices');
+  Keywords.Add('inner');
   Keywords.Add('intersect');
   Keywords.Add('into');
   Keywords.Add('insert');
   Keywords.Add('is');
   Keywords.Add('join');
   Keywords.Add('last');
+  Keywords.Add('left');
   Keywords.Add('like');
   Keywords.Add('loop');
   Keywords.Add('matched');
@@ -510,6 +540,7 @@ initialization
   Keywords.Add('or');
   Keywords.Add('order');
   Keywords.Add('out');
+  Keywords.Add('outer');
   Keywords.Add('package');
   Keywords.Add('pipe');
   Keywords.Add('pipelined');
@@ -520,6 +551,8 @@ initialization
   Keywords.Add('replace');
   Keywords.Add('return');
   Keywords.Add('returning');
+  Keywords.Add('reverse');
+  Keywords.Add('right');
   Keywords.Add('row');
   Keywords.Add('save');
   Keywords.Add('select');

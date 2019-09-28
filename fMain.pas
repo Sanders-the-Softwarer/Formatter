@@ -119,7 +119,7 @@ end;
 
 { Рассылка оповещений для синхронизации движения по различным представлениям текста }
 procedure TFormMain.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
-var Caret, i: integer;
+var Caret: integer;
 begin
   if IntoSync then exit;
   try
@@ -130,6 +130,7 @@ begin
       CoordsToCaret(edSrc, AToken.Line, AToken.Col, Caret);
       edSrc.SelStart := Caret;
       edSrc.SelLength := AToken.Value.Length;
+      PrevSrcCaret := Caret;
     end;
     { Известим активный принтер, прочие для скорости оставим }
     if pgDest.ActivePage = tabTokenizer then TokenizerPrinter.SyncNotification(AToken, ALine, ACol, ALen);
@@ -187,9 +188,12 @@ end;
 
 { Оповещение о движении пользователя по исходникам либо форматированному выводу }
 procedure TFormMain.tmMemoTimer(Sender: TObject);
-var Line, Col: integer;
+var
+  Line, Col: integer;
+  SrcChanged: boolean;
 begin
-  if edSrc.SelStart <> PrevSrcCaret then
+  SrcChanged := (edSrc.SelStart <> PrevSrcCaret);
+  if SrcChanged then
   begin
     PrevSrcCaret := edSrc.SelStart;
     CaretToCoords(edSrc, Line, Col, edSrc.SelStart);
@@ -198,7 +202,7 @@ begin
   if edResult.SelStart <> PrevResultCaret then
   begin
     PrevResultCaret := edResult.SelStart;
-    ResultPrinter.ControlChanged;
+    if not SrcChanged then ResultPrinter.ControlChanged;
   end;
 end;
 

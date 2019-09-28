@@ -205,7 +205,7 @@ begin
   _Not := Keyword('not');
   _Prefix := Terminal(['-', '+']);
   if Assigned(_Prefix) then _Prefix.OpType := otUnary;
-  _Distinct := Keyword(['distinct', 'unique']);
+  _Distinct := Keyword(['distinct', 'unique', 'all']);
   try
     { Слагаемое может быть числом }
     _Number := Number;
@@ -277,7 +277,11 @@ end;
 function TExpression.ParseDelimiter(out AResult: TToken): boolean;
 begin
   AResult := Terminal(['+', '-', '*', '/', '||', '=', '<', '>', '<=', '>=', '<>', '!=', '^=']);
-  if not Assigned(AResult) then AResult := Keyword(['like', 'not like', 'in', 'not in', 'and', 'or', 'between', 'multiset union']);
+  if not Assigned(AResult) then
+    AResult := Keyword(['like', 'not like', 'in', 'not in', 'and', 'or', 'between',
+                        'multiset except', 'multiset except all', 'multiset except distinct',
+                        'multiset intersect', 'multiset intersect all', 'multiset intersect distinct',
+                        'multiset union', 'multiset union all', 'multiset union distinct']);
   Result := Assigned(AResult);
   if AResult is TTerminal then TTerminal(AResult).OpType := otBinary;
 end;
@@ -407,11 +411,11 @@ end;
 function TCaseSection.StatementName: string;
 begin
   if Assigned(_When) then
-    Result := '< when >'
+    Result := 'when'
   else if Assigned(_Else) then
-    Result := '< else >'
+    Result := 'else'
   else
-    Result := inherited;
+    Result := '';
 end;
 
 procedure TCaseSection.PrintSelf(APrinter: TPrinter);

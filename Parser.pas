@@ -127,6 +127,7 @@ end;
 class function TParser.ParseAny(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
   Result := ParseOperator(AParent, ASource, AResult) or
+            ParseDeclaration(AParent, ASource, AResult) or
             ParseCreation(AParent, ASource, AResult) or
             ParseType(AParent, ASource, AResult) or
             TCreate.Parse(AParent, ASource, AResult) or

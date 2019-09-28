@@ -405,8 +405,8 @@ begin
   if ARight.Value = ';' then exit(false);
   { Запятую прижимаем справа ко всему }
   if ARight.Value = ',' then exit(false);
-  { Открывающую скобку прижимаем справа ко всему, кроме pipe row }
-  if (ARight.Value = '(') and (ALeft.Value <> 'row') then exit(false);
+  { Открывающую скобку прижимаем справа к идентификаторам и ключевому слову char }
+  if (ARight.Value = '(') and ((ALeft is TIdent) or (ALeft.Value = 'char')) then exit(false);
   { К открывающей скобке прижимаем справа всё }
   if ALeft.Value = '(' then exit(false);
   { Закрывающую скобку прижимаем справа ко всему }
@@ -805,7 +805,7 @@ end;
 
 procedure TAlarmPrinter.PrintToken(AToken: TToken);
 begin
-  if AToken.Printed then exit;
+  if AToken.Printed or (AToken is TComment) then exit;
   inherited;
   TabSheet.TabVisible := true;
 end;
