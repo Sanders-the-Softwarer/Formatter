@@ -35,9 +35,13 @@ type
     pgDest: TPageControl;
     tabTokenizer: TTabSheet;
     edTokenizer: TListBox;
+    edAlarmToken: TListBox;
+    edAlarmStatement: TListBox;
     tabParser: TTabSheet;
     treeParser: TTreeView;
     tabResult: TTabSheet;
+    tabAlarmToken: TTabSheet;
+    tabAlarmStatement: TTabSheet;
     edResult: TMemo;
     panSrc: TPanel;
     pgSrc: TPageControl;
@@ -57,21 +61,19 @@ type
     checkReplaceDefault: TCheckBox;
     Label3: TLabel;
     edMatchParamLimit: TSpinEdit;
-    checkReplaceAsIs: TCheckBox;
-    tabAlarm: TTabSheet;
-    edAlarm: TListBox;
     tmMemo: TTimer;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure edTokenizerClick(Sender: TObject);
-    procedure edAlarmClick(Sender: TObject);
+    procedure edAlarmTokenClick(Sender: TObject);
+    procedure edAlarmStatementClick(Sender: TObject);
     procedure treeParserChange(Sender: TObject; Node: TTreeNode);
     procedure tmMemoTimer(Sender: TObject);
     procedure pgDestChange(Sender: TObject);
   private
-    TokenizerPrinter, SyntaxTreePrinter, ResultPrinter, AlarmPrinter: TPrinter;
+    TokenizerPrinter, SyntaxTreePrinter, ResultPrinter, AlarmTokenPrinter, AlarmStatementPrinter: TPrinter;
     TokenStream: TBufferedStream<TToken>;
     StatementStream: TBufferedStream<TStatement>;
     Settings: TFormatSettings;
@@ -103,16 +105,16 @@ begin
   Settings.AlignFields                     := checkAlignFields.Checked;
   Settings.AlignSpecialComments            := checkAlignSpecialComments.Checked;
   Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
-  Settings.ReplaceAsIs                     := checkReplaceAsIs.Checked;
   { —оздадим потоки }
   TokenStream     := TMerger.Create(TProcedureDeleteStream.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(edSrc.Text))))));
   StatementStream := TParser.Create(TCommentProcessor.Create(TokenStream), Settings);
   { Ќапечатаем данные }
   StatementStream.PrintAll(ResultPrinter);
   StatementStream.PrintAll(SyntaxTreePrinter);
-  { —юда можно печатать и из StatementStream, но тогда не будут видны пропуски синтаксического анализа }
+  StatementStream.PrintAll(AlarmStatementPrinter);
+  { —юда печатаем из TokenStream, чтобы увидеть лексемы, выпавшие при печати из синтаксического анализа }
   TokenStream.PrintAll(TokenizerPrinter);
-  TokenStream.PrintAll(AlarmPrinter);
+  TokenStream.PrintAll(AlarmTokenPrinter);
   { “олкнЄм синхронизацию }
   PrevSrcCaret := -1;
 end;
@@ -136,7 +138,8 @@ begin
     if pgDest.ActivePage = tabTokenizer then TokenizerPrinter.SyncNotification(AToken, ALine, ACol, ALen);
     if pgDest.ActivePage = tabParser then SyntaxTreePrinter.SyncNotification(AToken, ALine, ACol, ALen);
     if pgDest.ActivePage = tabResult then ResultPrinter.SyncNotification(AToken, ALine, ACol, ALen);
-    if pgDest.ActivePage = tabAlarm then AlarmPrinter.SyncNotification(AToken, ALine, ACol, ALen);
+    if pgDest.ActivePage = tabAlarmToken then AlarmTokenPrinter.SyncNotification(AToken, ALine, ACol, ALen);
+    if pgDest.ActivePage = tabAlarmStatement then AlarmStatementPrinter.SyncNotification(AToken, ALine, ACol, ALen);
   finally
     IntoSync := false;
   end;
@@ -148,7 +151,8 @@ begin
   TokenizerPrinter  := TPrinter.CreateTokenizerPrinter(edTokenizer);
   SyntaxTreePrinter := TPrinter.CreateSyntaxTreePrinter(treeParser);
   ResultPrinter     := TPrinter.CreateFormatterPrinter(edResult);
-  AlarmPrinter      := TPrinter.CreateAlarmPrinter(edAlarm, tabAlarm);
+  AlarmTokenPrinter := TPrinter.CreateAlarmTokenPrinter(edAlarmToken, tabAlarmToken);
+  AlarmStatementPrinter := TPrinter.CreateAlarmStatementPrinter(edAlarmStatement, tabAlarmStatement);
   Self.WindowState  := wsMaximized;
   Settings := TFormatSettings.Create;
   ResultPrinter.Settings := Settings;
@@ -169,9 +173,15 @@ begin
 end;
 
 { ќповещение принтера о движении пользовател€ по списку непропечатанных лексем }
-procedure TFormMain.edAlarmClick(Sender: TObject);
+procedure TFormMain.edAlarmTokenClick(Sender: TObject);
 begin
-  AlarmPrinter.ControlChanged;
+  AlarmTokenPrinter.ControlChanged;
+end;
+
+{ ќповещение принтера о движении пользовател€ по списку непропечатанных лексем }
+procedure TFormMain.edAlarmStatementClick(Sender: TObject);
+begin
+  AlarmStatementPrinter.ControlChanged;
 end;
 
 { ќповещение принтера о движении пользовател€ по списку лексем }
@@ -212,7 +222,8 @@ begin
   FreeAndNil(TokenizerPrinter);
   FreeAndNil(SyntaxTreePrinter);
   FreeAndNil(ResultPrinter);
-  FreeAndNil(AlarmPrinter);
+  FreeAndNil(AlarmTokenPrinter);
+  FreeAndNil(AlarmStatementPrinter);
   FreeAndNil(StatementStream);
   FreeAndNil(Settings);
 end;

@@ -17,7 +17,7 @@ uses Math, Tokens, Statements, Printers_, Attributes;
 type
 
   { Оператор select }
-  TSelect = class(TStatement)
+  TSelect = class(TSemicolonStatement)
   strict private
     _With: TStatement;
     _Select: TKeyword;
@@ -40,7 +40,7 @@ type
   end;
 
   { Оператор insert }
-  TInsert = class(TStatement)
+  TInsert = class(TSemicolonStatement)
   strict private
     _Insert: TKeyword;
     _Into: TKeyword;
@@ -61,7 +61,7 @@ type
   end;
 
   { Оператор update }
-  TUpdate = class(TStatement)
+  TUpdate = class(TSemicolonStatement)
   strict private
     _Update: TKeyword;
     _Table: TStatement;
@@ -76,7 +76,7 @@ type
   end;
 
   { Оператор delete }
-  TDelete = class(TStatement)
+  TDelete = class(TSemicolonStatement)
   strict private
     _Delete: TKeyword;
     _From: TKeyword;
@@ -89,7 +89,7 @@ type
   end;
 
   { Оператор merge }
-  TMerge = class(TStatement)
+  TMerge = class(TSemicolonStatement)
   strict private
     _Merge: TKeyword;
     _Into: TKeyword;
@@ -133,9 +133,15 @@ type
   end;
 
   { Список идентификаторов }
+
   TIdentFields = class(TCommaList<TIdentField>)
   strict protected
     function ParseBreak: boolean; override;
+  end;
+
+  TSLIdentFields = class(TIdentFields)
+  public
+    function MultiLine: boolean; override;
   end;
 
 implementation
@@ -235,6 +241,13 @@ end;
 function TIdentFields.ParseBreak: boolean;
 begin
   Result := not (NextToken is TIdent);
+end;
+
+{ TSLIdentFields }
+
+function TSLIdentFields.MultiLine: boolean;
+begin
+  Result := false;
 end;
 
 { TExpressionField }
@@ -416,7 +429,8 @@ type
   { Список таблиц в select }
   TSelectTables = class(TCommaList<TSelectTableClause>)
   strict protected
-    function ParseDelimiter(out AResult: TToken): boolean; override;
+    function ParseDelimiter(out AResult: TObject): boolean; override;
+    procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject); override;
     function ParseBreak: boolean; override;
   end;
 
@@ -496,6 +510,7 @@ begin
   THaving.Parse(Self, Source, _Having);
   TOrderBy.Parse(Self, Source, _OrderBy);
   TAdditionalSelect.Parse(Self, Source, _AdditionalSelect);
+  inherited;
   Result := true;
 end;
 
@@ -515,6 +530,7 @@ begin
   APrinter.PrintItem(_Having);
   APrinter.PrintItem(_OrderBy);
   APrinter.PrintItem(_AdditionalSelect);
+  inherited;
 end;
 
 procedure TSelect.Match(AFields: TStatement);
@@ -633,7 +649,7 @@ begin
   if Assigned(_Using) then
   begin
     _OpenBracket := Terminal('(');
-    TIdentFields.Parse(Self, Source, _Fields);
+    TSLIdentFields.Parse(Self, Source, _Fields);
     _CloseBracket := Terminal(')');
   end;
 end;
@@ -641,12 +657,12 @@ end;
 procedure TSelectTableClause.PrintSelf(APrinter: TPrinter);
 begin
   inherited;
-  APrinter.PrintItems([_On, _JoinCondition, _Using, _OpenBracket, _Fields, _CloseBracket]);
+  APrinter.PrintIndented([_On, _JoinCondition, _Using, _OpenBracket, _Fields, _CloseBracket]);
 end;
 
 { TSelectTables }
 
-function TSelectTables.ParseDelimiter(out AResult: TToken): boolean;
+function TSelectTables.ParseDelimiter(out AResult: TObject): boolean;
 begin
   Result := inherited ParseDelimiter(AResult);
   if not Result then
@@ -654,6 +670,17 @@ begin
     AResult := Keyword(['join', 'inner join', 'full join', 'full outer join', 'left join', 'left outer join', 'right join', 'right outer join']);
     Result  := Assigned(AResult);
   end;
+end;
+
+procedure TSelectTables.PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject);
+begin
+  if ADelimiter is TKeyword then
+    begin
+      APrinter.PrintIndented(ADelimiter);
+      APrinter.NextLine;
+    end
+  else
+    inherited;
 end;
 
 function TSelectTables.ParseBreak: boolean;
@@ -782,6 +809,7 @@ begin
   TExpressionFields.Parse(Self, Source, _ValueList);
   _CloseBracket2 := Terminal(')');
   TReturning.Parse(Self, Source, _Returning);
+  inherited;
 end;
 
 procedure TInsert.PrintSelf(APrinter: TPrinter);
@@ -810,6 +838,7 @@ begin
   APrinter.Undent;
   APrinter.NextLine;
   APrinter.PrintItem(_Returning);
+  inherited;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -851,6 +880,7 @@ begin
   TUpdateAssignments.Parse(Self, Source, _Assignments);
   TWhere.Parse(Self, Source, _Where);
   TReturning.Parse(Self, Source, _Returning);
+  inherited;
   Result := true;
 end;
 
@@ -863,6 +893,7 @@ begin
   APrinter.PrintIndented(_Assignments);
   APrinter.PrintItem(_Where);
   APrinter.PrintItem(_Returning);
+  inherited;
 end;
 
 { TUpdateAssignment }
@@ -910,6 +941,7 @@ begin
   if not Assigned(_Delete) or not Assigned(_From) then exit(false);
   TTableRef.Parse(Self, Source, _Table);
   TWhere.Parse(Self, Source, _Where);
+  inherited;
   Result := true;
 end;
 
@@ -921,6 +953,7 @@ begin
   APrinter.PrintIndented(_Table);
   APrinter.NextLine;
   APrinter.PrintItem(_Where);
+  inherited;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -953,7 +986,6 @@ type
 
 function TMerge.InternalParse: boolean;
 begin
-  Result := true;
   _Merge := Keyword('merge');
   _Into  := Keyword('into');
   if not Assigned(_Merge) or not Assigned(_Into) then exit(false);
@@ -965,6 +997,8 @@ begin
   _On    := Keyword('on');
   TExpression.Parse(Self, Source, _Condition);
   TMergeSections.Parse(Self, Source, _Sections);
+  inherited;
+  Result := true;
 end;
 
 procedure TMerge.PrintSelf(APrinter: TPrinter);
@@ -972,20 +1006,16 @@ begin
   APrinter.PrintItem(_Merge);
   APrinter.NextLine;
   APrinter.PrintItem(_Into);
-  APrinter.NextLine;
-  APrinter.PrintIndented(_DestSelect);
-  APrinter.PrintIndented(_DestTable);
-  APrinter.PrintItem(_DestAlias);
+  APrinter.PrintIndented([_DestSelect, _DestTable, _DestAlias]);
   APrinter.NextLine;
   APrinter.PrintItem(_Using);
-  APrinter.PrintIndented(_SourceSelect);
-  APrinter.PrintIndented(_SourceTable);
-  APrinter.PrintItem(_SourceAlias);
+  APrinter.PrintIndented([_SourceSelect, _SourceTable, _SourceAlias]);
   APrinter.NextLine;
   APrinter.PrintItem(_On);
   APrinter.PrintIndented(_Condition);
   APrinter.NextLine;
   APrinter.PrintItem(_Sections);
+  inherited;
 end;
 
 { TMergeSection }

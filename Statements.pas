@@ -86,13 +86,13 @@ type
   TStatementList<S: TStatement> = class(TStatement)
   strict private
     Statements: TList<TStatement>;
-    Delimiters: TList<TToken>;
+    Delimiters: TList<TObject>;
   strict protected
     function InternalParse: boolean; override;
     function ParseStatement(out AResult: TStatement): boolean; virtual;
-    function ParseDelimiter(out AResult: TToken): boolean; virtual;
+    function ParseDelimiter(out AResult: TObject): boolean; virtual;
     function ParseBreak: boolean; virtual;
-    procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TToken); virtual;
+    procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject); virtual;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -106,7 +106,7 @@ type
   { Базовый класс для списка однотипных конструкций, разделённых запятыми }
   TCommaList<S: TStatement> = class(TStatementList<S>)
   strict protected
-    function ParseDelimiter(out AResult: TToken): boolean; override;
+    function ParseDelimiter(out AResult: TObject): boolean; override;
   end;
 
   { Неожиданная лексема - класс для конструкций, которые не удалось разобрать }
@@ -119,6 +119,16 @@ type
     function StatementName: string; override;
     procedure PrintSelf(APrinter: TPrinter); override;
     property Token: TToken read _Token;
+  end;
+
+  { Конструкция, завершающаяся точкой с запятой }
+  TSemicolonStatement = class(TStatement)
+  strict private
+    _Semicolon: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
 implementation
@@ -307,7 +317,7 @@ procedure TStatementList<S>.AfterConstruction;
 begin
   inherited;
   Statements := TList<TStatement>.Create;
-  Delimiters := TList<TToken>.Create;
+  Delimiters := TList<TObject>.Create;
 end;
 
 procedure TStatementList<S>.BeforeDestruction;
@@ -321,13 +331,14 @@ function TStatementList<S>.InternalParse: boolean;
 var
   P: TMark;
   Statement: TStatement;
-  Delimiter: TToken;
+  Delimiter: TObject;
   B: boolean;
   UnexpectedToken: TStatement;
 begin
   repeat
     P := Source.Mark;
     { Если успешно разобрали конструкцию - работаем дальше }
+    Statement := nil;
     if ParseStatement(Statement) then
     begin
       P := Source.Mark;
@@ -363,9 +374,9 @@ begin
   end;
 end;
 
-procedure TStatementList<S>.PrintDelimiter(APrinter: TPrinter; ADelimiter: TToken);
+procedure TStatementList<S>.PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject);
 begin
-  if (ADelimiter is TTerminal) and ((ADelimiter.Value = ',') or (ADelimiter.Value = ';')) then
+  if (ADelimiter is TTerminal) and ((TTerminal(ADelimiter).Value = ',') or (TTerminal(ADelimiter).Value = ';')) then
     APrinter.SupressNextLine;
   APrinter.PrintItem(ADelimiter);
   APrinter.SpaceOrNextLine(MultiLine);
@@ -376,7 +387,7 @@ begin
   Result := S.Parse(Self, Source, AResult);
 end;
 
-function TStatementList<S>.ParseDelimiter(out AResult: TToken): boolean;
+function TStatementList<S>.ParseDelimiter(out AResult: TObject): boolean;
 begin
   Result := true;
   AResult := nil;
@@ -411,7 +422,7 @@ end;
 
 { TCommaList }
 
-function TCommaList<S>.ParseDelimiter(out AResult: TToken): boolean;
+function TCommaList<S>.ParseDelimiter(out AResult: TObject): boolean;
 begin
   AResult := Terminal(',');
   Result  := Assigned(AResult);
@@ -435,6 +446,20 @@ begin
   APrinter.PrintItem(_Token);
   APrinter.NextLine;
   APrinter.PrintSpecialComment('!!! SHIT HAPPENS !!!');
+end;
+
+{ TSemicolonStatement }
+
+function TSemicolonStatement.InternalParse: boolean;
+begin
+  _Semicolon := Terminal(';');
+  Result := true;
+end;
+
+procedure TSemicolonStatement.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.SupressNextLine;
+  APrinter.PrintItem(_Semicolon);
 end;
 
 end.

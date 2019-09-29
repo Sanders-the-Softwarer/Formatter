@@ -85,9 +85,11 @@ type
   TTerminal = class(TToken)
   private
     FOpType: TOpType;
+    FIntoNumber: boolean;
   public
     function TokenType: string; override;
-    property OpType: TOpType read FOpType write FOpType;
+    property OpType: TOpType read FOpType write FOpType; { позвол€ет отличить унарные плюсы-минусы от бинарных }
+    property IntoNumber: boolean read FIntoNumber write FIntoNumber; { позвол€ет отличить зап€тую в number(5,2) }
   end;
 
   { »дентификатор }

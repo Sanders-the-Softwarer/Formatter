@@ -491,6 +491,7 @@ initialization
   Keywords.Add('default');
   Keywords.Add('delete');
   Keywords.Add('desc');
+  Keywords.Add('deterministic');
   Keywords.Add('distinct');
   Keywords.Add('else');
   Keywords.Add('elsif');

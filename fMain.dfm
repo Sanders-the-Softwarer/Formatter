@@ -2,8 +2,8 @@ object FormMain: TFormMain
   Left = 0
   Top = 0
   Caption = 'Formatter'
-  ClientHeight = 607
-  ClientWidth = 1128
+  ClientHeight = 501
+  ClientWidth = 986
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -20,7 +20,7 @@ object FormMain: TFormMain
   object spVert: TSplitter
     Left = 350
     Top = 0
-    Height = 607
+    Height = 501
     ExplicitLeft = 405
     ExplicitHeight = 100
   end
@@ -28,28 +28,28 @@ object FormMain: TFormMain
     AlignWithMargins = True
     Left = 353
     Top = 0
-    Width = 770
-    Height = 602
+    Width = 628
+    Height = 496
     Margins.Left = 0
     Margins.Top = 0
     Margins.Right = 5
     Margins.Bottom = 5
-    ActivePage = tabResult
+    ActivePage = tabAlarmStatement
     Align = alClient
     TabOrder = 0
     OnChange = pgDestChange
+    ExplicitWidth = 770
+    ExplicitHeight = 602
     object tabTokenizer: TTabSheet
       Caption = #1051#1077#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 762
+      ExplicitHeight = 574
       object edTokenizer: TListBox
         AlignWithMargins = True
         Left = 5
         Top = 5
-        Width = 752
-        Height = 564
+        Width = 610
+        Height = 458
         Margins.Left = 5
         Margins.Top = 5
         Margins.Right = 5
@@ -58,21 +58,21 @@ object FormMain: TFormMain
         ItemHeight = 13
         TabOrder = 0
         OnClick = edTokenizerClick
+        ExplicitWidth = 752
+        ExplicitHeight = 564
       end
     end
     object tabParser: TTabSheet
       Caption = #1057#1080#1085#1090#1072#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 762
+      ExplicitHeight = 574
       object treeParser: TTreeView
         AlignWithMargins = True
         Left = 5
         Top = 5
-        Width = 752
-        Height = 564
+        Width = 610
+        Height = 458
         Margins.Left = 5
         Margins.Top = 5
         Margins.Right = 5
@@ -83,21 +83,21 @@ object FormMain: TFormMain
         ReadOnly = True
         TabOrder = 0
         OnChange = treeParserChange
+        ExplicitWidth = 752
+        ExplicitHeight = 564
       end
     end
     object tabResult: TTabSheet
       Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 762
+      ExplicitHeight = 574
       object edResult: TMemo
         AlignWithMargins = True
         Left = 5
         Top = 5
-        Width = 752
-        Height = 564
+        Width = 610
+        Height = 458
         Margins.Left = 5
         Margins.Top = 5
         Margins.Right = 5
@@ -113,21 +113,21 @@ object FormMain: TFormMain
         ReadOnly = True
         ScrollBars = ssBoth
         TabOrder = 0
+        ExplicitWidth = 752
+        ExplicitHeight = 564
       end
     end
-    object tabAlarm: TTabSheet
+    object tabAlarmToken: TTabSheet
       Caption = '>>> '#1058#1056#1045#1042#1054#1043#1040' <<<'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
-      object edAlarm: TListBox
+      ExplicitWidth = 762
+      ExplicitHeight = 574
+      object edAlarmToken: TListBox
         AlignWithMargins = True
         Left = 5
         Top = 5
-        Width = 752
-        Height = 564
+        Width = 610
+        Height = 458
         Margins.Left = 5
         Margins.Top = 5
         Margins.Right = 5
@@ -135,7 +135,32 @@ object FormMain: TFormMain
         Align = alClient
         ItemHeight = 13
         TabOrder = 0
-        OnClick = edAlarmClick
+        OnClick = edAlarmTokenClick
+        ExplicitWidth = 752
+        ExplicitHeight = 564
+      end
+    end
+    object tabAlarmStatement: TTabSheet
+      Caption = '>>> '#1058#1056#1045#1042#1054#1043#1040' <<<'
+      ImageIndex = 3
+      ExplicitWidth = 762
+      ExplicitHeight = 574
+      object edAlarmStatement: TListBox
+        AlignWithMargins = True
+        Left = 5
+        Top = 5
+        Width = 610
+        Height = 458
+        Margins.Left = 5
+        Margins.Top = 5
+        Margins.Right = 5
+        Margins.Bottom = 5
+        Align = alClient
+        ItemHeight = 13
+        TabOrder = 0
+        OnClick = edAlarmStatementClick
+        ExplicitWidth = 752
+        ExplicitHeight = 564
       end
     end
   end
@@ -143,16 +168,17 @@ object FormMain: TFormMain
     Left = 0
     Top = 0
     Width = 350
-    Height = 607
+    Height = 501
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitHeight = 607
     object pgSrc: TPageControl
       AlignWithMargins = True
       Left = 5
       Top = 0
       Width = 345
-      Height = 602
+      Height = 496
       Margins.Left = 5
       Margins.Top = 0
       Margins.Right = 0
@@ -160,18 +186,16 @@ object FormMain: TFormMain
       ActivePage = tabSrc
       Align = alClient
       TabOrder = 0
+      ExplicitHeight = 602
       object tabSrc: TTabSheet
         Caption = #1048#1089#1093#1086#1076#1085#1080#1082
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
+        ExplicitHeight = 574
         object edSrc: TMemo
           AlignWithMargins = True
           Left = 5
           Top = 5
           Width = 327
-          Height = 564
+          Height = 458
           Margins.Left = 5
           Margins.Top = 5
           Margins.Right = 5
@@ -187,14 +211,12 @@ object FormMain: TFormMain
           ScrollBars = ssBoth
           TabOrder = 0
           OnChange = UpdateRequired
+          ExplicitHeight = 564
         end
       end
       object tabSettings: TTabSheet
         Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
+        ExplicitHeight = 574
         object Label1: TLabel
           Left = 5
           Top = 15
@@ -295,17 +317,6 @@ object FormMain: TFormMain
             Checked = True
             State = cbChecked
             TabOrder = 0
-            OnClick = UpdateRequired
-          end
-          object checkReplaceAsIs: TCheckBox
-            Left = 13
-            Top = 49
-            Width = 128
-            Height = 17
-            Caption = 'as '#1085#1072' is'
-            Checked = True
-            State = cbChecked
-            TabOrder = 1
             OnClick = UpdateRequired
           end
         end

@@ -60,7 +60,7 @@ type
   { Выражение }
   TExpression = class(TStatementList<TTerm>)
   strict protected
-    function ParseDelimiter(out AResult: TToken): boolean; override;
+    function ParseDelimiter(out AResult: TObject): boolean; override;
     function ParseBreak: boolean; override;
   public
     function MultiLine: boolean; override;
@@ -69,7 +69,7 @@ type
   { Вложенное выражение }
   TInnerExpression = class(TExpression)
   strict protected
-    function ParseDelimiter(out AResult: TToken): boolean; override;
+    function ParseDelimiter(out AResult: TObject): boolean; override;
   end;
 
   { Вызов функции }
@@ -101,9 +101,9 @@ type
 
   TLValue = class(TStatementList<TLValueItem>)
   strict protected
-    function ParseDelimiter(out AResult: TToken): boolean; override;
+    function ParseDelimiter(out AResult: TObject): boolean; override;
     function ParseBreak: boolean; override;
-    procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TToken); override;
+    procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject); override;
   public
     function StatementName: string; override;
     function MultiLine: boolean; override;
@@ -274,7 +274,7 @@ end;
 
 { TExpression }
 
-function TExpression.ParseDelimiter(out AResult: TToken): boolean;
+function TExpression.ParseDelimiter(out AResult: TObject): boolean;
 begin
   AResult := Terminal(['+', '-', '*', '/', '||', '=', '<', '>', '<=', '>=', '<>', '!=', '^=']);
   if not Assigned(AResult) then
@@ -298,7 +298,7 @@ end;
 
 { TInnerExpression }
 
-function TInnerExpression.ParseDelimiter(out AResult: TToken): boolean;
+function TInnerExpression.ParseDelimiter(out AResult: TObject): boolean;
 begin
   AResult := Terminal(',');
   Result  := Assigned(AResult) or inherited ParseDelimiter(AResult);
@@ -477,7 +477,7 @@ end;
 
 { TLValue }
 
-function TLValue.ParseDelimiter(out AResult: TToken): boolean;
+function TLValue.ParseDelimiter(out AResult: TObject): boolean;
 begin
   AResult := Terminal('.');
   Result  := Assigned(AResult);
@@ -488,7 +488,7 @@ begin
   Result := true;
 end;
 
-procedure TLValue.PrintDelimiter(APrinter: TPrinter; ADelimiter: TToken);
+procedure TLValue.PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject);
 begin
   APrinter.PrintItem(ADelimiter);
 end;
@@ -519,7 +519,10 @@ end;
 procedure TExists.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Exists);
+  APrinter.Indent;
+  APrinter.NextLine;
   inherited;
+  APrinter.Undent;
 end;
 
 end.

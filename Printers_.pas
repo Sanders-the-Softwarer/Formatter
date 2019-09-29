@@ -30,8 +30,10 @@ unit Printers_;
   пропадает. Это очень неприятная тенденция, так как она не только выдаёт
   некомпилируемый код, но и может погубить работу пользователя, грохнув
   что-то существенное в том, что он форматировал. Поэтому среди инструментов
-  предусмотрен специальный AlarmPrinter, задача которого - отлавливать
-  пропущенные лексемы и бить о них в барабан.
+  предусмотрен специальный принтер, задача которого - отлавливать пропущенные
+  лексемы и бить о них в барабан. Также для индикации проблем предназначен
+  принтер, выдающий только места с нераспознанными синтаксическими
+  конструкциями.
 
   В приложении широко используется возможность выравнивания соседних однотипных
   конструкций по ширине. Для этого в принтере используется специальный режим
@@ -59,7 +61,6 @@ type
     AlignFields: boolean;
     AlignSpecialComments: boolean;
     ReplaceDefault: boolean;
-    ReplaceAsIs: boolean;
   end;
 
   { Интерфейс вывода на принтер }
@@ -80,7 +81,8 @@ type
     procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); virtual; abstract;
   public
     procedure PrintItems(AItems: array of TObject);
-    procedure PrintIndented(AItem: TObject);
+    procedure PrintIndented(AItem: TObject); overload;
+    procedure PrintIndented(AItems: array of TObject); overload;
     procedure SpaceOrNextLine(AMultiLine: boolean);
   public
     property Settings: TFormatSettings read FSettings write FSettings;
@@ -88,7 +90,8 @@ type
     class function CreateTokenizerPrinter(AListBox: TListBox): TPrinter;
     class function CreateSyntaxTreePrinter(ATreeView: TTreeView): TPrinter;
     class function CreateFormatterPrinter(AMemo: TMemo): TPrinter;
-    class function CreateAlarmPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
+    class function CreateAlarmTokenPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
+    class function CreateAlarmStatementPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
   end;
 
   { Тип извещения о необходимости синхронизации интерфейса }
@@ -166,6 +169,7 @@ type
     PrevToken: TToken;
     IntoSync: boolean;
     TokenPos, TokenLen: TDictionary<TToken, integer>;
+    SpecialComments: TObjectList<TToken>;
   protected
     function SpaceRequired(ALeft, ARight: TToken): boolean;
   public
@@ -220,14 +224,24 @@ type
   end;
 
   { Отладочный принтер для вывода пропущенных лексем }
-  TAlarmPrinter = class(TTokenizerPrinter)
+  TAlarmTokenPrinter = class(TTokenizerPrinter)
   private
     TabSheet: TTabSheet;
   protected
     procedure BeginPrint; override;
     procedure PrintToken(AToken: TToken); override;
+    function CheckPrintToken(AToken: TToken): boolean; virtual;
   public
     constructor Create(AListBox: TListBox; ATabSheet: TTabSheet);
+  end;
+
+  { Отладочный принтер для вывода неожиданных конструкций }
+  TAlarmStatementPrinter = class(TAlarmTokenPrinter)
+  private
+    Unexpected: boolean;
+  protected
+    procedure PrintStatement(AStatement: TStatement); override;
+    function CheckPrintToken(AToken: TToken): boolean; override;
   end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -251,9 +265,14 @@ begin
   Result := TTokenizerPrinter.Create(AListBox);
 end;
 
-class function TPrinter.CreateAlarmPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
+class function TPrinter.CreateAlarmTokenPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
 begin
-  Result := TAlarmPrinter.Create(AListBox, ATabSheet);
+  Result := TAlarmTokenPrinter.Create(AListBox, ATabSheet);
+end;
+
+class function TPrinter.CreateAlarmStatementPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
+begin
+  Result := TAlarmStatementPrinter.Create(AListBox, ATabSheet);
 end;
 
 procedure TPrinter.SpaceOrNextLine(AMultiLine: boolean);
@@ -272,6 +291,14 @@ begin
   NextLine;
   Indent;
   PrintItem(AItem);
+  Undent;
+end;
+
+procedure TPrinter.PrintIndented(AItems: array of TObject);
+begin
+  NextLine;
+  Indent;
+  PrintItems(AItems);
   Undent;
 end;
 
@@ -366,12 +393,14 @@ begin
   inherited Create;
   TokenPos := TDictionary<TToken, integer>.Create;
   TokenLen := TDictionary<TToken, integer>.Create;
+  SpecialComments := TObjectList<TToken>.Create(true);
 end;
 
 destructor TFormatterPrinter.Destroy;
 begin
   FreeAndNil(TokenPos);
   FreeAndNil(TokenLen);
+  FreeAndNil(SpecialComments);
   inherited;
 end;
 
@@ -386,6 +415,7 @@ begin
   Padding := 0;
   TokenPos.Clear;
   TokenLen.Clear;
+  SpecialComments.Clear;
 end;
 
 { Вывод готового результата }
@@ -395,6 +425,7 @@ begin
   Memo.Text := Builder.ToString;
   Memo.Lines.EndUpdate;
   FreeAndNil(Builder);
+  PrevToken := nil;
   inherited;
 end;
 
@@ -403,10 +434,16 @@ function TFormatterPrinter.SpaceRequired(ALeft, ARight: TToken): boolean;
 begin
   { Точку с запятой прижимаем справа ко всему }
   if ARight.Value = ';' then exit(false);
+  { Точку прижимаем с обеих сторон ко всему }
+  if (ALeft.Value = '.') or (ARight.Value = '.') then exit(false);
   { Запятую прижимаем справа ко всему }
   if ARight.Value = ',' then exit(false);
-  { Открывающую скобку прижимаем справа к идентификаторам и ключевому слову char }
-  if (ARight.Value = '(') and ((ALeft is TIdent) or (ALeft.Value = 'char')) then exit(false);
+  { В конструкции number(5,2) запятую прижимаем и слева тоже }
+  if (ALeft.Value = ',') and TTerminal(ALeft).IntoNumber then exit(false);
+  { Открывающую скобку прижимаем справа к идентификаторам }
+  if (ARight.Value = '(') and (ALeft is TIdent) then exit(false);
+  { Открывающую скобку прижимаем справа к ключевым словам char, table }
+  if (ARight.Value = '(') and (ALeft is TKeyword) and (SameText(ALeft.Value, 'char') or SameText(ALeft.Value, 'table')) then exit(false);
   { К открывающей скобке прижимаем справа всё }
   if ALeft.Value = '(' then exit(false);
   { Закрывающую скобку прижимаем справа ко всему }
@@ -455,8 +492,6 @@ begin
     { Учтём настройки замены лексем на синонимы и вывод в нижнем регистре }
     if (AToken is TKeyword) and SameText(AToken.Value, 'default') and Settings.ReplaceDefault
       then Value := ':=';
-    if (AToken is TKeyword) and SameText(AToken.Value, 'as') and Settings.ReplaceAsIs
-      then Value := 'is';
     if Attributes.HasAttribute(AToken.ClassType, LowerCaseAttribute)
       then Value := Value.ToLower;
     { В режиме реальной печати - напечатаем лексему, иначе только учтём сдвиг позиции }
@@ -561,7 +596,7 @@ var T: TToken;
 begin
   T := TSpecialComment.Create('/*/ ' + AValue + ' /*/', -1, -1);
   PrintToken(T);
-  T.Free;
+  SpecialComments.Add(T);
 end;
 
 { Установка "линейки" для выравнивания }
@@ -788,26 +823,48 @@ begin
   end;
 end;
 
-{ TAlarmPrinter }
+{ TAlarmTokenPrinter }
 
-constructor TAlarmPrinter.Create(AListBox: TListBox; ATabSheet: TTabSheet);
+constructor TAlarmTokenPrinter.Create(AListBox: TListBox; ATabSheet: TTabSheet);
 begin
   TabSheet := ATabSheet;
   inherited Create(AListBox);
   TabSheet.TabVisible := false;
 end;
 
-procedure TAlarmPrinter.BeginPrint;
+procedure TAlarmTokenPrinter.BeginPrint;
 begin
   TabSheet.TabVisible := false;
   inherited;
 end;
 
-procedure TAlarmPrinter.PrintToken(AToken: TToken);
+procedure TAlarmTokenPrinter.PrintToken(AToken: TToken);
 begin
-  if AToken.Printed or (AToken is TComment) then exit;
+  if CheckPrintToken(AToken) then
+  begin
+    inherited;
+    TabSheet.TabVisible := true;
+  end;
+end;
+
+function TAlarmTokenPrinter.CheckPrintToken(AToken: TToken): boolean;
+begin
+  Result := not AToken.Printed and not (AToken is TComment);
+end;
+
+{ TAlarmStatementPrinter }
+
+procedure TAlarmStatementPrinter.PrintStatement(AStatement: TStatement);
+begin
+  Unexpected := (AStatement is TUnexpectedToken);
   inherited;
-  TabSheet.TabVisible := true;
+  Unexpected := false;
+end;
+
+
+function TAlarmStatementPrinter.CheckPrintToken(AToken: TToken): boolean;
+begin
+  Result := Unexpected;
 end;
 
 { TRulerInfo }

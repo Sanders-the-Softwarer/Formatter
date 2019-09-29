@@ -329,7 +329,7 @@ function y (a integer, b char := 'a', c date default null);
 
 -- проверка выравнивани€ в параметрах подпрограмм
 
-procedure x(a char, bb in out varchar2, ccc integer default 12345, dddd out char := big_function_call(1, 2, 3))
+procedure x(a char, bb in out varchar2, ccc integer default 12345, dddd out char := big_function_call(1, 2, 3));
 
 -- объ€влени€ переменных могут содержать модификатор constant и исходное значение
 
@@ -513,11 +513,11 @@ end;
 --------------------------------------------------------------------------------------------
 
 -- недопустимость выражений вместо полей в insert
-insert into t (a, 2, c) values (1, b, 3)
+-- insert into t (a, 2, c) values (1, b, 3)
 
 -- недопустимость выражений вместо полей в update
-update t set 1 = 2
+-- update t set 1 = 2
 
 -- недопустимость выражений вместо полей в returning
-update t set a = b returning '1', '2', '3' into ('4' + '5'), 6, 7
+-- update t set a = b returning '1', '2', '3' into ('4' + '5'), 6, 7
 

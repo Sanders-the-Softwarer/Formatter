@@ -127,7 +127,7 @@ implementation
 
 destructor TObjectStream<T>.Destroy;
 begin
-  FreeAndNil(Output);
+  FreeAndNil(Owned);
   inherited;
 end;
 
