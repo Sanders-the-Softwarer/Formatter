@@ -28,9 +28,23 @@ type
     function StatementName: string; override;
   end;
 
+  { Объект view }
+  TView = class(TStatement)
+  strict private
+    _View: TKeyword;
+    _ViewName: TIdent;
+    _As: TKeyword;
+    _Select: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function StatementName: string; override;
+  end;
+
 implementation
 
-uses Parser;
+uses Parser, DML;
 
 { TCreateStatement }
 
@@ -57,8 +71,34 @@ end;
 
 function TCreate.StatementName: string;
 begin
-  Result := _What.StatementName;
+  Result := '';
+  if Assigned(_What) then Result := _What.StatementName;
   if Result <> '' then Result := 'create ' + Result;
+end;
+
+{ TView }
+
+function TView.InternalParse: boolean;
+begin
+  _View := Keyword('view');
+  if not Assigned(_View) then exit(false);
+  _ViewName := Identifier;
+  _As := Keyword('as');
+  TSelect.Parse(Self, Source, _Select);
+  Result := true;
+end;
+
+procedure TView.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_View, _ViewName, _As]);
+  APrinter.PrintIndented(_Select);
+end;
+
+function TView.StatementName: string;
+begin
+  if Assigned(_ViewName)
+    then Result := 'view ' + _ViewName.Value
+    else Result := '';
 end;
 
 end.

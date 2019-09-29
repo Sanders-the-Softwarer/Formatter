@@ -31,9 +31,8 @@ type
   { Элемент выражения }
   TTerm = class(TStatement)
   strict private
-    _Not: TKeyword;
-    _Prefix: TTerminal;
-    _Distinct: TKeyword;
+    _KPrefix: TKeyword;
+    _TPrefix: TTerminal;
     _Star: TTerminal;
     _Number: TNumber;
     _Literal: TLiteral;
@@ -202,10 +201,9 @@ function TTerm.InternalParse: boolean;
 begin
   Result := false;
   { Префиксы }
-  _Not := Keyword('not');
-  _Prefix := Terminal(['-', '+']);
-  if Assigned(_Prefix) then _Prefix.OpType := otUnary;
-  _Distinct := Keyword(['distinct', 'unique', 'all']);
+  _KPrefix := Keyword(['not', 'prior', 'distinct', 'unique', 'all']);
+  _TPrefix := Terminal(['-', '+']);
+  if Assigned(_TPrefix) then _TPrefix.OpType := otUnary;
   try
     { Слагаемое может быть числом }
     _Number := Number;
@@ -262,7 +260,7 @@ end;
 
 procedure TTerm.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Not, _Distinct, _Prefix, _Number, _Literal, _LValue, _Suffix, _KeywordValue, _Case, _Cast, _Exists, _FunctionCall]);
+  APrinter.PrintItems([_KPrefix, _TPrefix, _Number, _Literal, _LValue, _Suffix, _KeywordValue, _Case, _Cast, _Exists, _FunctionCall]);
   if Assigned(_Select) then
   begin
     APrinter.NextLine;

@@ -194,7 +194,7 @@ type
   end;
 
   { Объявление переменной }
-  TVariableDeclaration = class(TStatement)
+  TVariableDeclaration = class(TSemicolonStatement)
   strict private
     _Name: TIdent;
     _Constant: TKeyword;
@@ -202,7 +202,6 @@ type
     _TAssignment: TTerminal;
     _KAssignment: TKeyword;
     _Value: TStatement;
-    _Semicolon: TTerminal;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -218,7 +217,7 @@ type
   end;
 
   { Курсор }
-  TCursor = class(TStatement)
+  TCursor = class(TSemicolonStatement)
   strict private
     _Cursor: TKeyword;
     _CursorName: TIdent;
@@ -227,7 +226,6 @@ type
     _ReturnType: TStatement;
     _Is: TKeyword;
     _Select: TStatement;
-    _Semicolon: TTerminal;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -235,11 +233,10 @@ type
   end;
 
   { Объявление исключения }
-  TExceptionDeclaration = class(TStatement)
+  TExceptionDeclaration = class(TSemicolonStatement)
   strict private
     _Name: TIdent;
     _Exception: TKeyword;
-    _Semicolon: TTerminal;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -527,11 +524,10 @@ type
   end;
 
   { Декларация pragma }
-  TPragma = class(TStatement)
+  TPragma = class(TSemicolonStatement)
   strict private
     _Pragma: TKeyword;
     _Body: TStatement;
-    _Semicolon: TTerminal;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -539,13 +535,12 @@ type
   end;
 
   { Декларация типа }
-  TType = class(TStatement)
+  TType = class(TSemicolonStatement)
   strict private
     _Type: TKeyword;
     _TypeName: TIdent;
     _Is: TKeyword;
     _Body: TStatement;
-    _Semicolon: TTerminal;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -841,7 +836,7 @@ begin
   _TAssignment := Terminal(':=');
   if not Assigned(_TAssignment) then _KAssignment := Keyword('default');
   if Assigned(_TAssignment) or Assigned (_KAssignment) then TExpression.Parse(Self, Source, _Value);
-  _Semicolon := Terminal(';');
+  inherited;
   Result := true;
 end;
 
@@ -858,8 +853,8 @@ begin
   APrinter.Ruler('constant', Settings.AlignVariables);
   APrinter.PrintItem(_Type);
   APrinter.Ruler('type', Settings.AlignVariables and (Assigned(_TAssignment) or Assigned(_KAssignment)));
-  APrinter.PrintItems([_TAssignment, _KAssignment, _Value, _Semicolon]);
-  APrinter.NextLine;
+  APrinter.PrintItems([_TAssignment, _KAssignment, _Value]);
+  inherited;
 end;
 
 { TVariableDeclarations }
@@ -1104,13 +1099,14 @@ function TExceptionDeclaration.InternalParse: boolean;
 begin
   _Name := Identifier;
   _Exception := Keyword('exception');
-  _Semicolon := Terminal(';');
   Result := Assigned(_Name) and Assigned(_Exception);
+  inherited;
 end;
 
 procedure TExceptionDeclaration.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Name, _Exception, _Semicolon]);
+  APrinter.PrintItems([_Name, _Exception]);
+  inherited;
 end;
 
 { TIfSection }
@@ -1180,13 +1176,14 @@ begin
   _Pragma := Keyword('pragma');
   if not Assigned(_Pragma) then exit(false);
   TLValue.Parse(Self, Source, _Body);
-  _Semicolon := Terminal(';');
+  inherited;
   Result := true;
 end;
 
 procedure TPragma.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Pragma, _Body, _Semicolon]);
+  APrinter.PrintItems([_Pragma, _Body]);
+  inherited;
 end;
 
 { TLoop }
@@ -1279,13 +1276,14 @@ begin
   _TypeName := Identifier;
   _Is := Keyword('is');
   TParser.ParseType(Self, Source, _Body);
-  _Semicolon := Terminal(';');
+  inherited;
   Result := true;
 end;
 
 procedure TType.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Type, _TypeName, _Is, _Body, _Semicolon]);
+  APrinter.PrintItems([_Type, _TypeName, _Is, _Body]);
+  inherited;
 end;
 
 function TType.StatementName: string;
@@ -1441,7 +1439,6 @@ begin
   if Assigned(_Return) then TTypeRef.Parse(Self, Source, _ReturnType);
   _Is := Keyword('is');
   TSelect.Parse(Self, Source, _Select);
-  _Semicolon := Terminal(';');
   Result := true;
 end;
 
@@ -1461,8 +1458,6 @@ begin
   APrinter.SpaceOrNextLine(MultiLine);
   APrinter.PrintItem(_Is);
   APrinter.PrintIndented(_Select);
-  APrinter.SupressNextLine;
-  APrinter.PrintItem(_Semicolon);
 end;
 
 { TPipeRow }

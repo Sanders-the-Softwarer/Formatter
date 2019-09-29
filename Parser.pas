@@ -77,7 +77,8 @@ end;
 class function TParser.ParseCreation(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
   Result := TPackage.Parse(AParent, ASource, AResult) or
-            TSubroutine.Parse(AParent, ASource, AResult);
+            TSubroutine.Parse(AParent, ASource, AResult) or
+            TView.Parse(AParent, ASource, AResult);
 end;
 
 { Разбор операторов PL/SQL }

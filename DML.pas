@@ -28,6 +28,8 @@ type
     _From: TKeyword;
     _Tables: TStatement;
     _Where: TStatement;
+    _StartWith: TStatement;
+    _ConnectBy: TStatement;
     _GroupBy: TStatement;
     _Having: TStatement;
     _OrderBy: TStatement;
@@ -457,6 +459,28 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Выражение start with }
+  TStartWith = class(TStatement)
+  strict private
+    _Start, _With: TKeyword;
+    _Condition: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+    { Выражение start with }
+  TConnectBy = class(TStatement)
+  strict private
+    _Connect, _By: TKeyword;
+    _Condition: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
   { Строка выражения order by }
   TOrderByItem = class(TStatement)
   strict private
@@ -506,6 +530,8 @@ begin
   _From := Keyword('from');
   TSelectTables.Parse(Self, Source, _Tables);
   TWhere.Parse(Self, Source, _Where);
+  TStartWith.Parse(Self, Source, _StartWith);
+  TConnectBy.Parse(Self, Source, _ConnectBy);
   TGroupBy.Parse(Self, Source, _GroupBy);
   THaving.Parse(Self, Source, _Having);
   TOrderBy.Parse(Self, Source, _OrderBy);
@@ -517,19 +543,13 @@ end;
 procedure TSelect.PrintSelf(APrinter: TPrinter);
 begin
   TExpressionFields(_Fields).Match(TIdentFields(_IntoFields));
-  APrinter.PrintItem(_With);
-  APrinter.PrintItem(_Select);
-  APrinter.PrintItem(_Mode);
+  APrinter.PrintItems([_With, _Select, _Mode]);
   APrinter.PrintIndented(_Fields);
   APrinter.PrintItem(_Into);
   APrinter.PrintIndented(_IntoFields);
   APrinter.PrintItem(_From);
   APrinter.PrintIndented(_Tables);
-  APrinter.PrintItem(_Where);
-  APrinter.PrintItem(_GroupBy);
-  APrinter.PrintItem(_Having);
-  APrinter.PrintItem(_OrderBy);
-  APrinter.PrintItem(_AdditionalSelect);
+  APrinter.PrintItems([_Where, _StartWith, _ConnectBy, _GroupBy, _Having, _OrderBy, _AdditionalSelect]);
   inherited;
 end;
 
@@ -729,6 +749,41 @@ begin
   APrinter.PrintItem(_Having);
   APrinter.PrintIndented(_Condition);
   APrinter.NextLine;
+end;
+
+
+{ TStartWith }
+
+function TStartWith.InternalParse: boolean;
+begin
+  _Start := Keyword('start');
+  if not Assigned(_Start) then exit(false);
+  _With  := Keyword('with');
+  TExpression.Parse(Self, Source, _Condition);
+  Result := true;
+end;
+
+procedure TStartWith.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Start, _With]);
+  APrinter.PrintIndented(_Condition);
+end;
+
+{ TConnectBy }
+
+function TConnectBy.InternalParse: boolean;
+begin
+  _Connect := Keyword('connect');
+  if not Assigned(_Connect) then exit;
+  _By := Keyword('by');
+  TExpression.Parse(Self, Source, _Condition);
+  Result := true;
+end;
+
+procedure TConnectBy.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Connect, _By]);
+  APrinter.PrintIndented(_Condition);
 end;
 
 { TOrderByItem }

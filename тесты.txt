@@ -43,8 +43,11 @@ select * from dual group by dummy, dummy, dummy
 -- select с having
 select * from dual group by dummy having count(*) > 1
 
+-- select со start with / connect by
+select * from dual start with dummy = 'X' connect by prior dummy <> 'Y'
+
 -- select с order by
-select * from dual order by dummy 
+select * from dual order by dummy
 
 -- указание направления сортировки и расположения null-ов в order by
 select * from dual order by dummy desc nulls last, dummy nulls first, dummy asc
@@ -59,7 +62,7 @@ select 1 a, 222, 3 + 4 + 5 as b, 6 + 7 + 8 c, 9 as d from dual
 select a, b, c, d, e into x, y, z, t, w from dual
 
 -- select с ansi-синтаксисом
-select * from a join b on a.id = b.id 
+select * from a join b on a.id = b.id
 
 -- select с предложением using
 select * from a join b using (id)
@@ -68,7 +71,7 @@ select * from a join b using (id)
 select * from a left join b on (a.id = b.id) right join c using (id, id, id) full join d on (date_from > sysdate)
 
 -- select с лишними словами в join-ах
-select * from a left outer join b on (a.id = b.id) right outer join c using (id, id, id) 
+select * from a left outer join b on (a.id = b.id) right outer join c using (id, id, id)
 full outer join d on (date_from > sysdate) inner join e on (1 = 2)
 
 -- select с оракловым синтаксисом внешних соединений
@@ -138,15 +141,15 @@ delete from dual d
 delete from dual where dummy = 'Y'
 
 -- просто оператор merge
-merge into dual d1 using (select * from dual) d2 on (d1.dummy = d2.dummy) 
+merge into dual d1 using (select * from dual) d2 on (d1.dummy = d2.dummy)
 when matched then update set dummy = 'Y' when not matched then insert (dummy) values ('Y')
 
 -- merge с другим порядком выражений
-merge into dual d1 using (select * from dual) d2 on (d1.dummy = d2.dummy) 
-when not matched then insert (dummy) values ('Y') when matched then update set dummy = 'Y' 
+merge into dual d1 using (select * from dual) d2 on (d1.dummy = d2.dummy)
+when not matched then insert (dummy) values ('Y') when matched then update set dummy = 'Y'
 
 -- merge с подзапросом
-merge into (select * from dual) d1 using (select * from dual) d2 on (d1.dummy = d2.dummy) 
+merge into (select * from dual) d1 using (select * from dual) d2 on (d1.dummy = d2.dummy)
 when matched then update set dummy = 'Y' when not matched then insert (dummy) values ('Y')
 
 -- вложенный запрос в select
@@ -213,11 +216,11 @@ select
   'a'*4,
   5/0,
   1||b+c
-from 
+from
   dual
 where
-  a = 1 and b < 2 and c > 3 and d <= 4 and e >= 5 and f <> 6 and g != 7 and h ^= 8 and i like 9 and j not like 10 
-  and k in (11, 12, 13) and (l, m, n) not in (select * from dual) or o between 14 and 15 
+  a = 1 and b < 2 and c > 3 and d <= 4 and e >= 5 and f <> 6 and g != 7 and h ^= 8 and i like 9 and j not like 10
+  and k in (11, 12, 13) and (l, m, n) not in (select * from dual) or o between 14 and 15
 
 -- выражение может содержать multiset операции во всех комбинациях
 select
@@ -242,7 +245,7 @@ declare x integer; begin x := 1; end;
 declare
   x integer;
   y integer;
-  procedure z is 
+  procedure z is
   begin
     x := 3;
     y := 4;
@@ -317,7 +320,7 @@ create or replace package x is
   -- либо единицу измерения
   g char(10 char);
   h char(10 byte);
-end;  
+end;
 
 -- параметры подпрограммы могут использовать модификаторы in/out/nocopy
 
@@ -432,7 +435,7 @@ begin
   raise;
 end;
 
--- оператор может быть if 
+-- оператор может быть if
 begin
   if a = b then null; end if;
   if a = b then null; else raise; end if;
@@ -509,6 +512,9 @@ begin
   execute immediate 'some expression';
   execute immediate p_str into p_a, p_b, p_c using p_d, p_e, p_f;
 end;
+
+-- оператор create view
+create or replace force view v$dual as select * from dual;
 
 --------------------------------------------------------------------------------------------
 

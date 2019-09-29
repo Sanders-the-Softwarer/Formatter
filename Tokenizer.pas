@@ -484,6 +484,7 @@ initialization
   Keywords.Add('char');
   Keywords.Add('close');
   Keywords.Add('collect');
+  Keywords.Add('connect');
   Keywords.Add('constant');
   Keywords.Add('create');
   Keywords.Add('cursor');
@@ -507,6 +508,7 @@ initialization
   Keywords.Add('first');
   Keywords.Add('for');
   Keywords.Add('forall');
+  Keywords.Add('force');
   Keywords.Add('from');
   Keywords.Add('full');
   Keywords.Add('function');
@@ -546,6 +548,7 @@ initialization
   Keywords.Add('pipe');
   Keywords.Add('pipelined');
   Keywords.Add('pragma');
+  Keywords.Add('prior');
   Keywords.Add('procedure');
   Keywords.Add('raise');
   Keywords.Add('record');
@@ -558,6 +561,7 @@ initialization
   Keywords.Add('save');
   Keywords.Add('select');
   Keywords.Add('set');
+  Keywords.Add('start');
   Keywords.Add('table');
   Keywords.Add('then');
   Keywords.Add('true');
@@ -567,6 +571,7 @@ initialization
   Keywords.Add('update');
   Keywords.Add('using');
   Keywords.Add('values');
+  Keywords.Add('view');
   Keywords.Add('with');
   Keywords.Add('when');
   Keywords.Add('where');

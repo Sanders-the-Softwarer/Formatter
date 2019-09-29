@@ -162,16 +162,19 @@ type
     Mode:    TFormatterPrinterMode;
     Shift:   integer;
     BOL:     boolean;
+    EmptyLine: boolean;
     Col:     integer;
     PrevCol: integer;
     Rulers:  TRulers;
     Padding: integer;
+    PrevStatement: TStatement;
     PrevToken: TToken;
     IntoSync: boolean;
     TokenPos, TokenLen: TDictionary<TToken, integer>;
     SpecialComments: TObjectList<TToken>;
   protected
     function SpaceRequired(ALeft, ARight: TToken): boolean;
+    function EmptyLineRequired(APrev, ANext: TStatement): boolean;
   public
     constructor Create(AMemo: TMemo);
     destructor Destroy; override;
@@ -426,6 +429,7 @@ begin
   Memo.Lines.EndUpdate;
   FreeAndNil(Builder);
   PrevToken := nil;
+  PrevStatement := nil;
   inherited;
 end;
 
@@ -456,11 +460,27 @@ begin
   Result := true;
 end;
 
+{ Проверка, нужна ли пустая строка между двумя конструкциями }
+function TFormatterPrinter.EmptyLineRequired(APrev, ANext: TStatement): boolean;
+begin
+  { Вставим пустую строку перед новой конструкцией верхнего уровня }
+  if not Assigned(ANext.Parent) then exit(true);
+  { Условия не выполнены }
+  Result := false;
+end;
+
 { Вывод очередной лексемы с навешиванием всех наворотов по форматированию }
 procedure TFormatterPrinter.PrintToken(AToken: TToken);
 var
   Value: string;
 begin
+  { Обработаем вставку пустой строки }
+  if EmptyLine then
+  begin
+    if Assigned(Builder) then Builder.AppendLine;
+    BOL := true;
+    EmptyLine := false;
+  end;
   { Обработаем переход на новую строку }
   if BOL then
   begin
@@ -515,10 +535,11 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
 var
   _Mode: TFormatterPrinterMode;
   _Shift, _Col: integer;
-  _BOL: boolean;
+  _BOL, _EmptyLine: boolean;
   _Builder: TStringBuilder;
   _Rulers: TRulers;
   _PrevToken: TToken;
+  _PrevStatement: TStatement;
 begin
   { Если задан режим печати с выравниваниями }
   if AStatement.Aligned then
@@ -527,9 +548,11 @@ begin
       _Shift   := Shift;
       _Col     := Col;
       _BOL     := BOL;
+      _EmptyLine := EmptyLine;
       _Builder := Builder;
       _Rulers  := Rulers;
       _PrevToken := PrevToken;
+      _PrevStatement := PrevStatement;
       _Mode    := Mode;
       { Соберём информацию }
       Builder := nil;
@@ -545,8 +568,10 @@ begin
       Shift := _Shift;
       Col   := _Col;
       BOL   := _BOL;
+      EmptyLine := _EmptyLine;
       Builder := _Builder;
       PrevToken := _PrevToken;
+      PrevStatement := _PrevStatement;
       { Напечатаем "по-настоящему" (возможно, в рамках вышестоящего fpmGetRulers)}
       Mode  := fpmSetRulers;
       PrevCol := Col;
@@ -559,6 +584,8 @@ begin
   else
     begin
       { Без выравниваний - просто напечатаем и проверим, что не забыли сбалансировать Indent/Undent-ы }
+      EmptyLine := Assigned(PrevStatement) and Assigned(AStatement) and EmptyLineRequired(PrevStatement, AStatement);
+      PrevStatement := AStatement;
       _Shift := Shift;
       inherited;
       if Shift <> _Shift then
