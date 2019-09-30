@@ -12,7 +12,7 @@ unit DML;
 
 interface
 
-uses Math, Tokens, Statements, Printers_, Attributes;
+uses SysUtils, Math, Tokens, Statements, Printers_, Attributes;
 
 type
 
@@ -126,7 +126,7 @@ type
   { Идентификатор как поле в insert, select into итп }
   TIdentField = class(TStatement)
   strict private
-    _FieldName: TIdent;
+    _FieldName: TStatement;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -157,6 +157,126 @@ uses Expressions;
 ////////////////////////////////////////////////////////////////////////////////
 
 type
+
+  { Расширение понятия операнда для SQL-выражений }
+  TSqlTerm = class(TTerm)
+  strict protected
+    function ParseSQLStatement: TStatement; override;
+  end;
+
+  { SQL-выражение }
+  TSqlExpression = class(TExpression)
+  strict protected
+    function ParseStatement(out AResult: TStatement): boolean; override;
+  end;
+
+  { Условие exists }
+  TExists = class(TInnerSelect)
+  strict private
+    _Exists: TKeyword;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция within group }
+  TWithinGroup = class(TStatement)
+  strict private
+    _Within, _Group: TKeyword;
+    _OrderBy: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция over }
+  TOver = class(TStatement)
+  strict private
+    _Over: TKeyword;
+    _OpenBracket: TTerminal;
+    _Partition: TKeyword;
+    _By: TKeyword;
+    _PartitionFields: TStatement;
+    _OrderBy: TStatement;
+    _CloseBracket: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция keep }
+  TKeep = class(TStatement)
+  strict private
+    _Keep: TKeyword;
+    _OpenBracket: TTerminal;
+    _Rank: TIdent;
+    _FirstOrLast: TKeyword;
+    _OrderBy: TStatement;
+    _CloseBracket: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Вызов функции с различными select-ными прибамбасами }
+  TSelectFunctionCall = class(TStatement)
+  strict private
+    _FunctionCall: TStatement;
+    _WithinGroup: TStatement;
+    _Keep: TStatement;
+    _Over: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Спецфункция listagg }
+  TListagg = class(TStatement)
+  strict private
+    _ListAgg: TIdent;
+    _OpenBracket: TTerminal;
+    _Expression: TStatement;
+    _Comma: TTerminal;
+    _Delimiter: TLiteral;
+    _On, _Overflow, _Truncate: TKeyword;
+    _OverflowTag: TLiteral;
+    _Without: TKeyword;
+    _Count: TIdent;
+    _CloseBracket: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Строка выражения order by }
+  TOrderByItem = class(TStatement)
+  strict private
+    _Expression: TStatement;
+    _Nulls: TKeyword;
+    _Position: TKeyword;
+    _Direction: TKeyword;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Выражение order by }
+  TOrderBy = class(TCommaList<TOrderByItem>)
+  strict private
+    _Order, _Siblings, _By: TKeyword;
+  strict protected
+    function InternalParse: boolean; override;
+    function ParseBreak: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
 
   { Выражение как поле в group by, insert values и т. п. }
   TExpressionField = class(TStatement)
@@ -220,17 +340,172 @@ type
     function StatementName: string; override;
   end;
 
+{ TSQLTerm }
+
+function TSQLTerm.ParseSQLStatement: TStatement;
+begin
+  Result := nil;
+  TExists.Parse(Self, Source, Result);
+  if not Assigned(Result) then TSelectFunctionCall.Parse(Self, Source, Result);
+  if not Assigned(Result) then TListagg.Parse(Self, Source, Result);
+end;
+
+{ TSQLExpression }
+
+function TSQLExpression.ParseStatement(out AResult: TStatement): boolean;
+begin
+  Result := TSQLTerm.Parse(Self, Source, AResult);
+end;
+
+{ TExists }
+
+function TExists.InternalParse: boolean;
+begin
+  _Exists := Keyword('exists');
+  Result := Assigned(_Exists);
+  if Result then inherited;
+end;
+
+procedure TExists.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Exists);
+  APrinter.Indent;
+  APrinter.NextLine;
+  inherited;
+  APrinter.Undent;
+end;
+
+{ TWithinGroup }
+
+function TWithinGroup.InternalParse: boolean;
+begin
+  _Within := Keyword('within');
+  if not Assigned(_Within) then exit(false);
+  _Group  := Keyword('group');
+  TMLBracketedStatement<TOrderBy>.Parse(Self, Source, _OrderBy);
+  Result := true;
+end;
+
+procedure TWithinGroup.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Within, _Group]);
+  APrinter.PrintIndented(_OrderBy);
+end;
+
+{ TOver }
+
+function TOver.InternalParse: boolean;
+begin
+  _Over := Keyword('over');
+  if not Assigned(_Over) then exit(false);
+  _OpenBracket := Terminal('(');
+  _Partition   := Keyword('partition');
+  if Assigned(_Partition) then _By := Keyword('by');
+  if Assigned(_Partition) then TIdentFields.Parse(Self, Source, _PartitionFields);
+  TOrderBy.Parse(Self, Source, _OrderBy);
+  _CloseBracket := Terminal(')');
+  Result := true;
+end;
+
+procedure TOver.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Over);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItem(_OpenBracket);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItems([_Partition, _By]);
+  APrinter.PrintIndented(_PartitionFields);
+  APrinter.PrintItem(_OrderBy);
+  APrinter.NextLine;
+  APrinter.Undent;
+  APrinter.PrintItem(_CloseBracket);
+  APrinter.Undent;
+end;
+
+{ TKeep }
+
+function TKeep.InternalParse: boolean;
+begin
+  _Keep := Keyword('keep');
+  if not Assigned(_Keep) then exit(false);
+  _OpenBracket := Terminal('(');
+  _Rank := Identifier;
+  _FirstOrLast := Keyword(['first', 'last']);
+  TOrderBy.Parse(Self, Source, _OrderBy);
+  _CloseBracket := Terminal(')');
+  Result := true;
+end;
+
+procedure TKeep.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Keep, _NextLine, _Indent,
+                              _OpenBracket, _NextLine, _Indent,
+                                            _Rank, _NextLine,
+                                            _FirstOrLast, _NextLine,
+                                            _OrderBy, _NextLine, _Undent,
+                              _CloseBracket, _Undent]);
+end;
+
+{ TAnalyticFunctionCall }
+
+function TSelectFunctionCall.InternalParse: boolean;
+begin
+  TListAgg.Parse(Self, Source, _FunctionCall);
+  if not Assigned(_FunctionCall) then TFunctionCall.Parse(Self, Source, _FunctionCall);
+  if not Assigned(_FunctionCall) then exit(false);
+  TWithinGroup.Parse(Self, Source, _WithinGroup);
+  TKeep.Parse(Self, Source, _Keep);
+  TOver.Parse(Self, Source, _Over);
+  Result := true;
+end;
+
+procedure TSelectFunctionCall.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_FunctionCall);
+  APrinter.NextLine;
+  APrinter.Indent;
+  APrinter.PrintItems([_WithinGroup, _NextLine, _Keep, _NextLine, _Over]);
+  APrinter.Undent;
+end;
+
+{ TListagg }
+
+function TListagg.InternalParse: boolean;
+begin
+  _ListAgg := Identifier;
+  if not Assigned(_ListAgg) or not SameText(_ListAgg.Value, 'listagg') then exit(false);
+  _OpenBracket := Terminal('(');
+  TSQLExpression.Parse(Self, Source, _Expression);
+  _Comma := Terminal(',');
+  if Assigned(_Comma) then _Delimiter := Literal;
+  _On := Keyword('on');
+  _Overflow := Keyword('overflow');
+  _Truncate := Keyword('truncate');
+  _OverflowTag := Literal;
+  _Without := Keyword('without');
+  _Count := Identifier; { должен быть count, но нет смысла это проверять }
+  _CloseBracket := Terminal(')');
+  Result := true;
+end;
+
+procedure TListagg.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_ListAgg, _OpenBracket, _Expression, _Comma, _Delimiter,
+    _On, _Overflow, _Truncate, _OverflowTag, _Without, _Count, _CloseBracket]);
+end;
+
 { TIdentField }
 
 function TIdentField.InternalParse: boolean;
 begin
-  _FieldName := Identifier;
-  Result := Assigned(_FieldName);
+  Result := TQualifiedIdent.Parse(Self, Source, _FieldName);
 end;
 
 function TIdentField.StatementName: string;
 begin
-  Result := _FieldName.Value;
+  Result := _FieldName.StatementName;
 end;
 
 procedure TIdentField.PrintSelf(APrinter: TPrinter);
@@ -252,11 +527,53 @@ begin
   Result := false;
 end;
 
+{ TOrderByItem }
+
+function TOrderByItem.InternalParse: boolean;
+begin
+  if not TSQLExpression.Parse(Self, Source, _Expression) then exit(false);
+  _Direction := Keyword(['asc', 'desc']);
+  _Nulls := Keyword('nulls');
+  _Position := Keyword(['first', 'last']);
+  Result := true;
+end;
+
+procedure TOrderByItem.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Expression, _Direction, _Nulls, _Position]);
+end;
+
+{ TOrderBy }
+
+function TOrderBy.InternalParse: boolean;
+begin
+  _Order    := Keyword('order');
+  _Siblings := Keyword('siblings');
+  _By       := Keyword('by');
+  if not Assigned(_Order) then exit(false);
+  Result := inherited InternalParse;
+end;
+
+function TOrderBy.ParseBreak: boolean;
+begin
+  Result := Any([Terminal([';', ')'])]) or (Source.Next is TKeyword);
+end;
+
+procedure TOrderBy.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Order, _Siblings, _By]);
+  APrinter.NextLine;
+  APrinter.Indent;
+  inherited;
+  APrinter.Undent;
+  APrinter.NextLine;
+end;
+
 { TExpressionField }
 
 function TExpressionField.InternalParse: boolean;
 begin
-  Result := TExpression.Parse(Self, Source, _Expression);
+  Result := TSQLExpression.Parse(Self, Source, _Expression);
 end;
 
 procedure TExpressionField.PrintSelf(APrinter: TPrinter);
@@ -297,7 +614,7 @@ end;
 function TWhere.InternalParse: boolean;
 begin
   _Where := Keyword('where');
-  TExpression.Parse(Self, Source, _Condition);
+  TSQLExpression.Parse(Self, Source, _Condition);
   Result := Assigned(_Where);
 end;
 
@@ -482,31 +799,6 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Строка выражения order by }
-  TOrderByItem = class(TStatement)
-  strict private
-    _Expression: TStatement;
-    _Nulls: TKeyword;
-    _Position: TKeyword;
-    _Direction: TKeyword;
-  strict protected
-    function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Выражение order by }
-  TOrderBy = class(TCommaList<TOrderByItem>)
-  strict private
-    _Order: TKeyword;
-    _By: TKeyword;
-  strict protected
-    function InternalParse: boolean; override;
-    function ParseBreak: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
-  end;
-
   { Следующий запрос в цепочке union all }
   TAdditionalSelect = class(TSelect)
   strict private
@@ -667,7 +959,7 @@ begin
   _Lateral := Keyword('lateral');
   Result := inherited InternalParse;
   if Result then _On := Keyword('on');
-  if Assigned(_On) then TExpression.Parse(Self, Source, _JoinCondition);
+  if Assigned(_On) then TSQLExpression.Parse(Self, Source, _JoinCondition);
   if not Assigned(_On) then _Using := Keyword('using');
   if Assigned(_Using) then
   begin
@@ -744,7 +1036,7 @@ function THaving.InternalParse: boolean;
 begin
   _Having := Keyword('having');
   if not Assigned(_Having) then exit(false);
-  TExpression.Parse(Self, Source, _Condition);
+  TSQLExpression.Parse(Self, Source, _Condition);
   Result := true;
 end;
 
@@ -763,7 +1055,7 @@ begin
   _Start := Keyword('start');
   if not Assigned(_Start) then exit(false);
   _With  := Keyword('with');
-  TExpression.Parse(Self, Source, _Condition);
+  TSQLExpression.Parse(Self, Source, _Condition);
   Result := true;
 end;
 
@@ -780,7 +1072,7 @@ begin
   _Connect := Keyword('connect');
   if not Assigned(_Connect) then exit(false);
   _By := Keyword('by');
-  TExpression.Parse(Self, Source, _Condition);
+  TSQLExpression.Parse(Self, Source, _Condition);
   Result := true;
 end;
 
@@ -788,47 +1080,6 @@ procedure TConnectBy.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Connect, _By]);
   APrinter.PrintIndented(_Condition);
-end;
-
-{ TOrderByItem }
-
-function TOrderByItem.InternalParse: boolean;
-begin
-  if not TExpression.Parse(Self, Source, _Expression) then exit(false);
-  _Direction := Keyword(['asc', 'desc']);
-  _Nulls := Keyword('nulls');
-  _Position := Keyword(['first', 'last']);
-  Result := true;
-end;
-
-procedure TOrderByItem.PrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Expression, _Direction, _Nulls, _Position]);
-end;
-
-{ TOrderBy }
-
-function TOrderBy.InternalParse: boolean;
-begin
-  _Order := Keyword('order');
-  _By    := Keyword('by');
-  if not Assigned(_Order) then exit(false);
-  Result := inherited InternalParse;
-end;
-
-function TOrderBy.ParseBreak: boolean;
-begin
-  Result := Any([Terminal([';', ')'])]) or (Source.Next is TKeyword);
-end;
-
-procedure TOrderBy.PrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Order, _By]);
-  APrinter.NextLine;
-  APrinter.Indent;
-  inherited;
-  APrinter.Undent;
-  APrinter.NextLine;
 end;
 
 { TAdditionalSelect }
@@ -962,7 +1213,7 @@ begin
   TQualifiedIdent.Parse(Self, Source, _Target);
   _Assignment := Terminal('=');
   Result := Assigned(_Target) and Assigned(_Assignment);
-  if Result then TExpression.Parse(Self, Source, _Value);
+  if Result then TSQLExpression.Parse(Self, Source, _Value);
 end;
 
 function TUpdateAssignment.StatementName: string;
@@ -1054,7 +1305,7 @@ begin
   if not TInnerSelect.Parse(Self, Source, _SourceSelect) then _SourceTable := Identifier;
   _SourceAlias := Identifier;
   _On    := Keyword('on');
-  TExpression.Parse(Self, Source, _Condition);
+  TSQLExpression.Parse(Self, Source, _Condition);
   TMergeSections.Parse(Self, Source, _Sections);
   inherited;
   Result := true;

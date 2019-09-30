@@ -529,6 +529,7 @@ initialization
   Keywords.Add('insert');
   Keywords.Add('is');
   Keywords.Add('join');
+  Keywords.Add('keep');
   Keywords.Add('last');
   Keywords.Add('lateral');
   Keywords.Add('left');
@@ -549,7 +550,10 @@ initialization
   Keywords.Add('order');
   Keywords.Add('out');
   Keywords.Add('outer');
+  Keywords.Add('over');
+  Keywords.Add('overflow');
   Keywords.Add('package');
+  Keywords.Add('partition');
   Keywords.Add('pipe');
   Keywords.Add('pipelined');
   Keywords.Add('pragma');
@@ -566,10 +570,12 @@ initialization
   Keywords.Add('save');
   Keywords.Add('select');
   Keywords.Add('set');
+  Keywords.Add('siblings');
   Keywords.Add('start');
   Keywords.Add('table');
   Keywords.Add('then');
   Keywords.Add('true');
+  Keywords.Add('truncate');
   Keywords.Add('type');
   Keywords.Add('union');
   Keywords.Add('unique');
@@ -578,6 +584,8 @@ initialization
   Keywords.Add('values');
   Keywords.Add('view');
   Keywords.Add('with');
+  Keywords.Add('within');
+  Keywords.Add('without');
   Keywords.Add('when');
   Keywords.Add('where');
   Keywords.Add('while');

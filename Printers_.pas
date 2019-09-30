@@ -105,6 +105,11 @@ var
 { Отправка извещения о необходимости синхронизации интерфейса }
 procedure SendSyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
 
+{ Конструкции, которые можно применять в TFormatterPrinter.PrintItems для форматирования }
+function _NextLine: TObject;
+function _Indent: TObject;
+function _Undent: TObject;
+
 implementation
 
 uses Statements, Attributes;
@@ -181,6 +186,7 @@ type
     destructor Destroy; override;
     procedure BeginPrint; override;
     procedure EndPrint; override;
+    procedure PrintItem(AItem: TObject); override;
     procedure PrintToken(AToken: TToken); override;
     procedure PrintStatement(AStatement: TStatement); override;
     procedure Indent; override;
@@ -325,14 +331,10 @@ end;
 { Разбиваем PrintItem на PrintToken и PrintStatement }
 procedure TBasePrinter.PrintItem(AItem: TObject);
 begin
-  if not Assigned(AItem) then
-    { пропускаем, это позволяет обойтись без кучи if-ов в других местах }
-  else if AItem is TToken then
+  if AItem is TToken then
     PrintToken(AItem as TToken)
   else if AItem is TStatement then
-    PrintStatement(AItem as TStatement)
-  else
-    raise Exception.CreateFmt('Cannot print item of class %s', [AItem.ClassName]);
+    PrintStatement(AItem as TStatement);
 end;
 
 procedure TBasePrinter.PrintToken(AToken: TToken);
@@ -387,6 +389,64 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
+//          Спецконструкции для более удобного форматирования вывода          //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+type
+
+  TFormatterCmd = class
+  public
+    procedure PrintSelf(APrinter: TPrinter); virtual; abstract;
+  end;
+
+  TNextLine = class(TFormatterCmd)
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  TIndent = class(TFormatterCmd)
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  TUndent = class(TFormatterCmd)
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+function _NextLine: TObject;
+begin
+  Result := TNextLine.Create;
+end;
+
+function _Indent: TObject;
+begin
+  Result := TIndent.Create;
+end;
+
+function _Undent: TObject;
+begin
+  Result := TUndent.Create;
+end;
+
+procedure TNextLine.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.NextLine;
+end;
+
+procedure TIndent.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.Indent;
+end;
+
+procedure TUndent.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.Undent;
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
 //                  Принтер для печати форматированного текста                //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
@@ -432,6 +492,18 @@ begin
   PrevToken := nil;
   PrevStatement := nil;
   inherited;
+end;
+
+{ Универсальный метод вывода на принтер поддерживаемых объектов }
+procedure TFormatterPrinter.PrintItem(AItem: TObject);
+begin
+  if AItem is TFormatterCmd then
+    begin
+      TFormatterCmd(AItem).PrintSelf(Self);
+      FreeAndNil(AItem);
+    end
+  else
+    inherited;
 end;
 
 { Проверка, нужен ли пробел между двумя лексемами }
@@ -882,7 +954,11 @@ begin
   end;
 end;
 
-{ TAlarmTokenPrinter }
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                Принтеры для вывода отладочных предупреждений               //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 constructor TAlarmTokenPrinter.Create(AListBox: TListBox; ATabSheet: TTabSheet);
 begin
@@ -911,8 +987,6 @@ begin
   Result := not AToken.Printed and not (AToken is TComment);
 end;
 
-{ TAlarmStatementPrinter }
-
 procedure TAlarmStatementPrinter.PrintStatement(AStatement: TStatement);
 begin
   Unexpected := (AStatement is TUnexpectedToken);
@@ -920,13 +994,16 @@ begin
   Unexpected := false;
 end;
 
-
 function TAlarmStatementPrinter.CheckPrintToken(AToken: TToken): boolean;
 begin
   Result := Unexpected;
 end;
 
-{ TRulerInfo }
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                Сбор и применение информации о выравниваниях                //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 constructor TRulers.Create;
 begin

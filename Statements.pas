@@ -40,6 +40,11 @@ unit Statements;
   классу, влияние таких ситуций на результат носит ограниченный и локальный
   характер.
 
+  Операторы и конструкции могут и часто должны завершаться точкой с запятой,
+  поэтому класс TSemicolonStatement избавляет от необходимости описывать в
+  тысяче мест парсинг одного и того же символа. Аналогично, класс
+  TBracedStatement позволяет удобно описывать конструкции в скобках.
+
 ------------------------------------------------------------------------------ }
 
 interface
@@ -131,6 +136,23 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Конструкция заданного типа в скобках }
+
+  TSLBracketedStatement<T: TStatement> = class(TStatement)
+  strict protected
+    _OpenBracket, _CloseBracket: TTerminal;
+    _Stmt: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  TMLBracketedStatement<T: TStatement> = class(TSLBracketedStatement<T>)
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
 implementation
 
 uses Attributes;
@@ -171,20 +193,20 @@ end;
 function TStatement.StatementType: string; 
 var
   S, U, L: string;
-  i: integer;
+  i, P: integer;
 begin
   S := Self.ClassName;
   if S[1] = 'T' then S := S.Substring(1);
+  if S.StartsWith('ML') or S.StartsWith('SL') then S := S.Substring(2);
+  P := Pos('<', S);
+  if P > 0 then S := S.Substring(0, P - 1);
   U := S.ToUpper;
   L := S.ToLower;
   Result := '';
   for i := 1 to Length(S) do
-    if S[i] = L[i] then
-      Result := Result + L[i]
-    else if S[i] = U[i] then
-      Result := Result + ' ' + L[i]
-    else
-      raise Exception.CreateFmt('Cannot make statement name for class %s', [Self.ClassName]);
+    if (S[i] = U[i]) and (i > 1) and (S[i - 1] = L[i - 1])
+      then Result := Result + ' ' + L[i]
+      else Result := Result + L[i];
 end;
 
 { Выражение по умолчанию не имеет собственного имени }
@@ -460,6 +482,30 @@ procedure TSemicolonStatement.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.SupressNextLine;
   APrinter.PrintItem(_Semicolon);
+end;
+
+{ TBracketedStatement<T> }
+
+function TSLBracketedStatement<T>.InternalParse: boolean;
+begin
+  _OpenBracket := Terminal('(');
+  if not Assigned(_OpenBracket) then exit(false);
+  if not T.Parse(Self, Source, _Stmt) then exit(false);
+  _CloseBracket := Terminal(')');
+  Result := true;
+end;
+
+procedure TSLBracketedStatement<T>.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_OpenBracket, _Stmt, _CloseBracket]);
+end;
+
+procedure TMLBracketedStatement<T>.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_OpenBracket);
+  APrinter.PrintIndented(_Stmt);
+  APrinter.NextLine;
+  APrinter.PrintItem(_CloseBracket);
 end;
 
 end.

@@ -36,22 +36,22 @@ type
     _Star: TTerminal;
     _Number: TNumber;
     _Literal: TLiteral;
+    _SQLStatement: TStatement;
     _LValue: TStatement;
     _Suffix: TTerminal;
     _KeywordValue: TKeyword;
     _Select: TStatement;
-    _FunctionCall: TStatement;
     _OpenBracket: TTerminal;
     _Expression: TStatement;
     _CloseBracket: TTerminal;
     _Case: TStatement;
     _Cast: TStatement;
-    _Exists: TStatement;
     _OuterJoin: TTerminal;
     _Postfix: TKeyword;
   strict protected
     function InternalParse: boolean; override;
     function AllowStar: boolean;
+    function ParseSQLStatement: TStatement; virtual;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
@@ -63,12 +63,6 @@ type
     function ParseBreak: boolean; override;
   public
     function MultiLine: boolean; override;
-  end;
-
-  { Вложенное выражение }
-  TInnerExpression = class(TExpression)
-  strict protected
-    function ParseDelimiter(out AResult: TObject): boolean; override;
   end;
 
   { Квалифицированный идентификатор }
@@ -198,16 +192,6 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Условие exists }
-  TExists = class(TInnerSelect)
-  strict private
-    _Exists: TKeyword;
-  strict protected
-    function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
-  end;
-
 { TExpression }
 
 function TTerm.InternalParse: boolean;
@@ -231,8 +215,9 @@ begin
     if TCase.Parse(Self, Source, _Case) then exit(true);
     { Выражением cast }
     if TCast.Parse(Self, Source, _Cast) then exit(true);
-    { Выражением exists }
-    if TExists.Parse(Self, Source, _Exists) then exit(true);
+    { SQL-выражением }
+    _SQLStatement := ParseSQLStatement;
+    if Assigned(_SQLStatement) then exit(true);
     { Идентификатором или подобным выражением }
     TLValue.Parse(Self, Source, _LValue);
     if Assigned(_LValue) then
@@ -246,7 +231,7 @@ begin
     _OpenBracket := Terminal('(');
     if Assigned(_OpenBracket) then
     begin
-      TInnerExpression.Parse(Self, Source, _Expression);
+      TStatementClass(Parent.ClassType).Parse(Self, Source, _Expression); { нужно для того, чтобы в Expression парсились term-ы, а в SqlExpression - sqlterm-ы }
       _CloseBracket := Terminal(')');
       exit(true);
     end;
@@ -271,9 +256,14 @@ begin
       else S := S.Parent;
 end;
 
+function TTerm.ParseSQLStatement: TStatement;
+begin
+  Result := nil; { предназначен для перекрытия в TSQLTerm }
+end;
+
 procedure TTerm.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_KPrefix, _TPrefix, _Number, _Literal, _LValue, _Suffix, _KeywordValue, _Case, _Cast, _Exists, _FunctionCall]);
+  APrinter.PrintItems([_KPrefix, _TPrefix, _Number, _Literal, _SQLStatement, _LValue, _Suffix, _KeywordValue, _Case, _Cast]);
   if Assigned(_Select) then
   begin
     APrinter.NextLine;
@@ -293,6 +283,8 @@ begin
                         'multiset except', 'multiset except all', 'multiset except distinct',
                         'multiset intersect', 'multiset intersect all', 'multiset intersect distinct',
                         'multiset union', 'multiset union all', 'multiset union distinct']);
+  if not Assigned(AResult) and (Self.Parent is TTerm) then
+    AResult := Terminal(',');
   Result := Assigned(AResult);
   if AResult is TTerminal then TTerminal(AResult).OpType := otBinary;
 end;
@@ -305,14 +297,6 @@ end;
 function TExpression.MultiLine: boolean;
 begin
   Result := false;
-end;
-
-{ TInnerExpression }
-
-function TInnerExpression.ParseDelimiter(out AResult: TObject): boolean;
-begin
-  AResult := Terminal(',');
-  Result  := Assigned(AResult) or inherited ParseDelimiter(AResult);
 end;
 
 { TQualifiedIdent }
@@ -540,26 +524,6 @@ begin
   if (Count = 1) and (Item(0) is TLValueItem)
     then Result := TLValueItem(Item(0)).Ident
     else Result := '';
-end;
-
-{ TExists }
-
-function TExists.InternalParse: boolean;
-begin
-  Result  := true;
-  _Exists := Keyword('exists');
-  if Assigned(_Exists)
-    then inherited
-    else Result := false;
-end;
-
-procedure TExists.PrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItem(_Exists);
-  APrinter.Indent;
-  APrinter.NextLine;
-  inherited;
-  APrinter.Undent;
 end;
 
 end.

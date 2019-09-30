@@ -218,6 +218,15 @@ select * from dual where dummy is null and dummy is not null
 -- операнд может быть вызовом функции
 select to_date('01.02.2004', 'dd.mm.yyyy') + my.fanction(a => b, c => d) from dual
 
+-- в запросе можно употреблять аналитические функции
+select 1 + rank() over (partition by d.dummy order by d.dummy desc) from dual d
+
+-- и функцию listagg, в том числе аналитическую
+select listagg(dummy, ',' on overflow truncate '...' without count) within group (order by dummy) over (order by dummy) from dual
+
+-- в запросе можно употреблять конструкцию keep
+select min(dummy) keep (dense_rank first order by dummy) over (partition by dummy) from dual
+
 -- выражения состоят из операндов, связанных между собой бинарными операциями
 select
   1+2,
