@@ -154,26 +154,24 @@ function TTokenizer.InternalNext: TToken;
   { Считывание идентификатора }
   function ParseIdent: boolean;
   var
-    C: char;
+    C, F: char;
   begin
     Restore;
-    repeat
-      C := NextChar;
-      if C = '"' then
-        repeat
-          C := NextChar
-        until C in ['"', #0]
-      else if TCharacter.IsLetter(C) then
-        repeat
-          C := NextChar;
-        until not TCharacter.IsLetter(C) and not TCharacter.IsDigit(C) and not (C in ['$', '#', '_'])
-      else
-        begin
-          RefuseLastChar;
-          exit(TokenValue <> '');
-        end;
-    until C <> '.';
-    RefuseLastChar;
+    F := NextChar;
+    if F = '"' then
+      repeat
+        C := NextChar
+      until C in ['"', #0]
+    else if TCharacter.IsLetter(F) then
+      repeat
+        C := NextChar;
+      until not TCharacter.IsLetter(C) and not TCharacter.IsDigit(C) and not (C in ['$', '#', '_'])
+    else
+      begin
+        RefuseLastChar;
+        exit(false);
+      end;
+    if F = '"' then ApplyLastChar else RefuseLastChar;
     Result := true;
   end;
 
@@ -288,7 +286,7 @@ begin
     Result := TComment.Create(TokenValue, Start)
   else if ParseBracedComment then
     Result := TComment.Create(TokenValue, Start)
-  else if ParseTerminal then { должен идти до ParseIdent, чтобы default распознавался как терминал }
+  else if ParseTerminal then
     Result := TTerminal.Create(TokenValue, Start)
   else if ParseIdent then
     if Keywords.IndexOf(TokenValue) >= 0
@@ -418,6 +416,7 @@ begin
   if not Source.Eof then T4 := Source.Next else T4 := nil;
   { И попробуем их скомбинировать }
   if Check(Result, 'bulk', 'collect', 'into') then exit;
+  if Check(Result, 'cross', 'apply') then exit;
   if Check(Result, 'full', 'join') then exit;
   if Check(Result, 'full', 'outer', 'join') then exit;
   if Check(Result, 'end', 'case') then exit;
@@ -440,6 +439,7 @@ begin
   if Check(Result, 'multiset', 'union', 'distinct') then exit;
   if Check(Result, 'not', 'in') then exit;
   if Check(Result, 'not', 'like') then exit;
+  if Check(Result, 'outer', 'apply') then exit;
   if Check(Result, 'right', 'join') then exit;
   if Check(Result, 'right', 'outer', 'join') then exit;
   if Check(Result, 'union', 'all') then exit;
@@ -456,7 +456,7 @@ function TProcedureDeleteStream.InternalNext: TToken;
 begin
   Result := Source.Next;
   { Если предыдущее слово procedure, заменим delete на идентификатор, а всё остальное оставим как есть }
-  if PrevProcedure and (Result is TKeyword) and SameText(Result.Value, 'delete')
+  if PrevProcedure and (Result is TKeyword) and (SameText(Result.Value, 'delete') or SameText(Result.Value, 'save'))
     then Result := TIdent.Create(Result.Value, Result.Line, Result.Col)
     else Transit(Result);
   { Взведём флаг для следующей лексемы }
@@ -471,6 +471,7 @@ initialization
   { Заполним список ключевых слов }
   Keywords.Add('all');
   Keywords.Add('and');
+  Keywords.Add('apply');
   Keywords.Add('as');
   Keywords.Add('asc');
   Keywords.Add('begin');
@@ -484,9 +485,12 @@ initialization
   Keywords.Add('char');
   Keywords.Add('close');
   Keywords.Add('collect');
+  Keywords.Add('column');
+  Keywords.Add('comment');
   Keywords.Add('connect');
   Keywords.Add('constant');
   Keywords.Add('create');
+  Keywords.Add('cross');
   Keywords.Add('cursor');
   Keywords.Add('declare');
   Keywords.Add('default');
@@ -526,6 +530,7 @@ initialization
   Keywords.Add('is');
   Keywords.Add('join');
   Keywords.Add('last');
+  Keywords.Add('lateral');
   Keywords.Add('left');
   Keywords.Add('like');
   Keywords.Add('loop');

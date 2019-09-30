@@ -62,6 +62,7 @@ type
     Label3: TLabel;
     edMatchParamLimit: TSpinEdit;
     tmMemo: TTimer;
+    checkAlignTableColumnComments: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -104,6 +105,7 @@ begin
   Settings.AlignVariables                  := checkAlignVariables.Checked;
   Settings.AlignFields                     := checkAlignFields.Checked;
   Settings.AlignSpecialComments            := checkAlignSpecialComments.Checked;
+  Settings.AlignTableColumnComments        := checkAlignTableColumnComments.Checked;
   Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
   { Создадим потоки }
   TokenStream     := TMerger.Create(TProcedureDeleteStream.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(edSrc.Text))))));

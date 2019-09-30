@@ -138,7 +138,7 @@ type
   { Название типа данных }
   TTypeRef = class(TStatement)
   strict private
-    _Ident: TIdent;
+    _Ident: TStatement;
     _Char: TKeyword;
     _Type: TTerminal;
     _RowType: TTerminal;
@@ -718,7 +718,7 @@ end;
 function TTypeRef.InternalParse: boolean;
 begin
   { Если распознали идентификатор, тип данных распознан }
-  _Ident := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _Ident);
   if not Assigned(_Ident) then _Char := Keyword('char');
   if not Assigned(_Ident) and not Assigned(_Char) then exit(false);
   { Проверим %[row]type }
@@ -1288,7 +1288,11 @@ end;
 
 function TType.StatementName: string;
 begin
-  Result := _Type.Value + ' ' + _TypeName.Value;
+  if Assigned(_Type)
+    then Result := _Type.Value
+    else Result := '';
+  if Assigned(_TypeName) then
+    Result := Trim(Result + ' ' + _TypeName.Value);
 end;
 
 { TRecord }

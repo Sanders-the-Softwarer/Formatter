@@ -37,6 +37,7 @@ type
   public
     constructor Create(AStream: TBufferedStream<TToken>; ASettings: TFormatSettings);
     class function ParseDML(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+    class function ParseDDL(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseCreation(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseOperator(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseDeclaration(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
@@ -71,6 +72,13 @@ begin
             TUpdate.Parse(AParent, ASource, AResult) or
             TDelete.Parse(AParent, ASource, AResult) or
              TMerge.Parse(AParent, ASource, AResult);
+end;
+
+{ Разбор поддерживаемых конструкций DDL }
+class function TParser.ParseDDL(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+begin
+  Result := TCreate.Parse(AParent, ASource, AResult) or
+            TComments.Parse(AParent, ASource, AResult);
 end;
 
 { Разбор объектов, создаваемых командой create }
@@ -131,7 +139,7 @@ begin
             ParseDeclaration(AParent, ASource, AResult) or
             ParseCreation(AParent, ASource, AResult) or
             ParseType(AParent, ASource, AResult) or
-            TCreate.Parse(AParent, ASource, AResult) or
+            ParseDDL(AParent, ASource, AResult) or
             TAnonymousBlock.Parse(AParent, ASource, AResult) or
             TExpression.Parse(AParent, ASource, AResult);
 end;

@@ -59,6 +59,7 @@ type
     MatchParamLimit: integer;
     AlignVariables: boolean;
     AlignFields: boolean;
+    AlignTableColumnComments: boolean;
     AlignSpecialComments: boolean;
     ReplaceDefault: boolean;
   end;
@@ -530,67 +531,98 @@ begin
   end;
 end;
 
+
 { Вывод синтаксической конструкции с расстановкой выравниваний }
 procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
-var
-  _Mode: TFormatterPrinterMode;
-  _Shift, _Col: integer;
-  _BOL, _EmptyLine: boolean;
-  _Builder: TStringBuilder;
-  _Rulers: TRulers;
-  _PrevToken: TToken;
-  _PrevStatement: TStatement;
+
+  var
+    _Mode: TFormatterPrinterMode;
+    _Shift, _Col: integer;
+    _BOL, _EmptyLine: boolean;
+    _Builder: TStringBuilder;
+    _Rulers: TRulers;
+    _PrevToken: TToken;
+    _PrevStatement: TStatement;
+
+  { Печать выражения без наворотов, связанных с выравниваниями }
+  procedure SimplePrintStatement(AStatement: TStatement);
+  var _Shift: integer;
+  begin
+    EmptyLine := EmptyLine or (Assigned(PrevStatement) and Assigned(AStatement) and EmptyLineRequired(PrevStatement, AStatement));
+    PrevStatement := AStatement;
+    _Shift := Shift;
+    inherited PrintStatement(AStatement);
+    if Shift <> _Shift then
+      raise Exception.CreateFmt('Invalid indents into %s - was %d but %d now', [AStatement.ClassName, _Shift, Shift]);
+  end;
+
+  { Сохранение конфигурации для возврата к ней после примерки выравнивания }
+  procedure SaveCfg;
+  begin
+    _Shift   := Shift;
+    _Col     := Col;
+    _BOL     := BOL;
+    _EmptyLine := EmptyLine;
+    _Builder := Builder;
+    _Rulers  := Rulers;
+    _PrevToken := PrevToken;
+    _PrevStatement := PrevStatement;
+    _Mode    := Mode;
+  end;
+
+  { Восстановление той части конфигурации, которая нужна для печати с выравниваниями }
+  procedure RestoreCfgBeforePrint;
+  begin
+    Shift := _Shift;
+    Col   := _Col;
+    BOL   := _BOL;
+    EmptyLine := _EmptyLine;
+    Builder := _Builder;
+    PrevToken := _PrevToken;
+    PrevStatement := _PrevStatement;
+  end;
+
+  { Окончательное восстановление конфигурации после печати с выравниваниями }
+  procedure RestoreCfgAfterPrint;
+  begin
+    FreeAndNil(Rulers);
+    Rulers := _Rulers;
+    Mode := _Mode;
+  end;
+
+  { Пробная печать - сбор информации о выравниваниях }
+  procedure PrintGetRulersMode;
+  begin
+    Builder := nil;
+    Rulers  := TRulers.Create;
+    Mode    := fpmGetRulers;
+    PrevCol := Col;
+    try
+      SimplePrintStatement(AStatement);
+    except
+      { проглотим ошибку и дадим аналогично упасть на SetRulers, чтобы выдать проблемный текст на принтер }
+    end;
+  end;
+
+  { Печать с расстановкой выравниваний }
+  procedure PrintSetRulersMode;
+  begin
+    Mode  := fpmSetRulers;
+    PrevCol := Col;
+    SimplePrintStatement(AStatement);
+  end;
+
 begin
-  { Если задан режим печати с выравниваниями }
   if AStatement.Aligned then
     begin
-      { Сохраним конфигурацию }
-      _Shift   := Shift;
-      _Col     := Col;
-      _BOL     := BOL;
-      _EmptyLine := EmptyLine;
-      _Builder := Builder;
-      _Rulers  := Rulers;
-      _PrevToken := PrevToken;
-      _PrevStatement := PrevStatement;
-      _Mode    := Mode;
-      { Соберём информацию }
-      Builder := nil;
-      Rulers  := TRulers.Create;
-      Mode    := fpmGetRulers;
-      PrevCol := Col;
-      try
-        inherited;
-      except
-        { проглотим ошибку и дадим аналогично упасть на SetRulers, чтобы выдать проблемный текст на принтер }
-      end;
-      { Восстановим конфигурацию для печати }
-      Shift := _Shift;
-      Col   := _Col;
-      BOL   := _BOL;
-      EmptyLine := _EmptyLine;
-      Builder := _Builder;
-      PrevToken := _PrevToken;
-      PrevStatement := _PrevStatement;
-      { Напечатаем "по-настоящему" (возможно, в рамках вышестоящего fpmGetRulers)}
-      Mode  := fpmSetRulers;
-      PrevCol := Col;
-      inherited;
-      { И окончательно восстановим конфигурацию для возврата к вызвавшему }
-      FreeAndNil(Rulers);
-      Rulers := _Rulers;
-      Mode := _Mode;
+      SaveCfg;
+      PrintGetRulersMode;
+      RestoreCfgBeforePrint;
+      PrintSetRulersMode;
+      RestoreCfgAfterPrint;
     end
   else
-    begin
-      { Без выравниваний - просто напечатаем и проверим, что не забыли сбалансировать Indent/Undent-ы }
-      EmptyLine := Assigned(PrevStatement) and Assigned(AStatement) and EmptyLineRequired(PrevStatement, AStatement);
-      PrevStatement := AStatement;
-      _Shift := Shift;
-      inherited;
-      if Shift <> _Shift then
-        raise Exception.CreateFmt('Invalid indents into %s - was %d but %d now', [AStatement.ClassName, _Shift, Shift]);
-    end;
+    SimplePrintStatement(AStatement);
 end;
 
 { Управление отступами }

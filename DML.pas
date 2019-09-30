@@ -416,6 +416,7 @@ type
   { Указание таблицы в select }
   TSelectTableClause = class(TTableRef)
   strict private
+    _Lateral: TKeyword;
     _On: TKeyword;
     _JoinCondition: TStatement;
     _Using: TKeyword;
@@ -522,7 +523,8 @@ function TSelect.InternalParse: boolean;
 begin
   TWith.Parse(Self, Source, _With);
   _Select := Keyword('select');
-  if not Assigned(_Select) then exit(false);
+  { Чтобы распознать конструкцию, надо увидеть либо with, либо select }
+  if not Assigned(_With) and not Assigned(_Select) then exit(false);
   _Mode := Keyword(['distinct', 'unique', 'all']);
   TSelectFields.Parse(Self, Source, _Fields);
   _Into := Keyword(['into', 'bulk collect into']);
@@ -662,6 +664,7 @@ end;
 
 function TSelectTableClause.InternalParse: boolean;
 begin
+  _Lateral := Keyword('lateral');
   Result := inherited InternalParse;
   if Result then _On := Keyword('on');
   if Assigned(_On) then TExpression.Parse(Self, Source, _JoinCondition);
@@ -676,6 +679,7 @@ end;
 
 procedure TSelectTableClause.PrintSelf(APrinter: TPrinter);
 begin
+  APrinter.PrintItem(_Lateral);
   inherited;
   APrinter.PrintIndented([_On, _JoinCondition, _Using, _OpenBracket, _Fields, _CloseBracket]);
 end;
@@ -687,7 +691,7 @@ begin
   Result := inherited ParseDelimiter(AResult);
   if not Result then
   begin
-    AResult := Keyword(['join', 'inner join', 'full join', 'full outer join', 'left join', 'left outer join', 'right join', 'right outer join']);
+    AResult := Keyword(['join', 'inner join', 'full join', 'full outer join', 'left join', 'left outer join', 'right join', 'right outer join', 'cross apply', 'outer apply']);
     Result  := Assigned(AResult);
   end;
 end;
@@ -774,7 +778,7 @@ end;
 function TConnectBy.InternalParse: boolean;
 begin
   _Connect := Keyword('connect');
-  if not Assigned(_Connect) then exit;
+  if not Assigned(_Connect) then exit(false);
   _By := Keyword('by');
   TExpression.Parse(Self, Source, _Condition);
   Result := true;
@@ -907,7 +911,7 @@ type
   { Присвоение в update }
   TUpdateAssignment = class(TStatement)
   strict private
-    _Target: TIdent;
+    _Target: TStatement;
     _Assignment: TTerminal;
     _Value: TStatement;
   strict protected
@@ -955,7 +959,7 @@ end;
 
 function TUpdateAssignment.InternalParse: boolean;
 begin
-  _Target := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _Target);
   _Assignment := Terminal('=');
   Result := Assigned(_Target) and Assigned(_Assignment);
   if Result then TExpression.Parse(Self, Source, _Value);
@@ -964,7 +968,7 @@ end;
 function TUpdateAssignment.StatementName: string;
 begin
   if Assigned(_Target)
-    then Result := _Target.Value
+    then Result := _Target.StatementName
     else Result := '';
 end;
 

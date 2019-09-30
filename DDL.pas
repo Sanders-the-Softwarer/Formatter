@@ -12,7 +12,7 @@ unit DDL;
 
 interface
 
-uses Tokens, Statements, Printers_;
+uses Tokens, Statements, Printers_, Attributes;
 
 type
 
@@ -42,9 +42,29 @@ type
     function StatementName: string; override;
   end;
 
+  { Команда comment }
+  TComment = class(TSemicolonStatement)
+  strict private
+    _Comment, _On, _TableOrColumn: TKeyword;
+    _Name: TStatement;
+    _Is: TKeyword;
+    _Text: TLiteral;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Группа комментариев }
+  [Aligned]
+  TComments = class(TStatementList<TComment>)
+  strict private
+    function ParseBreak: boolean; override;
+  end;
+
 implementation
 
-uses Parser, DML;
+uses Parser, DML, Expressions;
 
 { TCreateStatement }
 
@@ -99,6 +119,36 @@ begin
   if Assigned(_ViewName)
     then Result := 'view ' + _ViewName.Value
     else Result := '';
+end;
+
+{ TComment }
+
+function TComment.InternalParse: boolean;
+begin
+  _Comment := Keyword('comment');
+  if not Assigned(_Comment) then exit(false);
+  _On := Keyword('on');
+  _TableOrColumn := Keyword(['table', 'column']);
+  TQualifiedIdent.Parse(Self, Source, _Name);
+  _Is := Keyword('is');
+  _Text := Literal;
+  inherited;
+  Result := true;
+end;
+
+procedure TComment.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Comment, _On, _TableOrColumn, _Name]);
+  APrinter.Ruler('is', Settings.AlignTableColumnComments);
+  APrinter.PrintItems([_Is, _Text]);
+  inherited;
+end;
+
+{ TComments }
+
+function TComments.ParseBreak: boolean;
+begin
+  Result := true; { последовательность комментариев прерывает всё что угодно }
 end;
 
 end.

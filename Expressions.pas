@@ -71,6 +71,19 @@ type
     function ParseDelimiter(out AResult: TObject): boolean; override;
   end;
 
+  { Квалифицированный идентификатор }
+  TQualifiedIdent = class(TStatement)
+  strict private
+    _Dot: TTerminal;
+    _Name: TIdent;
+    _Next: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function StatementName: string; override;
+  end;
+
   { Вызов функции }
   TFunctionCall = class(TStatement)
   strict private
@@ -300,6 +313,32 @@ function TInnerExpression.ParseDelimiter(out AResult: TObject): boolean;
 begin
   AResult := Terminal(',');
   Result  := Assigned(AResult) or inherited ParseDelimiter(AResult);
+end;
+
+{ TQualifiedIdent }
+
+function TQualifiedIdent.InternalParse: boolean;
+begin
+  if Parent is TQualifiedIdent then _Dot := Terminal('.');
+  _Name := Identifier;
+  Result := Assigned(_Name) and (Assigned(_Dot) = (Parent is TQualifiedIdent));
+  if Result then TQualifiedIdent.Parse(Self, Source, _Next);
+end;
+
+procedure TQualifiedIdent.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Dot, _Name, _Next]);
+end;
+
+function TQualifiedIdent.StatementName: string;
+begin
+  if Assigned(_Dot)
+    then Result := _Dot.Value
+    else Result := '';
+  if Assigned(_Name) then
+    Result := Result + _Name.Value;
+  if Assigned(_Next) then
+    Result := Result + _Next.StatementName;
 end;
 
 { TFunctionCall }
