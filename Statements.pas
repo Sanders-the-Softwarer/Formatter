@@ -49,7 +49,7 @@ unit Statements;
 
 interface
 
-uses SysUtils, System.Generics.Collections, Streams, Tokens, Printers_;
+uses Classes, SysUtils, System.Generics.Collections, Streams, Tokens, Printers_;
 
 type
 
@@ -63,15 +63,16 @@ type
   strict protected
     Source: TBufferedStream<TToken>;
     function InternalParse: boolean; virtual; abstract;
+    function GetKeywords: TStrings; virtual;
     function NextToken: TToken;
-    function Keyword(const AKeyword: string): TKeyword; overload;
-    function Keyword(const AKeywords: array of string): TKeyword; overload;
-    function Identifier: TIdent;
+    function Keyword(const AKeyword: string): TEpithet; overload;
+    function Keyword(const AKeywords: array of string): TEpithet; overload;
+    function Identifier: TEpithet;
     function Number: TNumber;
     function Literal: TLiteral;
     function Terminal(const ATerminal: string): TTerminal; overload;
     function Terminal(const ATerminals: array of string): TTerminal; overload;
-    function Concat(Params: array of TToken): string;
+    function Concat(Params: array of TObject): string;
   public
     class function Parse(AParent: TStatement; Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
   public
@@ -210,7 +211,7 @@ begin
 end;
 
 { Выражение по умолчанию не имеет собственного имени }
-function TStatement.StatementName: string; 
+function TStatement.StatementName: string;
 begin
   Result := '';
 end;
@@ -225,6 +226,11 @@ begin
   Result := Attributes.HasAttribute(ClassType, AlignedAttribute);
 end;
 
+function TStatement.GetKeywords: TStrings;
+begin
+  if Assigned(Parent) then Result := Parent.GetKeywords else Result := nil;
+end;
+
 function TStatement.NextToken: TToken;
 begin
   if Source.Eof
@@ -232,12 +238,12 @@ begin
     else Result := Source.Next;
 end;
 
-function TStatement.Keyword(const AKeyword: string): TKeyword;
+function TStatement.Keyword(const AKeyword: string): TEpithet;
 begin
   Result := Keyword([AKeyword]);
 end;
 
-function TStatement.Keyword(const AKeywords: array of string): TKeyword;
+function TStatement.Keyword(const AKeywords: array of string): TEpithet;
 var
   Token: TToken;
   P: TMark;
@@ -246,25 +252,36 @@ begin
   Result := nil;
   P := Source.Mark;
   Token := NextToken;
-  if Token is TKeyword then
+  if Token is TEpithet then
     for i := Low(AKeywords) to High(AKeywords) do
       if SameText(Token.Value, AKeywords[i]) then
-        Result := Token as TKeyword;
+      begin
+        Result := Token as TEpithet;
+        Result.IsKeyword := true;
+        Result.IsIdent   := false;
+      end;
   if not Assigned(Result) then
     Source.Restore(P);
 end;
 
-function TStatement.Identifier: TIdent;
+function TStatement.Identifier: TEpithet;
 var
   Token: TToken;
   P: TMark;
+  K: TStrings;
 begin
   Result := nil;
+  K := GetKeywords;
   P := Source.Mark;
   Token := NextToken;
-  if Token is TIdent
-    then Result := Token as TIdent
-    else Source.Restore(P);
+  if (Token is TEpithet) and (not Assigned(K) or (K.IndexOf(Token.Value) < 0)) then
+    begin
+      Result := Token as TEpithet;
+      Result.IsKeyword := false;
+      Result.IsIdent   := true;
+    end
+  else
+    Source.Restore(P);
 end;
 
 function TStatement.Number: TNumber;
@@ -315,15 +332,22 @@ begin
     Source.Restore(P);
 end;
 
-function TStatement.Concat(Params: array of TToken): string;
-var i: integer;
+function TStatement.Concat(Params: array of TObject): string;
+var
+  i: integer;
+  S: string;
 begin
   Result := '';
   for i := Low(Params) to High(Params) do
-    if Assigned(Params[i]) then
+  begin
+    S := '';
+    if Params[i] is TToken then S := TToken(Params[i]).Value;
+    if Params[i] is TStatement then S := TStatement(Params[i]).StatementName;
+    if S <> '' then
       if Result = ''
-        then Result := Params[i].Value
-        else Result := Trim(Result + ' ' + Params[i].Value);
+        then Result := S
+        else Result := Trim(Result + ' ' + S);
+  end;
 end;
 
 function TStatement.GetSettings: TFormatSettings;

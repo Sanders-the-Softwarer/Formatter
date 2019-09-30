@@ -21,6 +21,17 @@ unit Parser;
   проходит в файлах DDL, DML, PLSQL, Expressions, а модуль Parser и класс
   TParser являются по сути только точкой входа.
 
+  Ввиду того, что идентификаторы и ключевые слова слиты в единую конструкцию
+  TEpithet, существует вероятность ошибочного распознавания конструкций,
+  начинающихся с идентификаторов - описаний переменных, операторов присваивания
+  и т. п. Для того, чтобы этого не происходило, в методах TParse.ParseXXXXX
+  следует чётко следить затем, чтобы в перечислении пробовались конструкции в
+  порядке от менее свободных к более свободным, например, сначала определение
+  типа (чтобы ключевое слово type не было ошибочно распознано как имя
+  переменной), при неудаче - определение исключения (чтобы ключевое слово
+  exception не было ошибочно распознано как тип переменной), и только потом,
+  когда не останется других вариантов - собственно декларация переменной.
+
 ------------------------------------------------------------------------------ }
 
 interface
@@ -38,8 +49,8 @@ type
     constructor Create(AStream: TBufferedStream<TToken>; ASettings: TFormatSettings);
     class function ParseDML(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseDDL(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+    class function ParsePLSQL(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseCreation(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-    class function ParseOperator(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseDeclaration(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseType(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseAny(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
@@ -81,20 +92,10 @@ begin
             TComments.Parse(AParent, ASource, AResult);
 end;
 
-{ Разбор объектов, создаваемых командой create }
-class function TParser.ParseCreation(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-begin
-  Result := TPackage.Parse(AParent, ASource, AResult) or
-            TSubroutine.Parse(AParent, ASource, AResult) or
-            TView.Parse(AParent, ASource, AResult);
-end;
-
 { Разбор операторов PL/SQL }
-class function TParser.ParseOperator(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+class function TParser.ParsePLSQL(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
-  Result := ParseDML(AParent, ASource, AResult) or
-            TAssignment.Parse(AParent, ASource, AResult) or
-            TReturn.Parse(AParent, ASource, AResult) or
+  Result := TReturn.Parse(AParent, ASource, AResult) or
             TNull.Parse(AParent, ASource, AResult) or
             TRaise.Parse(AParent, ASource, AResult) or
             TIf.Parse(AParent, ASource, AResult) or
@@ -109,18 +110,27 @@ begin
             TPipeRow.Parse(AParent, ASource, AResult) or
             TClose.Parse(AParent, ASource, AResult) or
             TExecuteImmediate.Parse(AParent, ASource, AResult) or
-            TProcedureCall.Parse(AParent, ASource, AResult) or
-            TAnonymousBlock.Parse(AParent, ASource, AResult);
+            TAnonymousBlock.Parse(AParent, ASource, AResult) or
+            TAssignment.Parse(AParent, ASource, AResult) or
+            TProcedureCall.Parse(AParent, ASource, AResult);
+end;
+
+{ Разбор объектов, создаваемых командой create }
+class function TParser.ParseCreation(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+begin
+  Result := TPackage.Parse(AParent, ASource, AResult) or
+            TSubroutine.Parse(AParent, ASource, AResult) or
+            TView.Parse(AParent, ASource, AResult);
 end;
 
 { Разбор деклараций (переменных, процедур, типов, курсоров, прагм и т. п. }
 class function TParser.ParseDeclaration(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
-  Result := TSubroutineForwardDeclaration.Parse(AParent, ASource, AResult) or
-            TSubroutine.Parse(AParent, ASource, AResult) or
-            TPragma.Parse(AParent, ASource, AResult) or
-            TType.Parse(AParent, ASource, AResult) or
+  Result := TType.Parse(AParent, ASource, AResult) or
             TCursor.Parse(AParent, ASource, AResult) or
+            TPragma.Parse(AParent, ASource, AResult) or
+            TSubroutineForwardDeclaration.Parse(AParent, ASource, AResult) or
+            TSubroutine.Parse(AParent, ASource, AResult) or
             TExceptionDeclaration.Parse(AParent, ASource, AResult) or
             TVariableDeclarations.Parse(AParent, ASource, AResult);
 end;
@@ -135,11 +145,12 @@ end;
 { Разбор произвольной заранее неизвестной конструкции }
 class function TParser.ParseAny(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
-  Result := ParseOperator(AParent, ASource, AResult) or
+  Result := ParseDDL(AParent, ASource, AResult) or
+            ParseDML(AParent, ASource, AResult) or
+            ParsePLSQL(AParent, ASource, AResult) or
             ParseDeclaration(AParent, ASource, AResult) or
             ParseCreation(AParent, ASource, AResult) or
             ParseType(AParent, ASource, AResult) or
-            ParseDDL(AParent, ASource, AResult) or
             TAnonymousBlock.Parse(AParent, ASource, AResult) or
             TExpression.Parse(AParent, ASource, AResult);
 end;

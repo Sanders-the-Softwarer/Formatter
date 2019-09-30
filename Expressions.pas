@@ -31,15 +31,14 @@ type
   { Элемент выражения }
   TTerm = class(TStatement)
   strict private
-    _KPrefix: TKeyword;
-    _TPrefix: TTerminal;
+    _Prefix: TToken;
     _Star: TTerminal;
     _Number: TNumber;
     _Literal: TLiteral;
     _SQLStatement: TStatement;
     _LValue: TStatement;
     _Suffix: TTerminal;
-    _KeywordValue: TKeyword;
+    _KeywordValue: TEpithet;
     _Select: TStatement;
     _OpenBracket: TTerminal;
     _Expression: TStatement;
@@ -47,7 +46,7 @@ type
     _Case: TStatement;
     _Cast: TStatement;
     _OuterJoin: TTerminal;
-    _Postfix: TKeyword;
+    _Postfix: TEpithet;
   strict protected
     function InternalParse: boolean; override;
     function AllowStar: boolean;
@@ -69,7 +68,7 @@ type
   TQualifiedIdent = class(TStatement)
   strict private
     _Dot: TTerminal;
-    _Name: TIdent;
+    _Name: TEpithet;
     _Next: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -81,7 +80,7 @@ type
   { Вызов функции }
   TFunctionCall = class(TStatement)
   strict private
-    _Name: TIdent;
+    _Name: TStatement;
     _OpenBracket: TTerminal;
     _Arguments: TStatement;
     _CloseBracket: TTerminal;
@@ -96,7 +95,7 @@ type
 
   TLValueItem = class(TStatement)
   strict private
-    _Ident: TIdent;
+    _Ident: TEpithet;
     _FunctionCall: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -118,7 +117,7 @@ type
   { Аргумент вызова подпрограммы }
   TArgument = class(TStatement)
   strict private
-    _Ident: TIdent;
+    _Ident: TEpithet;
     _Assignment: TTerminal;
     _Expression: TStatement;
   strict protected
@@ -145,10 +144,10 @@ type
   { Выражение case }
   TCase = class(TStatement)
   strict private
-    _Case: TKeyword;
+    _Case: TEpithet;
     _Expression: TStatement;
     _Sections: TStatement;
-    _End: TKeyword;
+    _End: TEpithet;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -158,10 +157,10 @@ type
   { Секция выражения case }
   TCaseSection = class(TStatement)
   strict private
-    _When: TKeyword;
+    _When: TEpithet;
     _Condition: TStatement;
-    _Then: TKeyword;
-    _Else: TKeyword;
+    _Then: TEpithet;
+    _Else: TEpithet;
     _Value: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -180,10 +179,10 @@ type
   { Выражение cast }
   TCast = class(TStatement)
   strict private
-    _Cast: TKeyword;
+    _Cast: TEpithet;
     _OpenBracket: TTerminal;
     _Expression: TStatement;
-    _As: TKeyword;
+    _As: TEpithet;
     _TypeRef: TStatement;
     _CloseBracket: TTerminal;
   strict protected
@@ -198,9 +197,12 @@ function TTerm.InternalParse: boolean;
 begin
   Result := false;
   { Префиксы }
-  _KPrefix := Keyword(['not', 'prior', 'distinct', 'unique', 'all']);
-  _TPrefix := Terminal(['-', '+']);
-  if Assigned(_TPrefix) then _TPrefix.OpType := otUnary;
+  _Prefix := Keyword(['not', 'prior', 'distinct', 'unique', 'all']);
+  if not Assigned(_Prefix) then
+  begin
+    _Prefix := Terminal(['-', '+']);
+    if Assigned(_Prefix) then TTerminal(_Prefix).OpType := otUnary;
+  end;
   try
     { Слагаемое может быть числом }
     _Number := Number;
@@ -263,7 +265,7 @@ end;
 
 procedure TTerm.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_KPrefix, _TPrefix, _Number, _Literal, _SQLStatement, _LValue, _Suffix, _KeywordValue, _Case, _Cast]);
+  APrinter.PrintItems([_Prefix, _Number, _Literal, _SQLStatement, _LValue, _Suffix, _KeywordValue, _Case, _Cast]);
   if Assigned(_Select) then
   begin
     APrinter.NextLine;
@@ -329,7 +331,7 @@ end;
 
 function TFunctionCall.InternalParse: boolean;
 begin
-  _Name := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _Name);
   _OpenBracket := Terminal('(');
   if not Assigned(_Name) or not Assigned(_OpenBracket) then exit(false);
   TArguments.Parse(Self, Source, _Arguments);
@@ -387,7 +389,7 @@ end;
 
 function TArguments.ParseBreak: boolean;
 begin
-  Result := Any([Terminal([';', ')'])]) or (Source.Next is TKeyword);
+  Result := Any([Terminal([';', ')'])]);
 end;
 
 function TArguments.MultiLine: boolean;
@@ -431,12 +433,7 @@ end;
 
 function TCaseSection.StatementName: string;
 begin
-  if Assigned(_When) then
-    Result := 'when'
-  else if Assigned(_Else) then
-    Result := 'else'
-  else
-    Result := '';
+  Result := Concat([_When, _Else]);
 end;
 
 procedure TCaseSection.PrintSelf(APrinter: TPrinter);

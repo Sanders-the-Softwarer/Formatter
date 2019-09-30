@@ -23,7 +23,7 @@ unit PLSQL;
 
 interface
 
-uses Windows, SysUtils, Math, Streams, Tokens, Statements, Expressions,
+uses Classes, Windows, SysUtils, Math, Streams, Tokens, Statements, Expressions,
   Printers_, Attributes;
 
 type
@@ -36,18 +36,19 @@ type
   strict private
     _Header: TStatement;
     _Declarations: TStatement;
-    _Begin: TKeyword;
+    _Begin: TEpithet;
     _Operators: TStatement;
-    _Exception: TKeyword;
+    _Exception: TEpithet;
     _ExceptionHandlers: TStatement;
-    _End: TKeyword;
-    _EndName: TIdent;
+    _End: TEpithet;
+    _EndName: TEpithet;
     _Semicolon: TTerminal;
     _Slash: TTerminal;
   strict protected
     property Header: TStatement read _Header;
     function GetHeaderClass: TStatementClass; virtual; abstract;
     function InternalParse: boolean; override;
+    function GetKeywords: TStrings; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
@@ -55,7 +56,7 @@ type
   { Заголовок анонимного блока }
   TAnonymousHeader = class(TStatement)
   strict private
-    _Declare: TKeyword;
+    _Declare: TEpithet;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -71,9 +72,9 @@ type
   { Заголовок пакета }
   TPackageHeader = class(TStatement)
   private {!strict}
-    _Package, _Body: TKeyword;
-    _PackageName: TIdent;
-    _Is: TKeyword;
+    _Package, _Body: TEpithet;
+    _PackageName: TEpithet;
+    _Is: TEpithet;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -91,13 +92,13 @@ type
   { Объявление подпрограммы }
   TSubroutineHeaderBase = class(TStatement)
   strict private
-    _Initial: TKeyword;
-    _Name: TIdent;
+    _Initial: TEpithet;
+    _Name: TEpithet;
     _Params: TStatement;
-    _Return: TKeyword;
+    _Return: TEpithet;
     _ReturnType: TStatement;
-    _Deterministic: TKeyword;
-    _Pipelined: TKeyword;
+    _Deterministic: TEpithet;
+    _Pipelined: TEpithet;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -109,7 +110,7 @@ type
   { Заголовок подпрограммы }
   TSubroutineHeader = class(TSubroutineHeaderBase)
   strict private
-    _Is: TKeyword;
+    _Is: TEpithet;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -139,14 +140,13 @@ type
   TTypeRef = class(TStatement)
   strict private
     _Ident: TStatement;
-    _Char: TKeyword;
     _Type: TTerminal;
     _RowType: TTerminal;
     _OpenBracket: TTerminal;
     _Size: TNumber;
     _Comma: TTerminal;
     _Precision: TNumber;
-    _Unit: TKeyword;
+    _Unit: TEpithet;
     _CloseBracket: TTerminal;
   strict protected
     function InternalParse: boolean; override;
@@ -157,13 +157,13 @@ type
   { Параметр подпрограммы }
   TParamDeclaration = class(TStatement)
   strict private
-    _ParamName: TIdent;
-    _In: TKeyword;
-    _Out: TKeyword;
-    _Nocopy: TKeyword;
+    _ParamName: TEpithet;
+    _In: TEpithet;
+    _Out: TEpithet;
+    _Nocopy: TEpithet;
     _ParamType: TStatement;
     _TAssignment: TTerminal;
-    _KAssignment: TKeyword;
+    _KAssignment: TEpithet;
     _DefaultValue: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -196,11 +196,10 @@ type
   { Объявление переменной }
   TVariableDeclaration = class(TSemicolonStatement)
   strict private
-    _Name: TIdent;
-    _Constant: TKeyword;
+    _Name: TEpithet;
+    _Constant: TEpithet;
     _Type: TStatement;
-    _TAssignment: TTerminal;
-    _KAssignment: TKeyword;
+    _Assignment: TToken;
     _Value: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -219,12 +218,12 @@ type
   { Курсор }
   TCursor = class(TSemicolonStatement)
   strict private
-    _Cursor: TKeyword;
-    _CursorName: TIdent;
+    _Cursor: TEpithet;
+    _CursorName: TEpithet;
     _Params: TStatement;
-    _Return: TKeyword;
+    _Return: TEpithet;
     _ReturnType: TStatement;
-    _Is: TKeyword;
+    _Is: TEpithet;
     _Select: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -235,8 +234,7 @@ type
   { Объявление исключения }
   TExceptionDeclaration = class(TSemicolonStatement)
   strict private
-    _Name: TIdent;
-    _Exception: TKeyword;
+    _Name, _Exception: TEpithet;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -277,7 +275,7 @@ type
   { Оператор return }
   TReturn = class(TSemicolonStatement)
   strict private
-    _Return: TKeyword;
+    _Return: TEpithet;
     _Value: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -288,7 +286,7 @@ type
   { Оператор null }
   TNull = class(TSemicolonStatement)
   strict private
-    _Null: TKeyword;
+    _Null: TEpithet;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -298,8 +296,7 @@ type
   { Оператор raise }
   TRaise = class(TSemicolonStatement)
   strict private
-    _Raise: TKeyword;
-    _ExceptionName: TIdent;
+    _Raise, _ExceptionName: TEpithet;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -309,10 +306,10 @@ type
   { Условный оператор }
   TIf = class(TSemicolonStatement)
   strict private
-    _If: TKeyword;
+    _If: TEpithet;
     _Condition: TStatement;
     _Sections: TStatement;
-    _EndIf: TKeyword;
+    _EndIf: TEpithet;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -322,9 +319,9 @@ type
   { Секция оператора if }
   TIfSection = class(TStatement)
   strict private
-    _Keyword: TKeyword;
+    _ThenOrElsifOrElse: TEpithet;
     _Condition: TStatement;
-    _Then: TKeyword;
+    _Then: TEpithet;
     _Statements: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -342,7 +339,7 @@ type
   { Секция оператора case }
   TCaseSection = class(TStatement)
   strict private
-    _When, _Then, _Else: TKeyword;
+    _When, _Then, _Else: TEpithet;
     _Condition: TStatement;
     _Body: TStatement;
   strict protected
@@ -354,7 +351,7 @@ type
   { Оператор case }
   TCase = class(TStatementList<TCaseSection>)
   strict private
-    _Case, _EndCase: TKeyword;
+    _Case, _EndCase: TEpithet;
     _Condition: TStatement;
     _Semicolon: TTerminal;
   strict protected
@@ -367,7 +364,7 @@ type
   { Оператор loop }
   TLoop = class(TStatements)
   strict private
-    _Loop, _EndLoop: TKeyword;
+    _Loop, _EndLoop: TEpithet;
     _Semicolon: TTerminal;
   strict protected
     function InternalParse: boolean; override;
@@ -378,16 +375,16 @@ type
   { Оператор for }
   TFor = class(TStatement)
   strict private
-    _For: TKeyword;
-    _Variable: TIdent;
-    _In: TKeyword;
-    _Reverse: TKeyword;
+    _For: TEpithet;
+    _Variable: TEpithet;
+    _In: TEpithet;
+    _Reverse: TEpithet;
     _Low: TStatement;
     _To: TTerminal;
     _High: TStatement;
     _Select: TStatement;
     _SCursor: TStatement;
-    _ICursor: TIdent;
+    _ICursor: TEpithet;
     _Loop: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -398,7 +395,7 @@ type
   { Оператор while }
   TWhile = class(TStatement)
   strict private
-    _While: TKeyword;
+    _While: TEpithet;
     _Condition: TStatement;
     _Loop: TStatement;
   strict protected
@@ -410,17 +407,17 @@ type
   { Оператор forall }
   TForAll = class(TSemicolonStatement)
   strict private
-    _ForAll: TKeyword;
-    _Variable: TIdent;
-    _In: TKeyword;
+    _ForAll: TEpithet;
+    _Variable: TEpithet;
+    _In: TEpithet;
     _Low: TStatement;
     _To: TTerminal;
     _High: TStatement;
-    _IndicesOrValues: TKeyword;
-    _Of: TKeyword;
+    _IndicesOrValues: TEpithet;
+    _Of: TEpithet;
     _TableName: TStatement;
-    _Save: TKeyword;
-    _Exceptions: TKeyword;
+    _Save: TEpithet;
+    _Exceptions: TEpithet;
     _DML: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -431,7 +428,7 @@ type
   { Оператор pipe row }
   TPipeRow = class(TSemicolonStatement)
   strict private
-    _Pipe, _Row: TKeyword;
+    _Pipe, _Row: TEpithet;
     _Arguments: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -442,9 +439,7 @@ type
   { Оператор open for }
   TOpenFor = class(TSemicolonStatement)
   strict private
-    _Open: TKeyword;
-    _Cursor: TIdent;
-    _For: TKeyword;
+    _Open, _Cursor, _For: TEpithet;
     _Select: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -455,9 +450,7 @@ type
   { Оператор fetch }
   TFetch = class(TSemicolonStatement)
   strict private
-    _Fetch: TKeyword;
-    _Cursor: TStatement;
-    _Into: TKeyword;
+    _Fetch, _Cursor, _Into: TEpithet;
     _Targets: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -468,7 +461,7 @@ type
   { Оператор close }
   TClose = class(TSemicolonStatement)
   strict private
-    _Close: TKeyword;
+    _Close: TEpithet;
     _Cursor: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -479,8 +472,7 @@ type
   { Оператор exit }
   TExit = class(TSemicolonStatement)
   strict private
-    _Exit: TKeyword;
-    _When: TKeyword;
+    _Exit, _When: TEpithet;
     _Condition: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -491,11 +483,11 @@ type
   { Оператор execute immediate }
   TExecuteImmediate = class(TSemicolonStatement)
   strict private
-    _ExecuteImmediate: TKeyword;
+    _Execute, _Immediate: TEpithet;
     _Command: TStatement;
-    _Into: TKeyword;
+    _Into: TEpithet;
     _IntoFields: TStatement;
-    _Using: TKeyword;
+    _Using: TEpithet;
     _UsingFields: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -506,9 +498,9 @@ type
   { Блок обработки исключений }
   TExceptionHandler = class(TStatement)
   strict private
-    _When: TKeyword;
+    _When: TEpithet;
     _Condition: TStatement;
-    _Then: TKeyword;
+    _Then: TEpithet;
     _Body: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -526,7 +518,7 @@ type
   { Декларация pragma }
   TPragma = class(TSemicolonStatement)
   strict private
-    _Pragma: TKeyword;
+    _Pragma: TEpithet;
     _Body: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -537,9 +529,7 @@ type
   { Декларация типа }
   TType = class(TSemicolonStatement)
   strict private
-    _Type: TKeyword;
-    _TypeName: TIdent;
-    _Is: TKeyword;
+    _Type, _TypeName, _Is: TEpithet;
     _Body: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -552,7 +542,7 @@ type
   [Aligned]
   TRecord = class(TCommaList<TVariableDeclaration>)
   strict private
-    _Record: TKeyword;
+    _Record: TEpithet;
     _OpenBracket, _CloseBracket: TTerminal;
   strict protected
     function InternalParse: boolean; override;
@@ -564,11 +554,9 @@ type
   { Декларация табличного типа }
   TTable = class(TStatement)
   strict private
-    _Table: TKeyword;
-    _Of: TKeyword;
+    _Table, _Of: TEpithet;
     _TypeRef: TStatement;
-    _Index: TKeyword;
-    _By: TKeyword;
+    _Index, _By: TEpithet;
     _IndexType: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -579,6 +567,9 @@ type
 implementation
 
 uses Parser, DML;
+
+var
+  Keywords: TStringList;
 
 { TProgramBlock }
 
@@ -627,6 +618,11 @@ begin
   APrinter.NextLine;
 end;
 
+function TProgramBlock.GetKeywords: TStrings;
+begin
+  Result := Keywords;
+end;
+
 { TPackageHeader }
 
 function TPackageHeader.InternalParse: boolean;
@@ -653,12 +649,7 @@ end;
 
 function TPackage.StatementName: string;
 begin
-  with Header as TPackageHeader do
-  begin
-    if Assigned(_Package) then Result := _Package.Value + ' ';
-    if Assigned(_Body) then Result := Result + _Body.Value + ' ';
-    if Assigned(_PackageName) then Result := Result + _PackageName.Value + ' ';
-  end;
+  Result := Header.StatementName;
 end;
 
 function TPackage.GetHeaderClass: TStatementClass;
@@ -719,8 +710,7 @@ function TTypeRef.InternalParse: boolean;
 begin
   { Если распознали идентификатор, тип данных распознан }
   TQualifiedIdent.Parse(Self, Source, _Ident);
-  if not Assigned(_Ident) then _Char := Keyword('char');
-  if not Assigned(_Ident) and not Assigned(_Char) then exit(false);
+  if not Assigned(_Ident) then exit(false);
   { Проверим %[row]type }
   _Type := Terminal('%type');
   _RowType := Terminal('%rowtype');
@@ -743,7 +733,7 @@ end;
 
 procedure TTypeRef.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Ident, _Char, _Type, _RowType, _OpenBracket, _Size, _Comma, _Precision, _Unit, _CloseBracket]);
+  APrinter.PrintItems([_Ident, _Type, _RowType, _OpenBracket, _Size, _Comma, _Precision, _Unit, _CloseBracket]);
 end;
 
 { TParamDeclaration }
@@ -764,7 +754,7 @@ end;
 
 function TParamDeclaration.StatementName: string;
 begin
-  Result := _ParamName.Value;
+  Result := Concat([_ParamName]);
 end;
 
 procedure TParamDeclaration.PrintSelf(APrinter: TPrinter);
@@ -792,7 +782,7 @@ end;
 
 function TParamsDeclaration.ParseBreak: boolean;
 begin
-  Result := Any([Terminal(')')]) or (Source.Next is TKeyword);
+  Result := Any([Terminal(')')]);
 end;
 
 function TParamsDeclaration.MultiLine: boolean;
@@ -833,16 +823,16 @@ begin
   { Теперь тип и значение }
   if not TTypeRef.Parse(Self, Source, _Type) then exit(false);
   { Осталось значение и т. п. }
-  _TAssignment := Terminal(':=');
-  if not Assigned(_TAssignment) then _KAssignment := Keyword('default');
-  if Assigned(_TAssignment) or Assigned (_KAssignment) then TExpression.Parse(Self, Source, _Value);
+  _Assignment := Terminal(':=');
+  if not Assigned(_Assignment) then _Assignment := Keyword('default');
+  if Assigned(_Assignment) then TExpression.Parse(Self, Source, _Value);
   inherited;
   Result := true;
 end;
 
 function TVariableDeclaration.StatementName: string;
 begin
-  Result := _Name.Value;
+  Result := Concat([_Name]);
 end;
 
 procedure TVariableDeclaration.PrintSelf(APrinter: TPrinter);
@@ -852,18 +842,16 @@ begin
   APrinter.PrintItem(_Constant);
   APrinter.Ruler('constant', Settings.AlignVariables);
   APrinter.PrintItem(_Type);
-  APrinter.Ruler('type', Settings.AlignVariables and (Assigned(_TAssignment) or Assigned(_KAssignment)));
-  APrinter.PrintItems([_TAssignment, _KAssignment, _Value]);
+  APrinter.Ruler('type', Settings.AlignVariables and (Assigned(_Assignment)));
+  APrinter.PrintItems([_Assignment, _Value]);
   inherited;
 end;
 
 { TVariableDeclarations }
 
 function TVariableDeclarations.ParseBreak: boolean;
-var T: TToken;
 begin
-  T := NextToken;
-  Result := (T is TKeyword) or (T is TIdent);
+  Result := true;
 end;
 
 { TProcedureCall }
@@ -969,7 +957,8 @@ end;
 
 function TStatements.ParseStatement(out AResult: TStatement): boolean;
 begin
-  Result := TParser.ParseOperator(Self, Source, AResult);
+  Result := TParser.ParseDML(Self, Source, AResult) or
+            TParser.ParsePLSQL(Self, Source, AResult);
 end;
 
 function TStatements.ParseDelimiter(out AResult: TObject): boolean;
@@ -1113,9 +1102,9 @@ end;
 
 function TIfSection.InternalParse: boolean;
 begin
-  _Keyword := Keyword(['then', 'elsif', 'else']);
-  if not Assigned(_Keyword) then exit(false);
-  if _Keyword.Value = 'elsif' then
+  _ThenOrElsifOrElse := Keyword(['then', 'elsif', 'else']);
+  if not Assigned(_ThenOrElsifOrElse) then exit(false);
+  if _ThenOrElsifOrElse.Value = 'elsif' then
   begin
     TExpression.Parse(Self, Source, _Condition);
     _Then := Keyword('then');
@@ -1126,12 +1115,12 @@ end;
 
 function TIfSection.StatementName: string;
 begin
-  Result := _Keyword.Value;
+  Result := Concat([_ThenOrElsifOrElse]);
 end;
 
 procedure TIfSection.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Keyword, _Condition, _Then]);
+  APrinter.PrintItems([_ThenOrElsifOrElse, _Condition, _Then]);
   APrinter.NextLine;
   APrinter.Indent;
   APrinter.PrintItem(_Statements);
@@ -1288,11 +1277,7 @@ end;
 
 function TType.StatementName: string;
 begin
-  if Assigned(_Type)
-    then Result := _Type.Value
-    else Result := '';
-  if Assigned(_TypeName) then
-    Result := Trim(Result + ' ' + _TypeName.Value);
+  Result := Concat([_Type, _TypeName]);
 end;
 
 { TRecord }
@@ -1309,7 +1294,7 @@ end;
 
 function TRecord.ParseBreak: boolean;
 begin
-  Result := Any([Terminal([';', ')'])]) or (NextToken is TKeyword);
+  Result := Any([Terminal([';', ')'])]);
 end;
 
 procedure TRecord.PrintSelf(APrinter: TPrinter);
@@ -1487,7 +1472,7 @@ function TFetch.InternalParse: boolean;
 begin
   _Fetch := Keyword('fetch');
   if not Assigned(_Fetch) then exit(false);
-  TLValue.Parse(Self, Source, _Cursor);
+  _Cursor := Identifier;
   _Into := Keyword('into');
   TIdentFields.Parse(Self, Source, _Targets);
   inherited;
@@ -1543,8 +1528,9 @@ end;
 
 function TExecuteImmediate.InternalParse: boolean;
 begin
-  _ExecuteImmediate := Keyword('execute immediate');
-  if not Assigned(_ExecuteImmediate) then exit(false);
+  _Execute := Keyword('execute');
+  if not Assigned(_Execute) then exit(false);
+  _Immediate := Keyword('immediate');
   TExpression.Parse(Self, Source, _Command);
   _Into := Keyword('into');
   if Assigned(_Into) then TIdentFields.Parse(Self, Source, _IntoFields);
@@ -1556,7 +1542,7 @@ end;
 
 procedure TExecuteImmediate.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_ExecuteImmediate);
+  APrinter.PrintItems([_Execute, _Immediate]);
   APrinter.PrintIndented(_Command);
   APrinter.NextLine;
   APrinter.PrintItem(_Into);
@@ -1565,5 +1551,19 @@ begin
   APrinter.PrintIndented(_UsingFields);
   inherited;
 end;
+
+initialization
+  Keywords := TStringList.Create;
+  Keywords.Sorted := true;
+  Keywords.Duplicates := dupIgnore;
+  Keywords.CaseSensitive := false;
+  Keywords.Add('begin');
+  Keywords.Add('end');
+  Keywords.Add('function');
+  Keywords.Add('procedure');
+  Keywords.Add('type');
+
+finalization
+  FreeAndNil(Keywords);
 
 end.

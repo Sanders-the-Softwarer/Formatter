@@ -29,16 +29,9 @@ unit Tokenizer;
   значимой лексеме. После реализации других частей кода это место будет
   доработано.
 
-  Для ключевого слова end предусмотрена особая обработка - делается попытка
-  соединить его со следующим ключевым словом в одну комбинацию (end if, end
-  loop и т. п.) Это позволяет проще и надёжнее описывать грамматику, в том
-  числе в случае ошибок парсинга анализ программного блока не завершается на
-  первом попавшемся end, что позволяет корректнее продолжить обработку.
-
-  Какой-то извращенец назвал одну из пакетных процедур delete. Для того, чтобы
-  с минимальными усилиями обработать этот случай, добавлен поток, который
-  отлавливает подобные места и превращает delete из ключевого слова в
-  идентификатор.
+  Для удобства работы с многословными синтаксическими конструкциями (end if,
+  full outer join, when not matched then и т. п.) предусмотрен специальный
+  поток, который находит подобные идиомы и собирает их воедино.
 
 ------------------------------------------------------------------------------ }
 
@@ -80,18 +73,7 @@ type
     function InternalNext: TToken; override;
   end;
 
-  { Класс обрабатывает идиотский случай "procedure delete" }
-  TProcedureDeleteStream = class(TNextStream<TToken, TToken>)
-  strict private
-    PrevProcedure: boolean;
-  strict protected
-    function InternalNext: TToken; override;
-  end;
-
 implementation
-
-var
-  Keywords: TStringList;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -289,9 +271,7 @@ begin
   else if ParseTerminal then
     Result := TTerminal.Create(TokenValue, Start)
   else if ParseIdent then
-    if Keywords.IndexOf(TokenValue) >= 0
-      then Result := TKeyword.Create(TokenValue, Start)
-      else Result := TIdent.Create(TokenValue, Start)
+    Result := TEpithet.Create(TokenValue, Start)
   else if ParseNumber then
     Result := TNumber.Create(TokenValue, Start)
   else if ParseLiteral then
@@ -389,10 +369,10 @@ function TMerger.InternalNext: TToken;
   function Check(var AResult: TToken; const S1, S2: string; const S3: string = ''; const S4: string = ''): boolean;
   var S: string;
   begin
-    if not (T1 is TKeyword) or not SameText(S1, T1.Value) then exit(false);
-    if not (T2 is TKeyword) or not SameText(S2, T2.Value) then exit(false);
-    if (S3 <> '') and not (T3 is TKeyword) and not SameText(S3, T3.Value) then exit(false);
-    if (S4 <> '') and not (T4 is TKeyword) and not SameText(S4, T4.Value) then exit(false);
+    if not (T1 is TEpithet) or not SameText(S1, T1.Value) then exit(false);
+    if not (T2 is TEpithet) or not SameText(S2, T2.Value) then exit(false);
+    if (S3 <> '') and not (T3 is TEpithet) and not SameText(S3, T3.Value) then exit(false);
+    if (S4 <> '') and not (T4 is TEpithet) and not SameText(S4, T4.Value) then exit(false);
     S := S1 + ' ' + S2;
     if S3 <> ''
       then S := S + ' ' + S3
@@ -401,7 +381,7 @@ function TMerger.InternalNext: TToken;
       then S := S + ' ' + S4
       else
         if S3 <> '' then Source.Restore(P4);
-    AResult := TKeyword.Create(S, T1.Line, T1.Col);
+    AResult := TEpithet.Create(S, T1.Line, T1.Col);
     Result := true;
   end;
 
@@ -422,7 +402,6 @@ begin
   if Check(Result, 'end', 'case') then exit;
   if Check(Result, 'end', 'if') then exit;
   if Check(Result, 'end', 'loop') then exit;
-  if Check(Result, 'execute', 'immediate') then exit;
   if Check(Result, 'inner', 'join') then exit;
   if Check(Result, 'is', 'not', 'null') then exit;
   if Check(Result, 'is', 'null') then exit;
@@ -449,148 +428,5 @@ begin
   Source.Restore(P2);
   Result := Transit(T1);
 end;
-
-{ TProcedureDeleteStream }
-
-function TProcedureDeleteStream.InternalNext: TToken;
-begin
-  Result := Source.Next;
-  { Если предыдущее слово procedure, заменим delete на идентификатор, а всё остальное оставим как есть }
-  if PrevProcedure and (Result is TKeyword) and (SameText(Result.Value, 'delete') or SameText(Result.Value, 'save'))
-    then Result := TIdent.Create(Result.Value, Result.Line, Result.Col)
-    else Transit(Result);
-  { Взведём флаг для следующей лексемы }
-  PrevProcedure := (Result is TKeyword) and SameText(Result.Value, 'procedure');
-end;
-
-initialization
-  Keywords := TStringList.Create;
-  Keywords.Sorted := true;
-  Keywords.Duplicates := dupIgnore;
-  Keywords.CaseSensitive := false;
-  { Заполним список ключевых слов }
-  Keywords.Add('all');
-  Keywords.Add('and');
-  Keywords.Add('apply');
-  Keywords.Add('as');
-  Keywords.Add('asc');
-  Keywords.Add('begin');
-  Keywords.Add('between');
-  Keywords.Add('body');
-  Keywords.Add('bulk');
-  Keywords.Add('by');
-  Keywords.Add('byte');
-  Keywords.Add('case');
-  Keywords.Add('cast');
-  Keywords.Add('char');
-  Keywords.Add('close');
-  Keywords.Add('collect');
-  Keywords.Add('column');
-  Keywords.Add('comment');
-  Keywords.Add('connect');
-  Keywords.Add('constant');
-  Keywords.Add('create');
-  Keywords.Add('cross');
-  Keywords.Add('cursor');
-  Keywords.Add('declare');
-  Keywords.Add('default');
-  Keywords.Add('delete');
-  Keywords.Add('desc');
-  Keywords.Add('deterministic');
-  Keywords.Add('distinct');
-  Keywords.Add('else');
-  Keywords.Add('elsif');
-  Keywords.Add('end');
-  Keywords.Add('except');
-  Keywords.Add('exception');
-  Keywords.Add('exceptions');
-  Keywords.Add('execute');
-  Keywords.Add('exists');
-  Keywords.Add('exit');
-  Keywords.Add('false');
-  Keywords.Add('fetch');
-  Keywords.Add('first');
-  Keywords.Add('for');
-  Keywords.Add('forall');
-  Keywords.Add('force');
-  Keywords.Add('from');
-  Keywords.Add('full');
-  Keywords.Add('function');
-  Keywords.Add('group');
-  Keywords.Add('having');
-  Keywords.Add('if');
-  Keywords.Add('immediate');
-  Keywords.Add('in');
-  Keywords.Add('index');
-  Keywords.Add('indices');
-  Keywords.Add('inner');
-  Keywords.Add('intersect');
-  Keywords.Add('into');
-  Keywords.Add('insert');
-  Keywords.Add('is');
-  Keywords.Add('join');
-  Keywords.Add('keep');
-  Keywords.Add('last');
-  Keywords.Add('lateral');
-  Keywords.Add('left');
-  Keywords.Add('like');
-  Keywords.Add('loop');
-  Keywords.Add('matched');
-  Keywords.Add('merge');
-  Keywords.Add('minus');
-  Keywords.Add('multiset');
-  Keywords.Add('nocopy');
-  Keywords.Add('not');
-  Keywords.Add('null');
-  Keywords.Add('nulls');
-  Keywords.Add('of');
-  Keywords.Add('on');
-  Keywords.Add('open');
-  Keywords.Add('or');
-  Keywords.Add('order');
-  Keywords.Add('out');
-  Keywords.Add('outer');
-  Keywords.Add('over');
-  Keywords.Add('overflow');
-  Keywords.Add('package');
-  Keywords.Add('partition');
-  Keywords.Add('pipe');
-  Keywords.Add('pipelined');
-  Keywords.Add('pragma');
-  Keywords.Add('prior');
-  Keywords.Add('procedure');
-  Keywords.Add('raise');
-  Keywords.Add('record');
-  Keywords.Add('replace');
-  Keywords.Add('return');
-  Keywords.Add('returning');
-  Keywords.Add('reverse');
-  Keywords.Add('right');
-  Keywords.Add('row');
-  Keywords.Add('save');
-  Keywords.Add('select');
-  Keywords.Add('set');
-  Keywords.Add('siblings');
-  Keywords.Add('start');
-  Keywords.Add('table');
-  Keywords.Add('then');
-  Keywords.Add('true');
-  Keywords.Add('truncate');
-  Keywords.Add('type');
-  Keywords.Add('union');
-  Keywords.Add('unique');
-  Keywords.Add('update');
-  Keywords.Add('using');
-  Keywords.Add('values');
-  Keywords.Add('view');
-  Keywords.Add('with');
-  Keywords.Add('within');
-  Keywords.Add('without');
-  Keywords.Add('when');
-  Keywords.Add('where');
-  Keywords.Add('while');
-
-finalization
-  FreeAndNil(Keywords);
 
 end.

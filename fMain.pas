@@ -108,7 +108,7 @@ begin
   Settings.AlignTableColumnComments        := checkAlignTableColumnComments.Checked;
   Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
   { Создадим потоки }
-  TokenStream     := TMerger.Create(TProcedureDeleteStream.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(edSrc.Text))))));
+  TokenStream     := TMerger.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(edSrc.Text)))));
   StatementStream := TParser.Create(TCommentProcessor.Create(TokenStream), Settings);
   { Напечатаем данные }
   StatementStream.PrintAll(ResultPrinter);

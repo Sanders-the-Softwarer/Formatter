@@ -19,7 +19,7 @@ type
   { Команда create [or replace] }
   TCreate = class(TStatement)
   strict private
-    _Create, _Or, _Replace, _Force: TKeyword;
+    _Create, _Or, _Replace, _Force: TEpithet;
     _What: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -31,9 +31,9 @@ type
   { Объект view }
   TView = class(TStatement)
   strict private
-    _View: TKeyword;
-    _ViewName: TIdent;
-    _As: TKeyword;
+    _View: TEpithet;
+    _ViewName: TEpithet;
+    _As: TEpithet;
     _Select: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -45,9 +45,9 @@ type
   { Команда comment }
   TComment = class(TSemicolonStatement)
   strict private
-    _Comment, _On, _TableOrColumn: TKeyword;
+    _Comment, _On, _TableOrColumn: TEpithet;
     _Name: TStatement;
-    _Is: TKeyword;
+    _Is: TEpithet;
     _Text: TLiteral;
   strict protected
     function InternalParse: boolean; override;
@@ -58,7 +58,7 @@ type
   { Группа комментариев }
   [Aligned]
   TComments = class(TStatementList<TComment>)
-  strict private
+  strict protected
     function ParseBreak: boolean; override;
   end;
 
@@ -91,9 +91,7 @@ end;
 
 function TCreate.StatementName: string;
 begin
-  Result := '';
-  if Assigned(_What) then Result := _What.StatementName;
-  if Result <> '' then Result := 'create ' + Result;
+  Result := Concat([_Create, _Or, _Replace, _Force, _What]);
 end;
 
 { TView }
@@ -116,9 +114,7 @@ end;
 
 function TView.StatementName: string;
 begin
-  if Assigned(_ViewName)
-    then Result := 'view ' + _ViewName.Value
-    else Result := '';
+  Result := Concat([_View, _ViewName]);
 end;
 
 { TComment }

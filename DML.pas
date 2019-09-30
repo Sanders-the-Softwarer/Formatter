@@ -12,20 +12,26 @@ unit DML;
 
 interface
 
-uses SysUtils, Math, Tokens, Statements, Printers_, Attributes;
+uses Classes, SysUtils, Math, Tokens, Statements, Printers_, Attributes;
 
 type
 
+  { Общий предок DML-операторов }
+  TDML = class(TSemicolonStatement)
+  strict protected
+    function GetKeywords: TStrings; override;
+  end;
+
   { Оператор select }
-  TSelect = class(TSemicolonStatement)
+  TSelect = class(TDML)
   strict private
     _With: TStatement;
-    _Select: TKeyword;
-    _Mode: TKeyword;
+    _Select: TEpithet;
+    _Mode: TEpithet;
     _Fields: TStatement;
-    _Into: TKeyword;
+    _Into: TEpithet;
     _IntoFields: TStatement;
-    _From: TKeyword;
+    _From: TEpithet;
     _Tables: TStatement;
     _Where: TStatement;
     _StartWith: TStatement;
@@ -42,16 +48,16 @@ type
   end;
 
   { Оператор insert }
-  TInsert = class(TSemicolonStatement)
+  TInsert = class(TDML)
   strict private
-    _Insert: TKeyword;
-    _Into: TKeyword;
+    _Insert: TEpithet;
+    _Into: TEpithet;
     _Table: TStatement;
     _OpenBracket: TTerminal;
     _Fields: TStatement;
     _CloseBracket: TTerminal;
     _Select: TStatement;
-    _Values: TKeyword;
+    _Values: TEpithet;
     _OpenBracket2: TTerminal;
     _ValueList: TStatement;
     _CloseBracket2: TTerminal;
@@ -63,11 +69,11 @@ type
   end;
 
   { Оператор update }
-  TUpdate = class(TSemicolonStatement)
+  TUpdate = class(TDML)
   strict private
-    _Update: TKeyword;
+    _Update: TEpithet;
     _Table: TStatement;
-    _Set: TKeyword;
+    _Set: TEpithet;
     _Assignments: TStatement;
     _Where: TStatement;
     _Returning: TStatement;
@@ -78,10 +84,10 @@ type
   end;
 
   { Оператор delete }
-  TDelete = class(TSemicolonStatement)
+  TDelete = class(TDML)
   strict private
-    _Delete: TKeyword;
-    _From: TKeyword;
+    _Delete: TEpithet;
+    _From: TEpithet;
     _Table: TStatement;
     _Where: TStatement;
   strict protected
@@ -91,18 +97,18 @@ type
   end;
 
   { Оператор merge }
-  TMerge = class(TSemicolonStatement)
+  TMerge = class(TDML)
   strict private
-    _Merge: TKeyword;
-    _Into: TKeyword;
+    _Merge: TEpithet;
+    _Into: TEpithet;
     _DestSelect: TStatement;
-    _DestTable: TIdent;
-    _DestAlias: TIdent;
-    _Using: TKeyword;
+    _DestTable: TEpithet;
+    _DestAlias: TEpithet;
+    _Using: TEpithet;
     _SourceSelect: TStatement;
-    _SourceTable: TIdent;
-    _SourceAlias: TIdent;
-    _On: TKeyword;
+    _SourceTable: TEpithet;
+    _SourceAlias: TEpithet;
+    _On: TEpithet;
     _Condition: TStatement;
     _Sections: TStatement;
   strict protected
@@ -150,6 +156,9 @@ implementation
 
 uses Expressions;
 
+var
+  Keywords: TStringList;
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //                         Общие элементы конструкций                         //
@@ -173,7 +182,7 @@ type
   { Условие exists }
   TExists = class(TInnerSelect)
   strict private
-    _Exists: TKeyword;
+    _Exists: TEpithet;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -183,7 +192,7 @@ type
   { Конструкция within group }
   TWithinGroup = class(TStatement)
   strict private
-    _Within, _Group: TKeyword;
+    _Within, _Group: TEpithet;
     _OrderBy: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -194,10 +203,9 @@ type
   { Конструкция over }
   TOver = class(TStatement)
   strict private
-    _Over: TKeyword;
+    _Over: TEpithet;
     _OpenBracket: TTerminal;
-    _Partition: TKeyword;
-    _By: TKeyword;
+    _Partition, _By: TEpithet;
     _PartitionFields: TStatement;
     _OrderBy: TStatement;
     _CloseBracket: TTerminal;
@@ -210,10 +218,10 @@ type
   { Конструкция keep }
   TKeep = class(TStatement)
   strict private
-    _Keep: TKeyword;
+    _Keep: TEpithet;
     _OpenBracket: TTerminal;
-    _Rank: TIdent;
-    _FirstOrLast: TKeyword;
+    _Rank: TEpithet;
+    _FirstOrLast: TEpithet;
     _OrderBy: TStatement;
     _CloseBracket: TTerminal;
   strict protected
@@ -238,15 +246,14 @@ type
   { Спецфункция listagg }
   TListagg = class(TStatement)
   strict private
-    _ListAgg: TIdent;
+    _ListAgg: TEpithet;
     _OpenBracket: TTerminal;
     _Expression: TStatement;
     _Comma: TTerminal;
     _Delimiter: TLiteral;
-    _On, _Overflow, _Truncate: TKeyword;
+    _On, _Overflow, _Truncate: TEpithet;
     _OverflowTag: TLiteral;
-    _Without: TKeyword;
-    _Count: TIdent;
+    _Without, _Count: TEpithet;
     _CloseBracket: TTerminal;
   strict protected
     function InternalParse: boolean; override;
@@ -258,9 +265,7 @@ type
   TOrderByItem = class(TStatement)
   strict private
     _Expression: TStatement;
-    _Nulls: TKeyword;
-    _Position: TKeyword;
-    _Direction: TKeyword;
+    _Nulls, _Position, _Direction: TEpithet;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -270,7 +275,7 @@ type
   { Выражение order by }
   TOrderBy = class(TCommaList<TOrderByItem>)
   strict private
-    _Order, _Siblings, _By: TKeyword;
+    _Order, _Siblings, _By: TEpithet;
   strict protected
     function InternalParse: boolean; override;
     function ParseBreak: boolean; override;
@@ -303,7 +308,7 @@ type
   { Конструкция where }
   TWhere = class(TStatement)
   strict private
-    _Where: TKeyword;
+    _Where: TEpithet;
     _Condition: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -314,9 +319,9 @@ type
   { Конструкция returning }
   TReturning = class(TStatement)
   strict private
-    _Returning: TKeyword;
+    _Returning: TEpithet;
     _ReturningFields: TStatement;
-    _Into: TKeyword;
+    _Into: TEpithet;
     _Targets: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -328,17 +333,24 @@ type
   TTableRef = class(TStatement)
   strict private
     _Select: TStatement;
-    _Table: TKeyword;
+    _Table: TEpithet;
     _OpenBracket: TTerminal;
-    _TableName: TIdent;
+    _TableName: TEpithet;
     _CloseBracket: TTerminal;
-    _Alias: TIdent;
+    _Alias: TEpithet;
   strict protected
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
     function StatementName: string; override;
   end;
+
+{ TDML }
+
+function TDML.GetKeywords: TStrings;
+begin
+  Result := Keywords;
+end;
 
 { TSQLTerm }
 
@@ -517,7 +529,7 @@ end;
 
 function TIdentFields.ParseBreak: boolean;
 begin
-  Result := not (NextToken is TIdent);
+  Result := Any([Terminal([')', ';']), Keyword(['from', 'values'])]);
 end;
 
 { TSLIdentFields }
@@ -556,7 +568,7 @@ end;
 
 function TOrderBy.ParseBreak: boolean;
 begin
-  Result := Any([Terminal([';', ')'])]) or (Source.Next is TKeyword);
+  Result := Any([Terminal([';', ')'])]);
 end;
 
 procedure TOrderBy.PrintSelf(APrinter: TPrinter);
@@ -594,7 +606,7 @@ end;
 
 function TExpressionFields.ParseBreak: boolean;
 begin
-  Result := not (NextToken is TIdent);
+  Result := true;
 end;
 
 procedure TExpressionFields.Match(AFields: TIdentFields);
@@ -690,8 +702,8 @@ type
   { Запрос в with }
   TWithItem = class(TStatement)
   strict private
-    _Alias: TIdent;
-    _As: TKeyword;
+    _Alias: TEpithet;
+    _As: TEpithet;
     _Select: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -703,7 +715,7 @@ type
   { Конструкция with }
   TWith = class(TCommaList<TWithItem>)
   strict private
-    _With: TKeyword;
+    _With: TEpithet;
   strict protected
     function InternalParse: boolean; override;
     function ParseBreak: boolean; override;
@@ -714,8 +726,8 @@ type
   { Поле в select }
   TSelectField = class(TExpressionField)
   strict private
-    _As: TKeyword;
-    _Alias: TIdent;
+    _As: TEpithet;
+    _Alias: TEpithet;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -733,10 +745,10 @@ type
   { Указание таблицы в select }
   TSelectTableClause = class(TTableRef)
   strict private
-    _Lateral: TKeyword;
-    _On: TKeyword;
+    _Lateral: TEpithet;
+    _On: TEpithet;
     _JoinCondition: TStatement;
-    _Using: TKeyword;
+    _Using: TEpithet;
     _OpenBracket: TTerminal;
     _Fields: TStatement;
     _CloseBracket: TTerminal;
@@ -757,8 +769,7 @@ type
   { Выражение group by }
   TGroupBy = class(TCommaList<TExpressionField>)
   strict private
-    _Group: TKeyword;
-    _By: TKeyword;
+    _Group, _By: TEpithet;
   strict protected
     function InternalParse: boolean; override;
     function ParseBreak: boolean; override;
@@ -769,7 +780,7 @@ type
   { Выражение having }
   THaving = class(TStatement)
   strict private
-    _Having: TKeyword;
+    _Having: TEpithet;
     _Condition: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -780,7 +791,7 @@ type
   { Выражение start with }
   TStartWith = class(TStatement)
   strict private
-    _Start, _With: TKeyword;
+    _Start, _With: TEpithet;
     _Condition: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -791,7 +802,7 @@ type
     { Выражение start with }
   TConnectBy = class(TStatement)
   strict private
-    _Connect, _By: TKeyword;
+    _Connect, _By: TEpithet;
     _Condition: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -802,7 +813,7 @@ type
   { Следующий запрос в цепочке union all }
   TAdditionalSelect = class(TSelect)
   strict private
-    _SetOperation: TKeyword;
+    _SetOperation: TEpithet;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -887,7 +898,7 @@ end;
 
 function TWithItem.StatementName: string;
 begin
-  Result := _Alias.Value;
+  Result := Concat([_Alias]);
 end;
 
 { TWith }
@@ -926,9 +937,7 @@ end;
 
 function TSelectField.StatementName: string;
 begin
-  if Assigned(_Alias)
-    then Result := _Alias.Value
-    else Result := '';
+  Result := Concat([_Alias]);
 end;
 
 procedure TSelectField.PrintSelfAfter(APrinter: TPrinter);
@@ -990,7 +999,7 @@ end;
 
 procedure TSelectTables.PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject);
 begin
-  if ADelimiter is TKeyword then
+  if ADelimiter is TEpithet then
     begin
       APrinter.PrintIndented(ADelimiter);
       APrinter.NextLine;
@@ -1001,7 +1010,7 @@ end;
 
 function TSelectTables.ParseBreak: boolean;
 begin
-  Result := Any([Terminal([')', ';'])]) or (NextToken is TKeyword);
+  Result := Any([Terminal([')', ';']), Keyword(['where', 'group', 'connect', 'start', 'having'])]);
 end;
 
 { TGroupBy }
@@ -1016,7 +1025,7 @@ end;
 
 function TGroupBy.ParseBreak: boolean;
 begin
-  Result := Any([Terminal([';', ')'])]) or (Source.Next is TKeyword);
+  Result := Any([Terminal([';', ')']), Keyword(['where', 'group', 'connect', 'start', 'having'])]);
 end;
 
 procedure TGroupBy.PrintSelf(APrinter: TPrinter);
@@ -1235,7 +1244,7 @@ end;
 
 function TUpdateAssignments.ParseBreak: boolean;
 begin
-  Result := Any([Terminal(';')]) or (Source.Next is TKeyword);
+  Result := Any([Terminal(';'), Keyword(['where', 'end'])]);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1277,7 +1286,7 @@ type
   { Секция в merge }
   TMergeSection = class(TStatement)
   strict private
-    _Section: TKeyword;
+    _Section: TEpithet;
     _DML: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -1342,7 +1351,7 @@ end;
 
 function TMergeSection.StatementName: string;
 begin
-  Result := _Section.Value;
+  Result := Concat([_Section]);
 end;
 
 procedure TMergeSection.PrintSelf(APrinter: TPrinter);
@@ -1357,5 +1366,16 @@ function TMergeSections.ParseBreak: boolean;
 begin
   Result := not Assigned(Keyword(['when matched then', 'when not matched then']));
 end;
+
+initialization
+  Keywords := TStringList.Create;
+  Keywords.Sorted := true;
+  Keywords.Duplicates := dupIgnore;
+  Keywords.CaseSensitive := false;
+  Keywords.Add('from');
+  Keywords.Add('into');
+
+finalization
+  FreeAndNil(Keywords);
 
 end.

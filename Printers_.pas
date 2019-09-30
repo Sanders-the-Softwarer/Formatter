@@ -517,10 +517,8 @@ begin
   if ARight.Value = ',' then exit(false);
   { В конструкции number(5,2) запятую прижимаем и слева тоже }
   if (ALeft.Value = ',') and TTerminal(ALeft).IntoNumber then exit(false);
-  { Открывающую скобку прижимаем справа к идентификаторам }
-  if (ARight.Value = '(') and (ALeft is TIdent) then exit(false);
-  { Открывающую скобку прижимаем справа к ключевым словам char, table }
-  if (ARight.Value = '(') and (ALeft is TKeyword) and (SameText(ALeft.Value, 'char') or SameText(ALeft.Value, 'table')) then exit(false);
+  { Открывающую скобку прижимаем справа к идентификаторам и ключевым словам char, table }
+  if (ARight.Value = '(') and (ALeft is TEpithet) and (SameText(ALeft.Value, 'char') or SameText(ALeft.Value, 'table') or not TEpithet(ALeft).IsKeyword) then exit(false);
   { К открывающей скобке прижимаем справа всё }
   if ALeft.Value = '(' then exit(false);
   { Закрывающую скобку прижимаем справа ко всему }
@@ -583,7 +581,7 @@ begin
   begin
     Value := AToken.Value;
     { Учтём настройки замены лексем на синонимы и вывод в нижнем регистре }
-    if (AToken is TKeyword) and SameText(AToken.Value, 'default') and Settings.ReplaceDefault
+    if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and SameText(AToken.Value, 'default') and Settings.ReplaceDefault
       then Value := ':=';
     if Attributes.HasAttribute(AToken.ClassType, LowerCaseAttribute)
       then Value := Value.ToLower;

@@ -10,6 +10,20 @@
 
 unit Tokens;
 
+{ ----- Примечания -------------------------------------------------------------
+
+  Понятие ключевого слова в Oracle крайне контекстно-зависимо. Например, слова
+  loop и while являются ключевыми в PL/SQL, но отлично сойдут как имена таблиц
+  или полей в SQL. Более того, внутри самого PL/SQL можно встретить конструкции
+  типа my_variable char(1 char). На уровне лексического анализа невозможно
+  определить, в каком смысле используется встреченное слово, поэтому классы
+  TIdent и TKeyword в конце концов пришлось слить воедино, в общий класс TEpithet
+  с признаком IsKeyword. Этот признак проставляется в ходе синтаксического
+  анализа и служит больше для человека, которому удобнее мыслить в таких
+  терминах.
+
+------------------------------------------------------------------------------ }
+
 interface
 
 uses System.SysUtils, System.Generics.Collections, Attributes;
@@ -68,7 +82,7 @@ type
 
   { Неожиданная или неизвестная лексема - встретился символ, с которого не может начинаться лексема }
   TUnknownToken = class(TToken)
-  strict protected
+  public
     function TokenType: string; override;
   end;
 
@@ -92,18 +106,16 @@ type
     property IntoNumber: boolean read FIntoNumber write FIntoNumber; { позволяет отличить запятую в number(5,2) }
   end;
 
-  { Идентификатор }
-  [LowerCase]
-  TIdent = class(TToken)
-  public
-    function TokenType: string; override;
-  end;
+  { Идентификатор либо ключевое слово }
 
-  { Ключевое слово }
   [LowerCase]
-  TKeyword = class(TToken)
+  TEpithet = class(TToken)
+  private
+    FIsKeyword, FIsIdent: boolean;
   public
     function TokenType: string; override;
+    property IsIdent: boolean read FIsIdent write FIsIdent;
+    property IsKeyword: boolean read FIsKeyword write FIsKeyword;
   end;
 
   { Комментарий }
@@ -220,11 +232,16 @@ begin
   Result := 'Пробел';
 end;
 
-{ TIdent }
+{ TEpithet }
 
-function TIdent.TokenType: string;
+function TEpithet.TokenType: string;
 begin
-  Result := 'Идентификатор';
+  if IsKeyword then
+    Result := 'Ключевое слово'
+  else if FIsIdent then
+    Result := 'Идентификатор'
+  else
+    Result := 'Неидентифицированное слово';
 end;
 
 { TComment }
@@ -253,13 +270,6 @@ end;
 function TTerminal.TokenType: string;
 begin
   Result := 'Символ';
-end;
-
-{ TKeyword }
-
-function TKeyword.TokenType: string;
-begin
-  Result := 'Ключевое слово';
 end;
 
 { TUnexpectedEOF }
