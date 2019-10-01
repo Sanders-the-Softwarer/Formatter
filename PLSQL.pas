@@ -162,8 +162,7 @@ type
     _Out: TEpithet;
     _Nocopy: TEpithet;
     _ParamType: TStatement;
-    _TAssignment: TTerminal;
-    _KAssignment: TEpithet;
+    _Assignment: TToken;
     _DefaultValue: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -746,9 +745,9 @@ begin
   _Nocopy := Keyword('nocopy');
   TTypeRef.Parse(Self, Source, _ParamType);
   if not Assigned(_ParamName) and not Assigned(_In) and not Assigned(_Out) and not Assigned(_Nocopy) and not Assigned(_ParamType) then exit(false);
-  _TAssignment := Terminal(':=');
-  if not Assigned(_TAssignment) then _KAssignment := Keyword('default');
-  if Assigned(_TAssignment) or Assigned(_KAssignment) then TExpression.Parse(Self, Source, _DefaultValue);
+  _Assignment := Terminal(':=');
+  if not Assigned(_Assignment) then _Assignment := Keyword('default');
+  if Assigned(_Assignment) then TParser.ParseExpression(Self, Source, _DefaultValue);
   Result := true;
 end;
 
@@ -766,8 +765,8 @@ begin
   APrinter.PrintItems([_In, _Out, _Nocopy]);
   APrinter.Ruler('type', NeedRuler);
   APrinter.PrintItem(_ParamType);
-  APrinter.Ruler('default', NeedRuler and (Assigned(_TAssignment) or Assigned(_KAssignment)));
-  APrinter.PrintItems([_TAssignment, _KAssignment, _DefaultValue]);
+  APrinter.Ruler('default', NeedRuler and Assigned(_Assignment));
+  APrinter.PrintItems([_Assignment, _DefaultValue]);
 end;
 
 { TParamsDeclaration }
@@ -825,7 +824,7 @@ begin
   { Осталось значение и т. п. }
   _Assignment := Terminal(':=');
   if not Assigned(_Assignment) then _Assignment := Keyword('default');
-  if Assigned(_Assignment) then TExpression.Parse(Self, Source, _Value);
+  if Assigned(_Assignment) then TParser.ParseExpression(Self, Source, _Value);
   inherited;
   Result := true;
 end;
@@ -876,7 +875,7 @@ begin
   _Assignment := Terminal(':=');
   Result := Assigned(_Target) and Assigned(_Assignment);
   if not Result then exit;
-  TExpression.Parse(Self, Source, _Expression);
+  TParser.ParseExpression(Self, Source, _Expression);
   inherited;
 end;
 
@@ -893,7 +892,7 @@ begin
   _Return := Keyword('return');
   if not Assigned(_Return) then exit(false);
   Result := true;
-  TExpression.Parse(Self, Source, _Value);
+  TParser.ParseExpression(Self, Source, _Value);
   inherited;
 end;
 
@@ -984,7 +983,7 @@ function TIf.InternalParse: boolean;
 begin
   _If := Keyword('if');
   if not Assigned(_If) then exit(false);
-  TExpression.Parse(Self, Source, _Condition);
+  TParser.ParseExpression(Self, Source, _Condition);
   TIfSections.Parse(Self, Source, _Sections);
   _EndIf := Keyword('end if');
   Result := true;
@@ -1027,7 +1026,7 @@ end;
 function TExceptionHandler.InternalParse: boolean;
 begin
   _When := Keyword('when');
-  Result := Assigned(_When) and TExpression.Parse(Self, Source, _Condition);
+  Result := Assigned(_When) and TParser.ParseExpression(Self, Source, _Condition);
   if not Result then exit;
   _Then := Keyword('then');
   TStatements.Parse(Self, Source, _Body);
@@ -1106,7 +1105,7 @@ begin
   if not Assigned(_ThenOrElsifOrElse) then exit(false);
   if _ThenOrElsifOrElse.Value = 'elsif' then
   begin
-    TExpression.Parse(Self, Source, _Condition);
+    TParser.ParseExpression(Self, Source, _Condition);
     _Then := Keyword('then');
   end;
   TStatements.Parse(Self, Source, _Statements);
@@ -1211,9 +1210,9 @@ begin
   if not TInnerSelect.Parse(Self, Source, _Select) then
   begin
     P := Source.Mark;
-    TExpression.Parse(Self, Source, _Low);
+    TParser.ParseExpression(Self, Source, _Low);
     if Assigned(_Low) then _To := Terminal('..');
-    if Assigned(_To)  then TExpression.Parse(Self, Source, _High);
+    if Assigned(_To)  then TParser.ParseExpression(Self, Source, _High);
     if not Assigned(_To) then
     begin
       _Low := nil;
@@ -1246,7 +1245,7 @@ function TWhile.InternalParse: boolean;
 begin
   _While := Keyword('while');
   if not Assigned(_While) then exit(false);
-  TExpression.Parse(Self, Source, _Condition);
+  TParser.ParseExpression(Self, Source, _Condition);
   TLoop.Parse(Self, Source, _Loop);
   Result := true;
 end;
@@ -1347,9 +1346,9 @@ begin
     end
   else
     begin
-      TExpression.Parse(Self, Source, _Low);
+      TParser.ParseExpression(Self, Source, _Low);
       _To := Terminal('..');
-      TExpression.Parse(Self, Source, _High);
+      TParser.ParseExpression(Self, Source, _High);
     end;
   _Save := Keyword('save');
   _Exceptions := Keyword('exceptions');
@@ -1372,7 +1371,7 @@ begin
   _When := Keyword('when');
   if Assigned(_When) then
     begin
-      TExpression.Parse(Self, Source, _Condition);
+      TParser.ParseExpression(Self, Source, _Condition);
       _Then := Keyword('then');
     end
   else
@@ -1394,7 +1393,7 @@ function TCase.InternalParse: boolean;
 begin
   _Case := Keyword('case');
   if not Assigned(_Case) then exit(false);
-  TExpression.Parse(Self, Source, _Condition);
+  TParser.ParseExpression(Self, Source, _Condition);
   inherited;
   _EndCase := Keyword('end case');
   _Semicolon := Terminal(';');
@@ -1513,7 +1512,7 @@ begin
   _Exit := Keyword('exit');
   if not Assigned(_Exit) then exit(false);
   _When := Keyword('when');
-  if Assigned(_When) then TExpression.Parse(Self, Source, _Condition);
+  if Assigned(_When) then TParser.ParseExpression(Self, Source, _Condition);
   inherited;
   Result := true;
 end;
@@ -1531,7 +1530,7 @@ begin
   _Execute := Keyword('execute');
   if not Assigned(_Execute) then exit(false);
   _Immediate := Keyword('immediate');
-  TExpression.Parse(Self, Source, _Command);
+  TParser.ParseExpression(Self, Source, _Command);
   _Into := Keyword('into');
   if Assigned(_Into) then TIdentFields.Parse(Self, Source, _IntoFields);
   _Using := Keyword('using');

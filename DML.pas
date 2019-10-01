@@ -12,13 +12,26 @@ unit DML;
 
 interface
 
-uses Classes, SysUtils, Math, Tokens, Statements, Printers_, Attributes;
+uses Classes, SysUtils, Math, Tokens, Statements, Printers_, Attributes, Expressions;
 
 type
 
   { Общий предок DML-операторов }
   TDML = class(TSemicolonStatement)
   strict protected
+    function GetKeywords: TStrings; override;
+  end;
+
+  { Расширение понятия операнда для SQL-выражений }
+  TSqlTerm = class(TTerm)
+  strict protected
+    function ParseSQLStatement: TStatement; override;
+  end;
+
+  { SQL-выражение }
+  TSqlExpression = class(TExpression)
+  strict protected
+    function ParseStatement(out AResult: TStatement): boolean; override;
     function GetKeywords: TStrings; override;
   end;
 
@@ -154,10 +167,10 @@ type
 
 implementation
 
-uses Expressions;
+uses Parser;
 
 var
-  Keywords: TStringList;
+  Keywords, SqlExpressionKeywords: TStringList;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -167,16 +180,15 @@ var
 
 type
 
-  { Расширение понятия операнда для SQL-выражений }
-  TSqlTerm = class(TTerm)
+  { Выражение со звёздочкой }
+  TAsterisk = class(TStatement)
+  strict private
+    _Prefix: TStatement;
+    _Dot, _Star: TTerminal;
   strict protected
-    function ParseSQLStatement: TStatement; override;
-  end;
-
-  { SQL-выражение }
-  TSqlExpression = class(TExpression)
-  strict protected
-    function ParseStatement(out AResult: TStatement): boolean; override;
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
   { Условие exists }
@@ -335,11 +347,12 @@ type
     _Select: TStatement;
     _Table: TEpithet;
     _OpenBracket: TTerminal;
-    _TableName: TEpithet;
+    _TableName: TStatement;
     _CloseBracket: TTerminal;
     _Alias: TEpithet;
   strict protected
     function InternalParse: boolean; override;
+    function ParseTableExpression(out AResult: TStatement): boolean; virtual;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
     function StatementName: string; override;
@@ -357,7 +370,8 @@ end;
 function TSQLTerm.ParseSQLStatement: TStatement;
 begin
   Result := nil;
-  TExists.Parse(Self, Source, Result);
+  if not Assigned(Result) then TAsterisk.Parse(Self, Source, Result);
+  if not Assigned(Result) then TExists.Parse(Self, Source, Result);
   if not Assigned(Result) then TSelectFunctionCall.Parse(Self, Source, Result);
   if not Assigned(Result) then TListagg.Parse(Self, Source, Result);
 end;
@@ -367,6 +381,31 @@ end;
 function TSQLExpression.ParseStatement(out AResult: TStatement): boolean;
 begin
   Result := TSQLTerm.Parse(Self, Source, AResult);
+end;
+
+function TSQLExpression.GetKeywords: TStrings;
+begin
+  Result := SqlExpressionKeywords;
+  if Assigned(Result) then exit;
+  Result := TStringList.Create;
+  Result.Assign(Keywords);
+  Result.AddStrings(inherited);
+  SqlExpressionKeywords := TStringList(Result);
+end;
+
+{ TAsterisk }
+
+function TAsterisk.InternalParse: boolean;
+begin
+  TQualifiedIdent.Parse(Self, Source, _Prefix);
+  _Dot := Terminal('.');
+  _Star := Terminal('*');
+  Result := Assigned(_Star) and (Assigned(_Dot) = Assigned(_Prefix));
+end;
+
+procedure TAsterisk.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Prefix, _Dot, _Star]);
 end;
 
 { TExists }
@@ -470,7 +509,7 @@ begin
   TWithinGroup.Parse(Self, Source, _WithinGroup);
   TKeep.Parse(Self, Source, _Keep);
   TOver.Parse(Self, Source, _Over);
-  Result := true;
+  Result := Assigned(_WithinGroup) or Assigned(_Keep) or Assigned(_Over);
 end;
 
 procedure TSelectFunctionCall.PrintSelf(APrinter: TPrinter);
@@ -489,7 +528,7 @@ begin
   _ListAgg := Identifier;
   if not Assigned(_ListAgg) or not SameText(_ListAgg.Value, 'listagg') then exit(false);
   _OpenBracket := Terminal('(');
-  TSQLExpression.Parse(Self, Source, _Expression);
+  TParser.ParseExpression(Self, Source, _Expression);
   _Comma := Terminal(',');
   if Assigned(_Comma) then _Delimiter := Literal;
   _On := Keyword('on');
@@ -529,7 +568,7 @@ end;
 
 function TIdentFields.ParseBreak: boolean;
 begin
-  Result := Any([Terminal([')', ';']), Keyword(['from', 'values'])]);
+  Result := Any([Terminal([')', ';']), Keyword('*')]);
 end;
 
 { TSLIdentFields }
@@ -543,7 +582,7 @@ end;
 
 function TOrderByItem.InternalParse: boolean;
 begin
-  if not TSQLExpression.Parse(Self, Source, _Expression) then exit(false);
+  if not TParser.ParseExpression(Self, Source, _Expression) then exit(false);
   _Direction := Keyword(['asc', 'desc']);
   _Nulls := Keyword('nulls');
   _Position := Keyword(['first', 'last']);
@@ -568,7 +607,7 @@ end;
 
 function TOrderBy.ParseBreak: boolean;
 begin
-  Result := Any([Terminal([';', ')'])]);
+  Result := true;
 end;
 
 procedure TOrderBy.PrintSelf(APrinter: TPrinter);
@@ -585,7 +624,7 @@ end;
 
 function TExpressionField.InternalParse: boolean;
 begin
-  Result := TSQLExpression.Parse(Self, Source, _Expression);
+  Result := TParser.ParseExpression(Self, Source, _Expression);
 end;
 
 procedure TExpressionField.PrintSelf(APrinter: TPrinter);
@@ -626,7 +665,7 @@ end;
 function TWhere.InternalParse: boolean;
 begin
   _Where := Keyword('where');
-  TSQLExpression.Parse(Self, Source, _Condition);
+  TParser.ParseExpression(Self, Source, _Condition);
   Result := Assigned(_Where);
 end;
 
@@ -667,7 +706,7 @@ begin
   begin
     _Table := Keyword('table');
     if Assigned(_Table) then _OpenBracket := Terminal('(');
-    _TableName := Identifier;
+    ParseTableExpression(_TableName);
     if not Assigned(_Table) and not Assigned(_TableName) then exit(false);
     if Assigned(_Table) then _CloseBracket := Terminal(')');
   end;
@@ -675,15 +714,15 @@ begin
   Result := true;
 end;
 
+function TTableRef.ParseTableExpression(out AResult: TStatement): boolean;
+begin
+  Result := TQualifiedIdent.Parse(Self, Source, _TableName);
+end;
+
 function TTableRef.StatementName: string;
 begin
-  if Assigned(_TableName) then
-    Result := _TableName.Value
-  else if Assigned(_Select) then
-    Result := _Select.StatementName
-  else
-    Result := 'table';
-  if Assigned(_Alias) then Result := _Alias.Value + ' => ' + Result;
+  Result := Concat([_Table, _TableName, _Select]);
+  if Assigned(_Alias) and (Result <> '') then Result := Result + ' as ' + _Alias.Value;
 end;
 
 procedure TTableRef.PrintSelf(APrinter: TPrinter);
@@ -743,7 +782,7 @@ type
   end;
 
   { Указание таблицы в select }
-  TSelectTableClause = class(TTableRef)
+  TSelectTableRef = class(TTableRef)
   strict private
     _Lateral: TEpithet;
     _On: TEpithet;
@@ -754,12 +793,13 @@ type
     _CloseBracket: TTerminal;
   strict protected
     function InternalParse: boolean; override;
+    function ParseTableExpression(out AResult: TStatement): boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
   { Список таблиц в select }
-  TSelectTables = class(TCommaList<TSelectTableClause>)
+  TSelectTables = class(TCommaList<TSelectTableRef>)
   strict protected
     function ParseDelimiter(out AResult: TObject): boolean; override;
     procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject); override;
@@ -961,14 +1001,14 @@ begin
   Result := TSelectField.Parse(Self, Source, AResult);
 end;
 
-{ TSelectTableClause }
+{ TSelectTableRef }
 
-function TSelectTableClause.InternalParse: boolean;
+function TSelectTableRef.InternalParse: boolean;
 begin
   _Lateral := Keyword('lateral');
   Result := inherited InternalParse;
   if Result then _On := Keyword('on');
-  if Assigned(_On) then TSQLExpression.Parse(Self, Source, _JoinCondition);
+  if Assigned(_On) then TParser.ParseExpression(Self, Source, _JoinCondition);
   if not Assigned(_On) then _Using := Keyword('using');
   if Assigned(_Using) then
   begin
@@ -978,7 +1018,12 @@ begin
   end;
 end;
 
-procedure TSelectTableClause.PrintSelf(APrinter: TPrinter);
+function TSelectTableRef.ParseTableExpression(out AResult: TStatement): boolean;
+begin
+  Result := TLValue.Parse(Self, Source, AResult);
+end;
+
+procedure TSelectTableRef.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Lateral);
   inherited;
@@ -1010,7 +1055,8 @@ end;
 
 function TSelectTables.ParseBreak: boolean;
 begin
-  Result := Any([Terminal([')', ';']), Keyword(['where', 'group', 'connect', 'start', 'having'])]);
+  //Result := Any([Terminal([')', ';']), Keyword(['where', 'group', 'connect', 'start', 'having', 'order', 'union', 'union all', 'intersect', 'minus'])]);
+  Result := true;
 end;
 
 { TGroupBy }
@@ -1025,7 +1071,7 @@ end;
 
 function TGroupBy.ParseBreak: boolean;
 begin
-  Result := Any([Terminal([';', ')']), Keyword(['where', 'group', 'connect', 'start', 'having'])]);
+  Result := Any([Terminal([';', ')']), Keyword('*')]);
 end;
 
 procedure TGroupBy.PrintSelf(APrinter: TPrinter);
@@ -1045,7 +1091,7 @@ function THaving.InternalParse: boolean;
 begin
   _Having := Keyword('having');
   if not Assigned(_Having) then exit(false);
-  TSQLExpression.Parse(Self, Source, _Condition);
+  TParser.ParseExpression(Self, Source, _Condition);
   Result := true;
 end;
 
@@ -1064,7 +1110,7 @@ begin
   _Start := Keyword('start');
   if not Assigned(_Start) then exit(false);
   _With  := Keyword('with');
-  TSQLExpression.Parse(Self, Source, _Condition);
+  TParser.ParseExpression(Self, Source, _Condition);
   Result := true;
 end;
 
@@ -1081,7 +1127,7 @@ begin
   _Connect := Keyword('connect');
   if not Assigned(_Connect) then exit(false);
   _By := Keyword('by');
-  TSQLExpression.Parse(Self, Source, _Condition);
+  TParser.ParseExpression(Self, Source, _Condition);
   Result := true;
 end;
 
@@ -1222,7 +1268,7 @@ begin
   TQualifiedIdent.Parse(Self, Source, _Target);
   _Assignment := Terminal('=');
   Result := Assigned(_Target) and Assigned(_Assignment);
-  if Result then TSQLExpression.Parse(Self, Source, _Value);
+  if Result then TParser.ParseExpression(Self, Source, _Value);
 end;
 
 function TUpdateAssignment.StatementName: string;
@@ -1244,7 +1290,7 @@ end;
 
 function TUpdateAssignments.ParseBreak: boolean;
 begin
-  Result := Any([Terminal(';'), Keyword(['where', 'end'])]);
+  Result := Any([Terminal(';'), Keyword(['*'])]);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1314,7 +1360,7 @@ begin
   if not TInnerSelect.Parse(Self, Source, _SourceSelect) then _SourceTable := Identifier;
   _SourceAlias := Identifier;
   _On    := Keyword('on');
-  TSQLExpression.Parse(Self, Source, _Condition);
+  TParser.ParseExpression(Self, Source, _Condition);
   TMergeSections.Parse(Self, Source, _Sections);
   inherited;
   Result := true;
@@ -1372,10 +1418,32 @@ initialization
   Keywords.Sorted := true;
   Keywords.Duplicates := dupIgnore;
   Keywords.CaseSensitive := false;
+  Keywords.Add('comment');
+  Keywords.Add('connect');
+  Keywords.Add('create');
+  Keywords.Add('delete');
   Keywords.Add('from');
+  Keywords.Add('group');
+  Keywords.Add('having');
+  Keywords.Add('insert');
+  Keywords.Add('intersect');
   Keywords.Add('into');
+  Keywords.Add('join');
+  Keywords.Add('merge');
+  Keywords.Add('minus');
+  Keywords.Add('on');
+  Keywords.Add('order');
+  Keywords.Add('select');
+  Keywords.Add('set');
+  Keywords.Add('start');
+  Keywords.Add('union');
+  Keywords.Add('update');
+  Keywords.Add('using');
+  Keywords.Add('values');
+  Keywords.Add('where');
 
 finalization
   FreeAndNil(Keywords);
+  FreeAndNil(SqlExpressionKeywords);
 
 end.

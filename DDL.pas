@@ -134,7 +134,9 @@ end;
 
 procedure TComment.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Comment, _On, _TableOrColumn, _Name]);
+  APrinter.PrintItems([_Comment, _On, _TableOrColumn]);
+  APrinter.Ruler('name', Settings.AlignTableColumnComments);
+  APrinter.PrintItem(_Name);
   APrinter.Ruler('is', Settings.AlignTableColumnComments);
   APrinter.PrintItems([_Is, _Text]);
   inherited;
@@ -144,7 +146,7 @@ end;
 
 function TComments.ParseBreak: boolean;
 begin
-  Result := true; { последовательность комментариев прерывает всё что угодно }
+  Result := not Assigned(Keyword('comment'));
 end;
 
 end.

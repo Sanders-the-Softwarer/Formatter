@@ -2,7 +2,7 @@
 select * from dual
 
 -- select из таблицы с алиасом
-select * from dual d
+select d.* from dual d
 
 -- select с with
 with a as (select * from dual), b as (select * from dual), c as (select * from dual) select * from a, b, c
@@ -33,6 +33,9 @@ select * from table(x)
 
 -- select из подзапроса
 select * from (select * from dual)
+
+-- в select можно использовать данные из вложенных структур и табличных типов
+select * from table(a.b(1).c.d(2).e) f
 
 -- select с lateral
 select * from a, lateral(select * from dual) b
@@ -291,32 +294,32 @@ exception
 end;
 
 -- заголовок пакета
-package x is
+create package x is
 end;
 /
 
 -- тело пакета
-package body x is
+create package body x is
 end;
 /
 
 -- подпрограмма может быть процедурой либо функцией
 
-procedure x is begin end;
-function y return number is begin end;
+create procedure x is begin end;
+create function y return number is begin end;
 
 -- подпрограмма может иметь параметры
 
-procedure x (a integer, b varchar2, c tablet.tipe, d sys_anydata);
+declare procedure x (a integer, b varchar2, c tablet.tipe, d sys_anydata); begin end;
 
 -- функци€ может обладать признаками pipelined или deterministic
 
-function pi return number deterministic is begin return 3.1415926; end;
-function pipelied return tablet.tipe pipelined is begin pipe row (null); end;
+create function pi return number deterministic is begin return 3.1415926; end;
+create function pipelied return tablet.tipe pipelined is begin pipe row (null); end;
 
 -- в объ€влении подпрограммы переменные идут после is без declare
 
-procedure x is
+create procedure x is
   a integer;
   b varchar2(1000);
 begin
@@ -342,15 +345,15 @@ end;
 
 -- параметры подпрограммы могут использовать модификаторы in/out/nocopy
 
-procedure x (a integer, b in char, c in out varchar2, d nocopy tablet.tipe, e in out nocopy super.tablet.tipe);
+declare procedure x (a integer, b in char, c in out varchar2, d nocopy tablet.tipe, e in out nocopy super.tablet.tipe); begin end;
 
 -- параметры подпрограммы могут иметь значени€ по умолчанию
 
-function y (a integer, b char := 'a', c date default null);
+declare function y (a integer, b char := 'a', c date default null); begin end;
 
 -- проверка выравнивани€ в параметрах подпрограмм
 
-procedure x(a char, bb in out varchar2, ccc integer default 12345, dddd out char := big_function_call(1, 2, 3));
+declare procedure x(a char, bb in out varchar2, ccc integer default 12345, dddd out char := big_function_call(1, 2, 3)); begin end;
 
 -- объ€влени€ переменных могут содержать модификатор constant и исходное значение
 
@@ -379,18 +382,18 @@ end;
 
 -- курсоры могут быть параметризованы
 
-package x is
+create package x is
   cursor c (a integer, b varchar2 := 'x') is select * from dual;
 end;
 
 -- курсоры могут специфицировать тип результата
 
-package x is
+create package x is
   cursor c return dual%rowtype is select * from dual;
 end;
 
 -- в блоках деклараций можно объ€вл€ть исключени€
-package x is
+create package x is
   e exception;
   f exception;
   g varchar2;

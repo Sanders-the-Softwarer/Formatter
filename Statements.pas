@@ -64,6 +64,7 @@ type
     Source: TBufferedStream<TToken>;
     function InternalParse: boolean; virtual; abstract;
     function GetKeywords: TStrings; virtual;
+    function IsStrongKeyword(const AEpithet: string): boolean;
     function NextToken: TToken;
     function Keyword(const AKeyword: string): TEpithet; overload;
     function Keyword(const AKeywords: array of string): TEpithet; overload;
@@ -216,6 +217,7 @@ begin
   Result := '';
 end;
 
+{ Обработчик печати по умолчанию }
 procedure TStatement.PrintSelf(APrinter: TPrinter);
 begin
   raise Exception.CreateFmt('Cannot print %s - PrintSelf is absent', [ClassName]);
@@ -229,6 +231,14 @@ end;
 function TStatement.GetKeywords: TStrings;
 begin
   if Assigned(Parent) then Result := Parent.GetKeywords else Result := nil;
+end;
+
+function TStatement.IsStrongKeyword(const AEpithet: string): boolean;
+var Keywords: TStrings;
+begin
+  if AEpithet.Contains(' ') then exit(true);
+  Keywords := GetKeywords;
+  Result := Assigned(Keywords) and (Keywords.IndexOf(AEpithet) >= 0);
 end;
 
 function TStatement.NextToken: TToken;
@@ -254,7 +264,8 @@ begin
   Token := NextToken;
   if Token is TEpithet then
     for i := Low(AKeywords) to High(AKeywords) do
-      if SameText(Token.Value, AKeywords[i]) then
+      if SameText(Token.Value, AKeywords[i]) or
+         SameText(AKeywords[i], '*') and IsStrongKeyword(Token.Value) then
       begin
         Result := Token as TEpithet;
         Result.IsKeyword := true;
@@ -268,13 +279,11 @@ function TStatement.Identifier: TEpithet;
 var
   Token: TToken;
   P: TMark;
-  K: TStrings;
 begin
   Result := nil;
-  K := GetKeywords;
   P := Source.Mark;
   Token := NextToken;
-  if (Token is TEpithet) and (not Assigned(K) or (K.IndexOf(Token.Value) < 0)) then
+  if (Token is TEpithet) and not IsStrongKeyword(Token.Value) then
     begin
       Result := Token as TEpithet;
       Result.IsKeyword := false;
@@ -378,35 +387,65 @@ var
   P: TMark;
   Statement: TStatement;
   Delimiter: TObject;
-  B: boolean;
+  StatementOk, DelimiterOk, BreakOk: boolean;
   UnexpectedToken: TStatement;
+  UnexpectedCnt, UnexpectedTotal: integer;
 begin
+  UnexpectedCnt := 0;
+  UnexpectedTotal := 0;
   repeat
     P := Source.Mark;
-    { Если успешно разобрали конструкцию - работаем дальше }
+    { Разберём конструкцию }
     Statement := nil;
-    if ParseStatement(Statement) then
+    StatementOk := ParseStatement(Statement);
+    if StatementOk then
+      begin
+        Statements.Add(Statement);
+        Assert(Source <> nil);
+        P := Source.Mark;
+        UnexpectedCnt := 0;
+      end
+    else
+      Source.Restore(P);
+    { Если разобрали конструкцию, разберём разделитель }
+    if StatementOk then
     begin
-      P := Source.Mark;
-      Statements.Add(Statement);
-      if ParseDelimiter(Delimiter) then
+      Delimiter := nil;
+      DelimiterOk := ParseDelimiter(Delimiter) and (P <> Source.Mark); { пустой разделитель не считается }
+      if DelimiterOk then
         begin
           Delimiters.Add(Delimiter);
-          continue;
+          P := Source.Mark;
         end
       else
-        Delimiters.Add(nil);
+        begin
+          Delimiters.Add(nil);
+          Source.Restore(P);
+        end;
     end;
-    { Если встретили завершающую конструкцию - выходим }
-    Source.Restore(P);
-    B := ParseBreak;
-    Source.Restore(P);
-    if B then break;
-    { Если ни то, ни другое - фиксируем неожиданную конструкцию и дальше ждём завершающей конструкции }
-    if TUnexpectedToken.Parse(Self, Source, UnexpectedToken)
-      then begin Statements.Add(UnexpectedToken); Delimiters.Add(nil); end
-      else break;
-  until false;
+    { Если нет либо конструкции, либо разделителя, проверим условия выхода }
+    if not StatementOk or not DelimiterOk then
+    begin
+      BreakOk := ParseBreak;
+      Source.Restore(P);
+      if BreakOk then break;
+    end;
+    { Если не удалось разобрать конструкцию и не удалось выйти - фиксируем неожиданную лексему и идём дальше }
+    if StatementOk then
+      continue
+    else if TUnexpectedToken.Parse(Self, Source, UnexpectedToken) then
+      begin
+        Statements.Add(UnexpectedToken);
+        Delimiters.Add(nil);
+        Inc(UnexpectedCnt);
+        Inc(UnexpectedTotal);
+      end
+    else
+      break;
+    { Если копятся неожиданные лексемы и не удаётся восстановиться - прервём разбор. Пусть вышестоящему повезёт больше }
+    if (UnexpectedCnt > 10) or (UnexpectedTotal > 100) then
+      break;
+  until Source.Eof;
   Result := (Count > 0);
 end;
 

@@ -24,7 +24,7 @@ unit Expressions;
 
 interface
 
-uses SysUtils, Math, Tokens, Statements, Printers_, Attributes;
+uses Classes, SysUtils, Math, Tokens, Statements, Printers_, Attributes;
 
 type
 
@@ -32,7 +32,6 @@ type
   TTerm = class(TStatement)
   strict private
     _Prefix: TToken;
-    _Star: TTerminal;
     _Number: TNumber;
     _Literal: TLiteral;
     _SQLStatement: TStatement;
@@ -49,7 +48,6 @@ type
     _Postfix: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-    function AllowStar: boolean;
     function ParseSQLStatement: TStatement; virtual;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
@@ -57,11 +55,17 @@ type
 
   { Выражение }
   TExpression = class(TStatementList<TTerm>)
+  strict private
+    class var FlagCreatedRight: boolean;
   strict protected
     function ParseDelimiter(out AResult: TObject): boolean; override;
     function ParseBreak: boolean; override;
+    function GetKeywords: TStrings; override;
   public
     function MultiLine: boolean; override;
+  public
+    class procedure CreatedRight;
+    procedure AfterConstruction; override;
   end;
 
   { Квалифицированный идентификатор }
@@ -137,7 +141,10 @@ type
 
 implementation
 
-uses DML, PLSQL;
+uses Parser, DML, PLSQL;
+
+var
+  Keywords: TStringList;
 
 type
 
@@ -213,13 +220,13 @@ begin
     { Ключевым словом null, true или false }
     _KeywordValue := Keyword(['null', 'false', 'true']);
     if Assigned(_KeywordValue) then exit(true);
+    { SQL-выражением }
+    _SQLStatement := ParseSQLStatement;
+    if Assigned(_SQLStatement) then exit(true);
     { Выражением case }
     if TCase.Parse(Self, Source, _Case) then exit(true);
     { Выражением cast }
     if TCast.Parse(Self, Source, _Cast) then exit(true);
-    { SQL-выражением }
-    _SQLStatement := ParseSQLStatement;
-    if Assigned(_SQLStatement) then exit(true);
     { Идентификатором или подобным выражением }
     TLValue.Parse(Self, Source, _LValue);
     if Assigned(_LValue) then
@@ -233,29 +240,15 @@ begin
     _OpenBracket := Terminal('(');
     if Assigned(_OpenBracket) then
     begin
-      TStatementClass(Parent.ClassType).Parse(Self, Source, _Expression); { нужно для того, чтобы в Expression парсились term-ы, а в SqlExpression - sqlterm-ы }
+      TParser.ParseExpression(Self, Source, _Expression);
       _CloseBracket := Terminal(')');
       exit(true);
     end;
-    { В запросах может быть также звёздочкой }
-    if AllowStar then _Star := Terminal('*');
-    if Assigned(_Star) then exit(true);
   finally
     { Суффиксы }
     _OuterJoin := Terminal('(+)');
     _Postfix := Keyword(['is null', 'is not null']);
   end;
-end;
-
-function TTerm.AllowStar: boolean;
-var S: TStatement;
-begin
-  Result := false;
-  S := Self;
-  while S <> nil do
-    if S is TSelect
-      then exit(true)
-      else S := S.Parent;
 end;
 
 function TTerm.ParseSQLStatement: TStatement;
@@ -272,7 +265,7 @@ begin
     APrinter.PrintItem(_Select);
     APrinter.NextLine;
   end;
-  APrinter.PrintItems([_OpenBracket, _Expression, _CloseBracket, _Star, _OuterJoin, _Postfix]);
+  APrinter.PrintItems([_OpenBracket, _Expression, _CloseBracket, _OuterJoin, _Postfix]);
 end;
 
 { TExpression }
@@ -296,9 +289,27 @@ begin
   Result := true;
 end;
 
+function TExpression.GetKeywords: TStrings;
+begin
+  Result := Keywords;
+end;
+
 function TExpression.MultiLine: boolean;
 begin
   Result := false;
+end;
+
+class procedure TExpression.CreatedRight;
+begin
+  FlagCreatedRight := true;
+end;
+
+procedure TExpression.AfterConstruction;
+begin
+  inherited;
+  if FlagCreatedRight
+    then FlagCreatedRight := false
+    else raise Exception.Create('Expression must be created using TParser.ParseExpression, do it!');
 end;
 
 { TQualifiedIdent }
@@ -373,7 +384,7 @@ begin
     _Assignment := nil;
     Source.Restore(P);
   end;
-  Result := TExpression.Parse(Self, Source, _Expression);
+  Result := TParser.ParseExpression(Self, Source, _Expression);
 end;
 
 procedure TArgument.PrintSelf(APrinter: TPrinter);
@@ -403,7 +414,7 @@ function TCase.InternalParse: boolean;
 begin
   _Case := Keyword('case');
   if not Assigned(_Case) then exit(false);
-  TExpression.Parse(Self, Source, _Expression);
+  TParser.ParseExpression(Self, Source, _Expression);
   TCaseSections.Parse(Self, Source, _Sections);
   _End := Keyword('end');
   Result := true;
@@ -421,13 +432,13 @@ begin
   _When := Keyword('when');
   if Assigned(_When) then
     begin
-      TExpression.Parse(Self, Source, _Condition);
+      TParser.ParseExpression(Self, Source, _Condition);
       _Then := Keyword('then');
     end
   else
     _Else := Keyword('else');
   if not Assigned(_When) and not Assigned(_Else) then exit(false);
-  TExpression.Parse(Self, Source, _Value);
+  TParser.ParseExpression(Self, Source, _Value);
   Result := true;
 end;
 
@@ -460,7 +471,7 @@ begin
   _Cast := Keyword('cast');
   if not Assigned(_Cast) then exit(false);
   _OpenBracket := Terminal('(');
-  TExpression.Parse(Self, Source, _Expression);
+  TParser.ParseExpression(Self, Source, _Expression);
   _As := Keyword('as');
   TTypeRef.Parse(Self, Source, _TypeRef);
   _CloseBracket := Terminal(')');
@@ -522,5 +533,16 @@ begin
     then Result := TLValueItem(Item(0)).Ident
     else Result := '';
 end;
+
+initialization
+  Keywords := TStringList.Create;
+  Keywords.Sorted := true;
+  Keywords.Duplicates := dupIgnore;
+  Keywords.CaseSensitive := false;
+  Keywords.Add('case');
+  Keywords.Add('when');
+
+finalization
+  FreeAndNil(Keywords);
 
 end.
