@@ -90,6 +90,7 @@ end;
 class function TParser.ParseDDL(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
   Result := TCreate.Parse(AParent, ASource, AResult) or
+            TDrop.Parse(AParent, ASource, AResult) or
             TComments.Parse(AParent, ASource, AResult);
 end;
 
@@ -121,6 +122,7 @@ class function TParser.ParseCreation(AParent: TStatement; ASource: TBufferedStre
 begin
   Result := TPackage.Parse(AParent, ASource, AResult) or
             TSubroutine.Parse(AParent, ASource, AResult) or
+            TTable.Parse(AParent, ASource, AResult) or
             TView.Parse(AParent, ASource, AResult);
 end;
 
@@ -140,7 +142,7 @@ end;
 class function TParser.ParseType(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
   Result := TRecord.Parse(AParent, ASource, AResult) or
-            TTable.Parse(AParent, ASource, AResult);
+            TPLSQLTable.Parse(AParent, ASource, AResult);
 end;
 
 { Разбор произвольной заранее неизвестной конструкции }

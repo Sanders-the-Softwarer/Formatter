@@ -28,9 +28,6 @@ uses Classes, Windows, SysUtils, Math, Streams, Tokens, Statements, Expressions,
 
 type
 
-  { Class reference для TProgramBlock.GetHeaderClass }
-  TStatementClass = class of TStatement;
-
   { Программный блок - та или иная конструкция на основе begin .. end }
   TProgramBlock = class(TStatement)
   strict private
@@ -141,7 +138,6 @@ type
   strict private
     _Ident: TStatement;
     _Type: TTerminal;
-    _RowType: TTerminal;
     _OpenBracket: TTerminal;
     _Size: TNumber;
     _Comma: TTerminal;
@@ -152,6 +148,7 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
+    function IsSimpleIdent: boolean;
   end;
 
   { Параметр подпрограммы }
@@ -538,20 +535,18 @@ type
   end;
 
   { Декларация записи }
-  [Aligned]
-  TRecord = class(TCommaList<TVariableDeclaration>)
+  TRecord = class(TStatement)
   strict private
     _Record: TEpithet;
-    _OpenBracket, _CloseBracket: TTerminal;
+    _Declarations: TStatement;
   strict protected
     function InternalParse: boolean; override;
-    function ParseBreak: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
   { Декларация табличного типа }
-  TTable = class(TStatement)
+  TPLSQLTable = class(TStatement)
   strict private
     _Table, _Of: TEpithet;
     _TypeRef: TStatement;
@@ -711,8 +706,7 @@ begin
   TQualifiedIdent.Parse(Self, Source, _Ident);
   if not Assigned(_Ident) then exit(false);
   { Проверим %[row]type }
-  _Type := Terminal('%type');
-  _RowType := Terminal('%rowtype');
+  _Type := Terminal(['%type', '%rowtype']);
   { Проверим указание размера }
   _OpenBracket := Terminal('(');
   if Assigned(_OpenBracket) then
@@ -732,7 +726,12 @@ end;
 
 procedure TTypeRef.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Ident, _Type, _RowType, _OpenBracket, _Size, _Comma, _Precision, _Unit, _CloseBracket]);
+  APrinter.PrintItems([_Ident, _Type, _OpenBracket, _Size, _Comma, _Precision, _Unit, _CloseBracket]);
+end;
+
+function TTypeRef.IsSimpleIdent: boolean;
+begin
+  Result := not Assigned(_Type) and not Assigned(_OpenBracket);
 end;
 
 { TParamDeclaration }
@@ -825,8 +824,12 @@ begin
   _Assignment := Terminal(':=');
   if not Assigned(_Assignment) then _Assignment := Keyword('default');
   if Assigned(_Assignment) then TParser.ParseExpression(Self, Source, _Value);
-  inherited;
-  Result := true;
+  { Слишком многие проблемные конструкции выглядят как пара идущих подряд
+    идентификаторов и распознаются как variable declaration. Поэтому
+    потребуем наличия либо точки с запятой, либо дополнительных конструкций }
+  Result := inherited or Assigned(_Constant) or Assigned(_Assignment) or
+            (Assigned(_Type) and not TTypeRef(_Type).IsSimpleIdent) or
+            (Parent is TCommaList<TVariableDeclaration>);
 end;
 
 function TVariableDeclaration.StatementName: string;
@@ -857,8 +860,11 @@ end;
 
 function TProcedureCall.InternalParse: boolean;
 begin
-  Result := TLValue.Parse(Self, Source, _LValue);
-  inherited;
+  if not TLValue.Parse(Self, Source, _LValue) then exit(false);
+  { Если выражение оказалось простым идентификатором, потребуем наличия точки
+    с запятой. Иначе слишком много проблемных конструкций распознаётся как
+    procedure call с опущенным разделителем }
+  Result := inherited or (TLValue(_LValue).StatementName = '');
 end;
 
 procedure TProcedureCall.PrintSelf(APrinter: TPrinter);
@@ -1284,36 +1290,19 @@ end;
 function TRecord.InternalParse: boolean;
 begin
   _Record := Keyword('record');
-  if not Assigned(_Record) then exit(false);
-  _OpenBracket := Terminal('(');
-  inherited;
-  _CloseBracket := Terminal(')');
-  Result := true;
-end;
-
-function TRecord.ParseBreak: boolean;
-begin
-  Result := Any([Terminal([';', ')'])]);
+  Result  := Assigned(_Record) and
+             TMLBracketedStatement<TCommaList<TVariableDeclaration>>.Parse(Self, Source, _Declarations);
 end;
 
 procedure TRecord.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Record);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_OpenBracket);
-  APrinter.NextLine;
-  APrinter.Indent;
-  inherited;
-  APrinter.NextLine;
-  APrinter.Undent;
-  APrinter.PrintItem(_CloseBracket);
-  APrinter.Undent;
+  APrinter.PrintIndented(_Declarations);
 end;
 
 { TTable }
 
-function TTable.InternalParse: boolean;
+function TPLSQLTable.InternalParse: boolean;
 begin
   _Table := Keyword('table');
   if not Assigned(_Table) then exit(false);
@@ -1325,7 +1314,7 @@ begin
   Result := true;
 end;
 
-procedure TTable.PrintSelf(APrinter: TPrinter);
+procedure TPLSQLTable.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Table, _Of, _TypeRef, _Index, _By, _IndexType]);
 end;

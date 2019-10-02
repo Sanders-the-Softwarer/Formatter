@@ -51,6 +51,7 @@ type
     function ParseSQLStatement: TStatement; virtual;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
+    function IsSimpleIdent: boolean;
   end;
 
   { Выражение }
@@ -58,6 +59,7 @@ type
   strict private
     class var FlagCreatedRight: boolean;
   strict protected
+    function InternalParse: boolean; override;
     function ParseDelimiter(out AResult: TObject): boolean; override;
     function ParseBreak: boolean; override;
     function GetKeywords: TStrings; override;
@@ -268,7 +270,22 @@ begin
   APrinter.PrintItems([_OpenBracket, _Expression, _CloseBracket, _OuterJoin, _Postfix]);
 end;
 
+function TTerm.IsSimpleIdent: boolean;
+begin
+  Result := Assigned(_LValue) and ((_LValue as TLValue).StatementName <> '') and
+    not Assigned(_Prefix) and not Assigned(_Suffix) and not Assigned(_Postfix);
+end;
+
 { TExpression }
+
+function TExpression.InternalParse: boolean;
+begin
+  Result := inherited;
+  { Если на верхнем уровне встретили одинокое непонятное слово - не будем
+    распознавать его как тривиальное выражение, пусть лучше будет unexpected token }
+  if not Assigned(Parent) and (Count = 1) and TTerm(Item(0)).IsSimpleIdent then
+    Result := false;
+end;
 
 function TExpression.ParseDelimiter(out AResult: TObject): boolean;
 begin
@@ -499,9 +516,7 @@ end;
 
 function TLValueItem.Ident: string;
 begin
-  if Assigned(_Ident)
-    then Result := _Ident.Value
-    else Result := '';
+  Result := Concat([_Ident]);
 end;
 
 { TLValue }

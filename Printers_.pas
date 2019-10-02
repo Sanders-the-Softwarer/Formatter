@@ -109,6 +109,8 @@ procedure SendSyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
 function _NextLine: TObject;
 function _Indent: TObject;
 function _Undent: TObject;
+function _IndentNextLine: TObject;
+function _UndentNextLine: TObject;
 
 implementation
 
@@ -415,6 +417,16 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
+  TIndentNextLine = class(TFormatterCmd)
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  TUndentNextLine = class(TFormatterCmd)
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
 function _NextLine: TObject;
 begin
   Result := TNextLine.Create;
@@ -430,6 +442,16 @@ begin
   Result := TUndent.Create;
 end;
 
+function _IndentNextLine: TObject;
+begin
+  Result := TIndentNextLine.Create;
+end;
+
+function _UndentNextLine: TObject;
+begin
+  Result := TUndentNextLine.Create;
+end;
+
 procedure TNextLine.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.NextLine;
@@ -443,6 +465,18 @@ end;
 procedure TUndent.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.Undent;
+end;
+
+procedure TIndentNextLine.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.Indent;
+  APrinter.NextLine;
+end;
+
+procedure TUndentNextLine.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.Undent;
+  APrinter.NextLine;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////

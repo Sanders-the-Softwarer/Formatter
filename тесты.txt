@@ -545,6 +545,25 @@ comment on table v$dual is 'Вьюха';
 comment on column v$dual.id is 'Ключ';
 comment on column v$dual.name is 'Название';
 
+-- Можно удалять таблицу
+drop table dual
+
+-- Можно удалять процедуру либо функцию
+drop procedure x
+drop function y
+
+-- Можно удалять пакет
+drop package x
+
+-- Можно удалять тело пакета
+drop package body x
+
+-- Можно удалять view
+drop view v$dual
+
+!!!!!! НУЖНО НАПИСАТЬ ТЕСТЫ НА CREATE TABLE !!!!!!!
+
+
 --------------------------------------------------------------------------------------------
 
 -- недопустимость выражений вместо полей в insert

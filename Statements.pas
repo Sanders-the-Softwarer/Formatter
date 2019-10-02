@@ -53,6 +53,9 @@ uses Classes, SysUtils, System.Generics.Collections, Streams, Tokens, Printers_;
 
 type
 
+  { Ссылка на класс синтаксических конструкций }
+  TStatementClass = class of TStatement;
+
   { Базовый класс синтаксических конструкций }
   {$TypeInfo On}
   TStatement = class
@@ -62,7 +65,7 @@ type
     function GetSettings: TFormatSettings;
   strict protected
     Source: TBufferedStream<TToken>;
-    function InternalParse: boolean; virtual; abstract;
+    function InternalParse: boolean; virtual;
     function GetKeywords: TStrings; virtual;
     function IsStrongKeyword(const AEpithet: string): boolean;
     function NextToken: TToken;
@@ -76,8 +79,9 @@ type
     function Concat(Params: array of TObject): string;
   public
     class function Parse(AParent: TStatement; Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+    class function Candidates: TArray<TStatementClass>; virtual;
   public
-    constructor Create(AParent: TStatement; ASource: TBufferedStream<TToken>);
+    constructor Create(AParent: TStatement; ASource: TBufferedStream<TToken>); virtual;
     procedure PrintSelf(APrinter: TPrinter); virtual;
     function Aligned: boolean; virtual;
     property Parent: TStatement read FParent;
@@ -114,6 +118,7 @@ type
   TCommaList<S: TStatement> = class(TStatementList<S>)
   strict protected
     function ParseDelimiter(out AResult: TObject): boolean; override;
+    function ParseBreak: boolean; override;
   end;
 
   { Неожиданная лексема - класс для конструкций, которые не удалось разобрать }
@@ -168,16 +173,38 @@ begin
 end;
 
 class function TStatement.Parse(AParent: TStatement; Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-var SavedPosition: TMark;
+var
+  SavedPosition: TMark;
+  Candidate: TStatementClass;
+  Candidates: TArray<TStatementClass>;
 begin
-  AResult := Self.Create(AParent, Tokens);
+  AResult := nil;
   SavedPosition := Tokens.Mark;
-  Result := AResult.InternalParse;
-  if not Result then
-  begin
-    Tokens.Restore(SavedPosition);
-    FreeAndNil(AResult);
+  Candidates := Self.Candidates;
+  try
+    for Candidate in Candidates do
+      if Candidate = Self then
+        begin
+          AResult := Candidate.Create(AParent, Tokens);
+          if AResult.InternalParse then exit(true);
+          Tokens.Restore(SavedPosition);
+          FreeAndNil(AResult);
+        end
+      else
+        begin
+          Result := Candidate.Parse(AParent, Tokens, AResult);
+          if Result then exit(true);
+          Tokens.Restore(SavedPosition);
+        end;
+    Result := false;
+  finally
+//    FreeAndNil(Candidates);
   end;
+end;
+
+class function TStatement.Candidates: TArray<TStatementClass>;
+begin
+  Result := TArray<TStatementClass>.Create(Self);
 end;
 
 { Конструирование названия выражения, выводимого в синтаксическое дерево }
@@ -226,6 +253,11 @@ end;
 function TStatement.Aligned: boolean;
 begin
   Result := Attributes.HasAttribute(ClassType, AlignedAttribute);
+end;
+
+function TStatement.InternalParse: boolean;
+begin
+  raise Exception.CreateFmt('Cannot parse %s - InternalParse is absent', [ClassName]);
 end;
 
 function TStatement.GetKeywords: TStrings;
@@ -513,6 +545,11 @@ begin
   Result  := Assigned(AResult);
 end;
 
+function TCommaList<S>.ParseBreak: boolean;
+begin
+  Result := true;
+end;
+
 { TUnexpectedToken }
 
 function TUnexpectedToken.StatementName: string;
@@ -538,7 +575,7 @@ end;
 function TSemicolonStatement.InternalParse: boolean;
 begin
   _Semicolon := Terminal(';');
-  Result := true;
+  Result := Assigned(_Semicolon);
 end;
 
 procedure TSemicolonStatement.PrintSelf(APrinter: TPrinter);

@@ -290,7 +290,6 @@ type
     _Order, _Siblings, _By: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-    function ParseBreak: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
@@ -311,8 +310,6 @@ type
   { Список выражений }
   [Aligned]
   TExpressionFields = class(TCommaList<TExpressionField>)
-  strict protected
-    function ParseBreak: boolean; override;
   public
     procedure Match(AFields: TIdentFields);
   end;
@@ -605,11 +602,6 @@ begin
   Result := inherited InternalParse;
 end;
 
-function TOrderBy.ParseBreak: boolean;
-begin
-  Result := true;
-end;
-
 procedure TOrderBy.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Order, _Siblings, _By]);
@@ -642,11 +634,6 @@ begin
 end;
 
 { TExpressionFields }
-
-function TExpressionFields.ParseBreak: boolean;
-begin
-  Result := true;
-end;
 
 procedure TExpressionFields.Match(AFields: TIdentFields);
 var
@@ -803,7 +790,6 @@ type
   strict protected
     function ParseDelimiter(out AResult: TObject): boolean; override;
     procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject); override;
-    function ParseBreak: boolean; override;
   end;
 
   { Выражение group by }
@@ -1051,12 +1037,6 @@ begin
     end
   else
     inherited;
-end;
-
-function TSelectTables.ParseBreak: boolean;
-begin
-  //Result := Any([Terminal([')', ';']), Keyword(['where', 'group', 'connect', 'start', 'having', 'order', 'union', 'union all', 'intersect', 'minus'])]);
-  Result := true;
 end;
 
 { TGroupBy }
