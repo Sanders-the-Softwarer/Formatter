@@ -104,10 +104,10 @@ type
     function ParseDelimiter(out AResult: TObject): boolean; virtual;
     function ParseBreak: boolean; virtual;
     procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject); virtual;
+    function OnePerLine: boolean; virtual;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
-    function MultiLine: boolean; virtual;
     procedure PrintSelf(APrinter: TPrinter); override;
     function Count: integer;
     function Item(Index: integer): TStatement;
@@ -144,9 +144,8 @@ type
   end;
 
   { Конструкция заданного типа в скобках }
-
-  TSLBracketedStatement<T: TStatement> = class(TStatement)
-  strict protected
+  TBracketedStatement<T: TStatement> = class(TStatement)
+  strict private
     _OpenBracket, _CloseBracket: TTerminal;
     _Stmt: TStatement;
   strict protected
@@ -155,7 +154,12 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
-  TMLBracketedStatement<T: TStatement> = class(TSLBracketedStatement<T>)
+  { Конструкция для форматирования заданной в одну строку }
+  TSingleLine<T: TStatement> = class(TStatement)
+  strict private
+    _Stmt: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
@@ -494,10 +498,13 @@ end;
 
 procedure TStatementList<S>.PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject);
 begin
-  if (ADelimiter is TTerminal) and ((TTerminal(ADelimiter).Value = ',') or (TTerminal(ADelimiter).Value = ';')) then
-    APrinter.SupressNextLine;
   APrinter.PrintItem(ADelimiter);
-  APrinter.SpaceOrNextLine(MultiLine);
+  if OnePerLine then APrinter.NextLine;
+end;
+
+function TStatementList<S>.OnePerLine: boolean;
+begin
+  Result := true;
 end;
 
 function TStatementList<S>.ParseStatement(out AResult: TStatement): boolean;
@@ -514,11 +521,6 @@ end;
 function TStatementList<S>.ParseBreak: boolean;
 begin
   raise Exception.CreateFmt('%s has no break condition', [ClassName]);
-end;
-
-function TStatementList<S>.MultiLine: boolean;
-begin
-  Result := true;
 end;
 
 function TStatementList<S>.Count: integer;
@@ -581,13 +583,12 @@ end;
 
 procedure TSemicolonStatement.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.SupressNextLine;
   APrinter.PrintItem(_Semicolon);
 end;
 
 { TBracketedStatement<T> }
 
-function TSLBracketedStatement<T>.InternalParse: boolean;
+function TBracketedStatement<T>.InternalParse: boolean;
 begin
   _OpenBracket := Terminal('(');
   if not Assigned(_OpenBracket) then exit(false);
@@ -596,17 +597,23 @@ begin
   Result := true;
 end;
 
-procedure TSLBracketedStatement<T>.PrintSelf(APrinter: TPrinter);
+procedure TBracketedStatement<T>.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_OpenBracket, _Stmt, _SupressNextLine, _CloseBracket]);
+  APrinter.PrintItems([_OpenBracket, _IndentNextLine, _Stmt, _UndentNextLine, _CloseBracket]);
 end;
 
-procedure TMLBracketedStatement<T>.PrintSelf(APrinter: TPrinter);
+{ TSingleLine<T> }
+
+function TSingleLine<T>.InternalParse: boolean;
 begin
-  APrinter.PrintItem(_OpenBracket);
-  APrinter.PrintIndented(_Stmt);
-  APrinter.NextLine;
-  APrinter.PrintItem(_CloseBracket);
+  Result := T.Parse(Self, Source, _Stmt);
+end;
+
+procedure TSingleLine<T>.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.SupressNextLine(true);
+  APrinter.PrintItem(_Stmt);
+  APrinter.SupressNextLine(false);
 end;
 
 end.

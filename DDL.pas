@@ -265,7 +265,7 @@ begin
   _IndexName := Identifier;
   _On := Keyword('on');
   _TableName := Identifier;
-  TSLBracketedStatement<TExpressionFields>.Parse(Self, Source, _Fields);
+  TBracketedStatement<TExpressionFields>.Parse(Self, Source, _Fields);
   inherited;
   Result := true;
 end;
@@ -285,7 +285,7 @@ begin
   _Table  := Keyword('table');
   if not Assigned(_Table) then exit(false);
   _TableName := Identifier;
-  TMLBracketedStatement<TCommaList<TTableItem>>.Parse(Self, Source, _Items);
+  TBracketedStatement<TCommaList<TTableItem>>.Parse(Self, Source, _Items);
   if Assigned(_Temporary) then
     begin
       _On := Keyword('on');
@@ -386,7 +386,7 @@ begin
   _Primary := Keyword('primary');
   if not Assigned(_Primary) then exit(false);
   _Key := Keyword('key');
-  TSLBracketedStatement<TIdentFields>.Parse(Self, Source, _Fields);
+  TBracketedStatement<TIdentFields>.Parse(Self, Source, _Fields);
   TUsingIndex.Parse(Self, Source, _UsingIndex);
   Result := true;
 end;
@@ -404,7 +404,7 @@ begin
   if not inherited then exit(false);
   _Unique := Keyword('unique');
   if not Assigned(_Unique) then exit(false);
-  TSLBracketedStatement<TIdentFields>.Parse(Self, Source, _Fields);
+  TBracketedStatement<TIdentFields>.Parse(Self, Source, _Fields);
   TUsingIndex.Parse(Self, Source, _UsingIndex);
   Result := true;
 end;
@@ -439,10 +439,10 @@ begin
   _Foreign := Keyword('foreign');
   if not Assigned(_Foreign) then exit(false);
   _Key := Keyword('key');
-  TSLBracketedStatement<TIdentFields>.Parse(Self, Source, _RefFields);
+  TBracketedStatement<TIdentFields>.Parse(Self, Source, _RefFields);
   _References := Keyword('references');
   _TableName  := Identifier;
-  TSLBracketedStatement<TIdentFields>.Parse(Self, Source, _TargetFields);
+  TBracketedStatement<TIdentFields>.Parse(Self, Source, _TargetFields);
   Result := true;
 end;
 

@@ -35,7 +35,7 @@ type
     _Number: TNumber;
     _Literal: TLiteral;
     _SQLStatement: TStatement;
-    _LValue: TStatement;
+    _Ident: TStatement;
     _Suffix: TTerminal;
     _KeywordValue: TEpithet;
     _Select: TStatement;
@@ -63,8 +63,7 @@ type
     function ParseDelimiter(out AResult: TObject): boolean; override;
     function ParseBreak: boolean; override;
     function GetKeywords: TStrings; override;
-  public
-    function MultiLine: boolean; override;
+    function OnePerLine: boolean; override;
   public
     class procedure CreatedRight;
     procedure AfterConstruction; override;
@@ -81,6 +80,22 @@ type
   public
     procedure PrintSelf(APrinter: TPrinter); override;
     function StatementName: string; override;
+    function IsSimpleIdent: boolean;
+  end;
+
+  { Индексированный квалифицированный идентификатор }
+  TQualifiedIndexedIdent = class(TStatement)
+  strict private
+    _Indexes: TStatement;
+    _Dot: TTerminal;
+    _Ident: TStatement;
+    _Next: TStatement;
+  strict protected
+    function TopStatement: boolean;
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+    function IsSimpleIdent: boolean;
   end;
 
   { Вызов функции }
@@ -94,30 +109,6 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function MultiLine: boolean;
-  end;
-
-  { Понятие компилятора LVALUE (переменная, элемент таблицы и прочее, что может быть присвоено }
-
-  TLValueItem = class(TStatement)
-  strict private
-    _Ident: TEpithet;
-    _FunctionCall: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
-    function Ident: string;
-  end;
-
-  TLValue = class(TStatementList<TLValueItem>)
-  strict protected
-    function ParseDelimiter(out AResult: TObject): boolean; override;
-    function ParseBreak: boolean; override;
-    procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject); override;
-  public
-    function StatementName: string; override;
-    function MultiLine: boolean; override;
   end;
 
   { Аргумент вызова подпрограммы }
@@ -137,8 +128,6 @@ type
   TArguments = class(TCommaList<TArgument>)
   strict protected
     function ParseBreak: boolean; override;
-  public
-    function MultiLine: boolean; override;
   end;
 
 implementation
@@ -182,7 +171,6 @@ type
   TCaseSections = class(TStatementList<TCaseSection>)
   strict protected
     function ParseBreak: boolean; override;
-    function MultiLine: boolean; override;
   end;
 
   { Выражение cast }
@@ -230,8 +218,8 @@ begin
     { Выражением cast }
     if TCast.Parse(Self, Source, _Cast) then exit(true);
     { Идентификатором или подобным выражением }
-    TLValue.Parse(Self, Source, _LValue);
-    if Assigned(_LValue) then
+    TQualifiedIndexedIdent.Parse(Self, Source, _Ident);
+    if Assigned(_Ident) then
     begin
       _Suffix := Terminal(['%rowcount', '%found', '%notfound', '%isopen']);
       exit(true);
@@ -260,7 +248,7 @@ end;
 
 procedure TTerm.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Prefix, _Number, _Literal, _SQLStatement, _LValue, _Suffix, _KeywordValue, _Case, _Cast]);
+  APrinter.PrintItems([_Prefix, _Number, _Literal, _SQLStatement, _Ident, _Suffix, _KeywordValue, _Case, _Cast]);
   if Assigned(_Select) then
   begin
     APrinter.NextLine;
@@ -272,7 +260,7 @@ end;
 
 function TTerm.IsSimpleIdent: boolean;
 begin
-  Result := Assigned(_LValue) and ((_LValue as TLValue).StatementName <> '') and
+  Result := Assigned(_Ident) and (_Ident as TQualifiedIndexedIdent).IsSimpleIdent and
     not Assigned(_Prefix) and not Assigned(_Suffix) and not Assigned(_Postfix);
 end;
 
@@ -311,7 +299,7 @@ begin
   Result := Keywords;
 end;
 
-function TExpression.MultiLine: boolean;
+function TExpression.OnePerLine: boolean;
 begin
   Result := false;
 end;
@@ -355,6 +343,39 @@ begin
     Result := Result + _Next.StatementName;
 end;
 
+function TQualifiedIdent.IsSimpleIdent: boolean;
+begin
+  Result := not Assigned(_Next);
+end;
+
+{ TQualifiedIndexedIdent }
+
+function TQualifiedIndexedIdent.TopStatement: boolean;
+begin
+  Result := not (Parent is TQualifiedIndexedIdent);
+end;
+
+function TQualifiedIndexedIdent.InternalParse: boolean;
+begin
+  if not TopStatement then TBracketedStatement<TExpressionFields>.Parse(Self, Source, _Indexes);
+  if Assigned(_Indexes) then _Dot := Terminal('.');
+  if TopStatement or Assigned(_Dot) then TQualifiedIdent.Parse(Self, Source, _Ident);
+  if Assigned(_Ident) then TQualifiedIndexedIdent.Parse(Self, Source, _Next);
+  Result := Assigned(_Indexes) or Assigned(_Ident);
+end;
+
+procedure TQualifiedIndexedIdent.PrintSelf(APrinter: TPrinter);
+begin
+  if TopStatement then APrinter.SupressNextLine(true);
+  APrinter.PrintItems([_Indexes, _Dot, _Ident, _Next]);
+  if TopStatement then APrinter.SupressNextLine(false);
+end;
+
+function TQualifiedIndexedIdent.IsSimpleIdent: boolean;
+begin
+  Result := Assigned(_Ident) and not Assigned(_Next) and (_Ident as TQualifiedIdent).IsSimpleIdent;
+end;
+
 { TFunctionCall }
 
 function TFunctionCall.InternalParse: boolean;
@@ -369,22 +390,7 @@ end;
 
 procedure TFunctionCall.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Name);
-  APrinter.SpaceOrNextLine(MultiLine);
-  APrinter.Indent;
-  APrinter.PrintItem(_OpenBracket);
-  APrinter.SpaceOrNextLine(MultiLine);
-  APrinter.Indent;
-  APrinter.PrintItem(_Arguments);
-  APrinter.Undent;
-  APrinter.SpaceOrNextLine(MultiLine);
-  APrinter.PrintItem(_CloseBracket);
-  APrinter.Undent;
-end;
-
-function TFunctionCall.MultiLine: boolean;
-begin
-  Result := Assigned(_Arguments) and ((_Arguments as TCommaList<TArgument>).Count > Settings.ArgumentSingleLineParamLimit);
+  APrinter.PrintItems([_Name, _IndentNextLine, _OpenBracket, _IndentNextLine, _Arguments, _UndentNextLine, _CloseBracket, _Undent]);
 end;
 
 { TArgument }
@@ -408,7 +414,7 @@ procedure TArgument.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Ident);
   if Assigned(_Ident) then
-    APrinter.Ruler('argument', TArguments(Parent).MultiLine and Settings.AlignVariables);
+    APrinter.Ruler('argument', Settings.AlignVariables);
   APrinter.PrintItem(_Assignment);
   APrinter.PrintItem(_Expression);
 end;
@@ -418,11 +424,6 @@ end;
 function TArguments.ParseBreak: boolean;
 begin
   Result := Any([Terminal([';', ')'])]);
-end;
-
-function TArguments.MultiLine: boolean;
-begin
-  Result := (Self.Count > Settings.ArgumentSingleLineParamLimit);
 end;
 
 { TCase }
@@ -476,11 +477,6 @@ begin
   Result := not Assigned(Keyword(['when', 'else']));
 end;
 
-function TCaseSections.MultiLine: boolean;
-begin
-  Result := false;
-end;
-
 { TCast }
 
 function TCast.InternalParse: boolean;
@@ -498,55 +494,6 @@ end;
 procedure TCast.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Cast, _OpenBracket, _Expression, _As, _TypeRef, _CloseBracket]);
-end;
-
-{ TLValueItem }
-
-function TLValueItem.InternalParse: boolean;
-begin
-  TFunctionCall.Parse(Self, Source, _FunctionCall);
-  if not Assigned(_FunctionCall) then _Ident := Identifier;
-  Result := Assigned(_FunctionCall) or Assigned(_Ident);
-end;
-
-procedure TLValueItem.PrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_FunctionCall, _Ident]);
-end;
-
-function TLValueItem.Ident: string;
-begin
-  Result := Concat([_Ident]);
-end;
-
-{ TLValue }
-
-function TLValue.ParseDelimiter(out AResult: TObject): boolean;
-begin
-  AResult := Terminal('.');
-  Result  := Assigned(AResult);
-end;
-
-function TLValue.ParseBreak: boolean;
-begin
-  Result := true;
-end;
-
-procedure TLValue.PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject);
-begin
-  APrinter.PrintItem(ADelimiter);
-end;
-
-function TLValue.MultiLine: boolean;
-begin
-  Result := false;
-end;
-
-function TLValue.StatementName: string;
-begin
-  if (Count = 1) and (Item(0) is TLValueItem)
-    then Result := TLValueItem(Item(0)).Ident
-    else Result := '';
 end;
 
 initialization

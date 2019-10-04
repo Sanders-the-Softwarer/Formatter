@@ -62,6 +62,7 @@ type
     AlignTableColumnComments: boolean;
     AlignSpecialComments: boolean;
     ReplaceDefault: boolean;
+    ReplaceAsIs: boolean;
   end;
 
   { Интерфейс вывода на принтер }
@@ -75,7 +76,7 @@ type
     procedure Indent; virtual; abstract;
     procedure Undent; virtual; abstract;
     procedure NextLine; virtual; abstract;
-    procedure SupressNextLine; virtual; abstract;
+    procedure SupressNextLine(ASupress: boolean); virtual; abstract;
     procedure SupressSpaces(ASupress: boolean); virtual; abstract;
     procedure PrintSpecialComment(AValue: string); virtual; abstract;
     procedure Ruler(const ARuler: string; Enabled: boolean = true); virtual; abstract;
@@ -85,7 +86,6 @@ type
     procedure PrintItems(AItems: array of TObject);
     procedure PrintIndented(AItem: TObject); overload;
     procedure PrintIndented(AItems: array of TObject); overload;
-    procedure SpaceOrNextLine(AMultiLine: boolean);
   public
     property Settings: TFormatSettings read FSettings write FSettings;
   public
@@ -112,7 +112,6 @@ function _Indent: TObject;
 function _Undent: TObject;
 function _IndentNextLine: TObject;
 function _UndentNextLine: TObject;
-function _SupressNextLine: TObject;
 
 implementation
 
@@ -142,7 +141,7 @@ type
     procedure Indent; override;
     procedure Undent; override;
     procedure NextLine; override;
-    procedure SupressNextLine; override;
+    procedure SupressNextLine(ASupress: boolean); override;
     procedure SupressSpaces(ASupress: boolean); override;
     procedure PrintSpecialComment(AValue: string); override;
     procedure Ruler(const ARuler: string; Enabled: boolean = true); override;
@@ -183,7 +182,7 @@ type
     IntoSync: boolean;
     TokenPos, TokenLen: TDictionary<TToken, integer>;
     SpecialComments: TObjectList<TToken>;
-    SupressMode: boolean;
+    SupSpace, SupNextLine: integer;
   protected
     function SpaceRequired(ALeft, ARight: TToken): boolean;
     function EmptyLineRequired(APrev, ANext: TStatement): boolean;
@@ -198,7 +197,7 @@ type
     procedure Indent; override;
     procedure Undent; override;
     procedure NextLine; override;
-    procedure SupressNextLine; override;
+    procedure SupressNextLine(ASupress: boolean); override;
     procedure SupressSpaces(ASupress: boolean); override;
     procedure PrintSpecialComment(AValue: string); override;
     procedure Ruler(const ARuler: string; Enabled: boolean = true); override;
@@ -292,11 +291,6 @@ begin
   Result := TAlarmStatementPrinter.Create(AListBox, ATabSheet);
 end;
 
-procedure TPrinter.SpaceOrNextLine(AMultiLine: boolean);
-begin
-  if AMultiLine then NextLine;
-end;
-
 procedure TPrinter.PrintItems(AItems: array of TObject);
 var i: integer;
 begin
@@ -305,6 +299,7 @@ end;
 
 procedure TPrinter.PrintIndented(AItem: TObject);
 begin
+  if not Assigned(AItem) then exit;
   NextLine;
   Indent;
   PrintItem(AItem);
@@ -312,7 +307,13 @@ begin
 end;
 
 procedure TPrinter.PrintIndented(AItems: array of TObject);
+var
+  Found: boolean;
+  i: integer;
 begin
+  Found := false;
+  for i := Low(AItems) to High(AItems) do Found := Found or Assigned(AItems[i]);
+  if not Found then exit;
   NextLine;
   Indent;
   PrintItems(AItems);
@@ -437,11 +438,6 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
-  TSupressNextLine = class(TFormatterCmd)
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
-  end;
-
 function _NextLine: TObject;
 begin
   Result := TNextLine.Create;
@@ -465,11 +461,6 @@ end;
 function _UndentNextLine: TObject;
 begin
   Result := TUndentNextLine.Create;
-end;
-
-function _SupressNextLine: TObject;
-begin
-  Result := TSupressNextLine.Create;
 end;
 
 procedure TNextLine.PrintSelf(APrinter: TPrinter);
@@ -497,11 +488,6 @@ procedure TUndentNextLine.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.Undent;
   APrinter.NextLine;
-end;
-
-procedure TSupressNextLine.PrintSelf(APrinter: TPrinter);
-begin
-  APrinter.SupressNextLine;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -568,6 +554,8 @@ end;
 { Проверка, нужен ли пробел между двумя лексемами }
 function TFormatterPrinter.SpaceRequired(ALeft, ARight: TToken): boolean;
 begin
+  { Если пробелы запрещены - не ставим их }
+  if SupSpace > 0 then exit(false);
   { Точку с запятой прижимаем справа ко всему }
   if ARight.Value = ';' then exit(false);
   { Точку прижимаем с обеих сторон ко всему }
@@ -586,8 +574,8 @@ begin
   if ARight.Value.StartsWith('%') then exit(false);
   { Унарные операции прижимаем слева к следующему за ними }
   if (ALeft is TTerminal) and (TTerminal(ALeft).OpType = otUnary) then exit(false);
-  { Если правила не сработали, лучше перестраховаться }
-  Result := not SupressMode;
+  { Если правила не сработали, ставим  пробел }
+  Result := true;
 end;
 
 { Проверка, нужна ли пустая строка между двумя конструкциями }
@@ -605,23 +593,27 @@ end;
 procedure TFormatterPrinter.PrintToken(AToken: TToken);
 var
   Value: string;
+  AllowLF: boolean;
 begin
+  AllowLF := (SupNextLine = 0);
   { Обработаем вставку пустой строки }
   if EmptyLine then
   begin
-    if Assigned(Builder) then Builder.AppendLine;
+    if Assigned(Builder) and AllowLF then Builder.AppendLine;
     BOL := true;
     EmptyLine := false;
   end;
   { Обработаем переход на новую строку }
   if BOL then
   begin
-    if Assigned(Builder) then Builder.AppendLine;
-    if Assigned(Builder) then Builder.Append(StringOfChar(' ', Shift));
+    if Assigned(Builder) and AllowLF then Builder.AppendLine.Append(StringOfChar(' ', Shift));
     BOL := false;
-    Col := Shift + 1;
-    PrevCol := 1;
-    PrevToken := nil;
+    if AllowLF then
+    begin
+      Col := Shift + 1;
+      PrevCol := 1;
+      PrevToken := nil;
+    end;
   end;
   { Если нужно, внедрим пробел между предыдущей и новой лексемами }
   if Assigned(PrevToken) and Assigned(AToken) and SpaceRequired(PrevToken, AToken) then
@@ -632,7 +624,7 @@ begin
   { Если задано выравнивание, вставим соответствующее количество пробелов }
   if Padding > 0 then
   begin
-    Builder.Append(StringOfChar(' ', Padding));
+    if Assigned(Builder) then Builder.Append(StringOfChar(' ', Padding));
     Inc(Col, Padding);
     Inc(PrevCol, Padding);
     Padding := 0;
@@ -642,8 +634,12 @@ begin
   begin
     Value := AToken.Value;
     { Учтём настройки замены лексем на синонимы и вывод в нижнем регистре }
-    if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and SameText(AToken.Value, 'default') and Settings.ReplaceDefault
+    if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and
+       SameText(AToken.Value, 'default') and Settings.ReplaceDefault and AToken.CanReplace
       then Value := ':=';
+    if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and
+       SameText(AToken.Value, 'as') and Settings.ReplaceAsIs and AToken.CanReplace
+      then Value := 'is';
     if Attributes.HasAttribute(AToken.ClassType, LowerCaseAttribute)
       then Value := Value.ToLower;
     { В режиме реальной печати - напечатаем лексему, иначе только учтём сдвиг позиции }
@@ -669,7 +665,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   var
     _Mode: TFormatterPrinterMode;
     _Shift, _Col: integer;
-    _BOL, _EmptyLine, _Supress: boolean;
+    _BOL, _EmptyLine: boolean;
     _Builder: TStringBuilder;
     _Rulers: TRulers;
     _PrevToken: TToken;
@@ -693,7 +689,6 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     _Shift   := Shift;
     _Col     := Col;
     _BOL     := BOL;
-    _Supress := SupressMode;
     _EmptyLine := EmptyLine;
     _Builder := Builder;
     _Rulers  := Rulers;
@@ -708,7 +703,6 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     Shift := _Shift;
     Col   := _Col;
     BOL   := _BOL;
-    SupressMode := _Supress;
     EmptyLine := _EmptyLine;
     Builder := _Builder;
     PrevToken := _PrevToken;
@@ -770,22 +764,28 @@ begin
   if Shift >= 4 then Dec(Shift, 4);
 end;
 
-{ Переход на следующую строку и его подавление }
-
+{ Переход на следующую строку }
 procedure TFormatterPrinter.NextLine;
 begin
   BOL := true;
 end;
 
-procedure TFormatterPrinter.SupressNextLine;
+{ Установка режима подавления переводов строки }
+procedure TFormatterPrinter.SupressNextLine(ASupress: boolean);
 begin
-  BOL := false;
+  PrintToken(nil);
+  if ASupress
+    then Inc(SupNextLine)
+    else Dec(SupNextLine);
+  PrintToken(nil);
 end;
 
 { Установка режима подавления пробелов }
 procedure TFormatterPrinter.SupressSpaces(ASupress: boolean);
 begin
-  SupressMode := ASupress;
+  if ASupress
+    then Inc(SupSpace)
+    else Dec(SupSpace);
 end;
 
 { Вывод на принтер специального комментария (отсутствующего в исходном тексте)}

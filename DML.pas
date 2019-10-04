@@ -160,11 +160,6 @@ type
     function ParseBreak: boolean; override;
   end;
 
-  TSLIdentFields = class(TIdentFields)
-  public
-    function MultiLine: boolean; override;
-  end;
-
   { Список выражений }
 
   TExpressionField = class(TStatement)
@@ -430,7 +425,7 @@ begin
   _Within := Keyword('within');
   if not Assigned(_Within) then exit(false);
   _Group  := Keyword('group');
-  TMLBracketedStatement<TOrderBy>.Parse(Self, Source, _OrderBy);
+  TBracketedStatement<TOrderBy>.Parse(Self, Source, _OrderBy);
   Result := true;
 end;
 
@@ -566,13 +561,6 @@ end;
 function TIdentFields.ParseBreak: boolean;
 begin
   Result := Any([Terminal([')', ';']), Keyword('*')]);
-end;
-
-{ TSLIdentFields }
-
-function TSLIdentFields.MultiLine: boolean;
-begin
-  Result := false;
 end;
 
 { TOrderByItem }
@@ -775,9 +763,7 @@ type
     _On: TEpithet;
     _JoinCondition: TStatement;
     _Using: TEpithet;
-    _OpenBracket: TTerminal;
     _Fields: TStatement;
-    _CloseBracket: TTerminal;
   strict protected
     function InternalParse: boolean; override;
     function ParseTableExpression(out AResult: TStatement): boolean; override;
@@ -874,13 +860,20 @@ end;
 procedure TSelect.PrintSelf(APrinter: TPrinter);
 begin
   TExpressionFields(_Fields).Match(TIdentFields(_IntoFields));
-  APrinter.PrintItems([_With, _Select, _Mode]);
-  APrinter.PrintIndented(_Fields);
-  APrinter.PrintItem(_Into);
-  APrinter.PrintIndented(_IntoFields);
-  APrinter.PrintItem(_From);
-  APrinter.PrintIndented(_Tables);
-  APrinter.PrintItems([_Where, _StartWith, _ConnectBy, _GroupBy, _Having, _OrderBy, _AdditionalSelect]);
+  APrinter.PrintItems([_With,
+                       _Select,    _Mode,           _IndentNextLine,
+                                   _Fields,         _UndentNextLine,
+                       _Into,      _IndentNextLine,
+                                   _IntoFields,     _UndentNextLine,
+                       _From,      _IndentNextLine,
+                                   _Tables,         _UndentNextLine,
+                       _Where,     _NextLine,
+                       _StartWith, _NextLine,
+                       _ConnectBy, _NextLine,
+                       _GroupBy,   _NextLine,
+                       _Having,    _NextLine,
+                       _OrderBy,   _NextLine,
+                       _AdditionalSelect]);
   inherited;
 end;
 
@@ -996,24 +989,19 @@ begin
   if Result then _On := Keyword('on');
   if Assigned(_On) then TParser.ParseExpression(Self, Source, _JoinCondition);
   if not Assigned(_On) then _Using := Keyword('using');
-  if Assigned(_Using) then
-  begin
-    _OpenBracket := Terminal('(');
-    TSLIdentFields.Parse(Self, Source, _Fields);
-    _CloseBracket := Terminal(')');
-  end;
+  if Assigned(_Using) then TSingleLine<TBracketedStatement<TIdentFields>>.Parse(Self, Source, _Fields);
 end;
 
 function TSelectTableRef.ParseTableExpression(out AResult: TStatement): boolean;
 begin
-  Result := TLValue.Parse(Self, Source, AResult);
+  Result := TQualifiedIndexedIdent.Parse(Self, Source, AResult);
 end;
 
 procedure TSelectTableRef.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Lateral);
   inherited;
-  APrinter.PrintIndented([_On, _JoinCondition, _Using, _OpenBracket, _Fields, _CloseBracket]);
+  APrinter.PrintIndented([_On, _JoinCondition, _Using, _Fields]);
 end;
 
 { TSelectTables }

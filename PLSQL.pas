@@ -100,7 +100,6 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function MultiLine: boolean;
     function StatementName: string; override;
   end;
 
@@ -179,7 +178,6 @@ type
     function ParseBreak: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-    function MultiLine: boolean; override;
   end;
 
   { Блок деклараций }
@@ -261,7 +259,7 @@ type
   { Вызов процедуры }
   TProcedureCall = class(TSemicolonStatement)
   strict private
-    _LValue: TStatement;
+    _Call: TStatement;
   strict protected
     function InternalParse: boolean; override;
   public
@@ -631,6 +629,7 @@ begin
   _PackageName := Identifier;
   { Проверим наличие is }
   _Is := Keyword(['is', 'as']);
+  if Assigned(_Is) then _Is.CanReplace := true;
 end;
 
 procedure TPackageHeader.PrintSelf(APrinter: TPrinter);
@@ -673,24 +672,11 @@ end;
 
 procedure TSubroutineHeaderBase.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Initial, _Name]);
-  if MultiLine then
-  begin
-    APrinter.NextLine;
-    APrinter.Indent;
-  end;
-  APrinter.PrintItem(_Params);
-  if Assigned(_Return) then APrinter.SpaceOrNextLine(MultiLine);
-  APrinter.PrintItems([_Return, _ReturnType]);
-  if Assigned(_Deterministic) then APrinter.SpaceOrNextLine(MultiLine);
-  APrinter.PrintItem(_Deterministic);
-  if Assigned(_Pipelined) then APrinter.SpaceOrNextLine(MultiLine);
-  APrinter.PrintItem(_Pipelined);
-end;
-
-function TSubroutineHeaderBase.MultiLine: boolean;
-begin
-  Result := Assigned(_Params) and TParamsDeclaration(_Params).MultiLine;
+  APrinter.PrintItems([_Initial, _Name, _IndentNextLine,
+                                 _Params, _NextLine,
+                                 _Return, _ReturnType, _NextLine,
+                                 _Deterministic, _NextLine,
+                                 _Pipelined, _UndentNextLine]);
 end;
 
 function TSubroutineHeaderBase.StatementName: string;
@@ -746,7 +732,11 @@ begin
   if not Assigned(_ParamName) and not Assigned(_In) and not Assigned(_Out) and not Assigned(_Nocopy) and not Assigned(_ParamType) then exit(false);
   _Assignment := Terminal(':=');
   if not Assigned(_Assignment) then _Assignment := Keyword('default');
-  if Assigned(_Assignment) then TParser.ParseExpression(Self, Source, _DefaultValue);
+  if Assigned(_Assignment) then
+  begin
+    _Assignment.CanReplace := true;
+    TParser.ParseExpression(Self, Source, _DefaultValue);
+  end;
   Result := true;
 end;
 
@@ -758,7 +748,7 @@ end;
 procedure TParamDeclaration.PrintSelf(APrinter: TPrinter);
 var NeedRuler: boolean;
 begin
-  NeedRuler := Settings.AlignVariables and (Parent as TParamsDeclaration).MultiLine;
+  NeedRuler := Settings.AlignVariables;
   APrinter.PrintItem(_ParamName);
   APrinter.Ruler('modifiers', NeedRuler);
   APrinter.PrintItems([_In, _Out, _Nocopy]);
@@ -783,19 +773,11 @@ begin
   Result := Any([Terminal(')')]);
 end;
 
-function TParamsDeclaration.MultiLine: boolean;
-begin
-  Result := (Count > Settings.DeclarationSingleLineParamLimit);
-end;
-
 procedure TParamsDeclaration.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_OpenBracket);
-  if MultiLine then APrinter.NextLine;
-  APrinter.Indent;
+  APrinter.PrintItems([_OpenBracket, _IndentNextLine]);
   inherited;
-  APrinter.Undent;
-  APrinter.PrintItem(_CloseBracket);
+  APrinter.PrintItems([_UndentNextLine, _CloseBracket]);
 end;
 
 { TDeclarations }
@@ -823,7 +805,11 @@ begin
   { Осталось значение и т. п. }
   _Assignment := Terminal(':=');
   if not Assigned(_Assignment) then _Assignment := Keyword('default');
-  if Assigned(_Assignment) then TParser.ParseExpression(Self, Source, _Value);
+  if Assigned(_Assignment) then
+  begin
+    _Assignment.CanReplace := true;
+    TParser.ParseExpression(Self, Source, _Value);
+  end;
   { Слишком многие проблемные конструкции выглядят как пара идущих подряд
     идентификаторов и распознаются как variable declaration. Поэтому
     потребуем наличия либо точки с запятой, либо дополнительных конструкций }
@@ -860,16 +846,17 @@ end;
 
 function TProcedureCall.InternalParse: boolean;
 begin
-  if not TLValue.Parse(Self, Source, _LValue) then exit(false);
-  { Если выражение оказалось простым идентификатором, потребуем наличия точки
-    с запятой. Иначе слишком много проблемных конструкций распознаётся как
-    procedure call с опущенным разделителем }
-  Result := inherited or (TLValue(_LValue).StatementName = '');
+  Result := TFunctionCall.Parse(Self, Source, _Call) or
+            TQualifiedIndexedIdent.Parse(Self, Source, _Call);
+  { Если результат - простой идентификатор, потребуем наличия точки с запятой,
+    иначе вероятно ложное распознавание }
+  if Result then
+    Result := inherited or (_Call is TFunctionCall) or not (_Call as TQualifiedIndexedIdent).IsSimpleIdent;
 end;
 
 procedure TProcedureCall.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_LValue);
+  APrinter.PrintItem(_Call);
   inherited;
 end;
 
@@ -877,7 +864,7 @@ end;
 
 function TAssignment.InternalParse: boolean;
 begin
-  TLValue.Parse(Self, Source, _Target);
+  TQualifiedIndexedIdent.Parse(Self, Source, _Target);
   _Assignment := Terminal(':=');
   Result := Assigned(_Target) and Assigned(_Assignment);
   if not Result then exit;
@@ -926,14 +913,13 @@ function TSubroutineHeader.InternalParse: boolean;
 begin
   Result := inherited InternalParse;
   if Result then _Is := Keyword(['is', 'as']);
+  if Assigned(_Is) then _Is.CanReplace := true;
 end;
 
 procedure TSubroutineHeader.PrintSelf(APrinter: TPrinter);
 begin
   inherited;
-  APrinter.SpaceOrNextLine(MultiLine);
-  if MultiLine then APrinter.Undent;
-  APrinter.PrintItem(_Is);
+  APrinter.PrintItems([_Is]);
 end;
 
 function TSubroutineHeader.Name: string;
@@ -954,8 +940,6 @@ procedure TSubroutineForwardDeclaration.PrintSelf(APrinter: TPrinter);
 begin
   inherited;
   APrinter.PrintItem(_Semicolon);
-  APrinter.NextLine;
-  if MultiLine then APrinter.Undent;
 end;
 
 { TOperators }
@@ -1169,7 +1153,7 @@ function TPragma.InternalParse: boolean;
 begin
   _Pragma := Keyword('pragma');
   if not Assigned(_Pragma) then exit(false);
-  TLValue.Parse(Self, Source, _Body);
+  TQualifiedIndexedIdent.Parse(Self, Source, _Body);
   inherited;
   Result := true;
 end;
@@ -1291,7 +1275,7 @@ function TRecord.InternalParse: boolean;
 begin
   _Record := Keyword('record');
   Result  := Assigned(_Record) and
-             TMLBracketedStatement<TCommaList<TVariableDeclaration>>.Parse(Self, Source, _Declarations);
+             TBracketedStatement<TCommaList<TVariableDeclaration>>.Parse(Self, Source, _Declarations);
 end;
 
 procedure TRecord.PrintSelf(APrinter: TPrinter);
@@ -1331,7 +1315,7 @@ begin
   if Assigned(_IndicesOrValues) then
     begin
       _Of := Keyword('of');
-      TLValue.Parse(Self, Source, _TableName);
+      TQualifiedIndexedIdent.Parse(Self, Source, _TableName);
     end
   else
     begin
@@ -1420,21 +1404,12 @@ begin
 end;
 
 procedure TCursor.PrintSelf(APrinter: TPrinter);
-var MultiLine: boolean;
 begin
-  MultiLine := Assigned(_Params) and TParamsDeclaration(_Params).MultiLine or Assigned(_Return);
-  APrinter.PrintItems([_Cursor, _CursorName]);
-  APrinter.SpaceOrNextLine(MultiLine);
-  APrinter.Indent;
-  APrinter.PrintItem(_Params);
-  APrinter.Undent;
-  APrinter.SpaceOrNextLine(MultiLine);
-  APrinter.Indent;
-  APrinter.PrintItems([_Return, _ReturnType]);
-  APrinter.Undent;
-  APrinter.SpaceOrNextLine(MultiLine);
-  APrinter.PrintItem(_Is);
-  APrinter.PrintIndented(_Select);
+  APrinter.PrintItems([_Cursor, _CursorName, _IndentNextLine,
+                                _Params, _NextLine,
+                                _Return, _ReturnType, _UndentNextLine,
+                       _Is,     _IndentNextLine,
+                                _Select, _UndentNextLine]);
 end;
 
 { TPipeRow }
@@ -1483,7 +1458,7 @@ function TClose.InternalParse: boolean;
 begin
   _Close := Keyword('close');
   if not Assigned(_Close) then exit(false);
-  TLValue.Parse(Self, Source, _Cursor);
+  TQualifiedIndexedIdent.Parse(Self, Source, _Cursor);
   inherited;
   Result := true;
 end;

@@ -63,6 +63,7 @@ type
     edMatchParamLimit: TSpinEdit;
     tmMemo: TTimer;
     checkAlignTableColumnComments: TCheckBox;
+    checkReplaceAsIs: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -110,6 +111,7 @@ begin
   Settings.AlignSpecialComments            := checkAlignSpecialComments.Checked;
   Settings.AlignTableColumnComments        := checkAlignTableColumnComments.Checked;
   Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
+  Settings.ReplaceAsIs                     := checkReplaceAsIs.Checked;
   { Создадим потоки }
   Text := edSrc.Text;
   Big  := (Text.Length > 1024 * 1024);

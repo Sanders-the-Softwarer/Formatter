@@ -577,6 +577,9 @@ drop index i$dual
 -- ћожно создавать таблицы
 create table x (i integer) tablespace tmp
 
+-- “аблицы могут быть индекс-организованными
+create table xi (i integer) organization index tablespace tmp
+
 -- “аблицы могут быть временными
 create global temporary table t (i integer) on commit delete rows
 create global temporary table tt (ii integer) on commit preserve rows
@@ -611,3 +614,5 @@ create table x (
 -- недопустимость выражений вместо полей в returning
 -- update t set a = b returning '1', '2', '3' into ('4' + '5'), 6, 7
 
+-- Ётот тест самый последний, провер€ет правильность разбора конструкций без перевода строки в конце файла
+select * from dual

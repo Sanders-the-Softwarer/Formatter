@@ -304,7 +304,7 @@ end;
 function TWhitespaceSkipper.InternalEof: boolean;
 begin
   Skip;
-  Result := inherited InternalEof;
+  Result := Source.Eof;
 end;
 
 function TWhitespaceSkipper.InternalNext: TToken;
@@ -316,9 +316,14 @@ end;
 procedure TWhitespaceSkipper.Skip;
 begin
   repeat
-    Source.SaveMark
-  until Source.Eof or not (Source.Next is TWhitespace);
-  if not Source.Eof then Source.Restore;
+    Source.SaveMark;
+    if Source.Eof then
+      exit
+    else if Source.Next is TWhitespace then
+      continue
+    else
+      Source.Restore;
+  until true;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////

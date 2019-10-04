@@ -101,8 +101,8 @@ type
   strict private
     FSource: TBufferedStream<I>;
   strict protected
-    property Source: TBufferedStream<I> read FSource;
     function InternalEof: boolean; override;
+    property Source: TBufferedStream<I> read FSource;
   public
     constructor Create(ASource: TBufferedStream<I>);
     destructor Destroy; override;
@@ -259,7 +259,7 @@ end;
 
 function TNextStream<I, O>.InternalEof: boolean;
 begin
-  Result := FSource.Eof;
+  Result := Source.Eof;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
