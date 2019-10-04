@@ -96,6 +96,9 @@ implementation
 
 { Подготовка и распечатка форматированного текста }
 procedure TFormMain.UpdateData;
+var
+  Text: string;
+  Big: boolean;
 begin
   FreeAndNil(StatementStream);
   { Скопируем настройки }
@@ -108,15 +111,17 @@ begin
   Settings.AlignTableColumnComments        := checkAlignTableColumnComments.Checked;
   Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
   { Создадим потоки }
+  Text := edSrc.Text;
+  Big  := (Text.Length > 1024 * 1024);
   TokenStream     := TMerger.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(edSrc.Text)))));
   StatementStream := TParser.Create(TCommentProcessor.Create(TokenStream), Settings);
   { Напечатаем данные }
   StatementStream.PrintAll(ResultPrinter);
-  StatementStream.PrintAll(SyntaxTreePrinter);
-  StatementStream.PrintAll(AlarmStatementPrinter);
+  if not Big then StatementStream.PrintAll(SyntaxTreePrinter);
+  if not Big then StatementStream.PrintAll(AlarmStatementPrinter);
   { Сюда печатаем из TokenStream, чтобы увидеть лексемы, выпавшие при печати из синтаксического анализа }
-  TokenStream.PrintAll(TokenizerPrinter);
-  TokenStream.PrintAll(AlarmTokenPrinter);
+  if not Big then TokenStream.PrintAll(TokenizerPrinter);
+  if not Big then TokenStream.PrintAll(AlarmTokenPrinter);
   { Толкнём синхронизацию }
   PrevSrcCaret := -1;
 end;

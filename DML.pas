@@ -165,6 +165,26 @@ type
     function MultiLine: boolean; override;
   end;
 
+  { Список выражений }
+
+  TExpressionField = class(TStatement)
+  strict private
+    _Expression: TStatement;
+    _Match: TIdentField;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override; final;
+    procedure PrintSelfAfter(APrinter: TPrinter); virtual;
+    property Match: TIdentField read _Match write _Match;
+  end;
+
+  [Aligned]
+  TExpressionFields = class(TCommaList<TExpressionField>)
+  public
+    procedure Match(AFields: TIdentFields);
+  end;
+
 implementation
 
 uses Parser;
@@ -292,26 +312,6 @@ type
     function InternalParse: boolean; override;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Выражение как поле в group by, insert values и т. п. }
-  TExpressionField = class(TStatement)
-  strict private
-    _Expression: TStatement;
-    _Match: TIdentField;
-  strict protected
-    function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override; final;
-    procedure PrintSelfAfter(APrinter: TPrinter); virtual;
-    property Match: TIdentField read _Match write _Match;
-  end;
-
-  { Список выражений }
-  [Aligned]
-  TExpressionFields = class(TCommaList<TExpressionField>)
-  public
-    procedure Match(AFields: TIdentFields);
   end;
 
   { Конструкция where }

@@ -107,7 +107,6 @@ type
   end;
 
   { Идентификатор либо ключевое слово }
-
   [LowerCase]
   TEpithet = class(TToken)
   private

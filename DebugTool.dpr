@@ -13,7 +13,8 @@ uses
   DML in 'DML.pas',
   Statements in 'Statements.pas',
   DDL in 'DDL.pas',
-  Attributes in 'Attributes.pas';
+  Attributes in 'Attributes.pas',
+  SQLPlus in 'SQLPlus.pas';
 
 {$R *.res}
 

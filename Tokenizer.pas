@@ -44,7 +44,7 @@ type
 
   { Ћексический анализатор превращает поток символов в поток лексем }
   TTokenizer = class(TNextStream<TPositionedChar, TToken>)
-  protected
+  strict protected
     function InternalNext: TToken; override;
   end;
 
@@ -130,6 +130,15 @@ function TTokenizer.InternalNext: TToken;
     Restore;
     Result := false;
     while NextChar in [#9, #13, ' '] do Result := true;
+    RefuseLastChar;
+  end;
+
+  { —читывание имени файла }
+  function ParseFilename: boolean;
+  begin
+    Restore;
+    Result := true;
+    repeat until NextChar in [#13, #0];
     RefuseLastChar;
   end;
 
@@ -226,12 +235,13 @@ function TTokenizer.InternalNext: TToken;
   { —читывание многосимвольных лексем }
   function ParseTerminal: boolean;
   const
-    N = 30;
+    N = 31;
     Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=',
                                       '=>', '..', '.', ',', ';', '(', ')', '+',
-                                      '-', '*', '/', '%', '@', '=', '<', '>',
-                                      '(+)', '%type', '%rowtype', '%rowcount',
-                                      '%found', '%notfound', '%isopen');
+                                      '-', '*', '/', '%', '@@', '@', '=', '<',
+                                      '>', '(+)', '%type', '%rowtype',
+                                      '%rowcount', '%found', '%notfound',
+                                      '%isopen');
   var
     Value: string;
     Starts, Exact, PrevExact: boolean;    
@@ -254,9 +264,11 @@ function TTokenizer.InternalNext: TToken;
     if Exact then
       ApplyLastChar
     else if PrevExact then
-      RefuseLastChar;
+      RefuseLastChar
+{    else
+      raise Exception.Create('Tokenizer: internal error #1');}
   end;
-  
+
 begin
   { —охраним начальную позицию }
   StartPosition := Source.Mark;

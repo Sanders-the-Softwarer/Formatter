@@ -50,7 +50,7 @@ type
     class function ParseDML(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseDDL(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParsePLSQL(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-    class function ParseCreation(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+    class function ParseSQLPlus(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseDeclaration(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseType(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseAny(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
@@ -59,7 +59,7 @@ type
 
 implementation
 
-uses DDL, DML, PLSQL, Expressions;
+uses DDL, DML, PLSQL, SQLPlus, Expressions;
 
 type
   { "Пустое" выражение }
@@ -117,13 +117,14 @@ begin
             TProcedureCall.Parse(AParent, ASource, AResult);
 end;
 
-{ Разбор объектов, создаваемых командой create }
-class function TParser.ParseCreation(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+{ Разбор операторов SQL*Plus }
+class function TParser.ParseSQLPlus(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
-  Result := TPackage.Parse(AParent, ASource, AResult) or
-            TSubroutine.Parse(AParent, ASource, AResult) or
-            TTable.Parse(AParent, ASource, AResult) or
-            TView.Parse(AParent, ASource, AResult);
+  Result := TClear.Parse(AParent, ASource, AResult) or
+            TWhenever.Parse(AParent, ASource, AResult) or
+            TSet.Parse(AParent, ASource, AResult) or
+            TAt.Parse(AParent, ASource, AResult) or
+            TSpool.Parse(AParent, ASource, AResult);
 end;
 
 { Разбор деклараций (переменных, процедур, типов, курсоров, прагм и т. п. }
@@ -154,6 +155,7 @@ begin
             ParseDeclaration(AParent, ASource, AResult) or
             ParseType(AParent, ASource, AResult) or
             TAnonymousBlock.Parse(AParent, ASource, AResult) or
+            ParseSQLPlus(AParent, ASource, AResult) or
             ParseExpression(AParent, ASource, AResult);
 end;
 

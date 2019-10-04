@@ -43,7 +43,7 @@ unit Statements;
   ќператоры и конструкции могут и часто должны завершатьс€ точкой с зап€той,
   поэтому класс TSemicolonStatement избавл€ет от необходимости описывать в
   тыс€че мест парсинг одного и того же символа. јналогично, класс
-  TBracedStatement позвол€ет удобно описывать конструкции в скобках.
+  TBracketedStatement позвол€ет удобно описывать конструкции в скобках.
 
 ------------------------------------------------------------------------------ }
 
@@ -172,6 +172,7 @@ begin
   Source := ASource;
 end;
 
+{  лючевое место продукта - попытка разбора указанного выражени€ и восстановление при неудаче }
 class function TStatement.Parse(AParent: TStatement; Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 var
   SavedPosition: TMark;
@@ -597,7 +598,7 @@ end;
 
 procedure TSLBracketedStatement<T>.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_OpenBracket, _Stmt, _CloseBracket]);
+  APrinter.PrintItems([_OpenBracket, _Stmt, _SupressNextLine, _CloseBracket]);
 end;
 
 procedure TMLBracketedStatement<T>.PrintSelf(APrinter: TPrinter);

@@ -31,7 +31,7 @@ type
   { Команда drop }
   TDrop = class(TSemicolonStatement)
   strict private
-    _Drop, _ObjectType, _Body, _ObjectName: TEpithet;
+    _Drop, _ObjectType, _Body, _ObjectName, _Cascade, _Constraints: TEpithet;
     _Unexpected: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -54,11 +54,23 @@ type
     function StatementName: string; override;
   end;
 
+  { Объект index }
+  TIndex = class(TSemicolonStatement)
+  strict private
+    _Unique, _Index, _IndexName, _On, _TableName: TEpithet;
+    _Fields: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
   { Объект table }
   TTable = class(TSemicolonStatement)
   strict private
     _Global, _Temporary, _Table, _TableName: TEpithet;
     _Items: TStatement;
+    _Organization, _Index: TEpithet;
     _Tablespace: TStatement;
     _On, _Commit, _DeleteOrPreserve, _Rows: TEpithet;
   strict protected
@@ -79,6 +91,8 @@ type
   strict private
     _Name: TEpithet;
     _Type: TStatement;
+    _Default: TEpithet;
+    _Value: TStatement;
     _Not, _Null: TEpithet;
   strict protected
     function InternalParse: boolean; override;
@@ -101,6 +115,17 @@ type
   TPrimaryKey = class(TConstraint)
   strict private
     _Primary, _Key: TEpithet;
+    _Fields, _UsingIndex: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+  public
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Описание unique }
+  TUnique = class(TConstraint)
+  strict private
+    _Unique: TEpithet;
     _Fields, _UsingIndex: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -189,7 +214,11 @@ begin
   { Проверим наличие force }
   _Force := Keyword('force');
   { И, наконец, распознаем, что же мы создаём }
-  Result := TParser.ParseCreation(Self, Source, _What) or
+  Result := TTable.Parse(Self, Source, _What) or
+            TView.Parse(Self, Source, _What) or
+            TIndex.Parse(Self, Source, _What) or
+            TPackage.Parse(Self, Source, _What) or
+            TSubroutine.Parse(Self, Source, _What) or
             TUnexpectedToken.Parse(Self, Source, _What);
 end;
 
@@ -226,6 +255,27 @@ begin
   Result := Concat([_View, _ViewName]);
 end;
 
+{ TIndex }
+
+function TIndex.InternalParse: boolean;
+begin
+  _Unique := Keyword('unique');
+  _Index  := Keyword('index');
+  if not Assigned(_Index) then exit(false);
+  _IndexName := Identifier;
+  _On := Keyword('on');
+  _TableName := Identifier;
+  TSLBracketedStatement<TExpressionFields>.Parse(Self, Source, _Fields);
+  inherited;
+  Result := true;
+end;
+
+procedure TIndex.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Unique, _Index, _IndexName, _On, _TableName, _Fields]);
+  inherited;
+end;
+
 { TTable }
 
 function TTable.InternalParse: boolean;
@@ -244,7 +294,11 @@ begin
       _Rows := Keyword('rows');
     end
   else
-    TTablespace.Parse(Self, Source, _Tablespace);
+    begin
+      _Organization := Keyword('organization');
+      _Index := Keyword('index');
+      TTablespace.Parse(Self, Source, _Tablespace);
+    end;
   inherited;
   Result := true;
 end;
@@ -252,70 +306,14 @@ end;
 procedure TTable.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Global, _Temporary, _Table, _TableName, _IndentNextLine,
-                       _Items, _Tablespace, _On, _Commit, _DeleteOrPreserve,
-                       _Rows, _UndentNextLine]);
+                       _Items, _Organization, _Index, _Tablespace, _On, _Commit,
+                       _DeleteOrPreserve, _Rows, _UndentNextLine]);
   inherited;
 end;
 
 function TTable.StatementName: string;
 begin
   Result := Concat([_Global, _Temporary, _Table, _TableName]);
-end;
-
-{ TComment }
-
-function TComment.InternalParse: boolean;
-begin
-  _Comment := Keyword('comment');
-  if not Assigned(_Comment) then exit(false);
-  _On := Keyword('on');
-  _TableOrColumn := Keyword(['table', 'column']);
-  TQualifiedIdent.Parse(Self, Source, _Name);
-  _Is := Keyword('is');
-  _Text := Literal;
-  inherited;
-  Result := true;
-end;
-
-procedure TComment.PrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Comment, _On, _TableOrColumn]);
-  APrinter.Ruler('name', Settings.AlignTableColumnComments);
-  APrinter.PrintItem(_Name);
-  APrinter.Ruler('is', Settings.AlignTableColumnComments);
-  APrinter.PrintItems([_Is, _Text]);
-  inherited;
-end;
-
-{ TComments }
-
-function TComments.ParseBreak: boolean;
-begin
-  Result := not Assigned(Keyword('comment'));
-end;
-
-{ TDrop }
-
-function TDrop.InternalParse: boolean;
-begin
-  _Drop := Keyword('drop');
-  if not Assigned(_Drop) then exit(false);
-  _ObjectType := Keyword(['table', 'procedure', 'function', 'package', 'view']);
-  if not Assigned(_ObjectType) then TUnexpectedToken.Parse(Self, Source, _Unexpected);
-  if Assigned(_ObjectType) and (_ObjectType.Value = 'package') then _Body := Keyword('body');
-  _ObjectName := Identifier;
-  Result := inherited or Assigned(_ObjectType);
-end;
-
-procedure TDrop.PrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Drop, _ObjectType, _Unexpected, _Body, _ObjectName]);
-  inherited;
-end;
-
-function TDrop.StatementName: string;
-begin
-  Result := Concat([_Drop, _ObjectType, _Body, _ObjectName]);
 end;
 
 { TTablespace }
@@ -346,6 +344,8 @@ begin
   _Name := Identifier;
   TTypeRef.Parse(Self, Source, _Type);
   if not Assigned(_Name) and not Assigned(_Type) then exit(false);
+  _Default := Keyword('default');
+  if Assigned(_Default) then TParser.ParseExpression(Self, Source, _Value);
   _Not  := Keyword('not');
   _Null := Keyword('null');
   Result := true;
@@ -353,7 +353,7 @@ end;
 
 procedure TTableField.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Name, _Type, _Not, _Null]);
+  APrinter.PrintItems([_Name, _Type, _Default, _Value, _Not, _Null]);
 end;
 
 { TConstraint }
@@ -374,7 +374,7 @@ end;
 class function TConstraint.Candidates: TArray<TStatementClass>;
 begin
   if Self = TConstraint
-    then Result := TArray<TStatementClass>.Create(TPrimaryKey, TForeignKey, TCheck)
+    then Result := TArray<TStatementClass>.Create(TPrimaryKey, TUnique, TForeignKey, TCheck)
     else Result := TArray<TStatementClass>.Create(Self)
 end;
 
@@ -395,6 +395,24 @@ procedure TPrimaryKey.PrintSelf(APrinter: TPrinter);
 begin
   inherited;
   APrinter.PrintItems([_Primary, _Key, _Fields, _UsingIndex]);
+end;
+
+{ TUnique }
+
+function TUnique.InternalParse: boolean;
+begin
+  if not inherited then exit(false);
+  _Unique := Keyword('unique');
+  if not Assigned(_Unique) then exit(false);
+  TSLBracketedStatement<TIdentFields>.Parse(Self, Source, _Fields);
+  TUsingIndex.Parse(Self, Source, _UsingIndex);
+  Result := true;
+end;
+
+procedure TUnique.PrintSelf(APrinter: TPrinter);
+begin
+  inherited;
+  APrinter.PrintItems([_Unique, _Fields, _UsingIndex]);
 end;
 
 { TUsingIndex }
@@ -449,6 +467,67 @@ procedure TCheck.PrintSelf(APrinter: TPrinter);
 begin
   inherited;
   APrinter.PrintItems([_Check, _Condition]);
+end;
+
+{ TComment }
+
+function TComment.InternalParse: boolean;
+begin
+  _Comment := Keyword('comment');
+  if not Assigned(_Comment) then exit(false);
+  _On := Keyword('on');
+  _TableOrColumn := Keyword(['table', 'column']);
+  TQualifiedIdent.Parse(Self, Source, _Name);
+  _Is := Keyword('is');
+  _Text := Literal;
+  inherited;
+  Result := true;
+end;
+
+procedure TComment.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Comment, _On, _TableOrColumn]);
+  APrinter.Ruler('name', Settings.AlignTableColumnComments);
+  APrinter.PrintItem(_Name);
+  APrinter.Ruler('is', Settings.AlignTableColumnComments);
+  APrinter.PrintItems([_Is, _Text]);
+  inherited;
+end;
+
+{ TComments }
+
+function TComments.ParseBreak: boolean;
+begin
+  Result := not Assigned(Keyword('comment'));
+end;
+
+{ TDrop }
+
+function TDrop.InternalParse: boolean;
+begin
+  _Drop := Keyword('drop');
+  if not Assigned(_Drop) then exit(false);
+  _ObjectType := Keyword(['table', 'procedure', 'function', 'package', 'view', 'index']);
+  if not Assigned(_ObjectType) then TUnexpectedToken.Parse(Self, Source, _Unexpected);
+  if Assigned(_ObjectType) and (_ObjectType.Value = 'package') then _Body := Keyword('body');
+  _ObjectName := Identifier;
+  if Assigned(_ObjectType) and (_ObjectType.Value = 'table') then
+  begin
+    _Cascade := Keyword('cascade');
+    _Constraints := Keyword('constraints');
+  end;
+  Result := inherited or Assigned(_ObjectType);
+end;
+
+procedure TDrop.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Drop, _ObjectType, _Unexpected, _Body, _ObjectName, _Cascade, _Constraints]);
+  inherited;
+end;
+
+function TDrop.StatementName: string;
+begin
+  Result := Concat([_Drop, _ObjectType, _Body, _ObjectName]);
 end;
 
 end.

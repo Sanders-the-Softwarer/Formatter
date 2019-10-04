@@ -540,6 +540,15 @@ create or replace force view v$dual as select * from dual
 -- create view с запросом, начинающимся с with
 create force view v$dual as with x as (select * from dual) select * from x
 
+-- оператор create index
+create index i$dual on dual(dummy, dummy, dummy)
+
+-- индекс может быть уникальным
+create unique index i$dual on dual(dummy)
+
+-- индекс может быть над выражением
+create index i$dual on dual(case when dummy = 'X' then null else 1 end, dummy)
+
 -- Комментарии, а также проверка выравнивания в комментариях
 comment on table v$dual is 'Вьюха';
 comment on column v$dual.id is 'Ключ';
@@ -547,6 +556,7 @@ comment on column v$dual.name is 'Название';
 
 -- Можно удалять таблицу
 drop table dual
+drop table dual cascade constraints
 
 -- Можно удалять процедуру либо функцию
 drop procedure x
@@ -561,8 +571,34 @@ drop package body x
 -- Можно удалять view
 drop view v$dual
 
-!!!!!! НУЖНО НАПИСАТЬ ТЕСТЫ НА CREATE TABLE !!!!!!!
+-- Можно удалять индекс
+drop index i$dual
 
+-- Можно создавать таблицы
+create table x (i integer) tablespace tmp
+
+-- Таблицы могут быть временными
+create global temporary table t (i integer) on commit delete rows
+create global temporary table tt (ii integer) on commit preserve rows
+
+-- Поля таблиц могут содержать разные типы, default и not null
+create table x(id integer not null, di varchar2(2000 char) default 'abc' || 'de', ididi date default sysdate not null)
+
+-- В таблицах могут быть указаны все типы constraint-ов и поля вперемешку
+create table x (
+  i integer,
+  constraint pk primary key(i) using index tablespace idx,
+  j varchar2(100 byte) default null,
+  constraint fk foreign key (i, j) references y (ii, jj),
+  k date not null,
+  constraint uq unique (k) using index tablespace idx,
+  l some.tipe,
+  constraint chk check (1 + 2 = 3)
+) tablespace tbl
+
+
+
+-- !!!!!! НУЖНО НАПИСАТЬ ТЕСТЫ НА КОМАНДЫ SQLPLUS !!!!!!
 
 --------------------------------------------------------------------------------------------
 
