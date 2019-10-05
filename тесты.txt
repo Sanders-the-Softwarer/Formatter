@@ -599,7 +599,11 @@ create table x (
   constraint chk check (1 + 2 = 3)
 ) tablespace tbl
 
-
+-- в литералах следует правильно парсить несколько апострофов подряд
+begin
+  a := ' ''';
+  for i in 1..10 loop null; end loop;
+end;
 
 -- !!!!!! НУЖНО НАПИСАТЬ ТЕСТЫ НА КОМАНДЫ SQLPLUS !!!!!!
 

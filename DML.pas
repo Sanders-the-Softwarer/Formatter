@@ -597,7 +597,6 @@ begin
   APrinter.Indent;
   inherited;
   APrinter.Undent;
-  APrinter.NextLine;
 end;
 
 { TExpressionField }
@@ -646,9 +645,7 @@ end;
 
 procedure TWhere.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Where);
-  APrinter.PrintIndented(_Condition);
-  APrinter.NextLine;
+  APrinter.PrintItems([_Where, _IndentNextLine, _Condition, _Undent]);
 end;
 
 { TReturning }
@@ -866,14 +863,14 @@ begin
                        _Into,      _IndentNextLine,
                                    _IntoFields,     _UndentNextLine,
                        _From,      _IndentNextLine,
-                                   _Tables,         _UndentNextLine,
-                       _Where,     _NextLine,
-                       _StartWith, _NextLine,
-                       _ConnectBy, _NextLine,
-                       _GroupBy,   _NextLine,
-                       _Having,    _NextLine,
-                       _OrderBy,   _NextLine,
-                       _AdditionalSelect]);
+                                   _Tables,         _Undent]);
+  APrinter.NextLineIf([_Where]);
+  APrinter.NextLineIf([_StartWith]);
+  APrinter.NextLineIf([_ConnectBy]);
+  APrinter.NextLineIf([_GroupBy]);
+  APrinter.NextLineIf([_Having]);
+  APrinter.NextLineIf([_OrderBy]);
+  APrinter.NextLineIf([_AdditionalSelect]);
   inherited;
 end;
 
@@ -1065,9 +1062,7 @@ end;
 
 procedure THaving.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Having);
-  APrinter.PrintIndented(_Condition);
-  APrinter.NextLine;
+  APrinter.PrintItems([_Having, _IndentNextLine, _Condition, _Undent]);
 end;
 
 
@@ -1084,8 +1079,7 @@ end;
 
 procedure TStartWith.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Start, _With]);
-  APrinter.PrintIndented(_Condition);
+  APrinter.PrintItems([_Start, _With, _IndentNextLine, _Condition, _Undent]);
 end;
 
 { TConnectBy }
@@ -1101,8 +1095,7 @@ end;
 
 procedure TConnectBy.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Connect, _By]);
-  APrinter.PrintIndented(_Condition);
+  APrinter.PrintItems([_Connect, _By, _IndentNextLine, _Condition, _Undent]);
 end;
 
 { TAdditionalSelect }

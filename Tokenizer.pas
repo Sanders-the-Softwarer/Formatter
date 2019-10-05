@@ -212,24 +212,24 @@ function TTokenizer.InternalNext: TToken;
 
   { Считывание литерала }
   function ParseLiteral: boolean;
-  var PrevApo, PrevPrevApo: boolean;
+  var
+    Odd: boolean;
+    C: char;
   begin
     Restore;
     Result := (NextChar = '''');
     if not Result then exit;
-    PrevApo := false;
-    PrevPrevApo := false;
-    while NextChar <> #0 do
-      if (LastChar <> '''') and PrevApo and not PrevPrevApo then
+    Odd := false;
+    repeat
+      C := NextChar;
+      if C = #0 then
         break
-      else
-        begin
-          PrevPrevApo := PrevApo;
-          PrevApo := (LastChar = '''');
-        end;
-    { Если достигнут конец файла, будем интерпретировать это как неожиданно
-      кончившийся литерал - так лучше чем как неизвестную лексему }
-    RefuseLastChar;
+      else if C = '''' then
+        Odd := not Odd
+      else if Odd then
+        break;
+    until false;
+    if C <> #0 then RefuseLastChar else ApplyLastChar;
   end;
 
   { Считывание многосимвольных лексем }

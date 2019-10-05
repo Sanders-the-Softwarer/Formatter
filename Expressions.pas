@@ -20,6 +20,13 @@ unit Expressions;
   кучей префиксных и постфиксных модификаторов, описывающих унарный минус,
   суффикс %rowcount и прочие подобные вещи.
 
+  Синтаксические конструкции "квалифицированный идентификатор", "вызов функции",
+  "обращение к элементу таблицы" настолько похожи друг на друга и настолько
+  могут комбинироваться в разных порядках и сочетаниях, что пришлось сделать
+  один класс TQualifiedIndexedIdent, по факту описывающий и ту, и другую, и
+  третью. Это оказалось не то что наиболее простым, а скорее единственным
+  способом обеспечить корректную работу парсера.
+
 ------------------------------------------------------------------------------ }
 
 interface
@@ -217,7 +224,7 @@ begin
     if TCase.Parse(Self, Source, _Case) then exit(true);
     { Выражением cast }
     if TCast.Parse(Self, Source, _Cast) then exit(true);
-    { Идентификатором или подобным выражением }
+    { Идентификатором или подобным выражением, включая вызов функции }
     TQualifiedIndexedIdent.Parse(Self, Source, _Ident);
     if Assigned(_Ident) then
     begin
@@ -357,7 +364,7 @@ end;
 
 function TQualifiedIndexedIdent.InternalParse: boolean;
 begin
-  if not TopStatement then TBracketedStatement<TExpressionFields>.Parse(Self, Source, _Indexes);
+  if not TopStatement then TOptionalBracketedStatement<TCommaList<TArgument>>.Parse(Self, Source, _Indexes);
   if Assigned(_Indexes) then _Dot := Terminal('.');
   if TopStatement or Assigned(_Dot) then TQualifiedIdent.Parse(Self, Source, _Ident);
   if Assigned(_Ident) then TQualifiedIndexedIdent.Parse(Self, Source, _Next);

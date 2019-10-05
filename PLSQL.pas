@@ -672,11 +672,11 @@ end;
 
 procedure TSubroutineHeaderBase.PrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Initial, _Name, _IndentNextLine,
-                                 _Params, _NextLine,
-                                 _Return, _ReturnType, _NextLine,
-                                 _Deterministic, _NextLine,
-                                 _Pipelined, _UndentNextLine]);
+  APrinter.PrintItems([_Initial, _Name, _IndentNextLine, _Params]);
+  APrinter.NextLineIf([_Return, _ReturnType]);
+  APrinter.NextLineIf([_Deterministic]);
+  APrinter.NextLineIf([_Pipelined]);
+  APrinter.Undent;
 end;
 
 function TSubroutineHeaderBase.StatementName: string;
@@ -919,7 +919,7 @@ end;
 procedure TSubroutineHeader.PrintSelf(APrinter: TPrinter);
 begin
   inherited;
-  APrinter.PrintItems([_Is]);
+  APrinter.PrintItems([_NextLine, _Is]);
 end;
 
 function TSubroutineHeader.Name: string;
@@ -1498,7 +1498,7 @@ begin
   _Into := Keyword('into');
   if Assigned(_Into) then TIdentFields.Parse(Self, Source, _IntoFields);
   _Using := Keyword('using');
-  if Assigned(_Using) then TIdentFields.Parse(Self, Source, _UsingFields);
+  if Assigned(_Using) then TExpressionFields.Parse(Self, Source, _UsingFields);
   inherited;
   Result := true;
 end;
@@ -1507,11 +1507,8 @@ procedure TExecuteImmediate.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Execute, _Immediate]);
   APrinter.PrintIndented(_Command);
-  APrinter.NextLine;
-  APrinter.PrintItem(_Into);
-  APrinter.PrintIndented(_IntoFields);
-  APrinter.PrintItem(_Using);
-  APrinter.PrintIndented(_UsingFields);
+  APrinter.NextLineIf([_Into, _NextLine, _Indent, _IntoFields, _Undent]);
+  APrinter.NextLineIf([_Using, _NextLine, _Indent, _UsingFields, _Undent]);
   inherited;
 end;
 
@@ -1520,11 +1517,14 @@ initialization
   Keywords.Sorted := true;
   Keywords.Duplicates := dupIgnore;
   Keywords.CaseSensitive := false;
+  Keywords.Add('as');
   Keywords.Add('begin');
   Keywords.Add('end');
   Keywords.Add('function');
+  Keywords.Add('is');
   Keywords.Add('procedure');
   Keywords.Add('type');
+  Keywords.Add('using');
 
 finalization
   FreeAndNil(Keywords);

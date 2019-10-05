@@ -69,6 +69,7 @@ type
   TPrinter = class
   private
     FSettings: TFormatSettings;
+    function HasItems(AItems: array of TObject): boolean;
   public
     procedure BeginPrint; virtual; abstract;
     procedure PrintItem(AItem: TObject); virtual; abstract;
@@ -86,6 +87,7 @@ type
     procedure PrintItems(AItems: array of TObject);
     procedure PrintIndented(AItem: TObject); overload;
     procedure PrintIndented(AItems: array of TObject); overload;
+    procedure NextLineIf(AItems: array of TObject);
   public
     property Settings: TFormatSettings read FSettings write FSettings;
   public
@@ -262,146 +264,6 @@ type
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//      Интерфейс вывода на принтер и фабрики создания реальных принтеров     //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-
-class function TPrinter.CreateFormatterPrinter(AMemo: TMemo): TPrinter;
-begin
-  Result := TFormatterPrinter.Create(AMemo);
-end;
-
-class function TPrinter.CreateSyntaxTreePrinter(ATreeView: TTreeView): TPrinter;
-begin
-  Result := TSyntaxTreePrinter.Create(ATreeView);
-end;
-
-class function TPrinter.CreateTokenizerPrinter(AListBox: TListBox): TPrinter;
-begin
-  Result := TTokenizerPrinter.Create(AListBox);
-end;
-
-class function TPrinter.CreateAlarmTokenPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
-begin
-  Result := TAlarmTokenPrinter.Create(AListBox, ATabSheet);
-end;
-
-class function TPrinter.CreateAlarmStatementPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
-begin
-  Result := TAlarmStatementPrinter.Create(AListBox, ATabSheet);
-end;
-
-procedure TPrinter.PrintItems(AItems: array of TObject);
-var i: integer;
-begin
-  for i := Low(AItems) to High(AItems) do PrintItem(AItems[i]);
-end;
-
-procedure TPrinter.PrintIndented(AItem: TObject);
-begin
-  if not Assigned(AItem) then exit;
-  NextLine;
-  Indent;
-  PrintItem(AItem);
-  Undent;
-end;
-
-procedure TPrinter.PrintIndented(AItems: array of TObject);
-var
-  Found: boolean;
-  i: integer;
-begin
-  Found := false;
-  for i := Low(AItems) to High(AItems) do Found := Found or Assigned(AItems[i]);
-  if not Found then exit;
-  NextLine;
-  Indent;
-  PrintItems(AItems);
-  Undent;
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-//                   Дефолтовая (пустая) реализация принтера                  //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-
-procedure TBasePrinter.BeginPrint;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.EndPrint;
-begin
-  { ничего не делаем }
-end;
-
-{ Разбиваем PrintItem на PrintToken и PrintStatement }
-procedure TBasePrinter.PrintItem(AItem: TObject);
-begin
-  if AItem is TToken then
-    PrintToken(AItem as TToken)
-  else if AItem is TStatement then
-    PrintStatement(AItem as TStatement);
-end;
-
-procedure TBasePrinter.PrintToken(AToken: TToken);
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.PrintSpecialComment(AValue: string);
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.Ruler(const ARuler: string; Enabled: boolean = true);
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.ControlChanged;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.PrintStatement(AStatement: TStatement);
-begin
-  AStatement.PrintSelf(Self);
-end;
-
-procedure TBasePrinter.Indent;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.Undent;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.NextLine;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.SupressNextLine;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.SupressSpaces(ASupress: boolean);
-begin
-  { ничего не делаем }
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
 //          Спецконструкции для более удобного форматирования вывода          //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
@@ -488,6 +350,156 @@ procedure TUndentNextLine.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.Undent;
   APrinter.NextLine;
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//      Интерфейс вывода на принтер и фабрики создания реальных принтеров     //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+class function TPrinter.CreateFormatterPrinter(AMemo: TMemo): TPrinter;
+begin
+  Result := TFormatterPrinter.Create(AMemo);
+end;
+
+class function TPrinter.CreateSyntaxTreePrinter(ATreeView: TTreeView): TPrinter;
+begin
+  Result := TSyntaxTreePrinter.Create(ATreeView);
+end;
+
+class function TPrinter.CreateTokenizerPrinter(AListBox: TListBox): TPrinter;
+begin
+  Result := TTokenizerPrinter.Create(AListBox);
+end;
+
+class function TPrinter.CreateAlarmTokenPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
+begin
+  Result := TAlarmTokenPrinter.Create(AListBox, ATabSheet);
+end;
+
+class function TPrinter.CreateAlarmStatementPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
+begin
+  Result := TAlarmStatementPrinter.Create(AListBox, ATabSheet);
+end;
+
+procedure TPrinter.PrintItems(AItems: array of TObject);
+var i: integer;
+begin
+  for i := Low(AItems) to High(AItems) do PrintItem(AItems[i]);
+end;
+
+procedure TPrinter.PrintIndented(AItem: TObject);
+begin
+  if not Assigned(AItem) then exit;
+  NextLine;
+  Indent;
+  PrintItem(AItem);
+  Undent;
+end;
+
+procedure TPrinter.PrintIndented(AItems: array of TObject);
+begin
+  if not HasItems(AItems) then exit;
+  NextLine;
+  Indent;
+  PrintItems(AItems);
+  Undent;
+end;
+
+procedure TPrinter.NextLineIf(AItems: array of TObject);
+begin
+  if not HasItems(AItems) then exit;
+  NextLine;
+  PrintItems(AItems);
+end;
+
+function TPrinter.HasItems(AItems: array of TObject): boolean;
+var i: integer;
+begin
+  for i := Low(AItems) to High(AItems) do
+    if Assigned(AItems[i]) and not (AItems[i] is TFormatterCmd) then exit(true);
+  Result := false;
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                   Дефолтовая (пустая) реализация принтера                  //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+procedure TBasePrinter.BeginPrint;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.EndPrint;
+begin
+  { ничего не делаем }
+end;
+
+{ Разбиваем PrintItem на PrintToken и PrintStatement }
+procedure TBasePrinter.PrintItem(AItem: TObject);
+begin
+  if AItem is TToken then
+    PrintToken(AItem as TToken)
+  else if AItem is TStatement then
+    PrintStatement(AItem as TStatement);
+end;
+
+procedure TBasePrinter.PrintToken(AToken: TToken);
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.PrintSpecialComment(AValue: string);
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.Ruler(const ARuler: string; Enabled: boolean = true);
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.ControlChanged;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.PrintStatement(AStatement: TStatement);
+begin
+  AStatement.PrintSelf(Self);
+end;
+
+procedure TBasePrinter.Indent;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.Undent;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.NextLine;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.SupressNextLine;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.SupressSpaces(ASupress: boolean);
+begin
+  { ничего не делаем }
 end;
 
 ////////////////////////////////////////////////////////////////////////////////

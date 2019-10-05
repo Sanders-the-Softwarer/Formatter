@@ -150,8 +150,15 @@ type
     _Stmt: TStatement;
   strict protected
     function InternalParse: boolean; override;
+    function AllowEmpty: boolean; virtual;
   public
     procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция заданного типа в скобках, допускающая пустые скобки }
+  TOptionalBracketedStatement<T: TStatement> = class(TBracketedStatement<T>)
+  strict protected
+    function AllowEmpty: boolean; override;
   end;
 
   { Конструкция для форматирования заданной в одну строку }
@@ -592,14 +599,26 @@ function TBracketedStatement<T>.InternalParse: boolean;
 begin
   _OpenBracket := Terminal('(');
   if not Assigned(_OpenBracket) then exit(false);
-  if not T.Parse(Self, Source, _Stmt) then exit(false);
+  if not T.Parse(Self, Source, _Stmt) and not AllowEmpty then exit(false);
   _CloseBracket := Terminal(')');
   Result := true;
+end;
+
+function TBracketedStatement<T>.AllowEmpty: boolean;
+begin
+  Result := false;
 end;
 
 procedure TBracketedStatement<T>.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_OpenBracket, _IndentNextLine, _Stmt, _UndentNextLine, _CloseBracket]);
+end;
+
+{ TOptionalBracketedStatement<T> }
+
+function TOptionalBracketedStatement<T>.AllowEmpty: boolean;
+begin
+  Result := true;
 end;
 
 { TSingleLine<T> }
