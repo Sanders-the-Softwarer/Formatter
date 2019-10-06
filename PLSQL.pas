@@ -46,8 +46,7 @@ type
     function GetHeaderClass: TStatementClass; virtual; abstract;
     function InternalParse: boolean; override;
     function GetKeywords: TStrings; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Заголовок анонимного блока }
@@ -56,8 +55,7 @@ type
     _Declare: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Анонимный блок }
@@ -74,8 +72,7 @@ type
     _Is: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Пакет }
@@ -98,8 +95,8 @@ type
     _Pipelined: TEpithet;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
     function StatementName: string; override;
   end;
 
@@ -109,8 +106,8 @@ type
     _Is: TEpithet;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
     function Name: string; override;
   end;
 
@@ -120,8 +117,7 @@ type
     _Semicolon: TTerminal;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Подпрограмма }
@@ -145,8 +141,8 @@ type
     _CloseBracket: TTerminal;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
     function IsSimpleIdent: boolean;
   end;
 
@@ -162,9 +158,9 @@ type
     _DefaultValue: TStatement;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function StatementName: string; override;
-    procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
   { Блок параметров подпрограммы }
@@ -176,8 +172,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     function ParseBreak: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Блок деклараций }
@@ -197,8 +192,8 @@ type
     _Value: TStatement;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
     function StatementName: string; override;
   end;
 
@@ -221,8 +216,7 @@ type
     _Select: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Объявление исключения }
@@ -231,8 +225,7 @@ type
     _Name, _Exception: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Список операторов }
@@ -252,8 +245,7 @@ type
     _Expression: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Вызов процедуры }
@@ -262,8 +254,7 @@ type
     _Call: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор return }
@@ -273,8 +264,7 @@ type
     _Value: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор null }
@@ -283,8 +273,7 @@ type
     _Null: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор raise }
@@ -293,8 +282,7 @@ type
     _Raise, _ExceptionName: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Условный оператор }
@@ -306,8 +294,7 @@ type
     _EndIf: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Секция оператора if }
@@ -319,9 +306,9 @@ type
     _Statements: TStatement;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function StatementName: string; override;
-    procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
   { Секции оператора if }
@@ -338,8 +325,7 @@ type
     _Body: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор case }
@@ -350,8 +336,7 @@ type
     _Semicolon: TTerminal;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
     function ParseBreak: boolean; override;
   end;
 
@@ -362,8 +347,7 @@ type
     _Semicolon: TTerminal;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор for }
@@ -382,8 +366,7 @@ type
     _Loop: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор while }
@@ -394,8 +377,7 @@ type
     _Loop: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор forall }
@@ -415,8 +397,7 @@ type
     _DML: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор pipe row }
@@ -426,8 +407,7 @@ type
     _Arguments: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор open for }
@@ -437,8 +417,7 @@ type
     _Select: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор fetch }
@@ -448,8 +427,7 @@ type
     _Targets: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор close }
@@ -459,8 +437,7 @@ type
     _Cursor: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор exit }
@@ -470,8 +447,7 @@ type
     _Condition: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор execute immediate }
@@ -485,8 +461,7 @@ type
     _UsingFields: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Блок обработки исключений }
@@ -498,8 +473,7 @@ type
     _Body: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Операторы секции exceptions }
@@ -516,8 +490,7 @@ type
     _Body: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Декларация типа }
@@ -527,8 +500,8 @@ type
     _Body: TStatement;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
     function StatementName: string; override;
   end;
 
@@ -539,8 +512,7 @@ type
     _Declarations: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Декларация табличного типа }
@@ -552,8 +524,7 @@ type
     _IndexType: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
 implementation
@@ -585,29 +556,16 @@ begin
   if not (Parent is TStatements) then _Slash := Terminal('/');
 end;
 
-procedure TProgramBlock.PrintSelf(APrinter: TPrinter);
+procedure TProgramBlock.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Header);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Declarations);
-  APrinter.Undent;
-  APrinter.PrintItem(_Begin);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Operators);
-  APrinter.Undent;
-  APrinter.PrintItem(_Exception);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_ExceptionHandlers);
-  APrinter.Undent;
-  APrinter.PrintItem(_End);
-  APrinter.PrintItem(_EndName);
-  APrinter.PrintItem(_Semicolon);
-  APrinter.NextLine;
-  APrinter.PrintItem(_Slash);
-  APrinter.NextLine;
+  APrinter.PrintItems([_NextLine,  _Header,            _IndentNextLine,
+                                   _Declarations,      _UndentNextLine,
+                       _Begin,     _IndentNextLine,
+                                   _Operators,         _UndentNextLine,
+                       _Exception, _IndentNextLine,
+                                   _ExceptionHandlers, _UndentNextLine,
+                       _End,       _EndName,           _Semicolon,      _NextLine,
+                       _Slash,     _NextLine]);
 end;
 
 function TProgramBlock.GetKeywords: TStrings;
@@ -632,7 +590,7 @@ begin
   if Assigned(_Is) then _Is.CanReplace := true;
 end;
 
-procedure TPackageHeader.PrintSelf(APrinter: TPrinter);
+procedure TPackageHeader.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Package, _Body, _PackageName, _Is]);
   APrinter.NextLine;
@@ -670,7 +628,7 @@ begin
   _Pipelined := Keyword('pipelined');
 end;
 
-procedure TSubroutineHeaderBase.PrintSelf(APrinter: TPrinter);
+procedure TSubroutineHeaderBase.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Initial, _Name, _IndentNextLine, _Params]);
   APrinter.NextLineIf([_Return, _ReturnType]);
@@ -710,7 +668,7 @@ begin
   Result := true;
 end;
 
-procedure TTypeRef.PrintSelf(APrinter: TPrinter);
+procedure TTypeRef.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Ident, _Type, _OpenBracket, _Size, _Comma, _Precision, _Unit, _CloseBracket]);
 end;
@@ -745,7 +703,7 @@ begin
   Result := Concat([_ParamName]);
 end;
 
-procedure TParamDeclaration.PrintSelf(APrinter: TPrinter);
+procedure TParamDeclaration.InternalPrintSelf(APrinter: TPrinter);
 var NeedRuler: boolean;
 begin
   NeedRuler := Settings.AlignVariables;
@@ -773,7 +731,7 @@ begin
   Result := Any([Terminal(')')]);
 end;
 
-procedure TParamsDeclaration.PrintSelf(APrinter: TPrinter);
+procedure TParamsDeclaration.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_OpenBracket, _IndentNextLine]);
   inherited;
@@ -823,7 +781,7 @@ begin
   Result := Concat([_Name]);
 end;
 
-procedure TVariableDeclaration.PrintSelf(APrinter: TPrinter);
+procedure TVariableDeclaration.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Name);
   APrinter.Ruler('name', Settings.AlignVariables);
@@ -854,7 +812,7 @@ begin
     Result := inherited or (_Call is TFunctionCall) or not (_Call as TQualifiedIndexedIdent).IsSimpleIdent;
 end;
 
-procedure TProcedureCall.PrintSelf(APrinter: TPrinter);
+procedure TProcedureCall.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Call);
   inherited;
@@ -872,7 +830,7 @@ begin
   inherited;
 end;
 
-procedure TAssignment.PrintSelf(APrinter: TPrinter);
+procedure TAssignment.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Target, _Assignment, _Expression]);
   inherited;
@@ -889,7 +847,7 @@ begin
   inherited;
 end;
 
-procedure TReturn.PrintSelf(APrinter: TPrinter);
+procedure TReturn.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Return, _Value]);
   inherited;
@@ -916,7 +874,7 @@ begin
   if Assigned(_Is) then _Is.CanReplace := true;
 end;
 
-procedure TSubroutineHeader.PrintSelf(APrinter: TPrinter);
+procedure TSubroutineHeader.InternalPrintSelf(APrinter: TPrinter);
 begin
   inherited;
   APrinter.PrintItems([_NextLine, _Is]);
@@ -936,7 +894,7 @@ begin
   Result := Result and Assigned(_Semicolon);
 end;
 
-procedure TSubroutineForwardDeclaration.PrintSelf(APrinter: TPrinter);
+procedure TSubroutineForwardDeclaration.InternalPrintSelf(APrinter: TPrinter);
 begin
   inherited;
   APrinter.PrintItem(_Semicolon);
@@ -980,7 +938,7 @@ begin
   inherited;
 end;
 
-procedure TIf.PrintSelf(APrinter: TPrinter);
+procedure TIf.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_If, _Condition, _Sections, _EndIf]);
   inherited;
@@ -998,7 +956,7 @@ begin
   Source.Restore(P);
 end;
 
-procedure TAnonymousHeader.PrintSelf(APrinter: TPrinter);
+procedure TAnonymousHeader.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Declare);
   APrinter.NextLine;
@@ -1022,7 +980,7 @@ begin
   TStatements.Parse(Self, Source, _Body);
 end;
 
-procedure TExceptionHandler.PrintSelf(APrinter: TPrinter);
+procedure TExceptionHandler.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_When, _Condition, _Then]);
   APrinter.PrintIndented(_Body);
@@ -1049,7 +1007,7 @@ begin
   inherited;
 end;
 
-procedure TNull.PrintSelf(APrinter: TPrinter);
+procedure TNull.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Null);
   inherited;
@@ -1065,7 +1023,7 @@ begin
   inherited;
 end;
 
-procedure TRaise.PrintSelf(APrinter: TPrinter);
+procedure TRaise.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Raise, _ExceptionName]);
   inherited;
@@ -1081,7 +1039,7 @@ begin
   inherited;
 end;
 
-procedure TExceptionDeclaration.PrintSelf(APrinter: TPrinter);
+procedure TExceptionDeclaration.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Name, _Exception]);
   inherited;
@@ -1107,7 +1065,7 @@ begin
   Result := Concat([_ThenOrElsifOrElse]);
 end;
 
-procedure TIfSection.PrintSelf(APrinter: TPrinter);
+procedure TIfSection.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_ThenOrElsifOrElse, _Condition, _Then]);
   APrinter.NextLine;
@@ -1137,7 +1095,7 @@ begin
   Result := true;
 end;
 
-procedure TOpenFor.PrintSelf(APrinter: TPrinter);
+procedure TOpenFor.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Open);
   APrinter.PrintIndented(_Cursor);
@@ -1158,7 +1116,7 @@ begin
   Result := true;
 end;
 
-procedure TPragma.PrintSelf(APrinter: TPrinter);
+procedure TPragma.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Pragma, _Body]);
   inherited;
@@ -1176,7 +1134,7 @@ begin
   Result := true;
 end;
 
-procedure TLoop.PrintSelf(APrinter: TPrinter);
+procedure TLoop.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Loop);
   APrinter.NextLine;
@@ -1216,7 +1174,7 @@ begin
   Result := true;
 end;
 
-procedure TFor.PrintSelf(APrinter: TPrinter);
+procedure TFor.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_For, _Variable, _In, _Reverse]);
   if Assigned(_Select) then
@@ -1240,7 +1198,7 @@ begin
   Result := true;
 end;
 
-procedure TWhile.PrintSelf(APrinter: TPrinter);
+procedure TWhile.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_While, _Condition, _Loop]);
 end;
@@ -1258,7 +1216,7 @@ begin
   Result := true;
 end;
 
-procedure TType.PrintSelf(APrinter: TPrinter);
+procedure TType.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Type, _TypeName, _Is, _Body]);
   inherited;
@@ -1278,7 +1236,7 @@ begin
              TBracketedStatement<TCommaList<TVariableDeclaration>>.Parse(Self, Source, _Declarations);
 end;
 
-procedure TRecord.PrintSelf(APrinter: TPrinter);
+procedure TRecord.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Record);
   APrinter.PrintIndented(_Declarations);
@@ -1298,7 +1256,7 @@ begin
   Result := true;
 end;
 
-procedure TPLSQLTable.PrintSelf(APrinter: TPrinter);
+procedure TPLSQLTable.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Table, _Of, _TypeRef, _Index, _By, _IndexType]);
 end;
@@ -1330,7 +1288,7 @@ begin
   Result := true;
 end;
 
-procedure TForall.PrintSelf(APrinter: TPrinter);
+procedure TForall.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_ForAll, _Variable, _In, _IndicesOrValues, _Low, _Of, _To, _TableName, _High, _Save, _Exceptions]);
   APrinter.PrintIndented(_DML);
@@ -1354,7 +1312,7 @@ begin
   Result := true;
 end;
 
-procedure TCaseSection.PrintSelf(APrinter: TPrinter);
+procedure TCaseSection.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_When, _Condition, _Then, _Else]);
   APrinter.PrintIndented(_Body);
@@ -1378,7 +1336,7 @@ begin
   Result := Any([Keyword(['end case', 'end'])]);
 end;
 
-procedure TCase.PrintSelf(APrinter: TPrinter);
+procedure TCase.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Case, _Condition]);
   APrinter.Indent;
@@ -1403,7 +1361,7 @@ begin
   Result := true;
 end;
 
-procedure TCursor.PrintSelf(APrinter: TPrinter);
+procedure TCursor.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Cursor, _CursorName, _IndentNextLine,
                                 _Params, _NextLine,
@@ -1423,7 +1381,7 @@ begin
   inherited;
 end;
 
-procedure TPipeRow.PrintSelf(APrinter: TPrinter);
+procedure TPipeRow.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Pipe, _Row, _Arguments]);
   inherited;
@@ -1442,7 +1400,7 @@ begin
   Result := true;
 end;
 
-procedure TFetch.PrintSelf(APrinter: TPrinter);
+procedure TFetch.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Fetch);
   APrinter.PrintIndented(_Cursor);
@@ -1463,7 +1421,7 @@ begin
   Result := true;
 end;
 
-procedure TClose.PrintSelf(APrinter: TPrinter);
+procedure TClose.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Close, _Cursor]);
   inherited;
@@ -1481,7 +1439,7 @@ begin
   Result := true;
 end;
 
-procedure TExit.PrintSelf(APrinter: TPrinter);
+procedure TExit.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Exit, _When, _Condition]);
   inherited;
@@ -1503,7 +1461,7 @@ begin
   Result := true;
 end;
 
-procedure TExecuteImmediate.PrintSelf(APrinter: TPrinter);
+procedure TExecuteImmediate.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Execute, _Immediate]);
   APrinter.PrintIndented(_Command);

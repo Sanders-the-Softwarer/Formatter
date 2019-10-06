@@ -55,9 +55,8 @@ type
     _AdditionalSelect: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
-    procedure Match(AFields: TStatement);
+    procedure InternalMatch(AStatement: TStatement); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор insert }
@@ -66,19 +65,15 @@ type
     _Insert: TEpithet;
     _Into: TEpithet;
     _Table: TStatement;
-    _OpenBracket: TTerminal;
     _Fields: TStatement;
-    _CloseBracket: TTerminal;
     _Select: TStatement;
     _Values: TEpithet;
-    _OpenBracket2: TTerminal;
     _ValueList: TStatement;
-    _CloseBracket2: TTerminal;
     _Returning: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalMatchChildren; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор update }
@@ -92,8 +87,7 @@ type
     _Returning: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор delete }
@@ -105,8 +99,7 @@ type
     _Where: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор merge }
@@ -126,8 +119,7 @@ type
     _Sections: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Вложенный запрос }
@@ -138,8 +130,7 @@ type
     _CloseBracket: TTerminal;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Идентификатор как поле в insert, select into итп }
@@ -148,8 +139,8 @@ type
     _FieldName: TStatement;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
     function StatementName: string; override;
   end;
 
@@ -168,16 +159,16 @@ type
     _Match: TIdentField;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override; final;
     procedure PrintSelfAfter(APrinter: TPrinter); virtual;
     property Match: TIdentField read _Match write _Match;
   end;
 
   [Aligned]
   TExpressionFields = class(TCommaList<TExpressionField>)
-  public
-    procedure Match(AFields: TIdentFields);
+  strict protected
+    procedure InternalMatch(AStatement: TStatement); override;
   end;
 
 implementation
@@ -202,8 +193,7 @@ type
     _Dot, _Star: TTerminal;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Условие exists }
@@ -212,8 +202,7 @@ type
     _Exists: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Конструкция within group }
@@ -223,8 +212,7 @@ type
     _OrderBy: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Конструкция over }
@@ -238,8 +226,7 @@ type
     _CloseBracket: TTerminal;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Конструкция keep }
@@ -253,8 +240,7 @@ type
     _CloseBracket: TTerminal;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Вызов функции с различными select-ными прибамбасами }
@@ -266,8 +252,7 @@ type
     _Over: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Спецфункция listagg }
@@ -284,8 +269,7 @@ type
     _CloseBracket: TTerminal;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Строка выражения order by }
@@ -295,8 +279,7 @@ type
     _Nulls, _Position, _Direction: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Выражение order by }
@@ -305,8 +288,7 @@ type
     _Order, _Siblings, _By: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Конструкция where }
@@ -316,8 +298,7 @@ type
     _Condition: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Конструкция returning }
@@ -329,8 +310,8 @@ type
     _Targets: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalMatchChildren; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Указание таблицы - в select, merge, delete и т. п. }
@@ -345,8 +326,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     function ParseTableExpression(out AResult: TStatement): boolean; virtual;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
     function StatementName: string; override;
   end;
 
@@ -395,7 +376,7 @@ begin
   Result := Assigned(_Star) and (Assigned(_Dot) = Assigned(_Prefix));
 end;
 
-procedure TAsterisk.PrintSelf(APrinter: TPrinter);
+procedure TAsterisk.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Prefix, _Dot, _Star]);
 end;
@@ -409,7 +390,7 @@ begin
   if Result then inherited;
 end;
 
-procedure TExists.PrintSelf(APrinter: TPrinter);
+procedure TExists.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Exists);
   APrinter.Indent;
@@ -429,7 +410,7 @@ begin
   Result := true;
 end;
 
-procedure TWithinGroup.PrintSelf(APrinter: TPrinter);
+procedure TWithinGroup.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Within, _Group]);
   APrinter.PrintIndented(_OrderBy);
@@ -450,7 +431,7 @@ begin
   Result := true;
 end;
 
-procedure TOver.PrintSelf(APrinter: TPrinter);
+procedure TOver.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Over);
   APrinter.NextLine;
@@ -481,7 +462,7 @@ begin
   Result := true;
 end;
 
-procedure TKeep.PrintSelf(APrinter: TPrinter);
+procedure TKeep.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Keep, _NextLine, _Indent,
                               _OpenBracket, _NextLine, _Indent,
@@ -504,7 +485,7 @@ begin
   Result := Assigned(_WithinGroup) or Assigned(_Keep) or Assigned(_Over);
 end;
 
-procedure TSelectFunctionCall.PrintSelf(APrinter: TPrinter);
+procedure TSelectFunctionCall.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_FunctionCall);
   APrinter.NextLine;
@@ -533,7 +514,7 @@ begin
   Result := true;
 end;
 
-procedure TListagg.PrintSelf(APrinter: TPrinter);
+procedure TListagg.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_ListAgg, _OpenBracket, _Expression, _Comma, _Delimiter,
     _On, _Overflow, _Truncate, _OverflowTag, _Without, _Count, _CloseBracket]);
@@ -551,7 +532,7 @@ begin
   Result := _FieldName.StatementName;
 end;
 
-procedure TIdentField.PrintSelf(APrinter: TPrinter);
+procedure TIdentField.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_FieldName);
 end;
@@ -574,7 +555,7 @@ begin
   Result := true;
 end;
 
-procedure TOrderByItem.PrintSelf(APrinter: TPrinter);
+procedure TOrderByItem.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Expression, _Direction, _Nulls, _Position]);
 end;
@@ -590,7 +571,7 @@ begin
   Result := inherited InternalParse;
 end;
 
-procedure TOrderBy.PrintSelf(APrinter: TPrinter);
+procedure TOrderBy.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Order, _Siblings, _By]);
   APrinter.NextLine;
@@ -606,7 +587,7 @@ begin
   Result := TParser.ParseExpression(Self, Source, _Expression);
 end;
 
-procedure TExpressionField.PrintSelf(APrinter: TPrinter);
+procedure TExpressionField.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Expression);
   PrintSelfAfter(APrinter);
@@ -622,12 +603,14 @@ end;
 
 { TExpressionFields }
 
-procedure TExpressionFields.Match(AFields: TIdentFields);
+procedure TExpressionFields.InternalMatch(AStatement: TStatement);
 var
   Count, i: integer;
+  AFields: TIdentFields absolute AStatement;
 begin
-  if not Assigned(Self) or not Assigned(AFields) then exit;
+  if not (AStatement is TIdentFields) then exit;
   Count := Math.Min(Self.Count, AFields.Count);
+  Assert(Settings <> nil);
   if Count < Settings.MatchParamLimit then exit;
   for i := 0 to Count - 1 do
     if (Self.Item(i) is TExpressionField) and (AFields.Item(i) is TIdentField) then
@@ -643,7 +626,7 @@ begin
   Result := Assigned(_Where);
 end;
 
-procedure TWhere.PrintSelf(APrinter: TPrinter);
+procedure TWhere.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Where, _IndentNextLine, _Condition, _Undent]);
 end;
@@ -660,14 +643,15 @@ begin
   Result := true;
 end;
 
-procedure TReturning.PrintSelf(APrinter: TPrinter);
+procedure TReturning.InternalMatchChildren;
 begin
-  TExpressionFields(_ReturningFields).Match(TIdentFields(_Targets));
-  APrinter.NextLine;
-  APrinter.PrintItem(_Returning);
-  APrinter.PrintIndented(_ReturningFields);
-  APrinter.PrintItem(_Into);
-  APrinter.PrintIndented(_Targets);
+  _ReturningFields.Match(_Targets);
+end;
+
+procedure TReturning.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_NextLine, _Returning, _IndentNextLine, _ReturningFields, _Undent]);
+  APrinter.NextLineIf([_Into, _IndentNextLine, _Targets, _Undent]);
 end;
 
 { TTableClause }
@@ -697,7 +681,7 @@ begin
   if Assigned(_Alias) and (Result <> '') then Result := Result + ' as ' + _Alias.Value;
 end;
 
-procedure TTableRef.PrintSelf(APrinter: TPrinter);
+procedure TTableRef.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Select, _Table, _OpenBracket, _TableName, _CloseBracket, _Alias]);
 end;
@@ -718,8 +702,8 @@ type
     _Select: TStatement;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
     function StatementName: string; override;
   end;
 
@@ -730,8 +714,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     function ParseBreak: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Поле в select }
@@ -764,8 +747,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     function ParseTableExpression(out AResult: TStatement): boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Список таблиц в select }
@@ -782,8 +764,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     function ParseBreak: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Выражение having }
@@ -793,8 +774,7 @@ type
     _Condition: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Выражение start with }
@@ -804,8 +784,7 @@ type
     _Condition: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
     { Выражение start with }
@@ -815,8 +794,7 @@ type
     _Condition: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Следующий запрос в цепочке union all }
@@ -825,8 +803,7 @@ type
     _SetOperation: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
 { TSelect }
@@ -854,10 +831,10 @@ begin
   Result := true;
 end;
 
-procedure TSelect.PrintSelf(APrinter: TPrinter);
+procedure TSelect.InternalPrintSelf(APrinter: TPrinter);
 begin
   TExpressionFields(_Fields).Match(TIdentFields(_IntoFields));
-  APrinter.PrintItems([_With,
+  APrinter.PrintItems([_With,      _NextLine,
                        _Select,    _Mode,           _IndentNextLine,
                                    _Fields,         _UndentNextLine,
                        _Into,      _IndentNextLine,
@@ -874,10 +851,9 @@ begin
   inherited;
 end;
 
-procedure TSelect.Match(AFields: TStatement);
+procedure TSelect.InternalMatch(AStatement: TStatement);
 begin
-  if Assigned(Self) and (_Fields is TExpressionFields) and (AFields is TIdentFields) then
-    TExpressionFields(_Fields).Match(AFields as TIdentFields);
+  _Fields.Match(AStatement);
 end;
 
 { TInnerSelect }
@@ -890,11 +866,9 @@ begin
   Result := Assigned(_OpenBracket) and Assigned(_Select);
 end;
 
-procedure TInnerSelect.PrintSelf(APrinter: TPrinter);
+procedure TInnerSelect.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_OpenBracket);
-  APrinter.PrintIndented(_Select);
-  APrinter.PrintItem(_CloseBracket);
+  APrinter.PrintItems([_OpenBracket, _IndentNextLine, _Select, _UndentNextLine, _CloseBracket]);
 end;
 
 { TWithItem }
@@ -907,7 +881,7 @@ begin
   Result := Assigned(_Alias);
 end;
 
-procedure TWithItem.PrintSelf(APrinter: TPrinter);
+procedure TWithItem.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Alias, _As, _Select]);
 end;
@@ -932,7 +906,7 @@ begin
   Result := Any([Keyword('select'), Terminal([')', ';'])]);
 end;
 
-procedure TWith.PrintSelf(APrinter: TPrinter);
+procedure TWith.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_With);
   APrinter.NextLine;
@@ -994,7 +968,7 @@ begin
   Result := TQualifiedIndexedIdent.Parse(Self, Source, AResult);
 end;
 
-procedure TSelectTableRef.PrintSelf(APrinter: TPrinter);
+procedure TSelectTableRef.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Lateral);
   inherited;
@@ -1039,13 +1013,13 @@ begin
   Result := Any([Terminal([';', ')']), Keyword('*')]);
 end;
 
-procedure TGroupBy.PrintSelf(APrinter: TPrinter);
+procedure TGroupBy.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Group);
   APrinter.PrintItem(_By);
   APrinter.NextLine;
   APrinter.Indent;
-  inherited PrintSelf(APrinter);
+  inherited;
   APrinter.NextLine;
   APrinter.Undent;
 end;
@@ -1060,7 +1034,7 @@ begin
   Result := true;
 end;
 
-procedure THaving.PrintSelf(APrinter: TPrinter);
+procedure THaving.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Having, _IndentNextLine, _Condition, _Undent]);
 end;
@@ -1077,7 +1051,7 @@ begin
   Result := true;
 end;
 
-procedure TStartWith.PrintSelf(APrinter: TPrinter);
+procedure TStartWith.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Start, _With, _IndentNextLine, _Condition, _Undent]);
 end;
@@ -1093,7 +1067,7 @@ begin
   Result := true;
 end;
 
-procedure TConnectBy.PrintSelf(APrinter: TPrinter);
+procedure TConnectBy.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Connect, _By, _IndentNextLine, _Condition, _Undent]);
 end;
@@ -1106,7 +1080,7 @@ begin
   Result := Assigned(_SetOperation) and inherited InternalParse;
 end;
 
-procedure TAdditionalSelect.PrintSelf(APrinter: TPrinter);
+procedure TAdditionalSelect.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_SetOperation);
   APrinter.NextLine;
@@ -1126,44 +1100,27 @@ begin
   if not Assigned(_Insert) then exit(false);
   _Into := Keyword('into');
   TTableRef.Parse(Self, Source, _Table);
-  _OpenBracket := Terminal('(');
-  TIdentFields.Parse(Self, Source, _Fields);
-  _CloseBracket := Terminal(')');
+  TBracketedStatement<TIdentFields>.Parse(Self, Source, _Fields);
   if TSelect.Parse(Self, Source, _Select) then exit;
   _Values := Keyword('values');
-  _OpenBracket2 := Terminal('(');
-  TExpressionFields.Parse(Self, Source, _ValueList);
-  _CloseBracket2 := Terminal(')');
+  TBracketedStatement<TExpressionFields>.Parse(Self, Source, _ValueList);
   TReturning.Parse(Self, Source, _Returning);
   inherited;
 end;
 
-procedure TInsert.PrintSelf(APrinter: TPrinter);
+procedure TInsert.InternalMatchChildren;
 begin
-  (_Select as TSelect).Match(_Fields as TIdentFields);
-  (_ValueList as TExpressionFields).Match(_Fields as TIdentFields);
-  APrinter.PrintItem(_Insert);
-  APrinter.NextLine;
-  APrinter.PrintItem(_Into);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Table);
-  APrinter.NextLine;
-  APrinter.PrintItem(_OpenBracket);
-  APrinter.PrintIndented(_Fields);
-  APrinter.PrintItem(_CloseBracket);
-  APrinter.Undent;
-  APrinter.NextLine;
-  APrinter.PrintItem(_Select);
-  APrinter.PrintItem(_Values);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_OpenBracket2);
-  APrinter.PrintIndented(_ValueList);
-  APrinter.PrintItem(_CloseBracket2);
-  APrinter.Undent;
-  APrinter.NextLine;
-  APrinter.PrintItem(_Returning);
+  if not Assigned(_Fields) then exit;
+  _Select.Match(TBracketedStatement<TIdentFields>(_Fields).InnerStatement);
+  _ValueList.Match(TBracketedStatement<TIdentFields>(_Fields).InnerStatement);
+end;
+
+procedure TInsert.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Insert, _NextLine, _Into, _IndentNextLine, _Table,
+                       _NextLine, _Fields, _UndentNextLine, _Select, _Values,
+                       _IndentNextLine, _ValueList, _Undent]);
+  APrinter.NextLineIf([_Returning]);
   inherited;
 end;
 
@@ -1183,8 +1140,8 @@ type
     _Value: TStatement;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
     function StatementName: string; override;
   end;
 
@@ -1210,7 +1167,7 @@ begin
   Result := true;
 end;
 
-procedure TUpdate.PrintSelf(APrinter: TPrinter);
+procedure TUpdate.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Update);
   APrinter.PrintIndented(_Table);
@@ -1239,7 +1196,7 @@ begin
     else Result := '';
 end;
 
-procedure TUpdateAssignment.PrintSelf(APrinter: TPrinter);
+procedure TUpdateAssignment.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Target);
   APrinter.Ruler('assignment');
@@ -1271,7 +1228,7 @@ begin
   Result := true;
 end;
 
-procedure TDelete.PrintSelf(APrinter: TPrinter);
+procedure TDelete.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Delete);
   APrinter.NextLine;
@@ -1297,9 +1254,9 @@ type
     _DML: TStatement;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function StatementName: string; override;
-    procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
   { Секции операторов в merge }
@@ -1327,7 +1284,7 @@ begin
   Result := true;
 end;
 
-procedure TMerge.PrintSelf(APrinter: TPrinter);
+procedure TMerge.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Merge);
   APrinter.NextLine;
@@ -1361,7 +1318,7 @@ begin
   Result := Concat([_Section]);
 end;
 
-procedure TMergeSection.PrintSelf(APrinter: TPrinter);
+procedure TMergeSection.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Section);
   APrinter.PrintIndented(_DML);

@@ -64,9 +64,13 @@ type
     FSettings: TFormatSettings;
     function GetSettings: TFormatSettings;
   strict protected
-    Source: TBufferedStream<TToken>;
-    function InternalParse: boolean; virtual;
     function GetKeywords: TStrings; virtual;
+    function InternalParse: boolean; virtual;
+    procedure InternalMatch(AStatement: TStatement); virtual;
+    procedure InternalMatchChildren; virtual;
+    procedure InternalPrintSelf(APrinter: TPrinter); virtual;
+  strict protected
+    Source: TBufferedStream<TToken>;
     function IsStrongKeyword(const AEpithet: string): boolean;
     function NextToken: TToken;
     function Keyword(const AKeyword: string): TEpithet; overload;
@@ -82,8 +86,10 @@ type
     class function Candidates: TArray<TStatementClass>; virtual;
   public
     constructor Create(AParent: TStatement; ASource: TBufferedStream<TToken>); virtual;
-    procedure PrintSelf(APrinter: TPrinter); virtual;
+    procedure PrintSelf(APrinter: TPrinter);
     function Aligned: boolean; virtual;
+    procedure Match(AStatement: TStatement);
+    procedure MatchChildren;
     property Parent: TStatement read FParent;
     property Settings: TFormatSettings read GetSettings write FSettings;
   public
@@ -100,6 +106,7 @@ type
     Delimiters: TList<TObject>;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
     function ParseStatement(out AResult: TStatement): boolean; virtual;
     function ParseDelimiter(out AResult: TObject): boolean; virtual;
     function ParseBreak: boolean; virtual;
@@ -108,7 +115,6 @@ type
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
-    procedure PrintSelf(APrinter: TPrinter); override;
     function Count: integer;
     function Item(Index: integer): TStatement;
     function Any(Found: array of TObject): boolean;
@@ -127,9 +133,9 @@ type
     _Token: TToken;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function StatementName: string; override;
-    procedure PrintSelf(APrinter: TPrinter); override;
     property Token: TToken read _Token;
   end;
 
@@ -139,8 +145,7 @@ type
     _Semicolon: TTerminal;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Конструкция заданного типа в скобках }
@@ -151,8 +156,10 @@ type
   strict protected
     function InternalParse: boolean; override;
     function AllowEmpty: boolean; virtual;
+    procedure InternalMatch(AStatement: TStatement); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    property InnerStatement: TStatement read _Stmt;
   end;
 
   { Конструкция заданного типа в скобках, допускающая пустые скобки }
@@ -167,8 +174,7 @@ type
     _Stmt: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
 implementation
@@ -193,25 +199,27 @@ begin
   AResult := nil;
   SavedPosition := Tokens.Mark;
   Candidates := Self.Candidates;
-  try
-    for Candidate in Candidates do
-      if Candidate = Self then
-        begin
-          AResult := Candidate.Create(AParent, Tokens);
-          if AResult.InternalParse then exit(true);
-          Tokens.Restore(SavedPosition);
-          FreeAndNil(AResult);
-        end
-      else
-        begin
-          Result := Candidate.Parse(AParent, Tokens, AResult);
-          if Result then exit(true);
-          Tokens.Restore(SavedPosition);
-        end;
-    Result := false;
-  finally
-//    FreeAndNil(Candidates);
-  end;
+  for Candidate in Candidates do
+    if Candidate = Self then
+      begin
+        AResult := Candidate.Create(AParent, Tokens);
+        if AResult.InternalParse then exit(true);
+        Tokens.Restore(SavedPosition);
+        FreeAndNil(AResult);
+      end
+    else
+      begin
+        Result := Candidate.Parse(AParent, Tokens, AResult);
+        if Result then exit(true);
+        Tokens.Restore(SavedPosition);
+      end;
+  Result := false;
+end;
+
+procedure TStatement.PrintSelf(APrinter: TPrinter);
+begin
+  MatchChildren;
+  InternalPrintSelf(APrinter);
 end;
 
 class function TStatement.Candidates: TArray<TStatementClass>;
@@ -257,7 +265,7 @@ begin
 end;
 
 { Обработчик печати по умолчанию }
-procedure TStatement.PrintSelf(APrinter: TPrinter);
+procedure TStatement.InternalPrintSelf(APrinter: TPrinter);
 begin
   raise Exception.CreateFmt('Cannot print %s - PrintSelf is absent', [ClassName]);
 end;
@@ -265,6 +273,17 @@ end;
 function TStatement.Aligned: boolean;
 begin
   Result := Attributes.HasAttribute(ClassType, AlignedAttribute);
+end;
+
+procedure TStatement.MatchChildren;
+begin
+  if Assigned(Self) then InternalMatchChildren;
+end;
+
+procedure TStatement.Match(AStatement: TStatement);
+begin
+  if not Assigned(Self) or not Assigned(AStatement) then exit;
+  InternalMatch(AStatement);
 end;
 
 function TStatement.InternalParse: boolean;
@@ -275,6 +294,16 @@ end;
 function TStatement.GetKeywords: TStrings;
 begin
   if Assigned(Parent) then Result := Parent.GetKeywords else Result := nil;
+end;
+
+procedure TStatement.InternalMatch(AStatement: TStatement);
+begin
+  { ничего не делаем }
+end;
+
+procedure TStatement.InternalMatchChildren;
+begin
+  { ничего не делаем }
 end;
 
 function TStatement.IsStrongKeyword(const AEpithet: string): boolean;
@@ -493,13 +522,14 @@ begin
   Result := (Count > 0);
 end;
 
-procedure TStatementList<S>.PrintSelf(APrinter: TPrinter);
+procedure TStatementList<S>.InternalPrintSelf(APrinter: TPrinter);
 var i: integer;
 begin
   for i := 0 to Count - 1 do
   begin
     APrinter.PrintItem(Statements[i]);
-    PrintDelimiter(APrinter, Delimiters[i]);
+    if Assigned(Delimiters[i]) or (i < Count - 1) then
+      PrintDelimiter(APrinter, Delimiters[i]);
   end;
 end;
 
@@ -573,7 +603,7 @@ begin
   Result := not (_Token is TUnexpectedEOF);
 end;
 
-procedure TUnexpectedToken.PrintSelf(APrinter: TPrinter);
+procedure TUnexpectedToken.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Token);
   APrinter.NextLine;
@@ -588,7 +618,7 @@ begin
   Result := Assigned(_Semicolon);
 end;
 
-procedure TSemicolonStatement.PrintSelf(APrinter: TPrinter);
+procedure TSemicolonStatement.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Semicolon);
 end;
@@ -609,7 +639,12 @@ begin
   Result := false;
 end;
 
-procedure TBracketedStatement<T>.PrintSelf(APrinter: TPrinter);
+procedure TBracketedStatement<T>.InternalMatch(AStatement: TStatement);
+begin
+  _Stmt.Match(AStatement);
+end;
+
+procedure TBracketedStatement<T>.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_OpenBracket, _IndentNextLine, _Stmt, _UndentNextLine, _CloseBracket]);
 end;
@@ -628,7 +663,7 @@ begin
   Result := T.Parse(Self, Source, _Stmt);
 end;
 
-procedure TSingleLine<T>.PrintSelf(APrinter: TPrinter);
+procedure TSingleLine<T>.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.SupressNextLine(true);
   APrinter.PrintItem(_Stmt);

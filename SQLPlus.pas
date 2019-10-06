@@ -21,8 +21,7 @@ type
     _Clear: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Команда whenever }
@@ -31,8 +30,7 @@ type
     _Whenever, _SQLError, _Action: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Команда set }
@@ -42,8 +40,7 @@ type
     _Value: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Команда @ }
@@ -53,8 +50,7 @@ type
     _FileName: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Команда spool }
@@ -64,8 +60,7 @@ type
     _FileName: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Имя файла }
@@ -74,8 +69,7 @@ type
     _Tokens: TArray<TToken>;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
 implementation
@@ -90,7 +84,7 @@ begin
   Result := Assigned(_Clear);
 end;
 
-procedure TClear.PrintSelf(APrinter: TPrinter);
+procedure TClear.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Clear]);
 end;
@@ -106,7 +100,7 @@ begin
   Result := true;
 end;
 
-procedure TWhenever.PrintSelf(APrinter: TPrinter);
+procedure TWhenever.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Whenever, _SQLError, _Action]);
 end;
@@ -122,7 +116,7 @@ begin
   Result := true;
 end;
 
-procedure TSet.PrintSelf(APrinter: TPrinter);
+procedure TSet.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Set, _Target, _Value]);
 end;
@@ -136,7 +130,7 @@ begin
   if Result then TFileName.Parse(Self, Source, _FileName);
 end;
 
-procedure TAt.PrintSelf(APrinter: TPrinter);
+procedure TAt.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.SupressSpaces(true);
   APrinter.PrintItems([_At, _FileName]);
@@ -152,7 +146,7 @@ begin
   if Result then TFileName.Parse(Self, Source, _FileName);
 end;
 
-procedure TSpool.PrintSelf(APrinter: TPrinter);
+procedure TSpool.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Spool, _FileName]);
 end;
@@ -183,7 +177,7 @@ begin
   FreeAndNil(Tokens);
 end;
 
-procedure TFileName.PrintSelf(APrinter: TPrinter);
+procedure TFileName.InternalPrintSelf(APrinter: TPrinter);
 var T: TToken;
 begin
   for T in _Tokens do

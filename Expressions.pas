@@ -39,6 +39,7 @@ type
   TTerm = class(TStatement)
   strict private
     _Prefix: TToken;
+    _Value: TStatement;
     _Number: TNumber;
     _Literal: TLiteral;
     _SQLStatement: TStatement;
@@ -56,8 +57,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     function ParseSQLStatement: TStatement; virtual;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
     function IsSimpleIdent: boolean;
   end;
 
@@ -84,8 +85,8 @@ type
     _Next: TStatement;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
     function StatementName: string; override;
     function IsSimpleIdent: boolean;
   end;
@@ -100,8 +101,8 @@ type
   strict protected
     function TopStatement: boolean;
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
     function IsSimpleIdent: boolean;
   end;
 
@@ -114,8 +115,7 @@ type
     _CloseBracket: TTerminal;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Аргумент вызова подпрограммы }
@@ -126,8 +126,7 @@ type
     _Expression: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Аргументы вызова подпрограммы }
@@ -155,8 +154,7 @@ type
     _End: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Секция выражения case }
@@ -169,8 +167,7 @@ type
     _Value: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
     function StatementName: string; override;
   end;
 
@@ -191,8 +188,7 @@ type
     _CloseBracket: TTerminal;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
 { TExpression }
@@ -253,7 +249,7 @@ begin
   Result := nil; { предназначен для перекрытия в TSQLTerm }
 end;
 
-procedure TTerm.PrintSelf(APrinter: TPrinter);
+procedure TTerm.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Prefix, _Number, _Literal, _SQLStatement, _Ident, _Suffix, _KeywordValue, _Case, _Cast]);
   if Assigned(_Select) then
@@ -334,7 +330,7 @@ begin
   if Result then TQualifiedIdent.Parse(Self, Source, _Next);
 end;
 
-procedure TQualifiedIdent.PrintSelf(APrinter: TPrinter);
+procedure TQualifiedIdent.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Dot, _Name, _Next]);
 end;
@@ -371,7 +367,7 @@ begin
   Result := Assigned(_Indexes) or Assigned(_Ident);
 end;
 
-procedure TQualifiedIndexedIdent.PrintSelf(APrinter: TPrinter);
+procedure TQualifiedIndexedIdent.InternalPrintSelf(APrinter: TPrinter);
 begin
   if TopStatement then APrinter.SupressNextLine(true);
   APrinter.PrintItems([_Indexes, _Dot, _Ident, _Next]);
@@ -395,7 +391,7 @@ begin
   Result := true;
 end;
 
-procedure TFunctionCall.PrintSelf(APrinter: TPrinter);
+procedure TFunctionCall.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Name, _IndentNextLine, _OpenBracket, _IndentNextLine, _Arguments, _UndentNextLine, _CloseBracket, _Undent]);
 end;
@@ -417,7 +413,7 @@ begin
   Result := TParser.ParseExpression(Self, Source, _Expression);
 end;
 
-procedure TArgument.PrintSelf(APrinter: TPrinter);
+procedure TArgument.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Ident);
   if Assigned(_Ident) then
@@ -445,7 +441,7 @@ begin
   Result := true;
 end;
 
-procedure TCase.PrintSelf(APrinter: TPrinter);
+procedure TCase.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Case, _Expression, _Sections, _End]);
 end;
@@ -472,7 +468,7 @@ begin
   Result := Concat([_When, _Else]);
 end;
 
-procedure TCaseSection.PrintSelf(APrinter: TPrinter);
+procedure TCaseSection.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_When, _Condition, _Then, _Else, _Value]);
 end;
@@ -498,7 +494,7 @@ begin
   Result := true;
 end;
 
-procedure TCast.PrintSelf(APrinter: TPrinter);
+procedure TCast.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Cast, _OpenBracket, _Expression, _As, _TypeRef, _CloseBracket]);
 end;

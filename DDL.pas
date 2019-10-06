@@ -23,8 +23,8 @@ type
     _What: TStatement;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
     function StatementName: string; override;
   end;
 
@@ -35,8 +35,8 @@ type
     _Unexpected: TStatement;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
     function StatementName: string; override;
   end;
 
@@ -49,8 +49,8 @@ type
     _Select: TStatement;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
     function StatementName: string; override;
   end;
 
@@ -61,8 +61,7 @@ type
     _Fields: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Объект table }
@@ -75,8 +74,8 @@ type
     _On, _Commit, _DeleteOrPreserve, _Rows: TEpithet;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure PrintSelf(APrinter: TPrinter); override;
     function StatementName: string; override;
   end;
 
@@ -96,8 +95,7 @@ type
     _Not, _Null: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Описание constraint-а }
@@ -106,8 +104,7 @@ type
     _Constraint, _ConstraintName: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
     class function Candidates: TArray<TStatementClass>; override;
   end;
 
@@ -118,8 +115,7 @@ type
     _Fields, _UsingIndex: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Описание unique }
@@ -129,8 +125,7 @@ type
     _Fields, _UsingIndex: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Описание foreign key }
@@ -140,8 +135,7 @@ type
     _RefFields, _TargetFields: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Описание check }
@@ -151,8 +145,7 @@ type
     _Condition: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Выражение tablespace }
@@ -161,8 +154,7 @@ type
     _Tablespace, _TablespaceName: TEpithet;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Выражение using index }
@@ -172,8 +164,7 @@ type
     _Tablespace: TStatement;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Команда comment }
@@ -185,8 +176,7 @@ type
     _Text: TLiteral;
   strict protected
     function InternalParse: boolean; override;
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Группа комментариев }
@@ -222,7 +212,7 @@ begin
             TUnexpectedToken.Parse(Self, Source, _What);
 end;
 
-procedure TCreate.PrintSelf(APrinter: TPrinter);
+procedure TCreate.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Create, _Or, _Replace, _Force, _What]);
 end;
@@ -244,7 +234,7 @@ begin
   Result := true;
 end;
 
-procedure TView.PrintSelf(APrinter: TPrinter);
+procedure TView.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_View, _ViewName, _As]);
   APrinter.PrintIndented(_Select);
@@ -270,7 +260,7 @@ begin
   Result := true;
 end;
 
-procedure TIndex.PrintSelf(APrinter: TPrinter);
+procedure TIndex.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Unique, _Index, _IndexName, _On, _TableName, _Fields]);
   inherited;
@@ -303,7 +293,7 @@ begin
   Result := true;
 end;
 
-procedure TTable.PrintSelf(APrinter: TPrinter);
+procedure TTable.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Global, _Temporary, _Table, _TableName, _IndentNextLine,
                        _Items, _Organization, _Index, _Tablespace, _On, _Commit,
@@ -325,7 +315,7 @@ begin
   if Result then _TablespaceName := Identifier;
 end;
 
-procedure TTablespace.PrintSelf(APrinter: TPrinter);
+procedure TTablespace.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Tablespace, _TablespaceName]);
 end;
@@ -351,7 +341,7 @@ begin
   Result := true;
 end;
 
-procedure TTableField.PrintSelf(APrinter: TPrinter);
+procedure TTableField.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Name, _Type, _Default, _Value, _Not, _Null]);
 end;
@@ -366,7 +356,7 @@ begin
   Result := true;
 end;
 
-procedure TConstraint.PrintSelf(APrinter: TPrinter);
+procedure TConstraint.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Constraint, _ConstraintName]);
 end;
@@ -391,7 +381,7 @@ begin
   Result := true;
 end;
 
-procedure TPrimaryKey.PrintSelf(APrinter: TPrinter);
+procedure TPrimaryKey.InternalPrintSelf(APrinter: TPrinter);
 begin
   inherited;
   APrinter.PrintItems([_Primary, _Key, _Fields, _UsingIndex]);
@@ -409,7 +399,7 @@ begin
   Result := true;
 end;
 
-procedure TUnique.PrintSelf(APrinter: TPrinter);
+procedure TUnique.InternalPrintSelf(APrinter: TPrinter);
 begin
   inherited;
   APrinter.PrintItems([_Unique, _Fields, _UsingIndex]);
@@ -426,7 +416,7 @@ begin
   Result := true;
 end;
 
-procedure TUsingIndex.PrintSelf(APrinter: TPrinter);
+procedure TUsingIndex.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Using, _Index, _Tablespace]);
 end;
@@ -446,7 +436,7 @@ begin
   Result := true;
 end;
 
-procedure TForeignKey.PrintSelf(APrinter: TPrinter);
+procedure TForeignKey.InternalPrintSelf(APrinter: TPrinter);
 begin
   inherited;
   APrinter.PrintItems([_Foreign, _Key, _RefFields, _References, _TableName, _TargetFields]);
@@ -463,7 +453,7 @@ begin
   Result := true;
 end;
 
-procedure TCheck.PrintSelf(APrinter: TPrinter);
+procedure TCheck.InternalPrintSelf(APrinter: TPrinter);
 begin
   inherited;
   APrinter.PrintItems([_Check, _Condition]);
@@ -484,7 +474,7 @@ begin
   Result := true;
 end;
 
-procedure TComment.PrintSelf(APrinter: TPrinter);
+procedure TComment.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Comment, _On, _TableOrColumn]);
   APrinter.Ruler('name', Settings.AlignTableColumnComments);
@@ -519,7 +509,7 @@ begin
   Result := inherited or Assigned(_ObjectType);
 end;
 
-procedure TDrop.PrintSelf(APrinter: TPrinter);
+procedure TDrop.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Drop, _ObjectType, _Unexpected, _Body, _ObjectName, _Cascade, _Constraints]);
   inherited;

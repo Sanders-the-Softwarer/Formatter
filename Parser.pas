@@ -64,8 +64,8 @@ uses DDL, DML, PLSQL, SQLPlus, Expressions;
 type
   { "Пустое" выражение }
   TEOFStatement = class(TStatement)
-  public
-    procedure PrintSelf(APrinter: TPrinter); override;
+  strict protected
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
 { TParser }
@@ -189,7 +189,7 @@ end;
 
 { TEOFStatement }
 
-procedure TEOFStatement.PrintSelf(APrinter: TPrinter);
+procedure TEOFStatement.InternalPrintSelf(APrinter: TPrinter);
 begin
   { ничего не делаем }
 end;
