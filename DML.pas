@@ -162,7 +162,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     procedure PrintSelfAfter(APrinter: TPrinter); virtual;
-    property Match: TIdentField read _Match write _Match;
+    property MatchedTo: TIdentField read _Match write _Match;
   end;
 
   [Aligned]
@@ -614,7 +614,7 @@ begin
   if Count < Settings.MatchParamLimit then exit;
   for i := 0 to Count - 1 do
     if (Self.Item(i) is TExpressionField) and (AFields.Item(i) is TIdentField) then
-      TExpressionField(Self.Item(i)).Match := TIdentField(AFields.Item(i));
+      TExpressionField(Self.Item(i)).MatchedTo := TIdentField(AFields.Item(i));
 end;
 
 { TWhere }
@@ -1252,6 +1252,8 @@ type
   strict private
     _Section: TEpithet;
     _DML: TStatement;
+    _Delete: TEpithet;
+    _Where: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -1308,9 +1310,15 @@ begin
   _Section := Keyword(['when matched then', 'when not matched then']);
   if not Assigned(_Section) then exit(false);
   Result := true;
-  if not TInsert.Parse(Self, Source, _DML) and
-     not TUpdate.Parse(Self, Source, _DML) and
-     not TUnexpectedToken.Parse(Self, Source, _DML) then { ничего не делаем } ;
+  if TInsert.Parse(Self, Source, _DML) or
+     TUpdate.Parse(Self, Source, _DML) then
+    begin
+      if TDML(_DML).HasSemicolon then exit;
+      _Delete := Keyword('delete');
+      TWhere.Parse(Self, Source, _Where);
+    end
+  else
+    TUnexpectedToken.Parse(Self, Source, _DML);
 end;
 
 function TMergeSection.StatementName: string;
@@ -1320,8 +1328,10 @@ end;
 
 procedure TMergeSection.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Section);
-  APrinter.PrintIndented(_DML);
+  APrinter.PrintItems([_Section, _IndentNextLine, _DML]);
+  APrinter.NextLineIf([_Delete]);
+  APrinter.NextLineIf([_Where]);
+  APrinter.Undent;
 end;
 
 { TMergeSections }

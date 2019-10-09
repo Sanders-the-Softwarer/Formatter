@@ -86,10 +86,12 @@ type
   { Объявление подпрограммы }
   TSubroutineHeaderBase = class(TStatement)
   strict private
-    _Initial: TEpithet;
+    _MemberOrConstructor: TEpithet;
+    _ProcedureOrFunction: TEpithet;
     _Name: TEpithet;
     _Params: TStatement;
     _Return: TEpithet;
+    _SelfAsResult: TEpithet;
     _ReturnType: TStatement;
     _Deterministic: TEpithet;
     _Pipelined: TEpithet;
@@ -185,6 +187,8 @@ type
   { Объявление переменной }
   TVariableDeclaration = class(TSemicolonStatement)
   strict private
+    class var SkipSemicolonCheck: boolean;
+  strict private
     _Name: TEpithet;
     _Constant: TEpithet;
     _Type: TStatement;
@@ -195,6 +199,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function StatementName: string; override;
+    class function WithoutSemicolon(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
   end;
 
   { Блок переменных }
@@ -496,7 +501,7 @@ type
   { Декларация типа }
   TType = class(TSemicolonStatement)
   strict private
-    _Type, _TypeName, _Is: TEpithet;
+    _Type, _TypeName, _Force, _Is: TEpithet;
     _Body: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -525,6 +530,28 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Объект object }
+  [Aligned]
+  TObject_ = class(TStatement)
+  strict private
+    _Object: TEpithet;
+    _Body: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Список членов класса }
+  TObjectMemberList = class(TCommaList<TStatement>)
+  strict protected
+    function ParseStatement(out AResult: TStatement): boolean; override;
+    function ParseBreak: boolean; override;
+  end;
+
+  { Декларация метода }
+  TObjectMethodDeclaration = class(TSubroutineHeaderBase)
   end;
 
 implementation
@@ -558,7 +585,7 @@ end;
 
 procedure TProgramBlock.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_NextLine,  _Header,            _IndentNextLine,
+  APrinter.PrintItems([_Header,    _IndentNextLine,
                                    _Declarations,      _UndentNextLine,
                        _Begin,     _IndentNextLine,
                                    _Operators,         _UndentNextLine,
@@ -612,9 +639,10 @@ end;
 
 function TSubroutineHeaderBase.InternalParse: boolean;
 begin
+  _MemberOrConstructor := Keyword(['member', 'constructor']);
   { Проверим procedure/function }
-  _Initial := Keyword(['procedure', 'function']);
-  if not Assigned(_Initial) then exit(false);
+  _ProcedureOrFunction := Keyword(['procedure', 'function']);
+  if not Assigned(_ProcedureOrFunction) then exit(false);
   Result := true;
   { Название процедуры и параметры }
   _Name := Identifier;
@@ -622,7 +650,8 @@ begin
   TParamsDeclaration.Parse(Self, Source, _Params);
   { Возвращаемое значение }
   _Return := Keyword('return');
-  TTypeRef.Parse(Self, Source, _ReturnType);
+  _SelfAsResult := Keyword('self as result');
+  if not Assigned(_SelfAsResult) then TTypeRef.Parse(Self, Source, _ReturnType);
   { Признаки }
   _Deterministic := Keyword('deterministic');
   _Pipelined := Keyword('pipelined');
@@ -630,8 +659,9 @@ end;
 
 procedure TSubroutineHeaderBase.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Initial, _Name, _IndentNextLine, _Params]);
-  APrinter.NextLineIf([_Return, _ReturnType]);
+  APrinter.PrintItems([_MemberOrConstructor, _ProcedureOrFunction, _Name, _Indent]);
+  APrinter.NextLineIf([_Params]);
+  APrinter.NextLineIf([_Return, _SelfAsResult, _ReturnType]);
   APrinter.NextLineIf([_Deterministic]);
   APrinter.NextLineIf([_Pipelined]);
   APrinter.Undent;
@@ -639,7 +669,7 @@ end;
 
 function TSubroutineHeaderBase.StatementName: string;
 begin
-  Result := Concat([_Initial, _Name]);
+  Result := Concat([_MemberOrConstructor, _ProcedureOrFunction, _Name]);
 end;
 
 { TTypeRef }
@@ -773,7 +803,7 @@ begin
     потребуем наличия либо точки с запятой, либо дополнительных конструкций }
   Result := inherited or Assigned(_Constant) or Assigned(_Assignment) or
             (Assigned(_Type) and not TTypeRef(_Type).IsSimpleIdent) or
-            (Parent is TCommaList<TVariableDeclaration>);
+            (Parent is TCommaList<TVariableDeclaration>) or SkipSemicolonCheck;
 end;
 
 function TVariableDeclaration.StatementName: string;
@@ -793,6 +823,19 @@ begin
   inherited;
 end;
 
+class function TVariableDeclaration.WithoutSemicolon(
+  AParent: TStatement;
+  ASource: TBufferedStream<TToken>;
+  out AResult: TStatement): boolean;
+begin
+  try
+    SkipSemicolonCheck := true;
+    Result := Parse(AParent, ASource, AResult);
+  finally
+    SkipSemicolonCheck := false;
+  end;
+end;
+
 { TVariableDeclarations }
 
 function TVariableDeclarations.ParseBreak: boolean;
@@ -804,12 +847,11 @@ end;
 
 function TProcedureCall.InternalParse: boolean;
 begin
-  Result := TFunctionCall.Parse(Self, Source, _Call) or
-            TQualifiedIndexedIdent.Parse(Self, Source, _Call);
+  Result := TQualifiedIndexedIdent.Parse(Self, Source, _Call);
   { Если результат - простой идентификатор, потребуем наличия точки с запятой,
     иначе вероятно ложное распознавание }
   if Result then
-    Result := inherited or (_Call is TFunctionCall) or not (_Call as TQualifiedIndexedIdent).IsSimpleIdent;
+    Result := inherited or not (_Call as TQualifiedIndexedIdent).IsSimpleIdent;
 end;
 
 procedure TProcedureCall.InternalPrintSelf(APrinter: TPrinter);
@@ -1210,6 +1252,7 @@ begin
   _Type := Keyword('type');
   if not Assigned(_Type) then exit(false);
   _TypeName := Identifier;
+  _Force := Keyword('force');
   _Is := Keyword('is');
   TParser.ParseType(Self, Source, _Body);
   inherited;
@@ -1218,7 +1261,7 @@ end;
 
 procedure TType.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Type, _TypeName, _Is, _Body]);
+  APrinter.PrintItems([_Type, _TypeName, _Force, _Is, _Body]);
   inherited;
 end;
 
@@ -1259,6 +1302,34 @@ end;
 procedure TPLSQLTable.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Table, _Of, _TypeRef, _Index, _By, _IndexType]);
+end;
+
+{ TObject_ }
+
+function TObject_.InternalParse: boolean;
+begin
+  _Object := Keyword('object');
+  if not Assigned(_Object) then exit(false);
+  TOptionalBracketedStatement<TObjectMemberList>.Parse(Self, Source, _Body);
+  Result := true;
+end;
+
+procedure TObject_.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Object, _IndentNextLine, _Body, _Undent]);
+end;
+
+{ TObjectMemberList }
+
+function TObjectMemberList.ParseStatement(out AResult: TStatement): boolean;
+begin
+  Result := TObjectMethodDeclaration.Parse(Self, Source, AResult) or
+            TVariableDeclaration.WithoutSemicolon(Self, Source, AResult);
+end;
+
+function TObjectMemberList.ParseBreak: boolean;
+begin
+  Result := Any([Terminal([';', ')'])]);
 end;
 
 { TForall }

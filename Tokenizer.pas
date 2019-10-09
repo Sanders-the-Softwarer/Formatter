@@ -438,6 +438,7 @@ begin
   if Check(Result, 'outer', 'apply') then exit;
   if Check(Result, 'right', 'join') then exit;
   if Check(Result, 'right', 'outer', 'join') then exit;
+  if Check(Result, 'self', 'as', 'result') then exit;
   if Check(Result, 'union', 'all') then exit;
   if Check(Result, 'when', 'matched', 'then') then exit;
   if Check(Result, 'when', 'not', 'matched', 'then') then exit;

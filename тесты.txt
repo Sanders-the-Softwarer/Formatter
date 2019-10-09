@@ -161,6 +161,17 @@ when not matched then insert (dummy) values ('Y') when matched then update set d
 merge into (select * from dual) d1 using (select * from dual) d2 on (d1.dummy = d2.dummy)
 when matched then update set dummy = 'Y' when not matched then insert (dummy) values ('Y')
 
+-- merge может содержать предложения insert/where и update/delete/where
+merge into (select * from dual) d1 using (select * from dual) d2 on (d1.dummy = d2.dummy)
+when matched then update set dummy = 'Y' delete where dummy = 'X' when not matched then insert (dummy) values ('Y') where dummy <> 'X';
+
+-- merge с delete нужно отличать от merge с последующим delete
+begin
+  merge into (select * from dual) d1 using (select * from dual) d2 on (d1.dummy = d2.dummy)
+  when matched then update set dummy = 'Y';
+  delete from dual where dummy <> 'Y';
+end;
+
 -- вложенный запрос в select
 select (select * from dual) from dual
 
@@ -205,6 +216,9 @@ select a, b.c, d.e.f, g.h(i).j from dual
 
 -- в квалифицированных идентификаторах некстати попадаются пробелы
 select a + b. c + d .e + f . g + h. i(1). k + l .m(1) .n from dual
+
+-- в квалифицированных идентификаторах бывают скобки подряд
+select a + b.c(1)(2).d(3).e(4)(f+g)(h).i from dual
 
 -- операнд может иметь суффикс
 select a%notfound, b%found, c%rowcount, d%isopen from dual
@@ -573,6 +587,13 @@ drop view v$dual
 
 -- Можно удалять индекс
 drop index i$dual
+
+-- Можно удалять тип, причём с ключевым словом force и завершением на слеш
+drop type t1
+drop type t2 force
+drop type t3;
+drop type t4 force
+/
 
 -- Можно создавать таблицы
 create table x (i integer) tablespace tmp

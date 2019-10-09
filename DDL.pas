@@ -31,8 +31,11 @@ type
   { Команда drop }
   TDrop = class(TSemicolonStatement)
   strict private
-    _Drop, _ObjectType, _Body, _ObjectName, _Cascade, _Constraints: TEpithet;
+    _Drop, _ObjectType, _Body, _ObjectName, _Force, _Cascade, _Constraints: TEpithet;
     _Unexpected: TStatement;
+    _Slash: TTerminal;
+    function IsTable: boolean;
+    function IsType: boolean;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -59,6 +62,17 @@ type
   strict private
     _Unique, _Index, _IndexName, _On, _TableName: TEpithet;
     _Fields: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Объект type }
+  TType = class(TSemicolonStatement)
+  strict private
+    _Type, _Force, _AsIs: TEpithet;
+    _TypeName: TStatement;
+    _Body: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -209,6 +223,7 @@ begin
             TIndex.Parse(Self, Source, _What) or
             TPackage.Parse(Self, Source, _What) or
             TSubroutine.Parse(Self, Source, _What) or
+            TType.Parse(Self, Source, _What) or
             TUnexpectedToken.Parse(Self, Source, _What);
 end;
 
@@ -263,6 +278,27 @@ end;
 procedure TIndex.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Unique, _Index, _IndexName, _On, _TableName, _Fields]);
+  inherited;
+end;
+
+{ TType }
+
+function TType.InternalParse: boolean;
+begin
+  _Type := Keyword('type');
+  if not Assigned(_Type) then exit;
+  TQualifiedIdent.Parse(Self, Source, _TypeName);
+  _Force := Keyword('force');
+  _AsIs  := Keyword(['as', 'is']);
+  if Assigned(_AsIs) then _AsIs.CanReplace := true;
+  TObject_.Parse(Self, Source, _Body);
+  Result := true;
+  inherited;
+end;
+
+procedure TType.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Type, _TypeName, _Force, _AsIs, _Body]);
   inherited;
 end;
 
@@ -497,27 +533,40 @@ function TDrop.InternalParse: boolean;
 begin
   _Drop := Keyword('drop');
   if not Assigned(_Drop) then exit(false);
-  _ObjectType := Keyword(['table', 'procedure', 'function', 'package', 'view', 'index']);
+  _ObjectType := Keyword(['table', 'procedure', 'function', 'package', 'view', 'index', 'type']);
   if not Assigned(_ObjectType) then TUnexpectedToken.Parse(Self, Source, _Unexpected);
   if Assigned(_ObjectType) and (_ObjectType.Value = 'package') then _Body := Keyword('body');
   _ObjectName := Identifier;
-  if Assigned(_ObjectType) and (_ObjectType.Value = 'table') then
+  if IsTable then
   begin
     _Cascade := Keyword('cascade');
     _Constraints := Keyword('constraints');
   end;
+  if IsType then _Cascade := Keyword('force');
   Result := inherited or Assigned(_ObjectType);
+  if Result then _Slash := Terminal('/');
 end;
 
 procedure TDrop.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Drop, _ObjectType, _Unexpected, _Body, _ObjectName, _Cascade, _Constraints]);
+  APrinter.PrintItems([_Drop, _ObjectType, _Unexpected, _Body, _ObjectName, _Force, _Cascade, _Constraints]);
   inherited;
+  APrinter.NextLineIf([_Slash]);
 end;
 
 function TDrop.StatementName: string;
 begin
   Result := Concat([_Drop, _ObjectType, _Body, _ObjectName]);
+end;
+
+function TDrop.IsTable: boolean;
+begin
+  Result := Assigned(_ObjectType) and (_ObjectType.Value = 'table');
+end;
+
+function TDrop.IsType: boolean;
+begin
+  Result := Assigned(_ObjectType) and (_ObjectType.Value = 'type');
 end;
 
 end.

@@ -143,6 +143,7 @@ end;
 class function TParser.ParseType(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
   Result := TRecord.Parse(AParent, ASource, AResult) or
+            TObject_.Parse(AParent, ASource, AResult) or
             TPLSQLTable.Parse(AParent, ASource, AResult);
 end;
 

@@ -363,7 +363,7 @@ begin
   if not TopStatement then TOptionalBracketedStatement<TCommaList<TArgument>>.Parse(Self, Source, _Indexes);
   if Assigned(_Indexes) then _Dot := Terminal('.');
   if TopStatement or Assigned(_Dot) then TQualifiedIdent.Parse(Self, Source, _Ident);
-  if Assigned(_Ident) then TQualifiedIndexedIdent.Parse(Self, Source, _Next);
+  if Assigned(_Indexes) or Assigned(_Ident) then TQualifiedIndexedIdent.Parse(Self, Source, _Next);
   Result := Assigned(_Indexes) or Assigned(_Ident);
 end;
 

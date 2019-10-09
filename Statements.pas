@@ -146,6 +146,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function HasSemicolon: boolean;
   end;
 
   { Конструкция заданного типа в скобках }
@@ -621,6 +623,11 @@ end;
 procedure TSemicolonStatement.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Semicolon);
+end;
+
+function TSemicolonStatement.HasSemicolon: boolean;
+begin
+  Result := Assigned(_Semicolon);
 end;
 
 { TBracketedStatement<T> }
