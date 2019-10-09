@@ -87,7 +87,8 @@ type
     procedure PrintItems(AItems: array of TObject);
     procedure PrintIndented(AItem: TObject); overload;
     procedure PrintIndented(AItems: array of TObject); overload;
-    procedure NextLineIf(AItems: array of TObject);
+    procedure NextLineIf(AItem: TObject); overload;
+    procedure NextLineIf(AItems: array of TObject); overload;
   public
     property Settings: TFormatSettings read FSettings write FSettings;
   public
@@ -407,6 +408,11 @@ begin
   Undent;
 end;
 
+procedure TPrinter.NextLineIf(AItem: TObject);
+begin
+  NextLineIf([AItem]);
+end;
+
 procedure TPrinter.NextLineIf(AItems: array of TObject);
 begin
   if not HasItems(AItems) then exit;
@@ -669,7 +675,6 @@ begin
     PrevToken := AToken;
   end;
 end;
-
 
 { Вывод синтаксической конструкции с расстановкой выравниваний }
 procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);

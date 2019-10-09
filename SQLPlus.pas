@@ -72,9 +72,19 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Анонимный блок в SQL*Plus }
+  TStandaloneAnonymousBlock = class(TStatement)
+  strict private
+    _Block: TStatement;
+    _Slash: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
 implementation
 
-uses Parser, Streams;
+uses Parser, Streams, PLSQL;
 
 { TClear }
 
@@ -186,6 +196,20 @@ begin
     APrinter.SupressSpaces(true); { первую лексему печатаем с пробелом, чтобы отделить от spool }
   end;
   APrinter.SupressSpaces(false);
+end;
+
+{ TStandaloneAnonymousBlock }
+
+function TStandaloneAnonymousBlock.InternalParse: boolean;
+begin
+  Result := TAnonymousBlock.Parse(Self, Source, _Block);
+  if Result then _Slash := Terminal('/');
+end;
+
+procedure TStandaloneAnonymousBlock.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Block);
+  APrinter.NextLineIf(_Slash);
 end;
 
 end.

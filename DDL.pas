@@ -12,15 +12,16 @@ unit DDL;
 
 interface
 
-uses Tokens, Statements, Printers_, Attributes, Streams;
+uses Tokens, Statements, Printers_, Attributes, Streams, PLSQL;
 
 type
 
   { Команда create [or replace] }
-  TCreate = class(TStatement)
+  TCreate = class(TSemicolonStatement)
   strict private
     _Create, _Or, _Replace, _Force: TEpithet;
     _What: TStatement;
+    _Slash: TTerminal;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -62,17 +63,25 @@ type
   strict private
     _Unique, _Index, _IndexName, _On, _TableName: TEpithet;
     _Fields: TStatement;
+    _Tablespace: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Объект type }
-  TType = class(TSemicolonStatement)
+  { Объект type body }
+  TTypeBody = class(TProgramBlock)
   strict private
-    _Type, _Force, _AsIs: TEpithet;
+    _TypeBody, _AsIs: TEpithet;
     _TypeName: TStatement;
-    _Body: TStatement;
+  strict protected
+    function GetHeaderClass: TStatementClass; override;
+  end;
+
+  { Заголовок type body }
+  TTypeBodyHeader = class(TStatement)
+  strict private
+    _TypeBody, _TypeName, _AsIs: TEpithet;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -85,6 +94,7 @@ type
     _Items: TStatement;
     _Organization, _Index: TEpithet;
     _Tablespace: TStatement;
+    _LobStores: TStatement;
     _On, _Commit, _DeleteOrPreserve, _Rows: TEpithet;
   strict protected
     function InternalParse: boolean; override;
@@ -181,6 +191,24 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Выражение lob store as }
+  TLobStore = class(TStatement)
+  strict private
+    _Lob: TEpithet;
+    _Column: TStatement;
+    _Store, _As, _TableName: TEpithet;
+    _Stored: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Список lob store-ов }
+  TLobStores = class(TStatementList<TLobStore>)
+  strict protected
+    function ParseBreak: boolean; override;
+  end;
+
   { Команда comment }
   TComment = class(TSemicolonStatement)
   strict private
@@ -200,9 +228,37 @@ type
     function ParseBreak: boolean; override;
   end;
 
+  { Объект sequence }
+  TSequence = class(TStatement)
+  strict private
+    _Sequence, _Name: TEpithet;
+    _Parts: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Части декларации sequence-а }
+  TSequencePart = class(TStatement)
+  strict private
+    _First, _Second: TEpithet;
+    _Value: TNumber;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function StatementName: string; override;
+  end;
+
+  { Список частей в sequence-е }
+  TSequencePartList = class(TStatementList<TSequencePart>)
+  strict protected
+    function ParseBreak: boolean; override;
+  end;
+
 implementation
 
-uses Parser, DML, PLSQL, Expressions;
+uses Parser, DML, Expressions;
 
 { TCreateStatement }
 
@@ -223,13 +279,21 @@ begin
             TIndex.Parse(Self, Source, _What) or
             TPackage.Parse(Self, Source, _What) or
             TSubroutine.Parse(Self, Source, _What) or
+            TTypeBody.Parse(Self, Source, _What) or
             TType.Parse(Self, Source, _What) or
+            TSequence.Parse(Self, Source, _What) or
+            TTrigger.Parse(Self, Source, _What) or
             TUnexpectedToken.Parse(Self, Source, _What);
+  inherited;
+  { Завершающий слеш }
+  _Slash := Terminal('/');
 end;
 
 procedure TCreate.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Create, _Or, _Replace, _Force, _What]);
+  inherited;
+  APrinter.NextLineIf([_Slash]);
 end;
 
 function TCreate.StatementName: string;
@@ -270,36 +334,40 @@ begin
   _IndexName := Identifier;
   _On := Keyword('on');
   _TableName := Identifier;
-  TBracketedStatement<TExpressionFields>.Parse(Self, Source, _Fields);
+  TSingleLine<TBracketedStatement<TExpressionFields>>.Parse(Self, Source, _Fields);
+  TTablespace.Parse(Self, Source, _Tablespace);
   inherited;
   Result := true;
 end;
 
 procedure TIndex.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Unique, _Index, _IndexName, _On, _TableName, _Fields]);
+  APrinter.PrintItems([_Unique, _Index, _IndexName, _On, _TableName, _Fields, _Tablespace]);
   inherited;
 end;
 
-{ TType }
+{ TTypeBody }
 
-function TType.InternalParse: boolean;
+function TTypeBody.GetHeaderClass: TStatementClass;
 begin
-  _Type := Keyword('type');
-  if not Assigned(_Type) then exit;
-  TQualifiedIdent.Parse(Self, Source, _TypeName);
-  _Force := Keyword('force');
-  _AsIs  := Keyword(['as', 'is']);
-  if Assigned(_AsIs) then _AsIs.CanReplace := true;
-  TObject_.Parse(Self, Source, _Body);
+  Result := TTypeBodyHeader;
+end;
+
+{ TTypeBodyHeader }
+
+function TTypeBodyHeader.InternalParse: boolean;
+begin
   Result := true;
-  inherited;
+  _TypeBody := Keyword('type body');
+  if not Assigned(_TypeBody) then exit(false);
+  _TypeName := Identifier;
+  _AsIs := Keyword(['as', 'is']);
+  if Assigned(_AsIs) then _AsIs.CanReplace := true;
 end;
 
-procedure TType.InternalPrintSelf(APrinter: TPrinter);
+procedure TTypeBodyHeader.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Type, _TypeName, _Force, _AsIs, _Body]);
-  inherited;
+  APrinter.PrintItems([_TypeBody, _TypeName, _AsIs]);
 end;
 
 { TTable }
@@ -324,6 +392,7 @@ begin
       _Organization := Keyword('organization');
       _Index := Keyword('index');
       TTablespace.Parse(Self, Source, _Tablespace);
+      TLobStores.Parse(Self, Source, _LobStores)
     end;
   inherited;
   Result := true;
@@ -332,8 +401,8 @@ end;
 procedure TTable.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Global, _Temporary, _Table, _TableName, _IndentNextLine,
-                       _Items, _Organization, _Index, _Tablespace, _On, _Commit,
-                       _DeleteOrPreserve, _Rows, _UndentNextLine]);
+                       _Items, _Organization, _Index, _Tablespace, _LobStores,
+                       _On, _Commit, _DeleteOrPreserve, _Rows, _Undent]);
   inherited;
 end;
 
@@ -412,7 +481,7 @@ begin
   _Primary := Keyword('primary');
   if not Assigned(_Primary) then exit(false);
   _Key := Keyword('key');
-  TBracketedStatement<TIdentFields>.Parse(Self, Source, _Fields);
+  TSingleLine<TBracketedStatement<TIdentFields>>.Parse(Self, Source, _Fields);
   TUsingIndex.Parse(Self, Source, _UsingIndex);
   Result := true;
 end;
@@ -430,7 +499,7 @@ begin
   if not inherited then exit(false);
   _Unique := Keyword('unique');
   if not Assigned(_Unique) then exit(false);
-  TBracketedStatement<TIdentFields>.Parse(Self, Source, _Fields);
+  TSingleLine<TBracketedStatement<TIdentFields>>.Parse(Self, Source, _Fields);
   TUsingIndex.Parse(Self, Source, _UsingIndex);
   Result := true;
 end;
@@ -457,6 +526,35 @@ begin
   APrinter.PrintItems([_Using, _Index, _Tablespace]);
 end;
 
+{ TLobStore }
+
+function TLobStore.InternalParse: boolean;
+begin
+  Result := true;
+  _Lob := Keyword('lob');
+  if not Assigned(_Lob) then exit(false);
+  TBracketedStatement<TQualifiedIdent>.Parse(Self, Source, _Column);
+  _Store := Keyword('store');
+  _As := Keyword('as');
+  _TableName := Identifier;
+  TBracketedStatement<TTablespace>.Parse(Self, Source, _Stored);
+end;
+
+procedure TLobStore.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.NextLine;
+  APrinter.SupressNextLine(true);
+  APrinter.PrintItems([_Lob, _Column, _Store, _As, _TableName, _Stored]);
+  APrinter.SupressNextLine(false);
+end;
+
+{ TLobStores }
+
+function TLobStores.ParseBreak: boolean;
+begin
+  Result := not Assigned(Keyword('lob'));
+end;
+
 { TForeignKey }
 
 function TForeignKey.InternalParse: boolean;
@@ -465,10 +563,10 @@ begin
   _Foreign := Keyword('foreign');
   if not Assigned(_Foreign) then exit(false);
   _Key := Keyword('key');
-  TBracketedStatement<TIdentFields>.Parse(Self, Source, _RefFields);
+  TSingleLine<TBracketedStatement<TIdentFields>>.Parse(Self, Source, _RefFields);
   _References := Keyword('references');
   _TableName  := Identifier;
-  TBracketedStatement<TIdentFields>.Parse(Self, Source, _TargetFields);
+  TSingleLine<TBracketedStatement<TIdentFields>>.Parse(Self, Source, _TargetFields);
   Result := true;
 end;
 
@@ -533,9 +631,9 @@ function TDrop.InternalParse: boolean;
 begin
   _Drop := Keyword('drop');
   if not Assigned(_Drop) then exit(false);
-  _ObjectType := Keyword(['table', 'procedure', 'function', 'package', 'view', 'index', 'type']);
+  _ObjectType := Keyword(['table', 'procedure', 'function', 'package', 'view', 'index', 'type', 'sequence', 'trigger']);
   if not Assigned(_ObjectType) then TUnexpectedToken.Parse(Self, Source, _Unexpected);
-  if Assigned(_ObjectType) and (_ObjectType.Value = 'package') then _Body := Keyword('body');
+  if Assigned(_ObjectType) and ((_ObjectType.Value = 'package') or (_ObjectType.Value = 'type')) then _Body := Keyword('body');
   _ObjectName := Identifier;
   if IsTable then
   begin
@@ -569,5 +667,50 @@ begin
   Result := Assigned(_ObjectType) and (_ObjectType.Value = 'type');
 end;
 
+{ TSequence }
+
+function TSequence.InternalParse: boolean;
+begin
+  Result := true;
+  _Sequence := Keyword('sequence');
+  if not Assigned(_Sequence) then exit(false);
+  _Name := Identifier;
+  TSequencePartList.Parse(Self, Source, _Parts);
+end;
+
+procedure TSequence.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Sequence, _Name, _Indent]);
+  APrinter.NextLineIf([_Parts]);
+  APrinter.Undent;
+end;
+
+{ TSequencePart }
+
+function TSequencePart.InternalParse: boolean;
+begin
+  _First  := Keyword(['increment', 'start', 'maxvalue', 'nomaxvalue', 'minvalue', 'nominvalue', 'cycle', 'nocycle', 'cache', 'nocache', 'order', 'noorder']);
+  _Second := Keyword(['by', 'with']);
+  _Value  := Number;
+  Result  := Assigned(_First);
+end;
+
+procedure TSequencePart.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_First, _Second, _Value]);
+end;
+
+function TSequencePart.StatementName: string;
+begin
+  Result := Concat([_First, _Second, _Value]);
+end;
+
+{ TSequencePartList }
+
+function TSequencePartList.ParseBreak: boolean;
+var _Dummy: TStatement;
+begin
+  Result := not TSequencePart.Parse(Self, Source, _Dummy);
+end;
 end.
 

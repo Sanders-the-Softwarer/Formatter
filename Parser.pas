@@ -152,10 +152,10 @@ class function TParser.ParseAny(AParent: TStatement; ASource: TBufferedStream<TT
 begin
   Result := ParseDDL(AParent, ASource, AResult) or
             ParseDML(AParent, ASource, AResult) or
+            TStandaloneAnonymousBlock.Parse(AParent, ASource, AResult) { нужно до PLSQL} or
             ParsePLSQL(AParent, ASource, AResult) or
             ParseDeclaration(AParent, ASource, AResult) or
             ParseType(AParent, ASource, AResult) or
-            TAnonymousBlock.Parse(AParent, ASource, AResult) or
             ParseSQLPlus(AParent, ASource, AResult) or
             ParseExpression(AParent, ASource, AResult);
 end;

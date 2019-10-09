@@ -595,6 +595,12 @@ drop type t3;
 drop type t4 force
 /
 
+-- Можно удалить последовательность
+drop sequence seq;
+
+-- Можно удалить триггер
+drop trigger trg;
+
 -- Можно создавать таблицы
 create table x (i integer) tablespace tmp
 
@@ -620,6 +626,24 @@ create table x (
   constraint chk check (1 + 2 = 3)
 ) tablespace tbl
 
+-- В таблицах можно указывать место хранения lob-ов
+create table x (
+  i blob,
+  j blob
+) tablespace t1
+lob(i) store as x_i(tablespace t2)
+lob(j) store as x_j(tablespace t3);
+
+-- можно создавать последовательности
+create sequence seq
+    minvalue 1
+    maxvalue 999999999999999999999999999
+    start with 100000
+    increment by 1
+    order
+    nocycle
+    nocache;
+
 -- в литералах следует правильно парсить несколько апострофов подряд
 begin
   a := ' ''';
@@ -627,6 +651,10 @@ begin
 end;
 
 -- !!!!!! НУЖНО НАПИСАТЬ ТЕСТЫ НА КОМАНДЫ SQLPLUS !!!!!!
+
+-- !!!!!! НУЖНО НАПИСАТЬ ТЕСТЫ НА ОБЪЕКТНЫЕ ТИПЫ !!!!!!!
+
+-- !!!!!! НУЖНО НАПИСАТЬ ТЕСТЫ НА CREATE TRIGGER !!!!!!!
 
 --------------------------------------------------------------------------------------------
 

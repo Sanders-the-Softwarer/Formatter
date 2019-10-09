@@ -249,6 +249,7 @@ begin
   S := Self.ClassName;
   if S[1] = 'T' then S := S.Substring(1);
   if S.StartsWith('ML') or S.StartsWith('SL') then S := S.Substring(2);
+  S := S.TrimEnd(['_']);
   P := Pos('<', S);
   if P > 0 then S := S.Substring(0, P - 1);
   U := S.ToUpper;
@@ -426,7 +427,7 @@ begin
   begin
     S := '';
     if Params[i] is TToken then S := TToken(Params[i]).Value;
-    if Params[i] is TStatement then S := TStatement(Params[i]).StatementName;
+    if Params[i] is TStatement then S := TStatement(Params[i]).Name;
     if S <> '' then
       if Result = ''
         then Result := S

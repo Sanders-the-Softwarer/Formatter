@@ -420,6 +420,7 @@ begin
   if Check(Result, 'end', 'if') then exit;
   if Check(Result, 'end', 'loop') then exit;
   if Check(Result, 'inner', 'join') then exit;
+  if Check(Result, 'instead', 'of') then exit;
   if Check(Result, 'is', 'not', 'null') then exit;
   if Check(Result, 'is', 'null') then exit;
   if Check(Result, 'left', 'join') then exit;
@@ -439,6 +440,7 @@ begin
   if Check(Result, 'right', 'join') then exit;
   if Check(Result, 'right', 'outer', 'join') then exit;
   if Check(Result, 'self', 'as', 'result') then exit;
+  if Check(Result, 'type', 'body') then exit;
   if Check(Result, 'union', 'all') then exit;
   if Check(Result, 'when', 'matched', 'then') then exit;
   if Check(Result, 'when', 'not', 'matched', 'then') then exit;

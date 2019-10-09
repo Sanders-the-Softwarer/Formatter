@@ -29,7 +29,7 @@ uses Classes, Windows, SysUtils, Math, Streams, Tokens, Statements, Expressions,
 type
 
   { Программный блок - та или иная конструкция на основе begin .. end }
-  TProgramBlock = class(TStatement)
+  TProgramBlock = class(TSemicolonStatement)
   strict private
     _Header: TStatement;
     _Declarations: TStatement;
@@ -39,8 +39,6 @@ type
     _ExceptionHandlers: TStatement;
     _End: TEpithet;
     _EndName: TEpithet;
-    _Semicolon: TTerminal;
-    _Slash: TTerminal;
   strict protected
     property Header: TStatement read _Header;
     function GetHeaderClass: TStatementClass; virtual; abstract;
@@ -66,10 +64,10 @@ type
 
   { Заголовок пакета }
   TPackageHeader = class(TStatement)
-  private {!strict}
+  strict private
     _Package, _Body: TEpithet;
     _PackageName: TEpithet;
-    _Is: TEpithet;
+    _AsIs: TEpithet;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -86,6 +84,7 @@ type
   { Объявление подпрограммы }
   TSubroutineHeaderBase = class(TStatement)
   strict private
+    _Map: TEpithet;
     _MemberOrConstructor: TEpithet;
     _ProcedureOrFunction: TEpithet;
     _Name: TEpithet;
@@ -124,6 +123,37 @@ type
 
   { Подпрограмма }
   TSubroutine = class(TProgramBlock)
+  strict protected
+    function GetHeaderClass: TStatementClass; override;
+  public
+    function StatementName: string; override;
+  end;
+
+  { Заголовок триггера }
+  TTriggerHeader = class(TStatement)
+  strict private
+    _Trigger: TEpithet;
+    _TriggerName: TStatement;
+    _BeforeAfterInstead: TEpithet;
+    _Events: TStatement;
+    _When: TEpithet;
+    _Condition: TStatement;
+    _Declare: TEpithet;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function StatementName: string; override;
+  end;
+
+  { События запуска триггера }
+  TTriggerEvents = class(TCommaList<TQualifiedIdent>)
+  strict protected
+    function ParseBreak: boolean; override;
+  end;
+
+  { Триггер }
+  TTrigger = class(TProgramBlock)
   strict protected
     function GetHeaderClass: TStatementClass; override;
   public
@@ -501,7 +531,7 @@ type
   { Декларация типа }
   TType = class(TSemicolonStatement)
   strict private
-    _Type, _TypeName, _Force, _Is: TEpithet;
+    _Type, _TypeName, _Force, _AsIs: TEpithet;
     _Body: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -579,8 +609,7 @@ begin
   { end }
   _End := Keyword('end');
   if not (Parent is TStatements) then _EndName := Identifier;
-  _Semicolon := Terminal(';');
-  if not (Parent is TStatements) then _Slash := Terminal('/');
+  inherited;
 end;
 
 procedure TProgramBlock.InternalPrintSelf(APrinter: TPrinter);
@@ -591,8 +620,8 @@ begin
                                    _Operators,         _UndentNextLine,
                        _Exception, _IndentNextLine,
                                    _ExceptionHandlers, _UndentNextLine,
-                       _End,       _EndName,           _Semicolon,      _NextLine,
-                       _Slash,     _NextLine]);
+                       _End,       _EndName]);
+  inherited;
 end;
 
 function TProgramBlock.GetKeywords: TStrings;
@@ -613,13 +642,13 @@ begin
   { Проверим название пакета }
   _PackageName := Identifier;
   { Проверим наличие is }
-  _Is := Keyword(['is', 'as']);
-  if Assigned(_Is) then _Is.CanReplace := true;
+  _AsIs := Keyword(['is', 'as']);
+  if Assigned(_AsIs) then _AsIs.CanReplace := true;
 end;
 
 procedure TPackageHeader.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Package, _Body, _PackageName, _Is]);
+  APrinter.PrintItems([_Package, _Body, _PackageName, _AsIs]);
   APrinter.NextLine;
 end;
 
@@ -639,6 +668,7 @@ end;
 
 function TSubroutineHeaderBase.InternalParse: boolean;
 begin
+  _Map := Keyword('map');
   _MemberOrConstructor := Keyword(['member', 'constructor']);
   { Проверим procedure/function }
   _ProcedureOrFunction := Keyword(['procedure', 'function']);
@@ -659,7 +689,7 @@ end;
 
 procedure TSubroutineHeaderBase.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_MemberOrConstructor, _ProcedureOrFunction, _Name, _Indent]);
+  APrinter.PrintItems([_Map, _MemberOrConstructor, _ProcedureOrFunction, _Name, _Indent]);
   APrinter.NextLineIf([_Params]);
   APrinter.NextLineIf([_Return, _SelfAsResult, _ReturnType]);
   APrinter.NextLineIf([_Deterministic]);
@@ -670,6 +700,51 @@ end;
 function TSubroutineHeaderBase.StatementName: string;
 begin
   Result := Concat([_MemberOrConstructor, _ProcedureOrFunction, _Name]);
+end;
+
+
+{ TTriggerHeader }
+
+function TTriggerHeader.InternalParse: boolean;
+begin
+  Result := true;
+  _Trigger := Keyword('trigger');
+  if not Assigned(_Trigger) then exit(false);
+  TQualifiedIdent.Parse(Self, Source, _TriggerName);
+  _BeforeAfterInstead := Keyword(['before', 'after', 'instead of']);
+  TSingleLine<TTriggerEvents>.Parse(Self, Source, _Events);
+  _When := Keyword('when');
+  if Assigned(_When) then TBracketedStatement<TExpression>.Parse(Self, Source, _Condition);
+  _Declare := Keyword('declare');
+end;
+
+procedure TTriggerHeader.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Trigger, _TriggerName, _BeforeAfterInstead, _Events, _When, _Condition, _NextLine, _Declare]);
+end;
+
+function TTriggerHeader.StatementName: string;
+begin
+  Result := Concat([_Trigger, _TriggerName]);
+end;
+
+{ TTriggerEvents }
+
+function TTriggerEvents.ParseBreak: boolean;
+begin
+  Result := Assigned(Keyword(['when', 'declare', 'begin']));
+end;
+
+{ TTrigger }
+
+function TTrigger.GetHeaderClass: TStatementClass;
+begin
+  Result := TTriggerHeader;
+end;
+
+function TTrigger.StatementName: string;
+begin
+  Result := Header.StatementName;
 end;
 
 { TTypeRef }
@@ -1253,7 +1328,8 @@ begin
   if not Assigned(_Type) then exit(false);
   _TypeName := Identifier;
   _Force := Keyword('force');
-  _Is := Keyword('is');
+  _AsIs := Keyword(['as', 'is']);
+  if Assigned(_AsIs) then _AsIs.CanReplace := true;
   TParser.ParseType(Self, Source, _Body);
   inherited;
   Result := true;
@@ -1261,7 +1337,7 @@ end;
 
 procedure TType.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Type, _TypeName, _Force, _Is, _Body]);
+  APrinter.PrintItems([_Type, _TypeName, _Force, _AsIs, _Body]);
   inherited;
 end;
 
