@@ -434,6 +434,7 @@ begin
   if Check(Result, 'multiset', 'union') then exit;
   if Check(Result, 'multiset', 'union', 'all') then exit;
   if Check(Result, 'multiset', 'union', 'distinct') then exit;
+  if Check(Result, 'not', 'between') then exit;
   if Check(Result, 'not', 'in') then exit;
   if Check(Result, 'not', 'like') then exit;
   if Check(Result, 'outer', 'apply') then exit;

@@ -64,6 +64,8 @@ type
     tmMemo: TTimer;
     checkAlignTableColumnComments: TCheckBox;
     checkReplaceAsIs: TCheckBox;
+    edPreferredExpressionLength: TSpinEdit;
+    Label4: TLabel;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -112,6 +114,7 @@ begin
   Settings.AlignTableColumnComments        := checkAlignTableColumnComments.Checked;
   Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
   Settings.ReplaceAsIs                     := checkReplaceAsIs.Checked;
+  Settings.PreferredExpressionLength       := edPreferredExpressionLength.Value;
   { Создадим потоки }
   Text := edSrc.Text;
   Big  := (Text.Length > 1024 * 1024);

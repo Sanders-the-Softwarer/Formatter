@@ -117,6 +117,7 @@ type
     procedure BeforeDestruction; override;
     function Count: integer;
     function Item(Index: integer): TStatement;
+    function Delimiter(Index: integer): TObject;
     function Any(Found: array of TObject): boolean;
   end;
 
@@ -571,6 +572,11 @@ end;
 function TStatementList<S>.Item(Index: integer): TStatement;
 begin
   Result := Statements[Index];
+end;
+
+function TStatementList<S>.Delimiter(Index: integer): TObject;
+begin
+  Result := Delimiters[Index];
 end;
 
 function TStatementList<S>.Any(Found: array of TObject): boolean;

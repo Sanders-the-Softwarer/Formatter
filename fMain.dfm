@@ -211,6 +211,13 @@ object FormMain: TFormMain
           Height = 13
           Caption = #1057#1086#1087#1086#1089#1090#1072#1074#1083#1103#1090#1100' '#1087#1086#1083#1103' '#1074#1099#1088#1072#1078#1077#1085#1080#1103#1084' '#1085#1072#1095#1080#1085#1072#1103' '#1089
         end
+        object Label4: TLabel
+          Left = 5
+          Top = 236
+          Width = 233
+          Height = 13
+          Caption = #1064#1080#1088#1080#1085#1072' '#1074#1099#1088#1072#1078#1077#1085#1080#1081' '#1087#1086' '#1074#1086#1079#1084#1086#1078#1085#1086#1089#1090#1080' '#1085#1077' '#1073#1086#1083#1077#1077
+        end
         object edDeclarationSingleLineParamLimit: TSpinEdit
           Left = 269
           Top = 12
@@ -324,6 +331,17 @@ object FormMain: TFormMain
           MinValue = 0
           TabOrder = 4
           Value = 3
+          OnChange = UpdateRequired
+        end
+        object edPreferredExpressionLength: TSpinEdit
+          Left = 269
+          Top = 233
+          Width = 46
+          Height = 22
+          MaxValue = 1000
+          MinValue = 0
+          TabOrder = 5
+          Value = 60
           OnChange = UpdateRequired
         end
       end

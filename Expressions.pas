@@ -31,7 +31,8 @@ unit Expressions;
 
 interface
 
-uses Classes, SysUtils, Math, Tokens, Statements, Printers_, Attributes;
+uses Classes, SysUtils, Math, Tokens, Statements, Printers_, Attributes,
+  System.Generics.Collections;
 
 type
 
@@ -39,7 +40,6 @@ type
   TTerm = class(TStatement)
   strict private
     _Prefix: TToken;
-    _Value: TStatement;
     _Number: TNumber;
     _Literal: TLiteral;
     _SQLStatement: TStatement;
@@ -68,6 +68,7 @@ type
     class var FlagCreatedRight: boolean;
   strict protected
     function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
     function ParseDelimiter(out AResult: TObject): boolean; override;
     function ParseBreak: boolean; override;
     function GetKeywords: TStrings; override;
@@ -142,6 +143,7 @@ uses Parser, DML, PLSQL;
 
 var
   Keywords: TStringList;
+  Operations: TDictionary<String, integer>;
 
 type
 
@@ -278,16 +280,129 @@ begin
     Result := false;
 end;
 
-function TExpression.ParseDelimiter(out AResult: TObject): boolean;
+procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
+
+  type
+    TTermInfo = record
+      SingleLineLen, MultiLineLen, PrevDelimiterLen: integer;
+      SingleLine, LineBreak: boolean;
+    end;
+
+  var
+    TermInfo: array of TTermInfo;
+
+  { Сбор информации о размерах }
+  procedure CollectInfo;
+  var
+    DraftPrinter: TPrinter;
+    i: integer;
+  begin
+    SetLength(TermInfo, Count);
+    DraftPrinter := APrinter.MakeDraftPrinter;
+    try
+      DraftPrinter.BeginPrint;
+      for i := 0 to Count - 1 do
+      begin
+        DraftPrinter.NextLine;
+        DraftPrinter.PrintItem(Item(i));
+        TermInfo[i].MultiLineLen := DraftPrinter.CurrentCol;
+        DraftPrinter.NextLine;
+        DraftPrinter.SupressNextLine(true);
+        DraftPrinter.PrintItem(Item(i));
+        TermInfo[i].SingleLineLen := DraftPrinter.CurrentCol;
+        DraftPrinter.SupressNextLine(false);
+        DraftPrinter.PrintItem(Delimiter(i));
+        if i > 0 then TermInfo[i - 1].PrevDelimiterLen := DraftPrinter.CurrentCol;
+      end;
+    finally
+      DraftPrinter.EndPrint;
+      DraftPrinter.Free;
+    end;
+  end;
+
+  procedure PutLineBreaks(Start, Finish: integer); forward;
+
+  { Примерка ширины печати в различных вариантах и разбиение на строки }
+  procedure CheckForBreaks(Start: integer = 0; Finish: integer = -1);
+  var
+    SLLen, MLLen, i: integer;
+  begin
+    if Finish < 0 then Finish := Count - 1;
+    { Прикинем ширину, если печатать в одну строку }
+    SLLen := 0;
+    MLLen := 0;
+    for i := Start to Finish do
+    begin
+      Inc(SLLen, TermInfo[i].SingleLineLen + TermInfo[i].PrevDelimiterLen);
+      Inc(MLLen, TermInfo[i].MultiLineLen + TermInfo[i].PrevDelimiterLen);
+    end;
+    { Если выражение влезает по ширине даже при печати в одну строку - так и поступим }
+    if SLLen <= Settings.PreferredExpressionLength then
+      for i := Start to Finish do
+        TermInfo[i].SingleLine := true
+    { Если же не влезает - придётся разбивать на части }
+    else if (MLLen > Settings.PreferredExpressionLength) and (Start < Finish) then
+      PutLineBreaks(Start, Finish);
+  end;
+
+  { Расстановка переносов по самым низкоприоритетным операциям }
+  procedure PutLineBreaks(Start, Finish: integer);
+  var
+    i, MinPriority, CurPriority, Prev: integer;
+    Delimiter_: string;
+  begin
+    { Определим наименьший приоритет операции в выбранном фрагменте }
+    MinPriority := MaxInt;
+    for i := Start to Finish do
+    begin
+      if not Assigned(Delimiter(i)) then continue;
+      Delimiter_ := (Delimiter(i) as TToken).Value;
+      if not Operations.ContainsKey(Delimiter_) then continue;
+      CurPriority := Operations[Delimiter_];
+      if CurPriority < MinPriority then MinPriority := CurPriority;
+    end;
+    { И расставим переносы по таким операциям }
+    Prev := Start;
+    for i := Start to Finish do
+    begin
+      if not Assigned(Delimiter(i)) then continue;
+      Delimiter_ := (Delimiter(i) as TToken).Value;
+      if not Operations.ContainsKey(Delimiter_) then continue;
+      CurPriority := Operations[Delimiter_];
+      if CurPriority > MinPriority then continue;
+      TermInfo[i].LineBreak := true;
+      if (Prev > Start) or (i < Finish) then CheckForBreaks(Prev, i);
+      Prev := i + 1;
+    end;
+    if Prev > Start then CheckForBreaks(Prev, Finish);
+  end;
+
+  { Печать получившегося выражения }
+  procedure PrintExpression;
+  var i: integer;
+  begin
+    for i := 0 to Count - 1 do
+    begin
+      if TermInfo[i].SingleLine then APrinter.SupressNextLine(true);
+      APrinter.PrintItem(Item(i));
+      if TermInfo[i].SingleLine then APrinter.SupressNextLine(false);
+      if TermInfo[i].LineBreak then APrinter.NextLine;
+      APrinter.PrintItem(Delimiter(i));
+    end;
+  end;
+
 begin
-  AResult := Terminal(['+', '-', '*', '/', '||', '=', '<', '>', '<=', '>=', '<>', '!=', '^=']);
-  if not Assigned(AResult) then
-    AResult := Keyword(['like', 'not like', 'in', 'not in', 'and', 'or', 'between',
-                        'multiset except', 'multiset except all', 'multiset except distinct',
-                        'multiset intersect', 'multiset intersect all', 'multiset intersect distinct',
-                        'multiset union', 'multiset union all', 'multiset union distinct']);
-  if not Assigned(AResult) and (Self.Parent is TTerm) then
-    AResult := Terminal(',');
+  CollectInfo;
+  CheckForBreaks;
+  PrintExpression;
+end;
+
+function TExpression.ParseDelimiter(out AResult: TObject): boolean;
+var
+  T: TToken;
+begin
+  T := NextToken;
+  if Operations.ContainsKey(T.Value) and ((T.Value <> ',') or (Self.Parent is TTerm)) then AResult := T;
   Result := Assigned(AResult);
   if AResult is TTerminal then TTerminal(AResult).OpType := otBinary;
 end;
@@ -500,14 +615,50 @@ begin
 end;
 
 initialization
+  { Заполняем список ключевых слов для выражений }
   Keywords := TStringList.Create;
   Keywords.Sorted := true;
   Keywords.Duplicates := dupIgnore;
   Keywords.CaseSensitive := false;
   Keywords.Add('case');
   Keywords.Add('when');
+  { Заполняем список операций с их приоритетами (Внимание! приоритеты имеются в
+    виду с точки зрения расстановки переносов и не обязаны соответствовать
+    чему-то другому)}
+  Operations := TDictionary<String, integer>.Create;
+  Operations.Add('or', 0);
+  Operations.Add('and', 1);
+  Operations.Add('between', 2);
+  Operations.Add('not between', 2);
+  Operations.Add('like', 3);
+  Operations.Add('not like', 3);
+  Operations.Add('in', 3);
+  Operations.Add('not in', 3);
+  Operations.Add('=', 4);
+  Operations.Add('<', 4);
+  Operations.Add('>', 4);
+  Operations.Add('<=', 4);
+  Operations.Add('>=', 4);
+  Operations.Add('!=', 4);
+  Operations.Add('^=', 4);
+  Operations.Add('||', 5);
+  Operations.Add('*', 6);
+  Operations.Add('/', 6);
+  Operations.Add('+', 7);
+  Operations.Add('-', 7);
+  Operations.Add(',', 8);
+  Operations.Add('multiset except', 6);
+  Operations.Add('multiset except all', 6);
+  Operations.Add('multiset except distinct', 6);
+  Operations.Add('multiset intersect', 6);
+  Operations.Add('multiset intersect all', 6);
+  Operations.Add('multiset intersect distinct', 6);
+  Operations.Add('multiset union', 6);
+  Operations.Add('multiset union all', 6);
+  Operations.Add('multiset union distinct', 6);
 
 finalization
   FreeAndNil(Keywords);
+  FreeAndNil(Operations);
 
 end.

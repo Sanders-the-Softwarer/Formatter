@@ -63,6 +63,7 @@ type
     AlignSpecialComments: boolean;
     ReplaceDefault: boolean;
     ReplaceAsIs: boolean;
+    PreferredExpressionLength: integer;
   end;
 
   { Интерфейс вывода на принтер }
@@ -81,6 +82,8 @@ type
     procedure SupressSpaces(ASupress: boolean); virtual; abstract;
     procedure PrintSpecialComment(AValue: string); virtual; abstract;
     procedure Ruler(const ARuler: string; Enabled: boolean = true); virtual; abstract;
+    function  MakeDraftPrinter: TPrinter; virtual; abstract;
+    function  CurrentCol: integer; virtual; abstract;
     procedure ControlChanged; virtual; abstract;
     procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); virtual; abstract;
   public
@@ -148,6 +151,8 @@ type
     procedure SupressSpaces(ASupress: boolean); override;
     procedure PrintSpecialComment(AValue: string); override;
     procedure Ruler(const ARuler: string; Enabled: boolean = true); override;
+    function  MakeDraftPrinter: TPrinter; override;
+    function  CurrentCol: integer; override;
     procedure ControlChanged; override;
     procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
   end;
@@ -186,6 +191,7 @@ type
     TokenPos, TokenLen: TDictionary<TToken, integer>;
     SpecialComments: TObjectList<TToken>;
     SupSpace, SupNextLine: integer;
+    IsDraft: boolean;
   protected
     function SpaceRequired(ALeft, ARight: TToken): boolean;
     function EmptyLineRequired(APrev, ANext: TStatement): boolean;
@@ -204,6 +210,8 @@ type
     procedure SupressSpaces(ASupress: boolean); override;
     procedure PrintSpecialComment(AValue: string); override;
     procedure Ruler(const ARuler: string; Enabled: boolean = true); override;
+    function MakeDraftPrinter: TPrinter; override;
+    function CurrentCol: integer; override;
     procedure ControlChanged; override;
     procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
   end;
@@ -468,6 +476,16 @@ begin
   { ничего не делаем }
 end;
 
+function TBasePrinter.MakeDraftPrinter: TPrinter;
+begin
+  Result := TBasePrinter.Create;
+end;
+
+function TBasePrinter.CurrentCol: integer;
+begin
+  Result := -1;
+end;
+
 procedure TBasePrinter.ControlChanged;
 begin
   { ничего не делаем }
@@ -548,9 +566,12 @@ end;
 { Вывод готового результата }
 procedure TFormatterPrinter.EndPrint;
 begin
-  Memo.Lines.BeginUpdate;
-  Memo.Text := Builder.ToString;
-  Memo.Lines.EndUpdate;
+  if Assigned(Memo) and Assigned(Builder) then
+  begin
+    Memo.Lines.BeginUpdate;
+    Memo.Text := Builder.ToString;
+    Memo.Lines.EndUpdate;
+  end;
   FreeAndNil(Builder);
   PrevToken := nil;
   PrevStatement := nil;
@@ -663,7 +684,7 @@ begin
     { В режиме реальной печати - напечатаем лексему, иначе только учтём сдвиг позиции }
     if Assigned(Builder) then
     begin
-      if not (AToken is TSpecialComment) then
+      if not IsDraft and not (AToken is TSpecialComment) then
       begin
         TokenPos.Add(AToken, Builder.Length);
         TokenLen.Add(AToken, Value.Length);
@@ -826,13 +847,27 @@ begin
   PrevCol := Col;
 end;
 
+{ Создание принтера для пробной печати }
+function TFormatterPrinter.MakeDraftPrinter: TPrinter;
+begin
+  Result := TFormatterPrinter.Create(nil);
+  Result.Settings := Self.Settings;
+  TFormatterPrinter(Result).IsDraft := true;
+end;
+
+{ Возврат текущего положения каретки }
+function TFormatterPrinter.CurrentCol: integer;
+begin
+  Result := Col;
+end;
+
 { Реакция на действия пользователя в привязанном к принтере Memo }
 procedure TFormatterPrinter.ControlChanged;
 var
   P: integer;
   T: TToken;
 begin
-  if IntoSync then exit;
+  if IntoSync or not Assigned(Memo) then exit;
   try
     IntoSync := true;
     { Найдём лексему под курсором и пошлём другим оповещение о синхронизации }
@@ -849,7 +884,7 @@ end;
 procedure TFormatterPrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
 var T: TToken;
 begin
-  if IntoSync then exit;
+  if IntoSync or not Assigned(Memo) then exit;
   try
     IntoSync := true;
     { Если лексема не указана - найдём подходящую по позиции }
