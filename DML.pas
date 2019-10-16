@@ -33,6 +33,7 @@ type
   strict protected
     function ParseStatement(out AResult: TStatement): boolean; override;
     function GetKeywords: TStrings; override;
+    function ForcedLineBreaks: boolean; override;
   end;
 
   { Оператор select }
@@ -364,6 +365,11 @@ begin
   Result.Assign(Keywords);
   Result.AddStrings(inherited);
   SqlExpressionKeywords := TStringList(Result);
+end;
+
+function TSQLExpression.ForcedLineBreaks: boolean;
+begin
+  Result := true;
 end;
 
 { TAsterisk }

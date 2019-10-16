@@ -54,12 +54,14 @@ type
     _Cast: TStatement;
     _OuterJoin: TTerminal;
     _Postfix: TEpithet;
+    FMultiLine: boolean;
   strict protected
     function InternalParse: boolean; override;
     function ParseSQLStatement: TStatement; virtual;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function IsSimpleIdent: boolean;
+    property MultiLine: boolean read FMultiLine write FMultiLine;
   end;
 
   { Выражение }
@@ -73,6 +75,7 @@ type
     function ParseBreak: boolean; override;
     function GetKeywords: TStrings; override;
     function OnePerLine: boolean; override;
+    function ForcedLineBreaks: boolean; virtual;
   public
     class procedure CreatedRight;
     procedure AfterConstruction; override;
@@ -135,6 +138,7 @@ type
   TArguments = class(TCommaList<TArgument>)
   strict protected
     function ParseBreak: boolean; override;
+    function OnePerLine: boolean; override;
   end;
 
 implementation
@@ -260,7 +264,15 @@ begin
     APrinter.PrintItem(_Select);
     APrinter.NextLine;
   end;
-  APrinter.PrintItems([_OpenBracket, _Expression, _CloseBracket, _OuterJoin, _Postfix]);
+  if Assigned(_Expression) then
+  begin
+    APrinter.PrintItem(_OpenBracket);
+    if MultiLine then APrinter.PrintItem(_IndentNextLine);
+    APrinter.PrintItem(_Expression);
+    if MultiLine then APrinter.PrintItem(_UndentNextLine);
+    APrinter.PrintItem(_CloseBracket);
+  end;
+  APrinter.PrintItems([_OuterJoin, _Postfix]);
 end;
 
 function TTerm.IsSimpleIdent: boolean;
@@ -311,8 +323,10 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         DraftPrinter.PrintItem(Item(i));
         TermInfo[i].SingleLineLen := DraftPrinter.CurrentCol;
         DraftPrinter.SupressNextLine(false);
+        DraftPrinter.NextLine;
         DraftPrinter.PrintItem(Delimiter(i));
         if i > 0 then TermInfo[i - 1].PrevDelimiterLen := DraftPrinter.CurrentCol;
+        if TermInfo[i].SingleLineLen = TermInfo[i].MultiLineLen then TermInfo[i].SingleLine := true;
       end;
     finally
       DraftPrinter.EndPrint;
@@ -335,6 +349,17 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     begin
       Inc(SLLen, TermInfo[i].SingleLineLen + TermInfo[i].PrevDelimiterLen);
       Inc(MLLen, TermInfo[i].MultiLineLen + TermInfo[i].PrevDelimiterLen);
+      { Если сказано насильно разбивать по and/or, выполним это }
+      if ForcedLineBreaks and
+         (Start = 0) and
+         (Finish = Count - 1) and
+         (i > Start) and
+         Assigned(Delimiter(i - 1)) and
+         (Operations[TToken(Delimiter(i - 1)).Value] < 0) then
+      begin
+        SLLen := MaxInt div 4;
+        MLLen := MaxInt div 4;
+      end;
     end;
     { Если выражение влезает по ширине даже при печати в одну строку - так и поступим }
     if SLLen <= Settings.PreferredExpressionLength then
@@ -353,7 +378,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   begin
     { Определим наименьший приоритет операции в выбранном фрагменте }
     MinPriority := MaxInt;
-    for i := Start to Finish do
+    for i := Start to Finish - 1 do
     begin
       if not Assigned(Delimiter(i)) then continue;
       Delimiter_ := (Delimiter(i) as TToken).Value;
@@ -383,9 +408,15 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   begin
     for i := 0 to Count - 1 do
     begin
-      if TermInfo[i].SingleLine then APrinter.SupressNextLine(true);
+      if TermInfo[i].SingleLine
+        then APrinter.SupressNextLine(true)
+        else APrinter.PrintItem(_IndentNextLine);
+      if Item(i) is TTerm then
+        TTerm(Item(i)).MultiLine := not TermInfo[i].SingleLine;
       APrinter.PrintItem(Item(i));
-      if TermInfo[i].SingleLine then APrinter.SupressNextLine(false);
+      if TermInfo[i].SingleLine
+        then APrinter.SupressNextLine(false)
+        else APrinter.Undent;
       if TermInfo[i].LineBreak then APrinter.NextLine;
       APrinter.PrintItem(Delimiter(i));
     end;
@@ -402,6 +433,7 @@ var
   T: TToken;
 begin
   T := NextToken;
+  if T is TEpithet then TEpithet(T).IsKeyword := true;
   if Operations.ContainsKey(T.Value) and ((T.Value <> ',') or (Self.Parent is TTerm)) then AResult := T;
   Result := Assigned(AResult);
   if AResult is TTerminal then TTerminal(AResult).OpType := otBinary;
@@ -418,6 +450,11 @@ begin
 end;
 
 function TExpression.OnePerLine: boolean;
+begin
+  Result := false;
+end;
+
+function TExpression.ForcedLineBreaks: boolean;
 begin
   Result := false;
 end;
@@ -475,7 +512,7 @@ end;
 
 function TQualifiedIndexedIdent.InternalParse: boolean;
 begin
-  if not TopStatement then TOptionalBracketedStatement<TCommaList<TArgument>>.Parse(Self, Source, _Indexes);
+  if not TopStatement then TOptionalBracketedStatement<TArguments>.Parse(Self, Source, _Indexes);
   if Assigned(_Indexes) then _Dot := Terminal('.');
   if TopStatement or Assigned(_Dot) then TQualifiedIdent.Parse(Self, Source, _Ident);
   if Assigned(_Indexes) or Assigned(_Ident) then TQualifiedIndexedIdent.Parse(Self, Source, _Next);
@@ -542,6 +579,11 @@ end;
 function TArguments.ParseBreak: boolean;
 begin
   Result := Any([Terminal([';', ')'])]);
+end;
+
+function TArguments.OnePerLine: boolean;
+begin
+  Result := Self.Count > Settings.ArgumentSingleLineParamLimit;
 end;
 
 { TCase }
@@ -626,8 +668,8 @@ initialization
     виду с точки зрения расстановки переносов и не обязаны соответствовать
     чему-то другому)}
   Operations := TDictionary<String, integer>.Create;
-  Operations.Add('or', 0);
-  Operations.Add('and', 1);
+  Operations.Add('or', -2);
+  Operations.Add('and', -1);
   Operations.Add('between', 2);
   Operations.Add('not between', 2);
   Operations.Add('like', 3);
@@ -639,6 +681,7 @@ initialization
   Operations.Add('>', 4);
   Operations.Add('<=', 4);
   Operations.Add('>=', 4);
+  Operations.Add('<>', 4);
   Operations.Add('!=', 4);
   Operations.Add('^=', 4);
   Operations.Add('||', 5);
