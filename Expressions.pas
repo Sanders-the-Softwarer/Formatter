@@ -64,6 +64,12 @@ type
     property MultiLine: boolean read FMultiLine write FMultiLine;
   end;
 
+  { Информация о форматировании выражения }
+  TTermInfo = record
+    SingleLineLen, MultiLineLen, PrevDelimiterLen: integer;
+    SingleLine, LineBreak: boolean;
+  end;
+
   { Выражение }
   TExpression = class(TStatementList<TTerm>)
   strict private
@@ -294,12 +300,6 @@ end;
 
 procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
 
-  type
-    TTermInfo = record
-      SingleLineLen, MultiLineLen, PrevDelimiterLen: integer;
-      SingleLine, LineBreak: boolean;
-    end;
-
   var
     TermInfo: array of TTermInfo;
 
@@ -408,15 +408,17 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   begin
     for i := 0 to Count - 1 do
     begin
-      if TermInfo[i].SingleLine
-        then APrinter.SupressNextLine(true)
-        else APrinter.PrintItem(_IndentNextLine);
+      if TermInfo[i].SingleLine then
+        APrinter.SupressNextLine(true)
+      else if i > 0 then
+        APrinter.PrintItem(_IndentNextLine);
       if Item(i) is TTerm then
         TTerm(Item(i)).MultiLine := not TermInfo[i].SingleLine;
       APrinter.PrintItem(Item(i));
-      if TermInfo[i].SingleLine
-        then APrinter.SupressNextLine(false)
-        else APrinter.Undent;
+      if TermInfo[i].SingleLine then
+        APrinter.SupressNextLine(false)
+      else if i > 0 then
+        APrinter.Undent;
       if TermInfo[i].LineBreak then APrinter.NextLine;
       APrinter.PrintItem(Delimiter(i));
     end;
@@ -521,9 +523,9 @@ end;
 
 procedure TQualifiedIndexedIdent.InternalPrintSelf(APrinter: TPrinter);
 begin
-  if TopStatement then APrinter.SupressNextLine(true);
+//  if TopStatement then APrinter.SupressNextLine(true);
   APrinter.PrintItems([_Indexes, _Dot, _Ident, _Next]);
-  if TopStatement then APrinter.SupressNextLine(false);
+//  if TopStatement then APrinter.SupressNextLine(false);
 end;
 
 function TQualifiedIndexedIdent.IsSimpleIdent: boolean;
