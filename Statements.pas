@@ -112,6 +112,7 @@ type
     function ParseBreak: boolean; virtual;
     procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject); virtual;
     function OnePerLine: boolean; virtual;
+    function AllowUnexpected: boolean; virtual;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -483,7 +484,10 @@ begin
         UnexpectedCnt := 0;
       end
     else
-      Source.Restore(P);
+      begin
+        Source.Restore(P);
+        if not AllowUnexpected then break;
+      end;
     { Если разобрали конструкцию, разберём разделитель }
     if StatementOk then
     begin
@@ -544,6 +548,11 @@ begin
 end;
 
 function TStatementList<S>.OnePerLine: boolean;
+begin
+  Result := true;
+end;
+
+function TStatementList<S>.AllowUnexpected: boolean;
 begin
   Result := true;
 end;

@@ -74,6 +74,7 @@ type
   TExpression = class(TStatementList<TTerm>)
   strict private
     class var FlagCreatedRight: boolean;
+    TermInfo: array of TTermInfo;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -300,8 +301,8 @@ end;
 
 procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
 
-  var
-    TermInfo: array of TTermInfo;
+  {var
+    TermInfo: array of TTermInfo;}
 
   { Сбор информации о размерах }
   procedure CollectInfo;
@@ -425,8 +426,11 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   end;
 
 begin
-  CollectInfo;
-  CheckForBreaks;
+  if not Assigned(TermInfo) then
+  begin
+    CollectInfo;
+    CheckForBreaks;
+  end;
   PrintExpression;
 end;
 

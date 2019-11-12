@@ -237,6 +237,7 @@ type
   TVariableDeclarations = class(TStatementList<TVariableDeclaration>)
   strict protected
     function ParseBreak: boolean; override;
+    function AllowUnexpected: boolean; override;
   end;
 
   { Курсор }
@@ -915,7 +916,12 @@ end;
 
 function TVariableDeclarations.ParseBreak: boolean;
 begin
-  Result := true;
+  Result := false;
+end;
+
+function TVariableDeclarations.AllowUnexpected: boolean;
+begin
+  Result := false;
 end;
 
 { TProcedureCall }
