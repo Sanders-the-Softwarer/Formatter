@@ -828,11 +828,21 @@ end;
 
 { Вывод на принтер специального комментария (отсутствующего в исходном тексте)}
 procedure TFormatterPrinter.PrintSpecialComment(AValue: string);
-var T: TToken;
+
+  procedure PrintSpecialToken(const Text: string);
+  var T: TToken;
+  begin
+    T := TSpecialComment.Create(Text, -1, -1);
+    SpecialComments.Add(T);
+    PrintToken(T);
+  end;
+
 begin
-  T := TSpecialComment.Create('/*/ ' + AValue + ' /*/', -1, -1);
-  PrintToken(T);
-  SpecialComments.Add(T);
+  Self.Ruler('special-comment-start', Settings.AlignSpecialComments);
+  PrintSpecialToken('/*/');
+  PrintSpecialToken(AValue);
+  Self.Ruler('special-comment-finish', Settings.AlignSpecialComments);
+  PrintSpecialToken('/*/');
 end;
 
 { Установка "линейки" для выравнивания }

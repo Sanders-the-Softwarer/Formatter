@@ -74,8 +74,8 @@ type
   TExpression = class(TStatementList<TTerm>)
   strict private
     class var FlagCreatedRight: boolean;
-    TermInfo: array of TTermInfo;
   strict protected
+    TermInfo: array of TTermInfo;
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
     function ParseDelimiter(out AResult: TObject): boolean; override;
@@ -300,9 +300,6 @@ begin
 end;
 
 procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
-
-  {var
-    TermInfo: array of TTermInfo;}
 
   { Сбор информации о размерах }
   procedure CollectInfo;

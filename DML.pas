@@ -598,7 +598,6 @@ begin
   APrinter.PrintItem(_Expression);
   PrintSelfAfter(APrinter);
   if not Assigned(_Match) then exit;
-  APrinter.Ruler('match', Settings.AlignSpecialComments);
   APrinter.PrintSpecialComment('=> ' + TIdentField(_Match).Name);
 end;
 
@@ -634,7 +633,7 @@ end;
 
 procedure TWhere.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Where, _IndentNextLine, _Condition, _Undent]);
+  APrinter.NextLineIf([_Where, _IndentNextLine, _Condition, _Undent]);
 end;
 
 { TReturning }
@@ -656,7 +655,7 @@ end;
 
 procedure TReturning.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_NextLine, _Returning, _IndentNextLine, _ReturningFields, _Undent]);
+  APrinter.NextLineIf([_Returning, _IndentNextLine, _ReturningFields, _Undent]);
   APrinter.NextLineIf([_Into, _IndentNextLine, _Targets, _Undent]);
 end;
 
@@ -938,16 +937,10 @@ end;
 
 procedure TSelectField.PrintSelfAfter(APrinter: TPrinter);
 begin
-  if Assigned(_As) then
-  begin
-    APrinter.Ruler('as', Settings.AlignFields);
-    APrinter.PrintItem(_As);
-  end;
-  if Assigned(_Alias) then
-  begin
-    APrinter.Ruler('alias', Settings.AlignFields);
-    APrinter.PrintItem(_Alias);
-  end;
+  APrinter.Ruler('as', Settings.AlignFields);
+  APrinter.PrintItem(_As);
+  APrinter.Ruler('alias', Settings.AlignFields);
+  APrinter.PrintItem(_Alias);
 end;
 
 { TSelectFields }
