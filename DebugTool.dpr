@@ -2,19 +2,19 @@ program DebugTool;
 
 uses
   Vcl.Forms,
-  fMain in 'fMain.pas' {FormMain},
-  Streams in 'Streams.pas',
-  Tokens in 'Tokens.pas',
-  Tokenizer in 'Tokenizer.pas',
-  Parser in 'Parser.pas',
-  Printers_ in 'Printers_.pas',
-  PLSQL in 'PLSQL.pas',
-  Expressions in 'Expressions.pas',
-  DML in 'DML.pas',
-  Statements in 'Statements.pas',
-  DDL in 'DDL.pas',
-  Attributes in 'Attributes.pas',
-  SQLPlus in 'SQLPlus.pas';
+  fMain in 'Source\fMain.pas' {FormMain},
+  Streams in 'Source\Streams.pas',
+  Tokens in 'Source\Tokens.pas',
+  Tokenizer in 'Source\Tokenizer.pas',
+  Parser in 'Source\Parser.pas',
+  Printers_ in 'Source\Printers_.pas',
+  PLSQL in 'Source\PLSQL.pas',
+  Expressions in 'Source\Expressions.pas',
+  DML in 'Source\DML.pas',
+  Statements in 'Source\Statements.pas',
+  DDL in 'Source\DDL.pas',
+  Attributes in 'Source\Attributes.pas',
+  SQLPlus in 'Source\SQLPlus.pas';
 
 {$R *.res}
 
