@@ -46,7 +46,7 @@ unit Printers_;
 interface
 
 uses
-  Classes, SysUtils, Math, StdCtrls, ComCtrls, System.Generics.Collections,
+  Classes, SysUtils, Math, Vcl.StdCtrls, Vcl.ComCtrls, System.Generics.Collections,
   Tokens, Windows;
 
 type
@@ -65,6 +65,8 @@ type
     ReplaceDefault: boolean;
     ReplaceAsIs: boolean;
     PreferredExpressionLength: integer;
+  public
+    constructor Default;
   end;
 
   { Интерфейс вывода на принтер }
@@ -87,6 +89,7 @@ type
     function  CurrentCol: integer; virtual; abstract;
     procedure ControlChanged; virtual; abstract;
     procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); virtual; abstract;
+    function  GetText: string; virtual; abstract;
   public
     procedure PrintItems(AItems: array of TObject);
     procedure PrintIndented(AItem: TObject); overload;
@@ -156,6 +159,7 @@ type
     function  CurrentCol: integer; override;
     procedure ControlChanged; override;
     procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
+    function  GetText: string; override;
   end;
 
   { Информация о выравниваниях }
@@ -193,6 +197,7 @@ type
     SpecialComments: TObjectList<TToken>;
     SupSpace, SupNextLine: integer;
     IsDraft: boolean;
+    Text:    string;
   protected
     function SpaceRequired(ALeft, ARight: TToken): boolean;
     function EmptyLineRequired(APrev, ANext: TStatement): boolean;
@@ -215,6 +220,7 @@ type
     function CurrentCol: integer; override;
     procedure ControlChanged; override;
     procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
+    function  GetText: string; override;
   end;
 
   { Принтер для вывода последовательности лексем }
@@ -527,6 +533,11 @@ begin
   { ничего не делаем }
 end;
 
+function TBasePrinter.GetText: string;
+begin
+  Result := '';
+end;
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //                  Принтер для печати форматированного текста                //
@@ -567,13 +578,9 @@ end;
 { Вывод готового результата }
 procedure TFormatterPrinter.EndPrint;
 begin
-  if Assigned(Memo) and Assigned(Builder) then
-  begin
-    Memo.Lines.BeginUpdate;
-    Memo.Text := Builder.ToString;
-    Memo.Lines.EndUpdate;
-  end;
+  if Assigned(Builder) then Text := Builder.ToString else Text := '';
   FreeAndNil(Builder);
+  if Assigned(Memo) then Memo.Text := Text;
   PrevToken := nil;
   PrevStatement := nil;
   inherited;
@@ -912,6 +919,13 @@ begin
   end;
 end;
 
+function TFormatterPrinter.GetText: string;
+begin
+  if Assigned(Builder)
+    then Result := Builder.ToString
+    else Result := Text;
+end;
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //              Принтер для печати вывода лексического анализатора            //
@@ -1165,6 +1179,23 @@ end;
 function TRulers.Padding(const ARuler: string; ACol: integer): integer;
 begin
   Result := FMax[ARuler] - ACol;
+end;
+
+{ TFormatSettings }
+
+constructor TFormatSettings.Default;
+begin
+  DeclarationSingleLineParamLimit := 1;
+  ArgumentSingleLineParamLimit    := 3;
+  MatchParamLimit                 := 3;
+  AlignVariables                  := true;
+  AlignFields                     := true;
+  AlignExpressions                := true;
+  AlignTableColumnComments        := true;
+  AlignSpecialComments            := true;
+  ReplaceDefault                  := true;
+  ReplaceAsIs                     := true;
+  PreferredExpressionLength       := 60;
 end;
 
 end.

@@ -839,7 +839,7 @@ end;
 procedure TSelect.InternalPrintSelf(APrinter: TPrinter);
 begin
   TExpressionFields(_Fields).Match(TIdentFields(_IntoFields));
-  APrinter.PrintItems([_With,      _NextLine,
+  APrinter.PrintItems([_With,
                        _Select,    _Mode,           _IndentNextLine,
                                    _Fields,         _UndentNextLine,
                        _Into,      _IndentNextLine,
@@ -913,11 +913,9 @@ end;
 
 procedure TWith.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_With);
-  APrinter.NextLine;
-  APrinter.Indent;
+  APrinter.PrintItems([_With, _IndentNextLine]);
   inherited;
-  APrinter.Undent;
+  APrinter.PrintItems([_UndentNextLine]);
 end;
 
 { TSelectField }
