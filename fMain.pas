@@ -66,6 +66,7 @@ type
     checkReplaceAsIs: TCheckBox;
     edPreferredExpressionLength: TSpinEdit;
     Label4: TLabel;
+    checkAlignExpressions: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -110,6 +111,7 @@ begin
   Settings.MatchParamLimit                 := edMatchParamLimit.Value;
   Settings.AlignVariables                  := checkAlignVariables.Checked;
   Settings.AlignFields                     := checkAlignFields.Checked;
+  Settings.AlignExpressions                := checkAlignExpressions.Checked;
   Settings.AlignSpecialComments            := checkAlignSpecialComments.Checked;
   Settings.AlignTableColumnComments        := checkAlignTableColumnComments.Checked;
   Settings.ReplaceDefault                  := checkReplaceDefault.Checked;

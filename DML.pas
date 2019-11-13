@@ -937,6 +937,7 @@ end;
 
 procedure TSelectField.PrintSelfAfter(APrinter: TPrinter);
 begin
+  if not Assigned(_As) and not Assigned(_Alias) then exit;
   APrinter.Ruler('as', Settings.AlignFields);
   APrinter.PrintItem(_As);
   APrinter.Ruler('alias', Settings.AlignFields);

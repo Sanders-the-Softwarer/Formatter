@@ -66,8 +66,8 @@ type
 
   { Информация о форматировании выражения }
   TTermInfo = record
-    SingleLineLen, MultiLineLen, PrevDelimiterLen: integer;
-    SingleLine, LineBreak: boolean;
+    SingleLineLen, MultiLineLen, PrevDelimiterLen, PostDelimiterLen, RulerNumber: integer;
+    SingleLine, LineBreak, BreakBeforeDelimiter: boolean;
   end;
 
   { Выражение }
@@ -86,6 +86,7 @@ type
   public
     class procedure CreatedRight;
     procedure AfterConstruction; override;
+    function Aligned: boolean; override;
   end;
 
   { Квалифицированный идентификатор }
@@ -155,6 +156,15 @@ uses Parser, DML, PLSQL;
 var
   Keywords: TStringList;
   Operations: TDictionary<String, integer>;
+
+function HasOperation(AOperation: TToken; out APriority: integer): boolean;
+var S: string;
+begin
+  if not Assigned(AOperation) then exit(false);
+  S := AOperation.Value.ToLower;
+  Result := Operations.ContainsKey(S);
+  if Result then APriority := Operations[S];
+end;
 
 type
 
@@ -305,7 +315,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   procedure CollectInfo;
   var
     DraftPrinter: TPrinter;
-    i: integer;
+    i, Priority: integer;
   begin
     SetLength(TermInfo, Count);
     DraftPrinter := APrinter.MakeDraftPrinter;
@@ -323,7 +333,14 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         DraftPrinter.SupressNextLine(false);
         DraftPrinter.NextLine;
         DraftPrinter.PrintItem(Delimiter(i));
-        if i > 0 then TermInfo[i - 1].PrevDelimiterLen := DraftPrinter.CurrentCol;
+        if HasOperation(TToken(Delimiter(i)), Priority) then
+        begin
+          TermInfo[i].BreakBeforeDelimiter := (Priority < 0);
+          if (Priority >= 0) then
+            TermInfo[i].PostDelimiterLen := DraftPrinter.CurrentCol
+          else if i < Count - 1 then
+            TermInfo[i + 1].PrevDelimiterLen := DraftPrinter.CurrentCol;
+        end;
         if TermInfo[i].SingleLineLen = TermInfo[i].MultiLineLen then TermInfo[i].SingleLine := true;
       end;
     finally
@@ -337,7 +354,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   { Примерка ширины печати в различных вариантах и разбиение на строки }
   procedure CheckForBreaks(Start: integer = 0; Finish: integer = -1);
   var
-    SLLen, MLLen, i: integer;
+    SLLen, MLLen, i, Priority: integer;
   begin
     if Finish < 0 then Finish := Count - 1;
     { Прикинем ширину, если печатать в одну строку }
@@ -345,15 +362,15 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     MLLen := 0;
     for i := Start to Finish do
     begin
-      Inc(SLLen, TermInfo[i].SingleLineLen + TermInfo[i].PrevDelimiterLen);
-      Inc(MLLen, TermInfo[i].MultiLineLen + TermInfo[i].PrevDelimiterLen);
+      Inc(SLLen, TermInfo[i].SingleLineLen + TermInfo[i].PrevDelimiterLen + TermInfo[i].PostDelimiterLen);
+      Inc(MLLen, TermInfo[i].MultiLineLen + TermInfo[i].PrevDelimiterLen + TermInfo[i].PostDelimiterLen);
       { Если сказано насильно разбивать по and/or, выполним это }
       if ForcedLineBreaks and
          (Start = 0) and
          (Finish = Count - 1) and
          (i > Start) and
-         Assigned(Delimiter(i - 1)) and
-         (Operations[TToken(Delimiter(i - 1)).Value] < 0) then
+         HasOperation(TToken(Delimiter(i - 1)), Priority) and
+         (Priority < 0) then
       begin
         SLLen := MaxInt div 4;
         MLLen := MaxInt div 4;
@@ -368,36 +385,55 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
       PutLineBreaks(Start, Finish);
   end;
 
+  { Разметка выравниваний }
+  procedure PutRulers(Start, Finish: integer);
+  var i, Prio, Min, Max: integer;
+  begin
+    if not Self.Aligned then exit;
+    { Проверим, что непереносимые операции одного приоритета }
+    Min := MaxInt;
+    Max := -MaxInt;
+    for i := Start to Finish do
+      if not TermInfo[i].LineBreak and HasOperation(TToken(Delimiter(i)), Prio) then
+      begin
+        if Min > Prio then Min := Prio;
+        if Max < Prio then Max := Prio;
+      end;
+    if Min <> Max then exit;
+    { Проверим, что они идут строго по одной в строке }
+    for i := Start to Finish - 1 do
+      if TermInfo[i].LineBreak xor ((i - Start) mod 2 = 1) then
+        exit;
+    { Разметим линейки }
+    for i := Start to Finish do
+      if not TermInfo[i].LineBreak and TermInfo[i].SingleLine then
+        TermInfo[i].RulerNumber := Finish; { Start не подходит, так как может быть нулём }
+  end;
+
   { Расстановка переносов по самым низкоприоритетным операциям }
   procedure PutLineBreaks(Start, Finish: integer);
   var
     i, MinPriority, CurPriority, Prev: integer;
-    Delimiter_: string;
   begin
     { Определим наименьший приоритет операции в выбранном фрагменте }
     MinPriority := MaxInt;
     for i := Start to Finish - 1 do
-    begin
-      if not Assigned(Delimiter(i)) then continue;
-      Delimiter_ := (Delimiter(i) as TToken).Value;
-      if not Operations.ContainsKey(Delimiter_) then continue;
-      CurPriority := Operations[Delimiter_];
-      if CurPriority < MinPriority then MinPriority := CurPriority;
-    end;
+      if HasOperation(TToken(Delimiter(i)), CurPriority) and
+         (CurPriority < MinPriority)
+        then MinPriority := CurPriority;
     { И расставим переносы по таким операциям }
     Prev := Start;
     for i := Start to Finish do
     begin
-      if not Assigned(Delimiter(i)) then continue;
-      Delimiter_ := (Delimiter(i) as TToken).Value;
-      if not Operations.ContainsKey(Delimiter_) then continue;
-      CurPriority := Operations[Delimiter_];
+      if not HasOperation(TToken(Delimiter(i)), CurPriority) then continue;
       if CurPriority > MinPriority then continue;
       TermInfo[i].LineBreak := true;
       if (Prev > Start) or (i < Finish) then CheckForBreaks(Prev, i);
       Prev := i + 1;
     end;
     if Prev > Start then CheckForBreaks(Prev, Finish);
+    { Расставим выравнивания }
+    PutRulers(Start, Finish);
   end;
 
   { Печать получившегося выражения }
@@ -417,8 +453,14 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         APrinter.SupressNextLine(false)
       else if i > 0 then
         APrinter.Undent;
-      if TermInfo[i].LineBreak then APrinter.NextLine;
+      if TermInfo[i].LineBreak and TermInfo[i].BreakBeforeDelimiter then APrinter.NextLine;
+      if not Assigned(Delimiter(i)) then continue;
+      APrinter.Ruler(Format('%p-delimiter-%d-before', [pointer(Self), TermInfo[i].RulerNumber]), Settings.AlignExpressions and (TermInfo[i].RulerNumber > 0));
+//      (**) if TermInfo[i].RulerNumber > 0 then APrinter.PrintSpecialComment(Format('%p-delimiter-%d-before', [pointer(Self), TermInfo[i].RulerNumber]));
       APrinter.PrintItem(Delimiter(i));
+      APrinter.Ruler(Format('%p-delimiter-%d-after', [pointer(Self), TermInfo[i].RulerNumber]), Settings.AlignExpressions and (TermInfo[i].RulerNumber > 0));
+//      (**) if TermInfo[i].RulerNumber > 0 then APrinter.PrintSpecialComment(Format('%p-delimiter-%d-after', [pointer(Self), TermInfo[i].RulerNumber]));
+      if TermInfo[i].LineBreak and not TermInfo[i].BreakBeforeDelimiter then APrinter.NextLine;
     end;
   end;
 
@@ -473,6 +515,11 @@ begin
   if FlagCreatedRight
     then FlagCreatedRight := false
     else raise Exception.Create('Expression must be created using TParser.ParseExpression, do it!');
+end;
+
+function TExpression.Aligned: boolean;
+begin
+  Result := not (Self.Parent is TExpression);
 end;
 
 { TQualifiedIdent }

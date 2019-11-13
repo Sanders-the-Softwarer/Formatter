@@ -59,6 +59,7 @@ type
     MatchParamLimit: integer;
     AlignVariables: boolean;
     AlignFields: boolean;
+    AlignExpressions: boolean;
     AlignTableColumnComments: boolean;
     AlignSpecialComments: boolean;
     ReplaceDefault: boolean;

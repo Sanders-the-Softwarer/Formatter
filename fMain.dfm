@@ -213,7 +213,7 @@ object FormMain: TFormMain
         end
         object Label4: TLabel
           Left = 5
-          Top = 236
+          Top = 256
           Width = 233
           Height = 13
           Caption = #1064#1080#1088#1080#1085#1072' '#1074#1099#1088#1072#1078#1077#1085#1080#1081' '#1087#1086' '#1074#1086#1079#1084#1086#1078#1085#1086#1089#1090#1080' '#1085#1077' '#1073#1086#1083#1077#1077
@@ -244,7 +244,7 @@ object FormMain: TFormMain
           Left = 3
           Top = 96
           Width = 153
-          Height = 125
+          Height = 154
           Caption = '  '#1042#1099#1088#1072#1074#1085#1080#1074#1072#1090#1100'  '
           TabOrder = 2
           object checkAlignFields: TCheckBox
@@ -271,7 +271,7 @@ object FormMain: TFormMain
           end
           object checkAlignSpecialComments: TCheckBox
             Left = 13
-            Top = 72
+            Top = 95
             Width = 128
             Height = 17
             Caption = #1057#1086#1087#1086#1089#1090#1072#1074#1083#1077#1085#1080#1103
@@ -282,7 +282,7 @@ object FormMain: TFormMain
           end
           object checkAlignTableColumnComments: TCheckBox
             Left = 13
-            Top = 95
+            Top = 118
             Width = 128
             Height = 17
             Caption = #1050#1086#1084#1072#1085#1076#1099' COMMENT'
@@ -296,7 +296,7 @@ object FormMain: TFormMain
           Left = 162
           Top = 96
           Width = 153
-          Height = 125
+          Height = 154
           Caption = '  '#1047#1072#1084#1077#1085#1103#1090#1100'  '
           TabOrder = 3
           object checkReplaceDefault: TCheckBox
@@ -335,7 +335,7 @@ object FormMain: TFormMain
         end
         object edPreferredExpressionLength: TSpinEdit
           Left = 269
-          Top = 233
+          Top = 253
           Width = 46
           Height = 22
           MaxValue = 1000
@@ -343,6 +343,17 @@ object FormMain: TFormMain
           TabOrder = 5
           Value = 60
           OnChange = UpdateRequired
+        end
+        object checkAlignExpressions: TCheckBox
+          Left = 16
+          Top = 168
+          Width = 128
+          Height = 17
+          Caption = #1042#1099#1088#1072#1078#1077#1085#1080#1103
+          Checked = True
+          State = cbChecked
+          TabOrder = 6
+          OnClick = UpdateRequired
         end
       end
     end
