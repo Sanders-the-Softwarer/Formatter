@@ -1,0 +1,6 @@
+select
+    a
+bulk collect into
+    b
+from
+    dual

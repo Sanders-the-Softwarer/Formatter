@@ -1,0 +1,1 @@
+select a into b from dual
