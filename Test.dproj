@@ -85,8 +85,22 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="Test\TestDML.pas"/>
-        <DCCReference Include="DML.pas"/>
         <DCCReference Include="Test\FileBasedTest.pas"/>
+        <DCCReference Include="Source\Attributes.pas"/>
+        <DCCReference Include="Source\DDL.pas"/>
+        <DCCReference Include="Source\DML.pas"/>
+        <DCCReference Include="Source\Expressions.pas"/>
+        <DCCReference Include="Source\fMain.pas">
+            <Form>FormMain</Form>
+        </DCCReference>
+        <DCCReference Include="Source\Parser.pas"/>
+        <DCCReference Include="Source\PLSQL.pas"/>
+        <DCCReference Include="Source\Printers_.pas"/>
+        <DCCReference Include="Source\SQLPlus.pas"/>
+        <DCCReference Include="Source\Statements.pas"/>
+        <DCCReference Include="Source\Streams.pas"/>
+        <DCCReference Include="Source\Tokenizer.pas"/>
+        <DCCReference Include="Source\Tokens.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -157,6 +171,8 @@
             <UnitTesting>
                 <TestFramework>DUnit / Delphi Win32</TestFramework>
                 <TestRunner>GUI</TestRunner>
+                <TestProjectName/>
+                <SourceProjectName/>
             </UnitTesting>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>

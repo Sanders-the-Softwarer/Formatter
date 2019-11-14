@@ -1,0 +1,4 @@
+select
+    *
+from
+    table(a.b(1).c.d(2).e) f

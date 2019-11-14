@@ -36,13 +36,32 @@ type
     { Сравнение форматированного текста с ожидаемым }
     procedure Check(AText, AExpected: string);
   protected
+    Settings: TFormatSettings;
+  protected
     { Загрузка файлов и проверка форматирования }
     procedure CheckFile(const AFileName: string);
     { Запуск тестового метода }
     procedure Invoke(AMethod: TTestMethod); override;
+  public
+    { Подготовка к выполнению теста }
+    procedure SetUp; override;
+    { Уборка после выполненного теста }
+    procedure TearDown; override;
   end;
 
 implementation
+
+{ Подготовка к выполнению теста }
+procedure TFileBasedTest.SetUp;
+begin
+  Settings := TFormatSettings.Default;
+end;
+
+{ Уборка после выполненного теста }
+procedure TFileBasedTest.TearDown;
+begin
+  FreeAndNil(Settings);
+end;
 
 { Загрузка файлов и проверка форматирования }
 procedure TFileBasedTest.CheckFile(const AFileName: string);
@@ -53,16 +72,18 @@ end;
 { Запуск тестового метода }
 procedure TFileBasedTest.Invoke(AMethod: TTestMethod);
 begin
-  { От метода нам нужно только имя, по нему считываем файлы }
-  CheckFile(GetName);
+  AMethod; { само тело теста нужно только для настройки опций, если требуется }
+  CheckFile(GetName); { а теперь по имени теста сравним файлы }
 end;
 
 { Чтение файла в строку }
 function TFileBasedTest.LoadFile(const AFileName: string): string;
+var i: integer;
 begin
   with TStringList.Create do
   try
     LoadFromFile('.\Тестовые Данные\' + AFileName);
+    for i := 0 to Count - 1 do Strings[i] := TrimRight(Strings[i]);
     Result := TrimRight(Text);
   finally
     Free;
@@ -80,12 +101,10 @@ end;
 { Сравнение форматированного текста с ожидаемым }
 procedure TFileBasedTest.Check(AText, AExpected: string);
 var
-  Settings: TFormatSettings;
   Parser: TParser;
   Printer: TPrinter;
 begin
   try
-    Settings := TFormatSettings.Default;
     Parser := TParser.Create(
                 TCommentProcessor.Create(
                   TMerger.Create(
@@ -98,7 +117,6 @@ begin
     Parser.PrintAll(Printer);
     CheckEquals(Beautify(AExpected), Beautify(Printer.GetText));
   finally
-    FreeAndNil(Settings);
     FreeAndNil(Parser);
     FreeAndNil(Printer);
   end;
