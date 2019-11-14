@@ -1,0 +1,6 @@
+select 
+    count(distinct *), 
+    count(unique *), 
+    count(all *) 
+from 
+    dual

@@ -1,0 +1,1 @@
+select a, b, c, d, e into x, y, z, ttttt, w from dual

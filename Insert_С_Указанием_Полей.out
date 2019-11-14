@@ -1,0 +1,10 @@
+insert 
+into 
+    dual 
+        (
+            dummy
+        ) 
+values 
+    (
+        'Y'
+    )

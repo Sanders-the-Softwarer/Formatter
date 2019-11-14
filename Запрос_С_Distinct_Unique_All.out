@@ -1,0 +1,14 @@
+select distinct 
+    * 
+from 
+    (
+        select unique 
+            * 
+        from 
+            (
+                select all 
+                    * 
+                from 
+                    dual
+            )
+    )
