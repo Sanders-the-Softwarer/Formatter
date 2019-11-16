@@ -1,0 +1,10 @@
+insert 
+into 
+    values 
+        (
+            'Y'
+        ) 
+returning 
+    dummy 
+into 
+    new_value

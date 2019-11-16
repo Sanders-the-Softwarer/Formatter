@@ -1,0 +1,4 @@
+select
+    d.*
+from
+    dual d

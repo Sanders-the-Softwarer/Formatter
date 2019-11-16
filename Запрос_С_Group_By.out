@@ -1,0 +1,8 @@
+select
+    *
+from
+    dual
+group by
+    dummy,
+    dummy,
+    dummy

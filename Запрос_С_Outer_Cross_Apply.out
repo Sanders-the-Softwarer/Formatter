@@ -1,0 +1,18 @@
+select 
+    * 
+from 
+    a 
+        cross apply 
+    (
+        select 
+            * 
+        from 
+            b
+    ) 
+        outer apply 
+    (
+        select 
+            * 
+        from 
+            c
+    )

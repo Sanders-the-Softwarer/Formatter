@@ -1,0 +1,1 @@
+insert into t (a, b, c, d, e) values (1, 2, 3, 4, 5) returning a, b, c, d, e into p_a, p_b, p_c, p_d, p_e
