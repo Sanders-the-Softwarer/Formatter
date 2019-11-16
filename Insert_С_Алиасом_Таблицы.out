@@ -1,7 +1,0 @@
-insert 
-into 
-    dual t 
-values 
-    (
-         'Y'
-    )

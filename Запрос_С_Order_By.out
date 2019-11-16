@@ -1,6 +1,0 @@
-select
-    *
-from
-    dual
-order by
-    dummy

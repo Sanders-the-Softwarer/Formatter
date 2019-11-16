@@ -1,2 +1,0 @@
-merge into (select * from dual) d1 using (select * from dual) d2 on (d1.dummy = d2.dummy)
-when matched then update set dummy = 'Y' delete where dummy = 'X' when not matched then insert (dummy) values ('Y') where dummy <> 'X';

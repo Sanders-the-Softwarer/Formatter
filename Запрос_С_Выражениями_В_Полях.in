@@ -1,1 +1,0 @@
-select 1, 'abc', 3 + 4 from dual

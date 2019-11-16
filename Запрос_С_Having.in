@@ -1,1 +1,0 @@
-select * from dual group by dummy having count(*) > 1

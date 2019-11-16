@@ -1,6 +1,0 @@
-select
-    a,
-    b    b,
-    c as c
-from
-    dual
