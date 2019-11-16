@@ -1,0 +1,1 @@
+create function pi return number deterministic is begin return 3.1415926; end;

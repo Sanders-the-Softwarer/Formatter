@@ -1,0 +1,5 @@
+select 
+    case when 1 = 2 then 3 when 4 = 5 then 6 else 7 end, 
+    case null when true then 1 else 0 end 
+from 
+    dual

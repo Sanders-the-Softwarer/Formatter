@@ -1,0 +1,7 @@
+select 
+    * 
+from 
+    dual 
+where 
+    dummy is null 
+    and dummy is not null

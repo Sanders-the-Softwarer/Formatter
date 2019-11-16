@@ -11,4 +11,17 @@ into
     ttttt, 
     w 
 from 
-    dual
+    dual;
+
+select 
+    a,
+    b,
+    c,
+    d
+into 
+    x, 
+    y, 
+    z, 
+    ttttt
+from 
+    dual;

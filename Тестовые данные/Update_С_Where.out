@@ -1,0 +1,6 @@
+update 
+    t 
+set 
+    a = 1 
+where 
+    b = 2

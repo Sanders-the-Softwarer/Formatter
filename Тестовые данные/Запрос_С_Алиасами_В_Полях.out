@@ -1,6 +1,6 @@
 select
     a,
-    b    b,
+    b b,
     c as c
 from
     dual

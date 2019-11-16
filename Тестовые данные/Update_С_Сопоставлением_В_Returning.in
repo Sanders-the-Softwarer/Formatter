@@ -1,0 +1,1 @@
+update t set a = 1 where b = 2 returning a, b, c, d, e into p_a, p_b, p_c, p_d, p_e

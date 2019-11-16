@@ -1,0 +1,9 @@
+declare
+    type t is record 
+        (
+            a integer, 
+            b char(100 char), 
+            c my.tablet.tipe := my.tablet.tipe()
+        );
+begin
+end;

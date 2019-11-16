@@ -1,0 +1,6 @@
+create package x is
+  e exception;
+  f exception;
+  g varchar2;
+  h exception;
+end;

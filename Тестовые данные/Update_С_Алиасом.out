@@ -1,0 +1,4 @@
+update 
+    dual d 
+set 
+    d.dummy = 'Y'

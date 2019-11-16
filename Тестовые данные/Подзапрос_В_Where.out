@@ -1,0 +1,6 @@
+select 
+    * 
+from 
+    dual 
+where 
+    (select * from dual) = 'Y'

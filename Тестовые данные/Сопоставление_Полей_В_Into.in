@@ -1,1 +1,2 @@
-select a, b, c, d, e into x, y, z, ttttt, w from dual
+select a, b, c, d, e into x, y, z, ttttt, w from dual;
+select a, b, c, d into x, y, z, ttttt from dual;

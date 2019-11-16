@@ -1,0 +1,4 @@
+select 
+    1 + (select count(*) from dual) 
+from 
+    dual

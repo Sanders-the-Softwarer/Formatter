@@ -1,0 +1,9 @@
+begin
+  begin
+  exception
+    raise;
+  end;
+exception
+  when invalid_number then null; raise; return;
+  when others or somebody_else then return; null; raise;
+end;

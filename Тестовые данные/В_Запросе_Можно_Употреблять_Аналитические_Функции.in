@@ -1,0 +1,1 @@
+select 1 + rank() over (partition by d.dummy order by d.dummy desc) from dual d

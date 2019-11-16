@@ -1,0 +1,1 @@
+select cast (1 as number(5, 2)), cast ('222' as char(28 char)), cast (null as packaged.object.tipe) from dual

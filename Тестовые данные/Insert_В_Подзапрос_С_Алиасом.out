@@ -1,0 +1,12 @@
+insert 
+into 
+    (
+        select 
+            * 
+        from 
+            dual
+    ) t 
+values 
+    (
+        'Y'
+    )

@@ -30,7 +30,10 @@ uses
   Statements in 'Source\Statements.pas',
   Streams in 'Source\Streams.pas',
   Tokenizer in 'Source\Tokenizer.pas',
-  Tokens in 'Source\Tokens.pas';
+  Tokens in 'Source\Tokens.pas',
+  TestExpressions in 'Test\TestExpressions.pas',
+  TestDDL in 'Test\TestDDL.pas',
+  TestPLSQL in 'Test\TestPLSQL.pas';
 
 {$R *.RES}
 

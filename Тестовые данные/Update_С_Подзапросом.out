@@ -1,0 +1,9 @@
+update 
+    (
+        select 
+            * 
+        from 
+            dual
+    ) d 
+set 
+    dummy = 'Y'
