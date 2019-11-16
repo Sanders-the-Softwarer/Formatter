@@ -1,0 +1,7 @@
+begin
+    loop
+        null;
+        return;
+        raise;
+    end loop;
+end;

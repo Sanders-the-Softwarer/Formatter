@@ -1,0 +1,6 @@
+create table x (
+  i blob,
+  j blob
+) tablespace t1
+lob(i) store as x_i(tablespace t2)
+lob(j) store as x_j(tablespace t3);

@@ -1,6 +1,6 @@
 begin
-  loop
-    exit;
-    exit when sql%notfound;
-  end loop;
+    loop
+        exit;
+        exit when sql%notfound;
+    end loop;
 end;

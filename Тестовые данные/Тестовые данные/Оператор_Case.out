@@ -1,0 +1,18 @@
+begin
+    case 
+        when a = b then 
+            null; 
+        when c > d then 
+            raise; 
+        else 
+            null; 
+    end case;
+    case a 
+        when b then 
+            null; 
+        when c then 
+            raise; 
+        else 
+            null 
+    end case;
+end;

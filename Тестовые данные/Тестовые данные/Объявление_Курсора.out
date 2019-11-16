@@ -1,0 +1,9 @@
+declare
+    cursor a 
+        is 
+    select 
+        * 
+    from 
+        dual;
+begin
+end;

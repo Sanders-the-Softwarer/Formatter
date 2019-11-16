@@ -1,0 +1,3 @@
+begin
+  open c for select * from dual;
+end;

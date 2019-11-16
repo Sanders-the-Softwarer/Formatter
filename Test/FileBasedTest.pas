@@ -96,7 +96,11 @@ begin
   try
     LoadFromFile('.\Тестовые Данные\' + AFileName);
     for i := 0 to Count - 1 do Strings[i] := TrimRight(Strings[i]);
-    Result := TrimRight(Text);
+    { С вероятностью 1/2 поставим либо не поставим на входе последний перевод
+      строки, результат на выходе не должен от этого зависеть }
+    if (Random >= 0.5) and AFileName.EndsWith('.in')
+      then Result := Text
+      else Result := TrimRight(Text);
   finally
     Free;
   end;
@@ -105,7 +109,7 @@ end;
 { Приведение строки к наглядному для сравнения виду }
 function TFileBasedTest.Beautify(const S: string): string;
 const
-  Liner = #13'---------->>----------'#13;
+  Liner = #13#10'---------->>----------'#13#10;
 begin
   Result := Liner + StringReplace(S, ' ', #183, [rfReplaceAll]) + Liner;
 end;

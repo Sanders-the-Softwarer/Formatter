@@ -1,0 +1,1 @@
+select * from a, lateral(select * from dual) b

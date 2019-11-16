@@ -1,0 +1,13 @@
+declare
+  x integer;
+  y integer;
+  procedure z is
+  begin
+    x := 3;
+    y := 4;
+  end;
+begin
+  x := 1;
+  y := 2;
+  z;
+end;

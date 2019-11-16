@@ -1,0 +1,11 @@
+create global temporary table t 
+    (
+        i integer
+    ) 
+    on commit delete rows
+
+create global temporary table tt 
+    (
+        ii integer
+    ) 
+    on commit preserve rows

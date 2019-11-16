@@ -1,0 +1,1 @@
+declare procedure x (a integer, b in char, c in out varchar2, d nocopy tablet.tipe, e in out nocopy super.tablet.tipe); begin end;

@@ -1,0 +1,6 @@
+create table xi 
+    (
+        i integer
+    ) 
+    organization index 
+    tablespace tmp

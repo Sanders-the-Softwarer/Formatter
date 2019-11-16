@@ -1,0 +1,5 @@
+begin
+    proc;
+    proc(1, 2, 3);
+    proc(a => 1, b => 2);
+end;

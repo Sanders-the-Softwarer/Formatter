@@ -1,0 +1,4 @@
+create package x is
+  cursor c return dual%rowtype is select * from dual;
+end;
+

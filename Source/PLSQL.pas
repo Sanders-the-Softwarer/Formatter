@@ -1241,7 +1241,10 @@ end;
 
 procedure TPragma.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Pragma, _Body]);
+  APrinter.PrintItem(_Pragma);
+  APrinter.SupressNextLine(true);
+  APrinter.PrintItem(_Body);
+  APrinter.SupressNextLine(false);
   inherited;
 end;
 
@@ -1491,12 +1494,9 @@ end;
 
 procedure TCase.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Case, _Condition]);
-  APrinter.Indent;
-  APrinter.NextLine;
+  APrinter.PrintItems([_Case, _Condition, _IndentNextLine]);
   inherited;
-  APrinter.Undent;
-  APrinter.PrintItems([_EndCase, _Semicolon]);
+  APrinter.PrintItems([_UndentNextLine, _EndCase, _Semicolon]);
 end;
 
 { TCursor }

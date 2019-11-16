@@ -15,7 +15,9 @@ program Test;
 {$ENDIF}
 
 uses
+  SysUtils,
   DUnitTestRunner,
+  TestFramework,
   TestDML in 'Test\TestDML.pas',
   FileBasedTest in 'Test\FileBasedTest.pas',
   Attributes in 'Source\Attributes.pas',
@@ -37,7 +39,33 @@ uses
 
 {$R *.RES}
 
+type
+  _UnderConstruction = class(TTestCase)
+  published
+    procedure Нужно_Написать_Тесты_На_Команды_SQLPLUS;
+    procedure Нужно_Написать_Тесты_На_Объектные_Типы;
+    procedure Нужно_Написать_Тесты_На_Create_Trigger;
+  end;
+
+{ _UnderConstruction }
+
+procedure _UnderConstruction.Нужно_Написать_Тесты_На_Create_Trigger;
 begin
+  Fail('Пока что не сделано');
+end;
+
+procedure _UnderConstruction.Нужно_Написать_Тесты_На_Команды_SQLPLUS;
+begin
+  Fail('Пока что не сделано');
+end;
+
+procedure _UnderConstruction.Нужно_Написать_Тесты_На_Объектные_Типы;
+begin
+  Fail('Пока что не сделано');
+end;
+
+begin
+  RegisterTest(_UnderConstruction.Suite);
   DUnitTestRunner.RunRegisteredTests;
 end.
 

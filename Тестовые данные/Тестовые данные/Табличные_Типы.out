@@ -1,0 +1,5 @@
+declare
+    type t is table of varchar2;
+    type tt is table of number index by varchar2(64);
+begin
+end;

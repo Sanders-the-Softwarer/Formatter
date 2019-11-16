@@ -1,11 +1,12 @@
 create force view v$dual as 
-    with x as 
-        (
-            select 
-                * 
-            from 
-                dual
-        ) 
+    with 
+        x as 
+            (
+                select 
+                    * 
+                from 
+                    dual
+            ) 
     select 
         * 
     from 

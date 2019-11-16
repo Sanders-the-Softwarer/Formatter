@@ -1,0 +1,10 @@
+create or replace package x is
+    a integer;
+    b char;
+    c schema.tablet%type;
+    d schema.tablet.ccolumn%rowtype;
+    e number(10);
+    f number(10,2);
+    g char(10 char);
+    h char(10 byte);
+end;

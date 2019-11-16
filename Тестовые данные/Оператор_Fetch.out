@@ -1,3 +1,10 @@
 begin
-  fetch c into a, b, c, d, e;
+    fetch 
+        c 
+    into 
+        a, 
+        b, 
+        c, 
+        d, 
+        e;
 end;

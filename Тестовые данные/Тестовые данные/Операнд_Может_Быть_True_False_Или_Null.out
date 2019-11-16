@@ -1,0 +1,6 @@
+select 
+    null 
+from 
+    dual 
+where 
+    true = false

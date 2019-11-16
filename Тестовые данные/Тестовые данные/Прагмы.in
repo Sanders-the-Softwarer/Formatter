@@ -1,0 +1,6 @@
+declare
+  e exception;
+  pragma anonymous_transaction;
+  pragma exception_init(e, -1024);
+begin
+end;

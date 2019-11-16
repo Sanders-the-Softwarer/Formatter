@@ -1,0 +1,3 @@
+create package body x is
+end;
+/

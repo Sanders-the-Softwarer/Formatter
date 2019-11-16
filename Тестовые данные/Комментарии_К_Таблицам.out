@@ -1,0 +1,11 @@
+create table v$dual
+    (
+        id integer, 
+        name varchar2(100)
+    );
+
+comment on table  v$dual      is 'Вьюха, хотя таблица :)';
+comment on column v$dual.id   is 'Ключ';
+comment on column v$dual.name is 'Название';
+
+drop table v$dual;

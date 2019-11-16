@@ -1,0 +1,11 @@
+-- В таблицах могут быть указаны все типы constraint-ов и поля вперемешку
+create table x (
+  i integer,
+  constraint pk primary key(i) using index tablespace idx,
+  j varchar2(100 byte) default null,
+  constraint fk foreign key (i, j) references y (ii, jj),
+  k date not null,
+  constraint uq unique (k) using index tablespace idx,
+  l some.tipe,
+  constraint chk check (1 + 2 = 3)
+) tablespace tbl

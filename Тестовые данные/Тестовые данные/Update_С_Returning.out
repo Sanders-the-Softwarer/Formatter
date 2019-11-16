@@ -1,0 +1,10 @@
+update 
+    t 
+set 
+    a = 1 
+where 
+    b = 2 
+returning 
+    a 
+into 
+    p_a

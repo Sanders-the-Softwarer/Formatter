@@ -185,6 +185,7 @@ type
     Mode:    TFormatterPrinterMode;
     Shift:   integer;
     BOL:     boolean;
+    BOT:     boolean;
     EmptyLine: boolean;
     Col:     integer;
     PrevCol: integer;
@@ -569,6 +570,7 @@ begin
   Shift   := 0;
   Col     := 1;
   BOL     := false;
+  BOT     := true;
   Padding := 0;
   TokenPos.Clear;
   TokenLen.Clear;
@@ -611,8 +613,8 @@ begin
   if ARight.Value = ',' then exit(false);
   { В конструкции number(5,2) запятую прижимаем и слева тоже }
   if (ALeft.Value = ',') and TTerminal(ALeft).IntoNumber then exit(false);
-  { Открывающую скобку прижимаем справа к идентификаторам и ключевым словам char, table }
-  if (ARight.Value = '(') and (ALeft is TEpithet) and (SameText(ALeft.Value, 'char') or SameText(ALeft.Value, 'table') or not TEpithet(ALeft).IsKeyword) then exit(false);
+  { Открывающую скобку прижимаем справа к идентификаторам и ключевым словам char, table, row }
+  if (ARight.Value = '(') and (ALeft is TEpithet) and (SameText(ALeft.Value, 'char') or SameText(ALeft.Value, 'table') or SameText(ALeft.Value, 'row') or not TEpithet(ALeft).IsKeyword) then exit(false);
   { К открывающей скобке прижимаем справа всё }
   if ALeft.Value = '(' then exit(false);
   { Закрывающую скобку прижимаем справа ко всему }
@@ -644,7 +646,7 @@ var
 begin
   AllowLF := (SupNextLine = 0);
   { Обработаем вставку пустой строки }
-  if EmptyLine then
+  if EmptyLine and not BOT then
   begin
     if Assigned(Builder) and AllowLF then Builder.AppendLine;
     BOL := true;
@@ -653,7 +655,7 @@ begin
   { Обработаем переход на новую строку }
   if BOL then
   begin
-    if Assigned(Builder) and AllowLF then Builder.AppendLine.Append(StringOfChar(' ', Shift));
+    if Assigned(Builder) and AllowLF and not BOT then Builder.AppendLine.Append(StringOfChar(' ', Shift));
     BOL := false;
     if AllowLF then
     begin
@@ -702,6 +704,7 @@ begin
     end;
     Inc(Col, Value.Length);
     PrevToken := AToken;
+    BOT := false;
   end;
 end;
 

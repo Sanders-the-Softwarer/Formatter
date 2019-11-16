@@ -1,0 +1,6 @@
+create table x
+    (
+        id integer not null, 
+        di varchar2(2000 char) default 'abc' || 'de', 
+        ididi date default sysdate not null
+    )

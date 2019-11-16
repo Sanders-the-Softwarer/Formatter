@@ -1,0 +1,6 @@
+select 
+    * 
+from 
+    dual 
+where 
+    not exists (select * from dual)

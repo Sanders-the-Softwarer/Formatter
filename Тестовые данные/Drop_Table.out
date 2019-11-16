@@ -1,2 +1,3 @@
 drop table dual
+
 drop table dual cascade constraints

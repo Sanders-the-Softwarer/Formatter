@@ -401,8 +401,12 @@ end;
 procedure TTable.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Global, _Temporary, _Table, _TableName, _IndentNextLine,
-                       _Items, _Organization, _Index, _Tablespace, _LobStores,
-                       _On, _Commit, _DeleteOrPreserve, _Rows, _Undent]);
+                       _Items]);
+  APrinter.NextLineIf([_Organization, _Index]);
+  APrinter.NextLineIf([_Tablespace]);
+  APrinter.NextLineIf([_LobStores]);
+  APrinter.NextLineIf([_On, _Commit, _DeleteOrPreserve, _Rows]);
+  APrinter.Undent;
   inherited;
 end;
 

@@ -1,0 +1,19 @@
+begin
+    if a = b then 
+        null; 
+    end if;
+    if a = b then 
+        null; 
+    else 
+        raise; 
+    end if;
+    if a = b then 
+        null; 
+    elsif c = d then 
+        return; 
+    elsif e > f then 
+        proc; 
+    else 
+        raise; 
+    end if;
+end;

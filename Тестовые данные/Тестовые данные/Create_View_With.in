@@ -1,0 +1,2 @@
+-- create view с запросом, начинающимся с with
+create force view v$dual as with x as (select * from dual) select * from x

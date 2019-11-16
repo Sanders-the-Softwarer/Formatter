@@ -27,6 +27,14 @@ type
     procedure Create_Index;
     procedure Create_Unique_Index;
     procedure Create_Functional_Index;
+    procedure Create_Table;
+    procedure Create_Indexed_Table;
+    procedure Create_Temporary_Table;
+    procedure Поля_Таблиц_Разных_Типов;
+    procedure Поля_И_Ограничения_Вперемешку;
+    procedure Указание_Места_Хранения_Lobов;
+    procedure Create_Sequence;
+    procedure Комментарии_К_Таблицам;
   end;
 
   { Тесты на drop }
@@ -58,7 +66,23 @@ procedure _Create.Create_Index;
 begin
 end;
 
+procedure _Create.Create_Indexed_Table;
+begin
+end;
+
 procedure _Create.Create_Or_Replace;
+begin
+end;
+
+procedure _Create.Create_Sequence;
+begin
+end;
+
+procedure _Create.Create_Table;
+begin
+end;
+
+procedure _Create.Create_Temporary_Table;
 begin
 end;
 
@@ -71,6 +95,23 @@ begin
 end;
 
 procedure _Create.Create_View_With;
+begin
+end;
+
+procedure _Create.Комментарии_К_Таблицам;
+begin
+  Settings.AlignTableColumnComments := true;
+end;
+
+procedure _Create.Поля_И_Ограничения_Вперемешку;
+begin
+end;
+
+procedure _Create.Поля_Таблиц_Разных_Типов;
+begin
+end;
+
+procedure _Create.Указание_Места_Хранения_Lobов;
 begin
 end;
 
