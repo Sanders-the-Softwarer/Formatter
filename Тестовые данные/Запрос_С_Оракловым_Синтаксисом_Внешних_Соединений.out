@@ -4,5 +4,5 @@ from
     a, 
     b 
 where 
-    a.id (+)                                  = b.id 
+    a.id (+) = b.id 
     and decode(a.value (+), 1, 2, null, 3, 4) = 2

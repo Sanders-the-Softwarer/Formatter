@@ -59,7 +59,7 @@ type
   end;
 
   { Тесты на insert }
-  _Insert = class(TTestCase)
+  _Insert = class(TFileBasedTest)
   published
     procedure Простой_Insert;
     procedure Insert_С_Алиасом_Таблицы;
@@ -73,7 +73,7 @@ type
   end;
 
   { Тесты на update }
-  _Update = class(TTestCase)
+  _Update = class(TFileBasedTest)
   published
     procedure Простой_Update;
     procedure Update_С_Алиасом;
@@ -86,7 +86,7 @@ type
   end;
 
   { Тесты на delete }
-  _Delete = class(TTestCase)
+  _Delete = class(TFileBasedTest)
   published
     procedure Простой_Delete;
     procedure Delete_С_Алиасом;
@@ -94,7 +94,7 @@ type
   end;
 
   { Тесты на merge }
-  _Merge = class(TTestCase)
+  _Merge = class(TFileBasedTest)
   published
     procedure Простой_Merge;
     procedure Merge_С_Другим_Порядком_Выражений;
@@ -125,6 +125,7 @@ end;
 
 procedure _Select.Сопоставление_Полей_В_Into;
 begin
+  Settings.MatchParamLimit := 5;
 end;
 
 procedure _Select.Указание_Направления_Сортировки_И_Расположения_Null_В_Order_By;

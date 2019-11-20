@@ -100,7 +100,7 @@ end;
 
 procedure _PLSQL.Выравнивание_В_Параметрах_Подпрограмм;
 begin
-  Settings.AlignFields := true;
+  Settings.AlignVariables := true;
 end;
 
 procedure _PLSQL.Выравнивание_В_Переменных;

@@ -1,8 +1,12 @@
 create package x is
-    cursor c (a integer, b varchar2 := 'x') 
-        is 
-    select 
-        * 
-    from 
-        dual;
+    cursor c 
+        (
+            a integer, 
+            b varchar2 := 'x'
+        ) 
+    is 
+        select 
+            * 
+        from 
+            dual;
 end;

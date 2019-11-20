@@ -1,4 +1,4 @@
 select 
-    a + b. c + d .e + f . g + h. i(1). k + l .m(1) .n 
+    a + b.c + d.e + f.g + h.i(1).k + l.m(1).n 
 from 
     dual

@@ -614,11 +614,10 @@ end;
 
 procedure TComment.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Comment, _On, _TableOrColumn]);
-  APrinter.Ruler('name', Settings.AlignTableColumnComments);
-  APrinter.PrintItem(_Name);
-  APrinter.Ruler('is', Settings.AlignTableColumnComments);
-  APrinter.PrintItems([_Is, _Text]);
+  APrinter.StartRuler(Settings.AlignTableColumnComments);
+  APrinter.PrintRulerItems('comment', [_Comment, _On, _TableOrColumn]);
+  APrinter.PrintRulerItem ('name', _Name);
+  APrinter.PrintRulerItems('is', [_Is, _Text]);
   inherited;
 end;
 

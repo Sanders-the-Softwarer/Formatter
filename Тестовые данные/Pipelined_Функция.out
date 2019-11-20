@@ -3,5 +3,5 @@ create function pipelied
     pipelined 
     is 
 begin 
-    pipe row (null); 
+    pipe row(null); 
 end;

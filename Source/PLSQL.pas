@@ -94,11 +94,14 @@ type
     _ReturnType: TStatement;
     _Deterministic: TEpithet;
     _Pipelined: TEpithet;
+    FIndentedBeforeIs, FIndentedAfterIs: boolean;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function StatementName: string; override;
+    property IndentedBeforeIs: boolean read FIndentedBeforeIs;
+    property IndentedAfterIs: boolean read FIndentedAfterIs write FIndentedAfterIs;
   end;
 
   { Заголовок подпрограммы }
@@ -615,6 +618,8 @@ end;
 
 procedure TProgramBlock.InternalPrintSelf(APrinter: TPrinter);
 begin
+  if _Header is TSubroutineHeaderBase then
+    TSubroutineHeaderBase(_Header).IndentedAfterIs := Assigned(_Declarations);
   APrinter.PrintItems([_Header,    _IndentNextLine,
                                    _Declarations,      _UndentNextLine,
                        _Begin,     _IndentNextLine,
@@ -691,10 +696,12 @@ end;
 procedure TSubroutineHeaderBase.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Map, _MemberOrConstructor, _ProcedureOrFunction, _Name, _Indent]);
-  APrinter.NextLineIf([_Params]);
-  APrinter.NextLineIf([_Return, _SelfAsResult, _ReturnType]);
-  APrinter.NextLineIf([_Deterministic]);
-  APrinter.NextLineIf([_Pipelined]);
+  {$B+}
+  FIndentedBeforeIs := APrinter.NextLineIf([_Params]) or
+                       APrinter.NextLineIf([_Return, _SelfAsResult, _ReturnType]) or
+                       APrinter.NextLineIf([_Deterministic]) or
+                       APrinter.NextLineIf([_Pipelined]);
+  {$B-}
   APrinter.Undent;
 end;
 
@@ -702,7 +709,6 @@ function TSubroutineHeaderBase.StatementName: string;
 begin
   Result := Concat([_MemberOrConstructor, _ProcedureOrFunction, _Name]);
 end;
-
 
 { TTriggerHeader }
 
@@ -810,16 +816,13 @@ begin
 end;
 
 procedure TParamDeclaration.InternalPrintSelf(APrinter: TPrinter);
-var NeedRuler: boolean;
 begin
-  NeedRuler := Settings.AlignVariables;
-  APrinter.PrintItem(_ParamName);
-  APrinter.Ruler('modifiers', NeedRuler);
-  APrinter.PrintItems([_In, _Out, _Nocopy]);
-  APrinter.Ruler('type', NeedRuler);
-  APrinter.PrintItem(_ParamType);
-  APrinter.Ruler('default', NeedRuler and Assigned(_Assignment));
-  APrinter.PrintItems([_Assignment, _DefaultValue]);
+  APrinter.StartRuler(Settings.AlignVariables);
+  APrinter.PrintRulerItem('name', _ParamName);
+  APrinter.PrintRulerItems('modifiers', [_In, _Out, _Nocopy]);
+  APrinter.PrintRulerItem ('type', _ParamType);
+  APrinter.PrintRulerItem ('assignment', _Assignment);
+  APrinter.PrintRulerItem ('value', _DefaultValue);
 end;
 
 { TParamsDeclaration }
@@ -889,13 +892,12 @@ end;
 
 procedure TVariableDeclaration.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Name);
-  APrinter.Ruler('name', Settings.AlignVariables);
-  APrinter.PrintItem(_Constant);
-  APrinter.Ruler('constant', Settings.AlignVariables);
-  APrinter.PrintItem(_Type);
-  APrinter.Ruler('type', Settings.AlignVariables and (Assigned(_Assignment)));
-  APrinter.PrintItems([_Assignment, _Value]);
+  APrinter.StartRuler(Settings.AlignVariables);
+  APrinter.PrintRulerItem('name', _Name);
+  APrinter.PrintRulerItem('constant', _Constant);
+  APrinter.PrintRulerItem('type', _Type);
+  APrinter.PrintRulerItem('assignment', _Assignment);
+  APrinter.PrintRulerItem('value', _Value);
   inherited;
 end;
 
@@ -998,9 +1000,13 @@ begin
 end;
 
 procedure TSubroutineHeader.InternalPrintSelf(APrinter: TPrinter);
+var Indented: boolean;
 begin
   inherited;
+  Indented := IndentedBeforeIs and not IndentedAfterIs;
+  if Indented then APrinter.Indent;
   APrinter.PrintItems([_NextLine, _Is]);
+  if Indented then APrinter.Undent;
 end;
 
 function TSubroutineHeader.Name: string;

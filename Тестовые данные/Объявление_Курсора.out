@@ -1,9 +1,9 @@
 declare
     cursor a 
-        is 
-    select 
-        * 
-    from 
-        dual;
+    is 
+        select 
+            * 
+        from 
+            dual;
 begin
 end;

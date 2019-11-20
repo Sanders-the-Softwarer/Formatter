@@ -935,11 +935,9 @@ end;
 
 procedure TSelectField.PrintSelfAfter(APrinter: TPrinter);
 begin
-  if not Assigned(_As) and not Assigned(_Alias) then exit;
-  APrinter.Ruler('as', Settings.AlignFields);
-  APrinter.PrintItem(_As);
-  APrinter.Ruler('alias', Settings.AlignFields);
-  APrinter.PrintItem(_Alias);
+  APrinter.StartRuler(Settings.AlignFields);
+  APrinter.PrintRulerItem('as', _As);
+  APrinter.PrintRulerItem('alias', _Alias);
 end;
 
 { TSelectFields }
@@ -1196,10 +1194,10 @@ end;
 
 procedure TUpdateAssignment.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Target);
-  APrinter.Ruler('assignment');
-  APrinter.PrintItem(_Assignment);
-  APrinter.PrintItem(_Value);
+  APrinter.StartRuler(Settings.AlignFields);
+  APrinter.PrintRulerItem('target', _Target);
+  APrinter.PrintRulerItem('assignment', _Assignment);
+  APrinter.PrintRulerItem('value', _Value);
 end;
 
 { TUpdateAssignments }

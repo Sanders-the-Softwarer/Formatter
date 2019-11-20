@@ -47,7 +47,7 @@ interface
 
 uses
   Classes, SysUtils, Math, Vcl.StdCtrls, Vcl.ComCtrls, System.Generics.Collections,
-  Tokens, Windows;
+  Tokens, Utils;
 
 type
 
@@ -84,7 +84,8 @@ type
     procedure SupressNextLine(ASupress: boolean); virtual; abstract;
     procedure SupressSpaces(ASupress: boolean); virtual; abstract;
     procedure PrintSpecialComment(AValue: string); virtual; abstract;
-    procedure Ruler(const ARuler: string; Enabled: boolean = true); virtual; abstract;
+    procedure StartRuler(Enabled: boolean); virtual; abstract;
+    procedure Ruler(const ARuler: string); virtual; abstract;
     function  MakeDraftPrinter: TPrinter; virtual; abstract;
     function  CurrentCol: integer; virtual; abstract;
     procedure ControlChanged; virtual; abstract;
@@ -92,10 +93,12 @@ type
     function  GetText: string; virtual; abstract;
   public
     procedure PrintItems(AItems: array of TObject);
+    procedure PrintRulerItem(const ARuler: string; AItem: TObject);
+    procedure PrintRulerItems(const ARuler: string; AItems: array of TObject);
     procedure PrintIndented(AItem: TObject); overload;
     procedure PrintIndented(AItems: array of TObject); overload;
-    procedure NextLineIf(AItem: TObject); overload;
-    procedure NextLineIf(AItems: array of TObject); overload;
+    function  NextLineIf(AItem: TObject): boolean; overload;
+    function  NextLineIf(AItems: array of TObject): boolean; overload;
   public
     property Settings: TFormatSettings read FSettings write FSettings;
   public
@@ -154,7 +157,8 @@ type
     procedure SupressNextLine(ASupress: boolean); override;
     procedure SupressSpaces(ASupress: boolean); override;
     procedure PrintSpecialComment(AValue: string); override;
-    procedure Ruler(const ARuler: string; Enabled: boolean = true); override;
+    procedure StartRuler(Enabled: boolean); override;
+    procedure Ruler(const ARuler: string); override;
     function  MakeDraftPrinter: TPrinter; override;
     function  CurrentCol: integer; override;
     procedure ControlChanged; override;
@@ -165,13 +169,17 @@ type
   { Информация о выравниваниях }
   TRulers = class
   private
-    FMin, FMax: TDictionary<String, integer>;
+    Names: TStringList;
+    MaxWidths: TDictionary<String, integer>;
+    PrevLine, PrevCol, Shift: integer;
+    PrevRuler: string;
+    DisablePadding: boolean;
   public
     constructor Create;
     destructor Destroy; override;
-    procedure Clear;
-    procedure Ruler(const ARuler: string; ACol: integer);
-    function Padding(const ARuler: string; ACol: integer): integer;
+    procedure NewLine(ALine, ACol: integer);
+    procedure Take(const ARuler: string; ALine, ACol: integer);
+    function Fix(const ARuler: string; ACol: integer): integer;
   end;
 
   { Режим принтера }
@@ -179,14 +187,14 @@ type
 
   { Принтер для вывода форматированного текста }
   TFormatterPrinter = class(TBasePrinter)
-  private
+  strict private
     Memo:    TMemo;
     Builder: TStringBuilder;
     Mode:    TFormatterPrinterMode;
     Shift:   integer;
     BOL:     boolean;
-    BOT:     boolean;
     EmptyLine: boolean;
+    Line:    integer;
     Col:     integer;
     PrevCol: integer;
     Rulers:  TRulers;
@@ -199,7 +207,8 @@ type
     SupSpace, SupNextLine: integer;
     IsDraft: boolean;
     Text:    string;
-  protected
+    RulerEnabled: boolean;
+  strict protected
     function SpaceRequired(ALeft, ARight: TToken): boolean;
     function EmptyLineRequired(APrev, ANext: TStatement): boolean;
   public
@@ -216,7 +225,8 @@ type
     procedure SupressNextLine(ASupress: boolean); override;
     procedure SupressSpaces(ASupress: boolean); override;
     procedure PrintSpecialComment(AValue: string); override;
-    procedure Ruler(const ARuler: string; Enabled: boolean = true); override;
+    procedure StartRuler(Enabled: boolean); override;
+    procedure Ruler(const ARuler: string); override;
     function MakeDraftPrinter: TPrinter; override;
     function CurrentCol: integer; override;
     procedure ControlChanged; override;
@@ -406,6 +416,20 @@ begin
   for i := Low(AItems) to High(AItems) do PrintItem(AItems[i]);
 end;
 
+procedure TPrinter.PrintRulerItem(const ARuler: string; AItem: TObject);
+begin
+  if not Assigned(AItem) then exit;
+  Ruler(ARuler);
+  PrintItem(AItem);
+end;
+
+procedure TPrinter.PrintRulerItems(const ARuler: string; AItems: array of TObject);
+begin
+  if not HasItems(AItems) then exit;
+  Ruler(ARuler);
+  PrintItems(AItems);
+end;
+
 procedure TPrinter.PrintIndented(AItem: TObject);
 begin
   if not Assigned(AItem) then exit;
@@ -424,14 +448,15 @@ begin
   Undent;
 end;
 
-procedure TPrinter.NextLineIf(AItem: TObject);
+function TPrinter.NextLineIf(AItem: TObject): boolean;
 begin
-  NextLineIf([AItem]);
+  Result := NextLineIf([AItem]);
 end;
 
-procedure TPrinter.NextLineIf(AItems: array of TObject);
+function TPrinter.NextLineIf(AItems: array of TObject): boolean;
 begin
-  if not HasItems(AItems) then exit;
+  Result := HasItems(AItems);
+  if not Result then exit;
   NextLine;
   PrintItems(AItems);
 end;
@@ -479,7 +504,12 @@ begin
   { ничего не делаем }
 end;
 
-procedure TBasePrinter.Ruler(const ARuler: string; Enabled: boolean = true);
+procedure TBasePrinter.StartRuler;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.Ruler(const ARuler: string);
 begin
   { ничего не делаем }
 end;
@@ -568,9 +598,9 @@ begin
   inherited;
   Builder := TStringBuilder.Create;
   Shift   := 0;
+  Line    := 1;
   Col     := 1;
   BOL     := false;
-  BOT     := true;
   Padding := 0;
   TokenPos.Clear;
   TokenLen.Clear;
@@ -614,9 +644,17 @@ begin
   { В конструкции number(5,2) запятую прижимаем и слева тоже }
   if (ALeft.Value = ',') and TTerminal(ALeft).IntoNumber then exit(false);
   { Открывающую скобку прижимаем справа к идентификаторам и ключевым словам char, table, row }
-  if (ARight.Value = '(') and (ALeft is TEpithet) and (SameText(ALeft.Value, 'char') or SameText(ALeft.Value, 'table') or SameText(ALeft.Value, 'row') or not TEpithet(ALeft).IsKeyword) then exit(false);
+  if (ARight.Value = '(') and
+     (ALeft is TEpithet) and
+     (SameText(ALeft.Value, 'char') or
+      SameText(ALeft.Value, 'table') or
+      SameText(ALeft.Value, 'row') or
+      SameText(ALeft.Value, 'lob') or
+      not TEpithet(ALeft).IsKeyword) then exit(false);
   { К открывающей скобке прижимаем справа всё }
   if ALeft.Value = '(' then exit(false);
+  { Открывающие/закрывающие скобки всегда прижимаем друг к другу }
+  if ((ALeft.Value = '(') or (ALeft.Value = ')')) and ((ARight.Value = '(') or (ARight.Value = ')')) then exit(false);
   { Закрывающую скобку прижимаем справа ко всему }
   if ARight.Value = ')' then exit(false);
   { Суффиксы %type и подобные прижимаем справа ко всему }
@@ -642,23 +680,26 @@ end;
 procedure TFormatterPrinter.PrintToken(AToken: TToken);
 var
   Value: string;
-  AllowLF: boolean;
+  AllowLF, StartOfText: boolean;
 begin
   AllowLF := (SupNextLine = 0);
+  StartOfText := (Line = 1) and (Col = 1);
   { Обработаем вставку пустой строки }
-  if EmptyLine and not BOT then
+  if EmptyLine and not StartOfText then
   begin
     if Assigned(Builder) and AllowLF then Builder.AppendLine;
+    Inc(Line);
     BOL := true;
     EmptyLine := false;
   end;
   { Обработаем переход на новую строку }
   if BOL then
   begin
-    if Assigned(Builder) and AllowLF and not BOT then Builder.AppendLine.Append(StringOfChar(' ', Shift));
+    if Assigned(Builder) and AllowLF and not StartOfText then Builder.AppendLine.Append(StringOfChar(' ', Shift));
     BOL := false;
-    if AllowLF then
+    if AllowLF and not StartOfText then
     begin
+      Inc(Line);
       Col := Shift + 1;
       PrevCol := 1;
       PrevToken := nil;
@@ -704,7 +745,6 @@ begin
     end;
     Inc(Col, Value.Length);
     PrevToken := AToken;
-    BOT := false;
   end;
 end;
 
@@ -713,7 +753,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
 
   var
     _Mode: TFormatterPrinterMode;
-    _Shift, _Col: integer;
+    _Shift, _Col, _Line: integer;
     _BOL, _EmptyLine: boolean;
     _Builder: TStringBuilder;
     _Rulers: TRulers;
@@ -737,6 +777,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   begin
     _Shift   := Shift;
     _Col     := Col;
+    _Line    := Line;
     _BOL     := BOL;
     _EmptyLine := EmptyLine;
     _Builder := Builder;
@@ -751,6 +792,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   begin
     Shift := _Shift;
     Col   := _Col;
+    Line  := _Line;
     BOL   := _BOL;
     EmptyLine := _EmptyLine;
     Builder := _Builder;
@@ -849,23 +891,32 @@ procedure TFormatterPrinter.PrintSpecialComment(AValue: string);
   end;
 
 begin
-  Self.Ruler('special-comment-start', Settings.AlignSpecialComments);
+//  Self.Ruler('special-comment-start', Settings.AlignSpecialComments);
   PrintSpecialToken('/*/');
   PrintSpecialToken(AValue);
-  Self.Ruler('special-comment-finish', Settings.AlignSpecialComments);
+//  Self.Ruler('special-comment-finish', Settings.AlignSpecialComments);
   PrintSpecialToken('/*/');
 end;
 
-{ Установка "линейки" для выравнивания }
-procedure TFormatterPrinter.Ruler(const ARuler: string; Enabled: boolean = true);
+{ Начало выравнивания в очередной строке }
+procedure TFormatterPrinter.StartRuler(Enabled: boolean);
 begin
+  if Mode <> fpmGetRulers then exit;
+  RulerEnabled := Enabled;
   if not Enabled then exit;
   PrintToken(nil);
+  Rulers.NewLine(Line, Col);
+end;
+
+{ Установка "линейки" для выравнивания }
+procedure TFormatterPrinter.Ruler(const ARuler: string);
+begin
+  if not RulerEnabled then exit;
+  PrintToken(nil);
   case Mode of
-    fpmGetRulers: Rulers.Ruler(ARuler, Col - PrevCol); { В режиме примерки запомним ширину фрагмента }
-    fpmSetRulers: Padding := Rulers.Padding(ARuler, Col - PrevCol); { В режиме разметки рассчитаем необходимое количество пробелов }
+    fpmGetRulers: Rulers.Take(ARuler, Line, Col); { В режиме примерки запомним ширину фрагмента }
+    fpmSetRulers: Padding := Rulers.Fix(ARuler, Col); { В режиме разметки рассчитаем необходимое количество пробелов }
   end;
-  PrevCol := Col;
 end;
 
 { Создание принтера для пробной печати }
@@ -1154,34 +1205,58 @@ end;
 
 constructor TRulers.Create;
 begin
-  FMin := TDictionary<String, integer>.Create;
-  FMax := TDictionary<String, integer>.Create;
+  Names := TStringList.Create;
+  MaxWidths := TDictionary<String, integer>.Create;
 end;
 
 destructor TRulers.Destroy;
 begin
-  FreeAndNil(FMin);
-  FreeAndNil(FMax);
+  FreeAndNil(Names);
+  FreeAndNil(MaxWidths);
   inherited;
 end;
 
-procedure TRulers.Clear;
+procedure TRulers.NewLine(ALine, ACol: integer);
 begin
-  FMin.Clear;
-  FMax.Clear;
+  _Debug('Rulers::NewLine, line = %d, col = %d', [ALine, ACol]);
+  if PrevLine >= ALine then
+    DisablePadding := true;
+  if DisablePadding then exit;
+  PrevLine  := ALine;
+  PrevCol   := ACol;
+  PrevRuler := '';
+  Shift     := ACol;
 end;
 
-procedure TRulers.Ruler(const ARuler: string; ACol: integer);
+procedure TRulers.Take(const ARuler: string; ALine, ACol: integer);
+var Width: integer;
 begin
-  if not FMin.ContainsKey(ARuler) then FMin.Add(ARuler, MaxInt);
-  if not FMax.ContainsKey(ARuler) then FMax.Add(ARuler, -MaxInt);
-  FMin[ARuler] := Math.Min(ACol, FMin[ARuler]);
-  FMax[ARuler] := Math.Max(ACol, FMax[ARuler]);
+  _Debug('Rulers::Take, ruler = %s, col = %d', [ARuler, ACol]);
+  if DisablePadding then exit;
+  if ALine <> PrevLine then raise Exception.Create('Line changed inside the ruler');
+  if Names.IndexOf(ARuler) < 0 then Names.Add(ARuler);
+  if PrevLine <= 0 then raise Exception.Create('TRuler.NewLine required');
+  Width := ACol - PrevCol;
+  PrevCol := ACol;
+  if MaxWidths.ContainsKey(ARuler)
+    then MaxWidths[ARuler] := Math.Max(MaxWidths[ARuler], Width)
+    else MaxWidths.Add(ARuler, Width);
+  _Debug('  width = %d, max width = %d', [Width, MaxWidths[ARuler]]);
 end;
 
-function TRulers.Padding(const ARuler: string; ACol: integer): integer;
+function TRulers.Fix(const ARuler: string; ACol: integer): integer;
+var
+  PrevIndex, CurIndex, Width, i: integer;
 begin
-  Result := FMax[ARuler] - ACol;
+  _Debug('Rulers::Fix, ruler = %s, col = %d, disable = %s', [ARuler, ACol, BoolToStr(DisablePadding, true)]);
+  if DisablePadding then exit(0);
+  PrevIndex := Names.IndexOf(PrevRuler);
+  CurIndex  := Names.IndexOf(ARuler);
+  Width     := Shift;
+  for i := PrevIndex + 1 to CurIndex do
+    Inc(Width, MaxWidths[Names[i]]);
+  Result := Math.Max(0, Width - ACol);
+  _Debug('  result = %d', [Result]);
 end;
 
 { TFormatSettings }

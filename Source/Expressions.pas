@@ -440,6 +440,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   procedure PrintExpression;
   var i: integer;
   begin
+    APrinter.StartRuler(Settings.AlignExpressions);
     for i := 0 to Count - 1 do
     begin
       if TermInfo[i].SingleLine then
@@ -448,18 +449,16 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         APrinter.PrintItem(_IndentNextLine);
       if Item(i) is TTerm then
         TTerm(Item(i)).MultiLine := not TermInfo[i].SingleLine;
-      APrinter.PrintItem(Item(i));
+      APrinter.PrintRulerItem(Format('%p-term-%d', [pointer(Self), TermInfo[i].RulerNumber]), Item(i));
       if TermInfo[i].SingleLine then
         APrinter.SupressNextLine(false)
       else if i > 0 then
         APrinter.Undent;
       if TermInfo[i].LineBreak and TermInfo[i].BreakBeforeDelimiter then APrinter.NextLine;
       if not Assigned(Delimiter(i)) then continue;
-      APrinter.Ruler(Format('%p-delimiter-%d-before', [pointer(Self), TermInfo[i].RulerNumber]), Settings.AlignExpressions and (TermInfo[i].RulerNumber > 0));
-//      (**) if TermInfo[i].RulerNumber > 0 then APrinter.PrintSpecialComment(Format('%p-delimiter-%d-before', [pointer(Self), TermInfo[i].RulerNumber]));
+      APrinter.Ruler(Format('%p-delimiter-%d-before', [pointer(Self), TermInfo[i].RulerNumber]));
       APrinter.PrintItem(Delimiter(i));
-      APrinter.Ruler(Format('%p-delimiter-%d-after', [pointer(Self), TermInfo[i].RulerNumber]), Settings.AlignExpressions and (TermInfo[i].RulerNumber > 0));
-//      (**) if TermInfo[i].RulerNumber > 0 then APrinter.PrintSpecialComment(Format('%p-delimiter-%d-after', [pointer(Self), TermInfo[i].RulerNumber]));
+      APrinter.Ruler(Format('%p-delimiter-%d-after', [pointer(Self), TermInfo[i].RulerNumber]));
       if TermInfo[i].LineBreak and not TermInfo[i].BreakBeforeDelimiter then APrinter.NextLine;
     end;
   end;
@@ -571,9 +570,9 @@ end;
 
 procedure TQualifiedIndexedIdent.InternalPrintSelf(APrinter: TPrinter);
 begin
-//  if TopStatement then APrinter.SupressNextLine(true);
+  if TopStatement then APrinter.SupressNextLine(true);
   APrinter.PrintItems([_Indexes, _Dot, _Ident, _Next]);
-//  if TopStatement then APrinter.SupressNextLine(false);
+  if TopStatement then APrinter.SupressNextLine(false);
 end;
 
 function TQualifiedIndexedIdent.IsSimpleIdent: boolean;
@@ -617,11 +616,10 @@ end;
 
 procedure TArgument.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Ident);
-  if Assigned(_Ident) then
-    APrinter.Ruler('argument', Settings.AlignVariables);
-  APrinter.PrintItem(_Assignment);
-  APrinter.PrintItem(_Expression);
+  APrinter.StartRuler(Settings.AlignVariables);
+  APrinter.PrintRulerItem('ident', _Ident);
+  APrinter.PrintRulerItem('argument', _Assignment);
+  APrinter.PrintRulerItem('expression', _Expression);
 end;
 
 { TArguments }

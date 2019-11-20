@@ -14,7 +14,8 @@ uses
   Statements in 'Source\Statements.pas',
   DDL in 'Source\DDL.pas',
   Attributes in 'Source\Attributes.pas',
-  SQLPlus in 'Source\SQLPlus.pas';
+  SQLPlus in 'Source\SQLPlus.pas',
+  Utils in 'Source\Utils.pas';
 
 {$R *.res}
 

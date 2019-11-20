@@ -1,3 +1,5 @@
-create function y return number is 
+create function y 
+    return number 
+    is 
 begin 
 end;
