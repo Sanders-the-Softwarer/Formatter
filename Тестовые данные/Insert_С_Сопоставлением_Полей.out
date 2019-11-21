@@ -1,13 +1,13 @@
 insert 
 into 
     t 
-        (
-            a, 
-            b, 
-            c, 
-            d, 
-            e
-        ) 
+    (
+        a, 
+        b, 
+        c, 
+        d, 
+        e
+    ) 
 values 
     (
         1, /*/ => a /*/

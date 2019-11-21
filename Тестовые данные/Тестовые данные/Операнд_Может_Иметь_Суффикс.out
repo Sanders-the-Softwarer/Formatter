@@ -1,7 +1,0 @@
-select 
-    a%notfound, 
-    b%found, 
-    c%rowcount, 
-    d%isopen 
-from 
-    dual

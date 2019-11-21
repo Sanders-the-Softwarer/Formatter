@@ -1,7 +1,8 @@
 declare
     x integer;
     y integer;
-    procedure z is
+    procedure z 
+    is
     begin
         x := 3;
         y := 4;

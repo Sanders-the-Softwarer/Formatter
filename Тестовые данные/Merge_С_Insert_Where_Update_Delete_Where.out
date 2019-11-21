@@ -20,7 +20,8 @@ when matched then
     set 
         dummy = 'Y' 
     delete 
-        where dummy = 'X' 
+    where 
+        dummy = 'X' 
 when not matched then 
     insert 
         (
@@ -31,4 +32,4 @@ when not matched then
             'Y'
         ) 
     where 
-        dummy <> 'X'
+        dummy <> 'X';

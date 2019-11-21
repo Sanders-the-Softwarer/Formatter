@@ -1,6 +1,0 @@
-select
-    1 + 2 a,
-    'abc' as b,
-    sysdate
-from
-    dual

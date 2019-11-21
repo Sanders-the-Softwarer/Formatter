@@ -1,1 +1,1 @@
-insert into values ('Y') returning dummy into new_value
+insert into tablename values ('Y') returning dummy into new_value

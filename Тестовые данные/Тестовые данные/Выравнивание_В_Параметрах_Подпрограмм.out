@@ -1,9 +1,0 @@
-declare 
-    procedure x(
-        a           char, 
-        bb   in out varchar2, 
-        ccc         integer default 12345, 
-        dddd out    char    := big_function_call(1, 2, 3)
-    ); 
-begin 
-end;

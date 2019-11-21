@@ -1,9 +1,9 @@
 insert 
 into 
     dual 
-        (
-            dummy
-        ) 
+    (
+        dummy
+    ) 
 values 
     (
         'Y'

@@ -46,16 +46,58 @@ type
     procedure Нужно_Написать_Тесты_На_Команды_SQLPLUS;
     procedure Нужно_Написать_Тесты_На_Объектные_Типы;
     procedure Нужно_Написать_Тесты_На_Create_Trigger;
+    procedure Нужно_Написать_Тесты_На_Невыравнивание_Везде_Где_Есть_На_Выравнивание;
+    procedure Нужно_Написать_Тесты_На_DeclarationSingleLineParamLimit;
+    procedure Нужно_Написать_Тесты_На_ArgumentSingleLineParamLimit;
+    procedure Нужно_Написать_Тесты_На_PreferredExpressionLength;
+    procedure Нужно_Написать_Тесты_На_MatchParamLimit;
+    procedure Нужно_Написать_Тесты_На_ReplaceDefault;
+    procedure Нужно_Написать_Тесты_На_ReplaceAsIs;
   end;
 
 { _UnderConstruction }
+
+procedure _UnderConstruction.Нужно_Написать_Тесты_На_ArgumentSingleLineParamLimit;
+begin
+  Fail('Пока что не сделано');
+end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_Create_Trigger;
 begin
   Fail('Пока что не сделано');
 end;
 
+procedure _UnderConstruction.Нужно_Написать_Тесты_На_DeclarationSingleLineParamLimit;
+begin
+  Fail('Пока что не сделано');
+end;
+
+procedure _UnderConstruction.Нужно_Написать_Тесты_На_MatchParamLimit;
+begin
+  Fail('Пока что не сделано');
+end;
+
+procedure _UnderConstruction.Нужно_Написать_Тесты_На_PreferredExpressionLength;
+begin
+  Fail('Пока что не сделано');
+end;
+
+procedure _UnderConstruction.Нужно_Написать_Тесты_На_ReplaceAsIs;
+begin
+  Fail('Пока что не сделано');
+end;
+
+procedure _UnderConstruction.Нужно_Написать_Тесты_На_ReplaceDefault;
+begin
+  Fail('Пока что не сделано');
+end;
+
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_Команды_SQLPLUS;
+begin
+  Fail('Пока что не сделано');
+end;
+
+procedure _UnderConstruction.Нужно_Написать_Тесты_На_Невыравнивание_Везде_Где_Есть_На_Выравнивание;
 begin
   Fail('Пока что не сделано');
 end;

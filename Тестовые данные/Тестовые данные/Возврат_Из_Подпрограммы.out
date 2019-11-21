@@ -1,4 +1,0 @@
-begin
-    return;
-    return to_date('01.02.2004');
-end;

@@ -1,4 +1,0 @@
-select 
-    to_date('01.02.2004', 'dd.mm.yyyy') + my.fanction(a => b, c => d) 
-from 
-    dual

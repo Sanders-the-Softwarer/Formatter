@@ -114,16 +114,22 @@ procedure TCheckStatement.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.StartRuler(true);
   APrinter.PrintRulerItem('a', Token('aaa1'));
-  if not FlagSkip then APrinter.PrintRulerItem('b', Token('b1'));
+  if FlagSkip
+    then APrinter.PrintRulerItem('b', nil)
+    else APrinter.PrintRulerItem('b', Token('b1'));
   APrinter.PrintRulerItem('c', Token('cc1'));
   APrinter.NextLine;
   APrinter.StartRuler(true);
   APrinter.PrintRulerItem('a', Token('aa2'));
   APrinter.PrintRulerItem('b', Token('bbb2'));
-  if not FlagSkip then APrinter.PrintRulerItem('c', Token('c2'));
+  if FlagSkip
+    then APrinter.PrintRulerItem('c', nil)
+    else APrinter.PrintRulerItem('c', Token('c2'));
   APrinter.NextLine;
   APrinter.StartRuler(true);
-  if not FlagSkip then APrinter.PrintRulerItem('a', Token('a3'));
+  if FlagSkip
+    then APrinter.PrintRulerItem('a', nil)
+    else APrinter.PrintRulerItem('a', Token('a3'));
   APrinter.PrintRulerItem('b', Token('bb3'));
   APrinter.PrintRulerItem('c', Token('ccc3'));
 end;

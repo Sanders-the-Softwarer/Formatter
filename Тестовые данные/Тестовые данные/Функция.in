@@ -1,1 +1,0 @@
-create function y return number is begin end;

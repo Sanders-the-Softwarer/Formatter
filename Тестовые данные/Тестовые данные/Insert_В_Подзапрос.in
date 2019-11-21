@@ -1,1 +1,0 @@
-insert into (select * from dual) values ('Y')

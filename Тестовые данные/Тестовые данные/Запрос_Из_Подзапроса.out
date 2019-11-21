@@ -1,9 +1,0 @@
-select
-    *
-from
-    (
-        select
-            *
-        from
-            dual
-    )

@@ -418,14 +418,12 @@ end;
 
 procedure TPrinter.PrintRulerItem(const ARuler: string; AItem: TObject);
 begin
-  if not Assigned(AItem) then exit;
   Ruler(ARuler);
   PrintItem(AItem);
 end;
 
 procedure TPrinter.PrintRulerItems(const ARuler: string; AItems: array of TObject);
 begin
-  if not HasItems(AItems) then exit;
   Ruler(ARuler);
   PrintItems(AItems);
 end;
@@ -643,13 +641,15 @@ begin
   if ARight.Value = ',' then exit(false);
   { В конструкции number(5,2) запятую прижимаем и слева тоже }
   if (ALeft.Value = ',') and TTerminal(ALeft).IntoNumber then exit(false);
-  { Открывающую скобку прижимаем справа к идентификаторам и ключевым словам char, table, row }
+  { Открывающую скобку прижимаем справа к идентификаторам и ключевым словам char, table, row, lob, key, unique }
   if (ARight.Value = '(') and
      (ALeft is TEpithet) and
      (SameText(ALeft.Value, 'char') or
       SameText(ALeft.Value, 'table') or
       SameText(ALeft.Value, 'row') or
       SameText(ALeft.Value, 'lob') or
+      SameText(ALeft.Value, 'key') or
+      SameText(ALeft.Value, 'unique') or
       not TEpithet(ALeft).IsKeyword) then exit(false);
   { К открывающей скобке прижимаем справа всё }
   if ALeft.Value = '(' then exit(false);
@@ -707,10 +707,12 @@ begin
   end;
   { Если нужно, внедрим пробел между предыдущей и новой лексемами }
   if Assigned(PrevToken) and Assigned(AToken) and SpaceRequired(PrevToken, AToken) then
-  begin
-    if Assigned(Builder) then Builder.Append(' ');
-    Inc(Col);
-  end;
+    begin
+      if Assigned(Builder) then Builder.Append(' ');
+      Inc(Col);
+    end
+  else if Padding > 0 then
+    Inc(Padding);
   { Если задано выравнивание, вставим соответствующее количество пробелов }
   if Padding > 0 then
   begin
@@ -901,9 +903,8 @@ end;
 { Начало выравнивания в очередной строке }
 procedure TFormatterPrinter.StartRuler(Enabled: boolean);
 begin
-  if Mode <> fpmGetRulers then exit;
   RulerEnabled := Enabled;
-  if not Enabled then exit;
+  if (Mode <> fpmGetRulers) or not Enabled then exit;
   PrintToken(nil);
   Rulers.NewLine(Line, Col);
 end;

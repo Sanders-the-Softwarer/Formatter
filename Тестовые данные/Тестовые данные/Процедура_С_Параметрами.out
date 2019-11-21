@@ -1,4 +1,0 @@
-declare 
-    procedure x (a integer, b varchar2, c tablet.tipe, d sys_anydata); 
-begin 
-end;

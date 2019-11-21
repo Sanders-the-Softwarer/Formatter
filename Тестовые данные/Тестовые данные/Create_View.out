@@ -1,5 +1,0 @@
-create or replace force view v$dual as 
-    select 
-        * 
-    from 
-        dual

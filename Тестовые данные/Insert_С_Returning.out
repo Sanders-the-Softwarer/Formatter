@@ -1,9 +1,10 @@
 insert 
 into 
-    values 
-        (
-            'Y'
-        ) 
+    tablename
+values
+    (
+        'Y'
+    ) 
 returning 
     dummy 
 into 

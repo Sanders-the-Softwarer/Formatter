@@ -1,4 +1,3 @@
--- merge с delete нужно отличать от merge с последующим delete
 begin
     merge 
     into 
@@ -19,7 +18,8 @@ begin
         (d1.dummy = d2.dummy)
     when matched then 
         update 
-        set dummy = 'Y';
+        set 
+            dummy = 'Y';
     delete 
     from 
         dual 

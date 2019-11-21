@@ -1,4 +1,0 @@
-select 
-    (select * from dual) 
-from 
-    dual

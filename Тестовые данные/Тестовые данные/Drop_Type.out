@@ -1,5 +1,0 @@
-drop type t1
-drop type t2 force
-drop type t3;
-drop type t4 force
-/

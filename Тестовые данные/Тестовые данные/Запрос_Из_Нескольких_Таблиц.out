@@ -1,7 +1,0 @@
-select
-    *
-from
-    a,
-    b,
-    c,
-    d

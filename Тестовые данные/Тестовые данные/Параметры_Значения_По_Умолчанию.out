@@ -1,8 +1,0 @@
-declare 
-    function y (
-        a integer, 
-        b char := 'a', 
-        c date default null
-    ); 
-begin 
-end;

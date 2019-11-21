@@ -68,7 +68,7 @@ type
     procedure Insert_С_Указанием_Полей;
     procedure Insert_С_Сопоставлением_Полей;
     procedure Insert_Select_С_Сопоставлением_Полей;
-    procedure Insert_C_Returning;
+    procedure Insert_С_Returning;
     procedure Insert_С_Returning_С_Сопоставлением;
   end;
 
@@ -255,12 +255,13 @@ end;
 
 { _Insert }
 
-procedure _Insert.Insert_C_Returning;
+procedure _Insert.Insert_С_Returning;
 begin
 end;
 
 procedure _Insert.Insert_Select_С_Сопоставлением_Полей;
 begin
+  Settings.MatchParamLimit := 5;
 end;
 
 procedure _Insert.Insert_В_Подзапрос;
@@ -273,6 +274,7 @@ end;
 
 procedure _Insert.Insert_С_Returning_С_Сопоставлением;
 begin
+  Settings.MatchParamLimit := 5;
 end;
 
 procedure _Insert.Insert_С_Алиасом_Таблицы;
@@ -281,6 +283,7 @@ end;
 
 procedure _Insert.Insert_С_Сопоставлением_Полей;
 begin
+  Settings.MatchParamLimit := 5;
 end;
 
 procedure _Insert.Insert_С_Указанием_Полей;
@@ -315,10 +318,12 @@ end;
 
 procedure _Update.Update_С_Сопоставлением_В_Returning;
 begin
+  Settings.MatchParamLimit := 5;
 end;
 
 procedure _Update.Выравнивание_В_Update;
 begin
+  Settings.AlignFields := true;
 end;
 
 procedure _Update.Простой_Update;

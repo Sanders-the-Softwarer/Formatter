@@ -64,6 +64,9 @@ begin
   Settings.AlignVariables   := false;
   Settings.AlignFields      := false;
   Settings.AlignExpressions := false;
+  Settings.DeclarationSingleLineParamLimit := 99;
+  Settings.ArgumentSingleLineParamLimit := 99;
+  Settings.PreferredExpressionLength := 9999;
   Settings.MatchParamLimit  := 99999;
   Settings.ReplaceDefault   := false;
   Settings.ReplaceAsIs      := false;
@@ -119,6 +122,7 @@ procedure TFileBasedTest.Check(AText, AExpected: string);
 var
   Parser: TParser;
   Printer: TPrinter;
+  Expected, Actual: string;
 begin
   try
     Parser := TParser.Create(
@@ -131,7 +135,9 @@ begin
     Printer := TPrinter.CreateFormatterPrinter(nil);
     Printer.Settings := Settings;
     Parser.PrintAll(Printer);
-    CheckEquals(Beautify(AExpected), Beautify(Printer.GetText));
+    Expected := Beautify(AExpected);
+    Actual   := Beautify(Printer.GetText);
+    CheckEquals(Expected, Actual);
   finally
     FreeAndNil(Parser);
     FreeAndNil(Printer);

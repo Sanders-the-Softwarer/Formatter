@@ -1,4 +1,0 @@
-drop procedure x
-drop function y
-drop package x
-drop package body x

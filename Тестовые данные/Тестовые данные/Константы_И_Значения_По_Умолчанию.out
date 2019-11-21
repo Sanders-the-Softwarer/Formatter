@@ -1,6 +1,0 @@
-declare
-  a boolean := true;
-  b constant number;
-  c constant char(1 byte) default 'a';
-begin
-end;

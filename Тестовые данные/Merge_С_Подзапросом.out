@@ -7,7 +7,12 @@ into
             dual
     ) d1 
 using 
-    (select * from dual) d2 
+    (
+        select 
+            * 
+        from 
+            dual
+    ) d2
 on 
     (d1.dummy = d2.dummy)
 when matched then 

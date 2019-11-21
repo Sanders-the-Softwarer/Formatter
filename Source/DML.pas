@@ -888,7 +888,7 @@ end;
 
 procedure TWithItem.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Alias, _As, _Select]);
+  APrinter.PrintItems([_Alias, _As, _IndentNextLine, _Select, _Undent]);
 end;
 
 function TWithItem.StatementName: string;
