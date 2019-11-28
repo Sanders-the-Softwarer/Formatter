@@ -64,6 +64,7 @@ begin
   Settings.AlignVariables   := false;
   Settings.AlignFields      := false;
   Settings.AlignExpressions := false;
+  Settings.AlignSpecialComments := false;
   Settings.DeclarationSingleLineParamLimit := 99;
   Settings.ArgumentSingleLineParamLimit := 99;
   Settings.PreferredExpressionLength := 9999;

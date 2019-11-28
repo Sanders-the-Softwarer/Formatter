@@ -631,16 +631,19 @@ end;
 { Проверка, нужен ли пробел между двумя лексемами }
 function TFormatterPrinter.SpaceRequired(ALeft, ARight: TToken): boolean;
 begin
+  Result := false;
   { Если пробелы запрещены - не ставим их }
-  if SupSpace > 0 then exit(false);
+  if SupSpace > 0 then exit;
   { Точку с запятой прижимаем справа ко всему }
-  if ARight.Value = ';' then exit(false);
+  if ARight.Value = ';' then exit;
   { Точку прижимаем с обеих сторон ко всему }
-  if (ALeft.Value = '.') or (ARight.Value = '.') then exit(false);
+  if (ALeft.Value = '.') or (ARight.Value = '.') then exit;
+  { Двоеточие/амперсанд прижимаем к следующему за ним идентификатору }
+  if ((ALeft.Value = ':') or (ALeft.Value = '&')) and (ARight is TEpithet) then exit;
   { Запятую прижимаем справа ко всему }
-  if ARight.Value = ',' then exit(false);
+  if ARight.Value = ',' then exit;
   { В конструкции number(5,2) запятую прижимаем и слева тоже }
-  if (ALeft.Value = ',') and TTerminal(ALeft).IntoNumber then exit(false);
+  if (ALeft.Value = ',') and TTerminal(ALeft).IntoNumber then exit;
   { Открывающую скобку прижимаем справа к идентификаторам и ключевым словам char, table, row, lob, key, unique }
   if (ARight.Value = '(') and
      (ALeft is TEpithet) and
@@ -650,17 +653,17 @@ begin
       SameText(ALeft.Value, 'lob') or
       SameText(ALeft.Value, 'key') or
       SameText(ALeft.Value, 'unique') or
-      not TEpithet(ALeft).IsKeyword) then exit(false);
+      not TEpithet(ALeft).IsKeyword) then exit;
   { К открывающей скобке прижимаем справа всё }
-  if ALeft.Value = '(' then exit(false);
+  if ALeft.Value = '(' then exit;
   { Открывающие/закрывающие скобки всегда прижимаем друг к другу }
-  if ((ALeft.Value = '(') or (ALeft.Value = ')')) and ((ARight.Value = '(') or (ARight.Value = ')')) then exit(false);
+  if ((ALeft.Value = '(') or (ALeft.Value = ')')) and ((ARight.Value = '(') or (ARight.Value = ')')) then exit;
   { Закрывающую скобку прижимаем справа ко всему }
-  if ARight.Value = ')' then exit(false);
+  if ARight.Value = ')' then exit;
   { Суффиксы %type и подобные прижимаем справа ко всему }
-  if ARight.Value.StartsWith('%') then exit(false);
+  if ARight.Value.StartsWith('%') then exit;
   { Унарные операции прижимаем слева к следующему за ними }
-  if (ALeft is TTerminal) and (TTerminal(ALeft).OpType = otUnary) then exit(false);
+  if (ALeft is TTerminal) and (TTerminal(ALeft).OpType = otUnary) then exit;
   { Если правила не сработали, ставим  пробел }
   Result := true;
 end;
@@ -893,10 +896,11 @@ procedure TFormatterPrinter.PrintSpecialComment(AValue: string);
   end;
 
 begin
-//  Self.Ruler('special-comment-start', Settings.AlignSpecialComments);
+  if not RulerEnabled then StartRuler(Settings.AlignSpecialComments);
+  if Settings.AlignSpecialComments then Self.PrintRulerItem('special-comment-start', nil);
   PrintSpecialToken('/*/');
   PrintSpecialToken(AValue);
-//  Self.Ruler('special-comment-finish', Settings.AlignSpecialComments);
+  if Settings.AlignSpecialComments then Self.PrintRulerItem('special-comment-finish', nil);
   PrintSpecialToken('/*/');
 end;
 

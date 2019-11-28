@@ -9,7 +9,7 @@ returning
     b, /*/ => p_b /*/
     c, /*/ => p_c /*/
     d, /*/ => p_d /*/
-    e  /*/ => p_e /*/
+    e /*/ => p_e /*/
 into 
     p_a, 
     p_b, 

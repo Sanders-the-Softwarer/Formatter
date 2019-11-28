@@ -92,6 +92,7 @@ type
   { Квалифицированный идентификатор }
   TQualifiedIdent = class(TStatement)
   strict private
+    _SemicolonOrAmpersand: TTerminal;
     _Dot: TTerminal;
     _Name: TEpithet;
     _Next: TStatement;
@@ -525,7 +526,7 @@ end;
 
 function TQualifiedIdent.InternalParse: boolean;
 begin
-  if Parent is TQualifiedIdent then _Dot := Terminal('.');
+  if Parent is TQualifiedIdent then _Dot := Terminal('.') else _SemicolonOrAmpersand := Terminal([':', '&']);
   _Name := Identifier;
   Result := Assigned(_Name) and (Assigned(_Dot) = (Parent is TQualifiedIdent));
   if Result then TQualifiedIdent.Parse(Self, Source, _Next);
@@ -533,18 +534,12 @@ end;
 
 procedure TQualifiedIdent.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Dot, _Name, _Next]);
+  APrinter.PrintItems([_SemicolonOrAmpersand, _Dot, _Name, _Next]);
 end;
 
 function TQualifiedIdent.StatementName: string;
 begin
-  if Assigned(_Dot)
-    then Result := _Dot.Value
-    else Result := '';
-  if Assigned(_Name) then
-    Result := Result + _Name.Value;
-  if Assigned(_Next) then
-    Result := Result + _Next.StatementName;
+  Result := Concat([_SemicolonOrAmpersand, _Dot, _Name, _Next]);
 end;
 
 function TQualifiedIdent.IsSimpleIdent: boolean;
@@ -570,9 +565,9 @@ end;
 
 procedure TQualifiedIndexedIdent.InternalPrintSelf(APrinter: TPrinter);
 begin
-  if TopStatement then APrinter.SupressNextLine(true);
+//  if TopStatement then APrinter.SupressNextLine(true);
   APrinter.PrintItems([_Indexes, _Dot, _Ident, _Next]);
-  if TopStatement then APrinter.SupressNextLine(false);
+//  if TopStatement then APrinter.SupressNextLine(false);
 end;
 
 function TQualifiedIndexedIdent.IsSimpleIdent: boolean;

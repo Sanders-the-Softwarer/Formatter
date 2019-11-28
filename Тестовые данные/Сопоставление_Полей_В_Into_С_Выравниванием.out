@@ -1,0 +1,14 @@
+select 
+    a, /*/ => x     /*/
+    b, /*/ => y     /*/
+    c, /*/ => z     /*/
+    d, /*/ => ttttt /*/
+    e  /*/ => w     /*/
+into 
+    x, 
+    y, 
+    z, 
+    ttttt, 
+    w 
+from 
+    dual;

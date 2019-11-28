@@ -36,7 +36,8 @@ uses
   TestExpressions in 'Test\TestExpressions.pas',
   TestDDL in 'Test\TestDDL.pas',
   TestPLSQL in 'Test\TestPLSQL.pas',
-  TestRulers in 'Test\TestRulers.pas';
+  TestRulers in 'Test\TestRulers.pas',
+  Utils in 'Source\Utils.pas';
 
 {$R *.RES}
 

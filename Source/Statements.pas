@@ -104,13 +104,14 @@ type
   strict private
     Statements: TList<TStatement>;
     Delimiters: TList<TObject>;
+    SpecialCommentAfterDelimiter: string;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
     function ParseStatement(out AResult: TStatement): boolean; virtual;
     function ParseDelimiter(out AResult: TObject): boolean; virtual;
     function ParseBreak: boolean; virtual;
-    procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject); virtual;
+    procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject; ALast: boolean); virtual;
     function OnePerLine: boolean; virtual;
     function AllowUnexpected: boolean; virtual;
   public
@@ -120,6 +121,7 @@ type
     function Item(Index: integer): TStatement;
     function Delimiter(Index: integer): TObject;
     function Any(Found: array of TObject): boolean;
+    procedure PrintSpecialCommentAfterDelimiter(const AComment: string);
   end;
 
   { Базовый класс для списка однотипных конструкций, разделённых запятыми }
@@ -536,15 +538,16 @@ begin
   for i := 0 to Count - 1 do
   begin
     APrinter.PrintItem(Statements[i]);
-    if Assigned(Delimiters[i]) or (i < Count - 1) then
-      PrintDelimiter(APrinter, Delimiters[i]);
+    PrintDelimiter(APrinter, Delimiters[i], i >= Count - 1);
   end;
 end;
 
-procedure TStatementList<S>.PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject);
+procedure TStatementList<S>.PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject; ALast: boolean);
 begin
   APrinter.PrintItem(ADelimiter);
-  if OnePerLine then APrinter.NextLine;
+  if SpecialCommentAfterDelimiter <> '' then APrinter.PrintSpecialComment(SpecialCommentAfterDelimiter);
+  SpecialCommentAfterDelimiter := '';
+  if OnePerLine and not ALast then APrinter.NextLine;
 end;
 
 function TStatementList<S>.OnePerLine: boolean;
@@ -593,6 +596,11 @@ var i: integer;
 begin
   Result := false;
   for i := Low(Found) to High(Found) do Result := Result or Assigned(Found[i]);
+end;
+
+procedure TStatementList<S>.PrintSpecialCommentAfterDelimiter(const AComment: string);
+begin
+  SpecialCommentAfterDelimiter := AComment;
 end;
 
 { TCommaList }

@@ -235,11 +235,11 @@ function TTokenizer.InternalNext: TToken;
   { —читывание многосимвольных лексем }
   function ParseTerminal: boolean;
   const
-    N = 31;
+    N = 33;
     Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=',
                                       '=>', '..', '.', ',', ';', '(', ')', '+',
                                       '-', '*', '/', '%', '@@', '@', '=', '<',
-                                      '>', '(+)', '%type', '%rowtype',
+                                      '>', '(+)', ':', '&', '%type', '%rowtype',
                                       '%rowcount', '%found', '%notfound',
                                       '%isopen');
   var

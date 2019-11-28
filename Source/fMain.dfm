@@ -34,7 +34,7 @@ object FormMain: TFormMain
     Margins.Top = 0
     Margins.Right = 5
     Margins.Bottom = 5
-    ActivePage = tabResult
+    ActivePage = tabTokenizer
     Align = alClient
     TabOrder = 0
     OnChange = pgDestChange
@@ -190,10 +190,6 @@ object FormMain: TFormMain
       end
       object tabSettings: TTabSheet
         Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object Label1: TLabel
           Left = 5
           Top = 15

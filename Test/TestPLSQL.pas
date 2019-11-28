@@ -63,6 +63,8 @@ type
     procedure Оператор_Close;
     procedure Оператор_Exit;
     procedure Оператор_Execute_Immediate;
+    procedure Анонимный_Блок_С_Bind_Переменными;
+    procedure Анонимный_Блок_С_Подстановками;
   end;
 
 implementation
@@ -81,6 +83,14 @@ procedure _PLSQL.Анонимный_Блок;
 begin
 end;
 
+procedure _PLSQL.Анонимный_Блок_С_Bind_Переменными;
+begin
+end;
+
+procedure _PLSQL.Анонимный_Блок_С_Подстановками;
+begin
+end;
+
 procedure _PLSQL.Блок_Declare_End;
 begin
 end;
@@ -96,6 +106,7 @@ end;
 procedure _PLSQL.Выравнивание_В_Вызовах_Процедур;
 begin
   Settings.AlignVariables := true;
+  Settings.ArgumentSingleLineParamLimit := 3;
 end;
 
 procedure _PLSQL.Выравнивание_В_Параметрах_Подпрограмм;

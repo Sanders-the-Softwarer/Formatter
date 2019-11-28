@@ -39,10 +39,13 @@ type
     procedure Запрос_С_Having;
     procedure Запрос_Со_Start_With_И_Connect_By;
     procedure Запрос_С_Order_By;
+    procedure Запрос_С_Bind_Переменными;
+    procedure Запрос_С_Подстановками;
     procedure Указание_Направления_Сортировки_И_Расположения_Null_В_Order_By;
     procedure Связывание_Запросов_Через_Операции_Над_Множествами;
     procedure Выравнивание_Полей_В_Запросе;
     procedure Сопоставление_Полей_В_Into;
+    procedure Сопоставление_Полей_В_Into_С_Выравниванием;
     procedure Запрос_С_Ansi_Синтаксисом;
     procedure Запрос_С_Using;
     procedure Запрос_С_Left_Right_Full_Join;
@@ -55,7 +58,9 @@ type
     procedure Подзапрос_В_Where;
     procedure В_Запросе_Можно_Употреблять_Аналитические_Функции;
     procedure В_Запросе_Можно_Употреблять_Функцию_Listagg;
+    procedure В_Запросе_Можно_Употреблять_Функцию_Listagg_С_Переносом;
     procedure В_Запросе_Можно_Употреблять_Конструкцию_Keep;
+    procedure В_Запросе_Можно_Употреблять_Конструкцию_Keep_С_Переносом;
   end;
 
   { Тесты на insert }
@@ -128,6 +133,12 @@ begin
   Settings.MatchParamLimit := 5;
 end;
 
+procedure _Select.Сопоставление_Полей_В_Into_С_Выравниванием;
+begin
+  Settings.MatchParamLimit := 3;
+  Settings.AlignSpecialComments := true;
+end;
+
 procedure _Select.Указание_Направления_Сортировки_И_Расположения_Null_В_Order_By;
 begin
 end;
@@ -149,6 +160,10 @@ begin
 end;
 
 procedure _Select.Запрос_С_Оракловым_Синтаксисом_Внешних_Соединений;
+begin
+end;
+
+procedure _Select.Запрос_С_Подстановками;
 begin
 end;
 
@@ -188,8 +203,18 @@ procedure _Select.В_Запросе_Можно_Употреблять_Конструкцию_Keep;
 begin
 end;
 
+procedure _Select.В_Запросе_Можно_Употреблять_Конструкцию_Keep_С_Переносом;
+begin
+  Settings.PreferredExpressionLength := 60;
+end;
+
 procedure _Select.В_Запросе_Можно_Употреблять_Функцию_Listagg;
 begin
+end;
+
+procedure _Select.В_Запросе_Можно_Употреблять_Функцию_Listagg_С_Переносом;
+begin
+  Settings.PreferredExpressionLength := 60;
 end;
 
 procedure _Select.Выравнивание_Полей_В_Запросе;
@@ -234,6 +259,10 @@ begin
 end;
 
 procedure _Select.Запрос_С_Ansi_Синтаксисом;
+begin
+end;
+
+procedure _Select.Запрос_С_Bind_Переменными;
 begin
 end;
 

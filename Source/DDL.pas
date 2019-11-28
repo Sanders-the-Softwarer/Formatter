@@ -129,6 +129,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
     class function Candidates: TArray<TStatementClass>; override;
   end;
 

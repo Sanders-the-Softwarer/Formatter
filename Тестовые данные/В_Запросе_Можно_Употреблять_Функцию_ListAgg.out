@@ -1,6 +1,4 @@
 select 
-    listagg(dummy, ',' on overflow truncate '...' without count) 
-        within group (order by dummy) 
-        over (order by dummy) 
+    listagg(dummy, ',' on overflow truncate '...' without count) within group (order by dummy) over (order by dummy) 
 from 
     dual

@@ -597,8 +597,8 @@ procedure TExpressionField.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Expression);
   PrintSelfAfter(APrinter);
-  if not Assigned(_Match) then exit;
-  APrinter.PrintSpecialComment('=> ' + TIdentField(_Match).Name);
+  if Assigned(_Match) then
+    (Parent as TExpressionFields).PrintSpecialCommentAfterDelimiter('=> ' + TIdentField(_Match).Name);
 end;
 
 procedure TExpressionField.PrintSelfAfter(APrinter: TPrinter);
@@ -759,7 +759,7 @@ type
   TSelectTables = class(TCommaList<TSelectTableRef>)
   strict protected
     function ParseDelimiter(out AResult: TObject): boolean; override;
-    procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject); override;
+    procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject; ALast: boolean); override;
   end;
 
   { Выражение group by }
@@ -983,12 +983,12 @@ begin
   end;
 end;
 
-procedure TSelectTables.PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject);
+procedure TSelectTables.PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject; ALast: boolean);
 begin
   if ADelimiter is TEpithet then
     begin
       APrinter.PrintIndented(ADelimiter);
-      APrinter.NextLine;
+      if not ALast then APrinter.NextLine;
     end
   else
     inherited;
