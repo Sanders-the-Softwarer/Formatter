@@ -119,18 +119,6 @@ type
     function IsSimpleIdent: boolean;
   end;
 
-  { Вызов функции }
-  TFunctionCall = class(TStatement)
-  strict private
-    _Name: TStatement;
-    _OpenBracket: TTerminal;
-    _Arguments: TStatement;
-    _CloseBracket: TTerminal;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
   { Аргумент вызова подпрограммы }
   TArgument = class(TStatement)
   strict private
@@ -147,7 +135,14 @@ type
   TArguments = class(TCommaList<TArgument>)
   strict protected
     function ParseBreak: boolean; override;
+  public
     function OnePerLine: boolean; override;
+  end;
+
+  { Список аргументов в скобках }
+  TBracketedArguments = class(TOptionalBracketedStatement<TArguments>)
+  strict protected
+    function MultiLine: boolean; override;
   end;
 
 implementation
@@ -556,40 +551,21 @@ end;
 
 function TQualifiedIndexedIdent.InternalParse: boolean;
 begin
-  if not TopStatement then TOptionalBracketedStatement<TArguments>.Parse(Self, Source, _Indexes);
-  if Assigned(_Indexes) then _Dot := Terminal('.');
+  if not TopStatement then _Dot := Terminal('.');
   if TopStatement or Assigned(_Dot) then TQualifiedIdent.Parse(Self, Source, _Ident);
+  if not TopStatement or Assigned(_Ident) then TBracketedArguments.Parse(Self, Source, _Indexes);
   if Assigned(_Indexes) or Assigned(_Ident) then TQualifiedIndexedIdent.Parse(Self, Source, _Next);
   Result := Assigned(_Indexes) or Assigned(_Ident);
 end;
 
 procedure TQualifiedIndexedIdent.InternalPrintSelf(APrinter: TPrinter);
 begin
-//  if TopStatement then APrinter.SupressNextLine(true);
-  APrinter.PrintItems([_Indexes, _Dot, _Ident, _Next]);
-//  if TopStatement then APrinter.SupressNextLine(false);
+  APrinter.PrintItems([_Dot, _Ident, _Indexes, _Next]);
 end;
 
 function TQualifiedIndexedIdent.IsSimpleIdent: boolean;
 begin
   Result := Assigned(_Ident) and not Assigned(_Next) and (_Ident as TQualifiedIdent).IsSimpleIdent;
-end;
-
-{ TFunctionCall }
-
-function TFunctionCall.InternalParse: boolean;
-begin
-  TQualifiedIdent.Parse(Self, Source, _Name);
-  _OpenBracket := Terminal('(');
-  if not Assigned(_Name) or not Assigned(_OpenBracket) then exit(false);
-  TArguments.Parse(Self, Source, _Arguments);
-  _CloseBracket := Terminal(')');
-  Result := true;
-end;
-
-procedure TFunctionCall.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Name, _IndentNextLine, _OpenBracket, _IndentNextLine, _Arguments, _UndentNextLine, _CloseBracket, _Undent]);
 end;
 
 { TArgument }
@@ -697,6 +673,13 @@ end;
 procedure TCast.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Cast, _OpenBracket, _Expression, _As, _TypeRef, _CloseBracket]);
+end;
+
+{ TBracketedArguments }
+
+function TBracketedArguments.MultiLine: boolean;
+begin
+  Result := (InnerStatement is TArguments) and TArguments(InnerStatement).OnePerLine;
 end;
 
 initialization

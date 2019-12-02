@@ -400,8 +400,7 @@ type
     _To: TTerminal;
     _High: TStatement;
     _Select: TStatement;
-    _SCursor: TStatement;
-    _ICursor: TEpithet;
+    _Cursor: TStatement;
     _Loop: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -1298,8 +1297,7 @@ begin
       _Low := nil;
       _High := nil;
       Source.Restore(P);
-      if not TFunctionCall.Parse(Self, Source, _SCursor) then
-        _ICursor := Identifier;
+      TQualifiedIndexedIdent.Parse(Self, Source, _Cursor);
     end;
   end;
   TLoop.Parse(Self, Source, _Loop);
@@ -1315,7 +1313,7 @@ begin
       APrinter.NextLine;
     end
   else
-    APrinter.PrintItems([_ICursor, _SCursor, _Low, _To, _High]);
+    APrinter.PrintItems([_Cursor, _Low, _To, _High]);
   APrinter.PrintItem(_Loop);
 end;
 

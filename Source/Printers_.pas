@@ -93,8 +93,8 @@ type
     function  GetText: string; virtual; abstract;
   public
     procedure PrintItems(AItems: array of TObject);
-    procedure PrintRulerItem(const ARuler: string; AItem: TObject);
-    procedure PrintRulerItems(const ARuler: string; AItems: array of TObject);
+    procedure PrintRulerItem(const ARuler: string; AItem: TObject); virtual;
+    procedure PrintRulerItems(const ARuler: string; AItems: array of TObject); virtual;
     procedure PrintIndented(AItem: TObject); overload;
     procedure PrintIndented(AItems: array of TObject); overload;
     function  NextLineIf(AItem: TObject): boolean; overload;
@@ -172,7 +172,6 @@ type
     Names: TStringList;
     MaxWidths: TDictionary<String, integer>;
     PrevLine, PrevCol, Shift: integer;
-    PrevRuler: string;
     DisablePadding: boolean;
   public
     constructor Create;
@@ -219,6 +218,8 @@ type
     procedure PrintItem(AItem: TObject); override;
     procedure PrintToken(AToken: TToken); override;
     procedure PrintStatement(AStatement: TStatement); override;
+    procedure PrintRulerItem(const ARuler: string; AItem: TObject); override;
+    procedure PrintRulerItems(const ARuler: string; AItems: array of TObject); override;
     procedure Indent; override;
     procedure Undent; override;
     procedure NextLine; override;
@@ -717,7 +718,7 @@ begin
   else if Padding > 0 then
     Inc(Padding);
   { ≈сли задано выравнивание, вставим соответствующее количество пробелов }
-  if Padding > 0 then
+  if (Padding > 0) and Assigned(AToken) then
   begin
     if Assigned(Builder) then Builder.Append(StringOfChar(' ', Padding));
     Inc(Col, Padding);
@@ -758,7 +759,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
 
   var
     _Mode: TFormatterPrinterMode;
-    _Shift, _Col, _Line: integer;
+    _Shift, _Col, _Line, _Padding: integer;
     _BOL, _EmptyLine: boolean;
     _Builder: TStringBuilder;
     _Rulers: TRulers;
@@ -783,6 +784,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     _Shift   := Shift;
     _Col     := Col;
     _Line    := Line;
+    _Padding := Padding;
     _BOL     := BOL;
     _EmptyLine := EmptyLine;
     _Builder := Builder;
@@ -798,6 +800,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     Shift := _Shift;
     Col   := _Col;
     Line  := _Line;
+    Padding := _Padding;
     BOL   := _BOL;
     EmptyLine := _EmptyLine;
     Builder := _Builder;
@@ -846,6 +849,18 @@ begin
     end
   else
     SimplePrintStatement(AStatement);
+end;
+
+procedure TFormatterPrinter.PrintRulerItem(const ARuler: string; AItem: TObject);
+begin
+  inherited;
+  Padding := 0;
+end;
+
+procedure TFormatterPrinter.PrintRulerItems(const ARuler: string; AItems: array of TObject);
+begin
+  inherited;
+  Padding := 0;
 end;
 
 { ”правление отступами }
@@ -1229,7 +1244,6 @@ begin
   if DisablePadding then exit;
   PrevLine  := ALine;
   PrevCol   := ACol;
-  PrevRuler := '';
   Shift     := ACol;
 end;
 
@@ -1251,14 +1265,13 @@ end;
 
 function TRulers.Fix(const ARuler: string; ACol: integer): integer;
 var
-  PrevIndex, CurIndex, Width, i: integer;
+  Index, Width, i: integer;
 begin
   _Debug('Rulers::Fix, ruler = %s, col = %d, disable = %s', [ARuler, ACol, BoolToStr(DisablePadding, true)]);
   if DisablePadding then exit(0);
-  PrevIndex := Names.IndexOf(PrevRuler);
-  CurIndex  := Names.IndexOf(ARuler);
-  Width     := Shift;
-  for i := PrevIndex + 1 to CurIndex do
+  Index  := Names.IndexOf(ARuler);
+  Width  := Shift;
+  for i := 0 to Index do
     Inc(Width, MaxWidths[Names[i]]);
   Result := Math.Max(0, Width - ACol);
   _Debug('  result = %d', [Result]);

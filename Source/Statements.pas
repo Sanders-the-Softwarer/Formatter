@@ -162,6 +162,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     function AllowEmpty: boolean; virtual;
+    function MultiLine: boolean; virtual;
     procedure InternalMatch(AStatement: TStatement); override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
@@ -670,6 +671,11 @@ begin
   Result := false;
 end;
 
+function TBracketedStatement<T>.MultiLine: boolean;
+begin
+  Result := true;
+end;
+
 procedure TBracketedStatement<T>.InternalMatch(AStatement: TStatement);
 begin
   _Stmt.Match(AStatement);
@@ -677,7 +683,11 @@ end;
 
 procedure TBracketedStatement<T>.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_OpenBracket, _IndentNextLine, _Stmt, _UndentNextLine, _CloseBracket]);
+  APrinter.PrintItem(_OpenBracket);
+  if MultiLine then APrinter.PrintItem(_IndentNextLine);
+  APrinter.PrintItem(_Stmt);
+  if MultiLine then APrinter.PrintItem(_UndentNextLine);
+  APrinter.PrintItem(_CloseBracket);
 end;
 
 { TOptionalBracketedStatement<T> }

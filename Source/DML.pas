@@ -483,7 +483,7 @@ end;
 function TSelectFunctionCall.InternalParse: boolean;
 begin
   TListAgg.Parse(Self, Source, _FunctionCall);
-  if not Assigned(_FunctionCall) then TFunctionCall.Parse(Self, Source, _FunctionCall);
+  if not Assigned(_FunctionCall) then TQualifiedIndexedIdent.Parse(Self, Source, _FunctionCall);
   if not Assigned(_FunctionCall) then exit(false);
   TWithinGroup.Parse(Self, Source, _WithinGroup);
   TKeep.Parse(Self, Source, _Keep);
