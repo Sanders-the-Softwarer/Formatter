@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{34AAC6D8-F6F0-4A71-A458-DD2664352148}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="DebugTool.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Test.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="DebugTool">
+        <MSBuild Projects="DebugTool.dproj"/>
+    </Target>
+    <Target Name="DebugTool:Clean">
+        <MSBuild Projects="DebugTool.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DebugTool:Make">
+        <MSBuild Projects="DebugTool.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Test">
+        <MSBuild Projects="Test.dproj"/>
+    </Target>
+    <Target Name="Test:Clean">
+        <MSBuild Projects="Test.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Test:Make">
+        <MSBuild Projects="Test.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="DebugTool;Test"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="DebugTool:Clean;Test:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="DebugTool:Make;Test:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

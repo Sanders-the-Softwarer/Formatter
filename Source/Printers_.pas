@@ -170,15 +170,15 @@ type
   TRulers = class
   private
     Names: TStringList;
-    MaxWidths: TDictionary<String, integer>;
-    PrevLine, PrevCol, Shift: integer;
+    MaxWidth: TDictionary<String, integer>;
+    PrevLine, PrevCol: integer;
     DisablePadding: boolean;
   public
     constructor Create;
     destructor Destroy; override;
-    procedure NewLine(ALine, ACol: integer);
+    procedure NewLine(ALine: integer);
     procedure Take(const ARuler: string; ALine, ACol: integer);
-    function Fix(const ARuler: string; ACol: integer): integer;
+    function Fix(const ARuler: string): integer;
   end;
 
   { Режим принтера }
@@ -195,9 +195,8 @@ type
     EmptyLine: boolean;
     Line:    integer;
     Col:     integer;
-    PrevCol: integer;
     Rulers:  TRulers;
-    Padding: integer;
+    PaddingCol: integer;
     PrevStatement: TStatement;
     PrevToken: TToken;
     IntoSync: boolean;
@@ -600,7 +599,7 @@ begin
   Line    := 1;
   Col     := 1;
   BOL     := false;
-  Padding := 0;
+  PaddingCol := 0;
   TokenPos.Clear;
   TokenLen.Clear;
   SpecialComments.Clear;
@@ -705,25 +704,21 @@ begin
     begin
       Inc(Line);
       Col := Shift + 1;
-      PrevCol := 1;
       PrevToken := nil;
     end;
   end;
+  { Если задано выравнивание, вставим соответствующее количество пробелов }
+  if (PaddingCol > Col) and Assigned(AToken) then
+  begin
+    if Assigned(Builder) then Builder.Append(StringOfChar(' ', PaddingCol - Col));
+    Col := PaddingCol;
+    PaddingCol := 0;
+  end;
   { Если нужно, внедрим пробел между предыдущей и новой лексемами }
   if Assigned(PrevToken) and Assigned(AToken) and SpaceRequired(PrevToken, AToken) then
-    begin
-      if Assigned(Builder) then Builder.Append(' ');
-      Inc(Col);
-    end
-  else if Padding > 0 then
-    Inc(Padding);
-  { Если задано выравнивание, вставим соответствующее количество пробелов }
-  if (Padding > 0) and Assigned(AToken) then
   begin
-    if Assigned(Builder) then Builder.Append(StringOfChar(' ', Padding));
-    Inc(Col, Padding);
-    Inc(PrevCol, Padding);
-    Padding := 0;
+    if Assigned(Builder) then Builder.Append(' ');
+    Inc(Col);
   end;
   { И, наконец, если задана лексема - напечатаем её }
   if Assigned(AToken) then
@@ -759,7 +754,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
 
   var
     _Mode: TFormatterPrinterMode;
-    _Shift, _Col, _Line, _Padding: integer;
+    _Shift, _Col, _Line, _PaddingCol: integer;
     _BOL, _EmptyLine: boolean;
     _Builder: TStringBuilder;
     _Rulers: TRulers;
@@ -784,7 +779,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     _Shift   := Shift;
     _Col     := Col;
     _Line    := Line;
-    _Padding := Padding;
+    _PaddingCol := PaddingCol;
     _BOL     := BOL;
     _EmptyLine := EmptyLine;
     _Builder := Builder;
@@ -800,7 +795,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     Shift := _Shift;
     Col   := _Col;
     Line  := _Line;
-    Padding := _Padding;
+    PaddingCol := _PaddingCol;
     BOL   := _BOL;
     EmptyLine := _EmptyLine;
     Builder := _Builder;
@@ -822,7 +817,6 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     Builder := nil;
     Rulers  := TRulers.Create;
     Mode    := fpmGetRulers;
-    PrevCol := Col;
     try
       SimplePrintStatement(AStatement);
     except
@@ -834,7 +828,6 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   procedure PrintSetRulersMode;
   begin
     Mode  := fpmSetRulers;
-    PrevCol := Col;
     SimplePrintStatement(AStatement);
   end;
 
@@ -854,13 +847,13 @@ end;
 procedure TFormatterPrinter.PrintRulerItem(const ARuler: string; AItem: TObject);
 begin
   inherited;
-  Padding := 0;
+  PaddingCol := 0;
 end;
 
 procedure TFormatterPrinter.PrintRulerItems(const ARuler: string; AItems: array of TObject);
 begin
   inherited;
-  Padding := 0;
+  PaddingCol := 0;
 end;
 
 { Управление отступами }
@@ -902,21 +895,17 @@ end;
 { Вывод на принтер специального комментария (отсутствующего в исходном тексте)}
 procedure TFormatterPrinter.PrintSpecialComment(AValue: string);
 
-  procedure PrintSpecialToken(const Text: string);
-  var T: TToken;
+  function SpecialToken(const Text: string): TToken;
   begin
-    T := TSpecialComment.Create(Text, -1, -1);
-    SpecialComments.Add(T);
-    PrintToken(T);
+    Result := TSpecialComment.Create(Text, -1, -1);
+    SpecialComments.Add(Result);
   end;
 
 begin
   if not RulerEnabled then StartRuler(Settings.AlignSpecialComments);
-  if Settings.AlignSpecialComments then Self.PrintRulerItem('special-comment-start', nil);
-  PrintSpecialToken('/*/');
-  PrintSpecialToken(AValue);
-  if Settings.AlignSpecialComments then Self.PrintRulerItem('special-comment-finish', nil);
-  PrintSpecialToken('/*/');
+  Self.PrintRulerItem('special-comment-start', SpecialToken('/*/'));
+  PrintItem(SpecialToken(AValue));
+  Self.PrintRulerItem('special-comment-finish', SpecialToken('/*/'));
 end;
 
 { Начало выравнивания в очередной строке }
@@ -925,7 +914,7 @@ begin
   RulerEnabled := Enabled;
   if (Mode <> fpmGetRulers) or not Enabled then exit;
   PrintToken(nil);
-  Rulers.NewLine(Line, Col);
+  Rulers.NewLine(Line);
 end;
 
 { Установка "линейки" для выравнивания }
@@ -935,7 +924,7 @@ begin
   PrintToken(nil);
   case Mode of
     fpmGetRulers: Rulers.Take(ARuler, Line, Col); { В режиме примерки запомним ширину фрагмента }
-    fpmSetRulers: Padding := Rulers.Fix(ARuler, Col); { В режиме разметки рассчитаем необходимое количество пробелов }
+    fpmSetRulers: PaddingCol := Rulers.Fix(ARuler); { В режиме разметки рассчитаем необходимое количество пробелов }
   end;
 end;
 
@@ -1226,55 +1215,52 @@ end;
 constructor TRulers.Create;
 begin
   Names := TStringList.Create;
-  MaxWidths := TDictionary<String, integer>.Create;
+  MaxWidth := TDictionary<String, integer>.Create;
 end;
 
 destructor TRulers.Destroy;
 begin
+  FreeAndNil(MaxWidth);
   FreeAndNil(Names);
-  FreeAndNil(MaxWidths);
   inherited;
 end;
 
-procedure TRulers.NewLine(ALine, ACol: integer);
+procedure TRulers.NewLine(ALine: integer);
 begin
-  _Debug('Rulers::NewLine, line = %d, col = %d', [ALine, ACol]);
-  if PrevLine >= ALine then
-    DisablePadding := true;
-  if DisablePadding then exit;
-  PrevLine  := ALine;
-  PrevCol   := ACol;
-  Shift     := ACol;
+  if PrevLine < ALine
+    then PrevLine := ALine
+    else DisablePadding := true;
+  PrevCol := 1;
 end;
 
 procedure TRulers.Take(const ARuler: string; ALine, ACol: integer);
 var Width: integer;
 begin
-  _Debug('Rulers::Take, ruler = %s, col = %d', [ARuler, ACol]);
   if DisablePadding then exit;
   if ALine <> PrevLine then raise Exception.Create('Line changed inside the ruler');
-  if Names.IndexOf(ARuler) < 0 then Names.Add(ARuler);
   if PrevLine <= 0 then raise Exception.Create('TRuler.NewLine required');
+  if Names.IndexOf(ARuler) < 0 then Names.Add(ARuler);
   Width := ACol - PrevCol;
+  if MaxWidth.ContainsKey(ARuler)
+    then MaxWidth[ARuler] := Math.Max(MaxWidth[ARuler], Width)
+    else MaxWidth.Add(ARuler, Width);
+  _Debug('Take: ruler=%s line=%d col=%d prev=%d width=%d max=%d', [ARuler, ALine, ACol, PrevCol, Width, MaxWidth[ARuler]]);
   PrevCol := ACol;
-  if MaxWidths.ContainsKey(ARuler)
-    then MaxWidths[ARuler] := Math.Max(MaxWidths[ARuler], Width)
-    else MaxWidths.Add(ARuler, Width);
-  _Debug('  width = %d, max width = %d', [Width, MaxWidths[ARuler]]);
 end;
 
-function TRulers.Fix(const ARuler: string; ACol: integer): integer;
-var
-  Index, Width, i: integer;
+function TRulers.Fix(const ARuler: string): integer;
+var i: integer; S: string;
 begin
-  _Debug('Rulers::Fix, ruler = %s, col = %d, disable = %s', [ARuler, ACol, BoolToStr(DisablePadding, true)]);
-  if DisablePadding then exit(0);
-  Index  := Names.IndexOf(ARuler);
-  Width  := Shift;
-  for i := 0 to Index do
-    Inc(Width, MaxWidths[Names[i]]);
-  Result := Math.Max(0, Width - ACol);
-  _Debug('  result = %d', [Result]);
+  Result := 0;
+  if DisablePadding then exit;
+  S := '';
+  for i := 0 to Names.IndexOf(ARuler) do
+  begin
+    Inc(Result, MaxWidth[Names[i]]);
+    S := S + Format('+%d', [MaxWidth[Names[i]]]);
+  end;
+  Inc(Result);
+  _Debug('Fix: ruler=%s padding = %s = %d', [ARuler, S, Result]);
 end;
 
 { TFormatSettings }

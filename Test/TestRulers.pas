@@ -57,9 +57,9 @@ begin
   Printer.PrintItem(Stmt);
   FreeAndNil(Stmt);
   S := Printer.GetText;
-  CheckEquals('aaa1 b1   cc1'#13#10 +
-              'aa2  bbb2 c2'#13#10  +
-              'a3   bb3  ccc3', S);
+  CheckEquals('| aaa1 b1   cc1'#13#10 +
+              '| aa2  bbb2 c2'#13#10  +
+              '| a3   bb3  ccc3', S);
 end;
 
 procedure _Rulers.Выравнивание_С_Пропусками;
@@ -71,9 +71,9 @@ begin
   Printer.PrintItem(Stmt);
   FreeAndNil(Stmt);
   S := Printer.GetText;
-  CheckEquals('aaa1      cc1'#13#10 +
-              'aa2  bbb2'#13#10  +
-              '     bb3  ccc3', S);
+  CheckEquals('| aaa1      cc1'#13#10 +
+              '| aa2  bbb2'#13#10  +
+              '|      bb3  ccc3', S);
 end;
 
 procedure _Rulers.Без_Выравнивания;
@@ -85,9 +85,9 @@ begin
   Printer.PrintItem(Stmt);
   FreeAndNil(Stmt);
   S := Printer.GetText;
-  CheckEquals('aaa1 b1 cc1'#13#10 +
-              'aa2 bbb2 c2'#13#10  +
-              'a3 bb3 ccc3', S);
+  CheckEquals('| aaa1 b1 cc1'#13#10 +
+              '| aa2 bbb2 c2'#13#10  +
+              '| a3 bb3 ccc3', S);
 end;
 
 { TCheckStatement }
@@ -113,6 +113,7 @@ end;
 procedure TCheckStatement.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.StartRuler(true);
+  APrinter.PrintRulerItem('@', Token('|'));
   APrinter.PrintRulerItem('a', Token('aaa1'));
   if FlagSkip
     then APrinter.PrintRulerItem('b', nil)
@@ -120,6 +121,7 @@ begin
   APrinter.PrintRulerItem('c', Token('cc1'));
   APrinter.NextLine;
   APrinter.StartRuler(true);
+  APrinter.PrintRulerItem('@', Token('|'));
   APrinter.PrintRulerItem('a', Token('aa2'));
   APrinter.PrintRulerItem('b', Token('bbb2'));
   if FlagSkip
@@ -127,6 +129,7 @@ begin
     else APrinter.PrintRulerItem('c', Token('c2'));
   APrinter.NextLine;
   APrinter.StartRuler(true);
+  APrinter.PrintRulerItem('@', Token('|'));
   if FlagSkip
     then APrinter.PrintRulerItem('a', nil)
     else APrinter.PrintRulerItem('a', Token('a3'));
