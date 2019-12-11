@@ -2,9 +2,10 @@ begin
     for i in 1 .. 10 loop 
         null; 
     end loop;
+    -- здесь важно, чтобы 1.. можно было принять за начало вещественного числа
     for j in reverse 1 .. 10 loop 
         null; 
-    end loop;
+    end loop; 
     for k in 
         (
             select 

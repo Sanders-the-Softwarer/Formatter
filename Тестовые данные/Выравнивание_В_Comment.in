@@ -1,0 +1,3 @@
+comment on table x is 'Иксовая такая таблица';
+comment on column x.yz is 'Колонка yz';
+comment on column x.t is 'Колонка t';

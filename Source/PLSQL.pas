@@ -587,6 +587,15 @@ type
   TObjectMethodDeclaration = class(TSubroutineHeaderBase)
   end;
 
+  { Обособленный комментарий, не привязанный к конструкции }
+  TStandaloneComment = class(TStatement)
+  strict private
+    _Comment: TToken;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
 implementation
 
 uses Parser, DML;
@@ -1625,6 +1634,21 @@ begin
   APrinter.NextLineIf([_Into, _NextLine, _Indent, _IntoFields, _Undent]);
   APrinter.NextLineIf([_Using, _NextLine, _Indent, _UsingFields, _Undent]);
   inherited;
+end;
+
+{ TStandaloneComment }
+
+function TStandaloneComment.InternalParse: boolean;
+var T: TToken;
+begin
+  T := NextToken;
+  Result := T is TComment;
+  if Result then _Comment := T;
+end;
+
+procedure TStandaloneComment.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_NextLine, _NextLine, _Comment, _NextLine, _NextLine]);
 end;
 
 initialization

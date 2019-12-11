@@ -1,0 +1,36 @@
+select
+    t.code,
+    t.name,
+    (
+        select
+            l.value
+        from
+            sm_lang_name l
+        where
+            l.obj_code = t.code
+            and l.language_code = 'en'
+    ) name_en,
+    (
+        select
+            l.value
+        from
+            sm_lang_name l
+        where
+            l.obj_code = t.code
+            and l.language_code = 'ru'
+    ) name_ru,
+    (
+        select
+            e.ext_char_code
+        from
+            sm_ext_code e
+        where
+            e.code = t.code
+            and e.subsystem_code = top_const.idtype_id_mdm
+            and e.table_code = v_table_code
+    ) ext_code,
+    t.state
+from
+    top_v_ref_gender t
+order by
+    t.name;

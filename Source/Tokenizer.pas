@@ -66,8 +66,11 @@ type
   { Класс выкусывает комментарии из основного потока и привязывает их к значимым лексемам }
   TCommentProcessor = class(TNextStream<TToken, TToken>)
   strict private
-    PrevToken: TToken;
-    procedure Process;
+    T1, T2, T3: TToken;
+    Started: boolean;
+    procedure ReadNext;
+    function Applied(C: TComment; T: TToken; Strong: boolean): boolean;
+    procedure Compress;
   strict protected
     function InternalEof: boolean; override;
     function InternalNext: TToken; override;
@@ -334,48 +337,68 @@ end;
 
 function TCommentProcessor.InternalEof: boolean;
 begin
-  Process;
-  Result := Source.Eof;
+  Compress;
+  Result := not Assigned(T1);
 end;
 
 function TCommentProcessor.InternalNext: TToken;
 begin
-  Process;
-  Result := Transit(Source.Next);
-  PrevToken := Result;
+  Compress;
+  Result := Transit(T1);
+  T1 := T2;
+  T2 := T3;
+  T3 := nil;
 end;
 
-procedure TCommentProcessor.Process;
-var
-  Token: TToken;
-  Prev: TList<TComment>;
-  i: integer;
+procedure TCommentProcessor.ReadNext;
 begin
-  Prev := nil;
-  while not Source.Eof do
+  if Source.Eof then
+    { неоткуда }
+  else if not Assigned(T1) then
+    T1 := Source.Next
+  else if not Assigned(T2) then
+    T2 := Source.Next
+  else if not Assigned(T3) then
+    T3 := Source.Next
+  else
+    { пока больше не нужно }
+end;
+
+function TCommentProcessor.Applied(C: TComment; T: TToken; Strong: boolean): boolean;
+begin
+  Result := Assigned(C) and Assigned(T) and (not Strong or (C.Col = T.Col)) and (Abs(C.Line - T.Line) <= 1);
+end;
+
+procedure TCommentProcessor.Compress;
+begin
+  { Если начинаем с комментария, пока возможно будем привязывать его к следующей лексеме }
+  ReadNext; ReadNext;
+  while (T1 is TComment) and Applied(T1 as TComment, T2, true) do
   begin
-    Source.SaveMark;
-    Token := Source.Next;
-    if Token is TComment then
-      if Assigned(PrevToken) then
-        PrevToken.AddCommentBelow(Token as TComment)
-      else
-        begin
-          if not Assigned(Prev) then Prev := TList<TComment>.Create;
-          Prev.Add(Token as TComment);
-        end
-    else
-      begin
-        if Assigned(Prev) then
-          for i := 0 to Prev.Count - 1 do
-            Token.AddCommentAbove(Prev[i]);
-        Source.Restore;
-        exit;
-      end;
+    T2.AddCommentAbove(T1 as TComment);
+    T1 := T2;
+    T2 := T3;
+    T3 := nil;
+    ReadNext;
+  end;
+  { Теперь, когда в начале (возможно) не комментарий, комментарий из середины привяжем либо к предыдущей, либо к следующей }
+  ReadNext;
+  while T2 is TComment do
+  begin
+    if Applied(T2 as TComment, T3, true)
+      then T3.AddCommentAbove(T2 as TComment)
+      else T1.AddCommentBelow(T2 as TComment);
+    T2 := T3;
+    T3 := nil;
+    ReadNext;
   end;
 end;
 
-{ TEndMerger }
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//        Объединение отдельных лексем в составные типа full outer join       //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 function TMerger.InternalNext: TToken;
 

@@ -1,3 +1,4 @@
+-- ѕол€ таблиц могут содержать разные типы, default и not null
 create table x
     (
         id integer not null, 

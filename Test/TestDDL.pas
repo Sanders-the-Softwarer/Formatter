@@ -49,6 +49,12 @@ type
     procedure Drop_Trigger;
   end;
 
+  { Тесты на comment }
+  _Comment = class(TFileBasedTest)
+  published
+    procedure Comment_On_Table;
+    procedure Выравнивание_В_Comment;
+  end;
 
 implementation
 
@@ -145,9 +151,21 @@ procedure _Drop.Drop_View;
 begin
 end;
 
+{ _Comment }
+
+procedure _Comment.Comment_On_Table;
+begin
+end;
+
+procedure _Comment.Выравнивание_В_Comment;
+begin
+  Settings.AlignTableColumnComments := true;
+end;
+
 initialization
   RegisterTest(_Create.Suite);
   RegisterTest(_Drop.Suite);
+  RegisterTest(_Comment.Suite);
 
 end.
 

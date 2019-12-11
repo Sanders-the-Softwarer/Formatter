@@ -1,10 +1,17 @@
+-- типы могут быть
 create or replace package x is
+    -- простым идентификатором
     a integer;
+    -- определяться через ключевое слово char
     b char;
+    -- обладать суффиксом %type или %rowtype
     c schema.tablet%type;
     d schema.tablet.ccolumn%rowtype;
+    -- содержать указатель размера
     e number(10);
+    -- и точность
     f number(10,2);
+    -- либо единицу измерения
     g char(10 char);
     h char(10 byte);
 end;

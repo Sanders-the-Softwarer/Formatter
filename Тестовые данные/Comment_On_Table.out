@@ -1,0 +1,2 @@
+comment on table dual is 'Обычная такая таблица';
+comment on column dual.dummy is 'Да и поле обычное';

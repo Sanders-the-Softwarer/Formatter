@@ -114,7 +114,8 @@ begin
             TExecuteImmediate.Parse(AParent, ASource, AResult) or
             TAnonymousBlock.Parse(AParent, ASource, AResult) or
             TAssignment.Parse(AParent, ASource, AResult) or
-            TProcedureCall.Parse(AParent, ASource, AResult);
+            TProcedureCall.Parse(AParent, ASource, AResult) or
+            TStandaloneComment.Parse(AParent, ASource, AResult);
 end;
 
 { Разбор операторов SQL*Plus }
@@ -124,7 +125,8 @@ begin
             TWhenever.Parse(AParent, ASource, AResult) or
             TSet.Parse(AParent, ASource, AResult) or
             TAt.Parse(AParent, ASource, AResult) or
-            TSpool.Parse(AParent, ASource, AResult);
+            TSpool.Parse(AParent, ASource, AResult) or
+            TCall.Parse(AParent, ASource, AResult);
 end;
 
 { Разбор деклараций (переменных, процедур, типов, курсоров, прагм и т. п. }

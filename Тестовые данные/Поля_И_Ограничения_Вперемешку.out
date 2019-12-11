@@ -1,3 +1,4 @@
+-- В таблицах могут быть указаны все типы constraint-ов и поля вперемешку
 create table x 
     (
         i integer,

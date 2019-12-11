@@ -434,11 +434,14 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
 
   { Печать получившегося выражения }
   procedure PrintExpression;
-  var i: integer;
+  var
+    i: integer;
+    SameLine: boolean;
   begin
     APrinter.StartRuler(Settings.AlignExpressions);
     for i := 0 to Count - 1 do
     begin
+      SameLine := false;
       if TermInfo[i].SingleLine then
         APrinter.SupressNextLine(true)
       else if i > 0 then
@@ -450,11 +453,13 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         APrinter.SupressNextLine(false)
       else if i > 0 then
         APrinter.Undent;
-      if TermInfo[i].LineBreak and TermInfo[i].BreakBeforeDelimiter then APrinter.NextLine;
+      if TermInfo[i].LineBreak and TermInfo[i].BreakBeforeDelimiter
+        then APrinter.NextLine
+        else SameLine := true;
       if not Assigned(Delimiter(i)) then continue;
-      APrinter.Ruler(Format('%p-delimiter-%d-before', [pointer(Self), TermInfo[i].RulerNumber]));
+      if SameLine then APrinter.Ruler(Format('%p-delimiter-%d-before', [pointer(Self), TermInfo[i].RulerNumber]));
       APrinter.PrintItem(Delimiter(i));
-      APrinter.Ruler(Format('%p-delimiter-%d-after', [pointer(Self), TermInfo[i].RulerNumber]));
+      if SameLine then APrinter.Ruler(Format('%p-delimiter-%d-after', [pointer(Self), TermInfo[i].RulerNumber]));
       if TermInfo[i].LineBreak and not TermInfo[i].BreakBeforeDelimiter then APrinter.NextLine;
     end;
   end;

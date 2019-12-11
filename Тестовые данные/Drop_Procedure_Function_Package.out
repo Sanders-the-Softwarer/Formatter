@@ -1,7 +1,10 @@
+-- Можно удалять процедуру либо функцию
 drop procedure x
 
 drop function y
 
+-- Можно удалять пакет
 drop package x
 
+-- Можно удалять тело пакета
 drop package body x

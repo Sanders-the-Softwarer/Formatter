@@ -1,3 +1,5 @@
+-- объ€влени€ переменных могут содержать модификатор constant и исходное значение
+
 declare
     a boolean := true;
     b constant number;

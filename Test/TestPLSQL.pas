@@ -65,6 +65,7 @@ type
     procedure Оператор_Execute_Immediate;
     procedure Анонимный_Блок_С_Bind_Переменными;
     procedure Анонимный_Блок_С_Подстановками;
+    procedure Комментарии_В_Пакете;
   end;
 
 implementation
@@ -124,6 +125,10 @@ begin
 end;
 
 procedure _PLSQL.Записи;
+begin
+end;
+
+procedure _PLSQL.Комментарии_В_Пакете;
 begin
 end;
 

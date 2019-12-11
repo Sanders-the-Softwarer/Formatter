@@ -63,6 +63,16 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Команда call }
+  TCall = class(TStatement)
+  strict private
+    _Call: TEpithet;
+    _What: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
   { Имя файла }
   TFileName = class(TStatement)
   strict private
@@ -84,7 +94,7 @@ type
 
 implementation
 
-uses Parser, Streams, PLSQL;
+uses Parser, Streams, PLSQL, Expressions;
 
 { TClear }
 
@@ -159,6 +169,20 @@ end;
 procedure TSpool.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Spool, _FileName]);
+end;
+
+{ TCall }
+
+function TCall.InternalParse: boolean;
+begin
+  _Call := Keyword('call');
+  Result := Assigned(_Call);
+  if Result then TQualifiedIndexedIdent.Parse(Self, Source, _What);
+end;
+
+procedure TCall.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Call, _What]);
 end;
 
 { TFileName }

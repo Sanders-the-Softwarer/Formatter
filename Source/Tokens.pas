@@ -79,6 +79,8 @@ type
     property Col: integer read FCol;
     property Printed: boolean read FPrinted write FPrinted;
     property CanReplace: boolean read FCanReplace write FCanReplace;
+    property CommentsAbove: TList<TComment> read FCommentsAbove;
+    property CommentsBelow: TList<TComment> read FCommentsBelow;
   end;
 
   { Неожиданная или неизвестная лексема - встретился символ, с которого не может начинаться лексема }

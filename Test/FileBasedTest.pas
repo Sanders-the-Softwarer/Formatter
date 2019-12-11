@@ -59,18 +59,7 @@ implementation
 { Подготовка к выполнению теста }
 procedure TFileBasedTest.SetUp;
 begin
-  { По умолчанию отключим то, что приводит к усложнению результата }
-  Settings := TFormatSettings.Default;
-  Settings.AlignVariables   := false;
-  Settings.AlignFields      := false;
-  Settings.AlignExpressions := false;
-  Settings.AlignSpecialComments := false;
-  Settings.DeclarationSingleLineParamLimit := 99;
-  Settings.ArgumentSingleLineParamLimit := 99;
-  Settings.PreferredExpressionLength := 9999;
-  Settings.MatchParamLimit  := 99999;
-  Settings.ReplaceDefault   := false;
-  Settings.ReplaceAsIs      := false;
+  Settings := TFormatSettings.ForTest; { По умолчанию отключаем то, что приводит к усложнению результата }
 end;
 
 { Уборка после выполненного теста }

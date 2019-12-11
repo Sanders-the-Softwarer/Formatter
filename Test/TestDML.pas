@@ -61,6 +61,7 @@ type
     procedure В_Запросе_Можно_Употреблять_Функцию_Listagg_С_Переносом;
     procedure В_Запросе_Можно_Употреблять_Конструкцию_Keep;
     procedure В_Запросе_Можно_Употреблять_Конструкцию_Keep_С_Переносом;
+    procedure Форматирование_Подзапросов_В_Select;
   end;
 
   { Тесты на insert }
@@ -206,6 +207,12 @@ end;
 procedure _Select.В_Запросе_Можно_Употреблять_Конструкцию_Keep_С_Переносом;
 begin
   Settings.PreferredExpressionLength := 60;
+end;
+
+procedure _Select.Форматирование_Подзапросов_В_Select;
+begin
+  Settings.PreferredExpressionLength := 80;
+  Settings.AlignExpressions := true;
 end;
 
 procedure _Select.В_Запросе_Можно_Употреблять_Функцию_Listagg;
@@ -402,5 +409,4 @@ initialization
   RegisterTest(_Delete.Suite);
   RegisterTest(_Merge.Suite);
 end.
-
 
