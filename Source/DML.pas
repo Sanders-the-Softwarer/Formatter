@@ -123,6 +123,33 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Оператор commit }
+  TCommit = class(TDML)
+  strict private
+    _Commit: TEpithet;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Оператор rollback }
+  TRollback = class(TDML)
+  strict private
+    _Rollback, _To, _Savepoint, _Name: TEpithet;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Оператор savepoint }
+  TSavepoint = class(TDML)
+  strict private
+    _Savepoint, _Name: TEpithet;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
   { Вложенный запрос }
   TInnerSelect = class(TStatement)
   strict private
@@ -1335,6 +1362,55 @@ end;
 function TMergeSections.ParseBreak: boolean;
 begin
   Result := not Assigned(Keyword(['when matched then', 'when not matched then']));
+end;
+
+{ TCommit }
+
+function TCommit.InternalParse: boolean;
+begin
+  _Commit := Keyword('commit');
+  inherited;
+  Result  := Assigned(_Commit);
+end;
+
+procedure TCommit.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Commit);
+  inherited;
+end;
+
+{ TRollback }
+
+function TRollback.InternalParse: boolean;
+begin
+  _Rollback := Keyword('rollback');
+  _To := Keyword('to');
+  _Savepoint := Keyword('savepoint');
+  _Name := Identifier;
+  inherited;
+  Result := Assigned(_Rollback);
+end;
+
+procedure TRollback.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Rollback, _To, _Savepoint, _Name]);
+  inherited;
+end;
+
+{ TSavepoint }
+
+function TSavepoint.InternalParse: boolean;
+begin
+  _Savepoint := Keyword('savepoint');
+  _Name := Identifier;
+  inherited;
+  Result := Assigned(_Savepoint);
+end;
+
+procedure TSavepoint.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Savepoint, _Name]);
+  inherited;
 end;
 
 initialization

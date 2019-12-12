@@ -28,7 +28,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, Printers_,
-  Vcl.ExtCtrls, Vcl.Samples.Spin, Parser, Streams, Tokens, Statements, Tokenizer;
+  Vcl.ExtCtrls, Vcl.Samples.Spin, Controller, Streams, Tokens, Statements, Tokenizer;
 
 type
   TFormMain = class(TForm)
@@ -120,8 +120,8 @@ begin
   { Создадим потоки }
   Text := edSrc.Text;
   Big  := (Text.Length > 1024 * 1024);
-  TokenStream     := TMerger.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(edSrc.Text)))));
-  StatementStream := TParser.Create(TCommentProcessor.Create(TokenStream), Settings);
+  TokenStream     := Controller.MakeTokenStream(edSrc.Text);
+  StatementStream := Controller.MakeStatementStream(TokenStream, Settings);
   { Напечатаем данные }
   StatementStream.PrintAll(ResultPrinter);
   if not Big then StatementStream.PrintAll(SyntaxTreePrinter);

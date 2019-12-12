@@ -83,7 +83,10 @@ begin
             TInsert.Parse(AParent, ASource, AResult) or
             TUpdate.Parse(AParent, ASource, AResult) or
             TDelete.Parse(AParent, ASource, AResult) or
-             TMerge.Parse(AParent, ASource, AResult);
+             TMerge.Parse(AParent, ASource, AResult) or
+            TCommit.Parse(AParent, ASource, AResult) or
+            TRollback.Parse(AParent, ASource, AResult) or
+            TSavepoint.Parse(AParent, ASource, AResult);
 end;
 
 { Разбор поддерживаемых конструкций DDL }

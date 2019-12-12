@@ -66,6 +66,7 @@ type
     procedure Анонимный_Блок_С_Bind_Переменными;
     procedure Анонимный_Блок_С_Подстановками;
     procedure Комментарии_В_Пакете;
+    procedure Пустота_Не_Должна_Сдвигать_Выравнивание;
   end;
 
 implementation
@@ -130,6 +131,12 @@ end;
 
 procedure _PLSQL.Комментарии_В_Пакете;
 begin
+end;
+
+procedure _PLSQL.Пустота_Не_Должна_Сдвигать_Выравнивание;
+begin
+  Settings.AlignFields := true;
+  Settings.AlignVariables := true;
 end;
 
 procedure _PLSQL.Константы_И_Значения_По_Умолчанию;

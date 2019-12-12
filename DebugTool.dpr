@@ -15,7 +15,8 @@ uses
   DDL in 'Source\DDL.pas',
   Attributes in 'Source\Attributes.pas',
   SQLPlus in 'Source\SQLPlus.pas',
-  Utils in 'Source\Utils.pas';
+  Utils in 'Source\Utils.pas',
+  Controller in 'Source\Controller.pas';
 
 {$R *.res}
 

@@ -1,0 +1,10 @@
+declare
+  cnt integer;
+begin
+  savepoint svp;
+  select count(*) into cnt from dual;
+  commit;
+exception
+  when no_data_found then rollback;
+  when too_many_rows then rollback to savepoint svp;
+end;

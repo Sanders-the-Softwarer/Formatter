@@ -63,11 +63,20 @@ type
     function InternalNext: TToken; override;
   end;
 
+  {  ласс выкусывает "спецкомментарии", вставленные в текст во врем€ прошлого форматировани€ }
+  TSkipSpecCommentProcessor = class(TNextStream<TToken, TToken>)
+  strict private
+    T: TToken;
+    procedure Skip;
+  strict protected
+    function InternalEof: boolean; override;
+    function InternalNext: TToken; override;
+  end;
+
   {  ласс выкусывает комментарии из основного потока и прив€зывает их к значимым лексемам }
   TCommentProcessor = class(TNextStream<TToken, TToken>)
   strict private
     T1, T2, T3: TToken;
-    Started: boolean;
     procedure ReadNext;
     function Applied(C: TComment; T: TToken; Strong: boolean): boolean;
     procedure Compress;
@@ -471,6 +480,34 @@ begin
   { –аз не удалось - возвращаем первую лексему }
   Source.Restore(P2);
   Result := Transit(T1);
+end;
+
+{ TSkipSpecCommentProcessor }
+
+function TSkipSpecCommentProcessor.InternalEof: boolean;
+begin
+  Skip;
+  Result := not Assigned(T);
+end;
+
+function TSkipSpecCommentProcessor.InternalNext: TToken;
+begin
+  Skip;
+  Result := Transit(T);
+  T := nil;
+end;
+
+procedure TSkipSpecCommentProcessor.Skip;
+begin
+  while not Assigned(T) and not Source.Eof do
+  begin
+    T := Source.Next;
+    if (T is TComment) and T.Value.StartsWith('/*/') and T.Value.EndsWith('/*/') then
+    begin
+      T.Printed := true; { чтобы не ругалась диагностика }
+      T := nil;
+    end;
+  end;
 end;
 
 end.

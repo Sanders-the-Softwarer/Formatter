@@ -1,14 +1,14 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{545CAA4E-9BB3-4C94-A0A6-B561768CCC76}</ProjectGuid>
+        <ProjectGuid>{6C0234D6-50E4-454F-9550-DE5DE3A473BC}</ProjectGuid>
         <ProjectVersion>18.2</ProjectVersion>
         <FrameworkType>None</FrameworkType>
+        <MainSource>PLSQLDev_Plugin.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1</TargetedPlatforms>
-        <AppType>Console</AppType>
-        <MainSource>Test.dpr</MainSource>
+        <AppType>Library</AppType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -40,15 +40,13 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <DCC_ExeOutput>.\</DCC_ExeOutput>
-        <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
-        <SanitizedProjectName>Test</SanitizedProjectName>
-        <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
-        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>$(BDS)\Source\DUnit\src;.\Dcu;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <DCC_DcpOutput>.\Dcu</DCC_DcpOutput>
+        <SanitizedProjectName>PLSQLDev_Plugin</SanitizedProjectName>
+        <GenDll>true</GenDll>
+        <DCC_BplOutput>.\Dcu</DCC_BplOutput>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_Locale>1049</VerInfo_Locale>
-        <Manifest_File>None</Manifest_File>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DCC_DcuOutput>.\Dcu</DCC_DcuOutput>
         <DCC_E>false</DCC_E>
         <DCC_N>false</DCC_N>
@@ -57,12 +55,19 @@
         <DCC_K>false</DCC_K>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UsePackage>bindcompfmx;DBXSqliteDriver;vcldbx;rtl;dbrtl;DbxClientDriver;IndySystem;TeeDB;bindcomp;inetdb;inetdbbde;vclib;DBXInterBaseDriver;DataSnapClient;DataSnapCommon;DBXOdbcDriver;DataSnapServer;Tee;DataSnapProviderClient;xmlrtl;DBXSybaseASEDriver;ibxpress;DbxCommonDriver;svnui;vclimg;IndyProtocols;DBXMySQLDriver;dbxcds;MetropolisUILiveTile;bindengine;vclactnband;vcldb;bindcompdbx;soaprtl;vcldsnap;bindcompvcl;TeeUI;vclie;DBXDb2Driver;vcltouch;websnap;DBXOracleDriver;CustomIPTransport;vclribbon;VclSmp;dsnap;DBXInformixDriver;IndyIPServer;Intraweb;IndyCore;vcl;DataSnapConnectors;DBXMSSQLDriver;CloudService;IndyIPCommon;DBXFirebirdDriver;dsnapcon;inet;vclx;inetdbxpress;webdsnap;svn;DBXSybaseASADriver;bdertl;dbexpress;DataSnapIndy10ServerTransport;adortl;IndyIPClient;$(DCC_UsePackage)</DCC_UsePackage>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_UsePackage>DBXSqliteDriver;dxFlowChartAdvancedCustomizeFormRS24;dxRichEditInplaceRS24;dxSkinBlueprintRS24;dxSpreadSheetConditionalFormattingDialogsRS24;dxPSdxGaugeControlLnkRS24;vclactnband;dxSpreadSheetRS24;vclFireDAC;dxDockingRS24;tethering;dxSkinVisualStudio2013BlueRS24;dxPScxTLLnkRS24;dxBarExtItemsRS24;FireDACADSDriver;dxFireDACServerModeRS24;dxSkinOffice2007BlackRS24;vcltouch;vcldb;dxSkinXmas2008BlueRS24;svn;odac240;dxSkinOffice2010BlackRS24;dacfmx240;dxADOServerModeRS24;dxGDIPlusRS24;dxPSdxDBTVLnkRS24;frx24;dclSMEdit;dxSkinLilianRS24;crcontrols240;dxNavBarRS24;vclx;cxTreeListRS24;dxSkinDevExpressDarkStyleRS24;dxtrmdRS24;dxRichEditControlCoreRS24;RESTBackendComponents;dxRibbonRS24;VCLRESTComponents;cxExportRS24;cxTreeListdxBarPopupMenuRS24;dxSkinOffice2013LightGrayRS24;cxPivotGridChartRS24;dxTabbedMDIRS24;vclie;dxSkinVisualStudio2013LightRS24;bindengine;CloudService;FireDACMySQLDriver;cxPivotGridOLAPRS24;dxSkinSharpRS24;dxSkinBlackRS24;dxPSLnksRS24;bindcompdbx;dxSkinCoffeeRS24;IndyIPServer;dxCoreRS24;IndySystem;dxSkinOffice2013DarkGrayRS24;dsnapcon;FireDACMSAccDriver;fmxFireDAC;vclimg;dxBarDBNavRS24;dxSkinDarkSideRS24;dxSkinOffice2013WhiteRS24;dxPSdxLCLnkRS24;dxPScxExtCommonRS24;dxPScxPivotGridLnkRS24;soaprtl;DbxCommonDriver;xmlrtl;dxSkinMcSkinRS24;rtl;dxLayoutControlRS24;DbxClientDriver;odacvcl240;cxGridRS24;dxSkinBlueRS24;dxSpellCheckerRS24;cxLibraryRS24;dxSkinStardustRS24;dxSkinCaramelRS24;appanalytics;dxSkinsCoreRS24;dxDBXServerModeRS24;dxSkinHighContrastRS24;IndyIPClient;dxMapControlRS24;bindcompvcl;dxPSdxMapControlLnkRS24;dxSkinTheAsphaltWorldRS24;cxPageControlRS24;frxe24;dxPsPrVwAdvRS24;cxEditorsRS24;dxSkinSevenClassicRS24;oraprov240;VclSmp;cxSchedulerRibbonStyleEventEditorRS24;dxSkinPumpkinRS24;dxPSPrVwRibbonRS24;dxSpreadSheetReportDesignerRS24;dxSkinSevenRS24;dclSMShared;dxdborRS24;dxmdsRS24;cxSchedulerGridRS24;RESTComponents;dxHttpIndyRequestRS24;cxPivotGridRS24;DBXInterBaseDriver;svnui;dxdbtrRS24;dxSkinMetropolisRS24;dxSkinMoneyTwinsRS24;dxPScxPCProdRS24;dxWizardControlRS24;bindcompfmx;dxPSdxOCLnkRS24;dxBarExtDBItemsRS24;dxPSdxFCLnkRS24;dxSkinOffice2016ColorfulRS24;inetdb;cxSchedulerTreeBrowserRS24;FireDACIBDriver;fmx;dxSkinSpringTimeRS24;dxSkinValentineRS24;dxSkinLondonLiquidSkyRS24;dxSpreadSheetInplaceRichEditRS24;dxSkinWhiteprintRS24;dbexpress;IndyCore;dxSpreadSheetCoreRS24;dxSkiniMaginaryRS24;dxTileControlRS24;dxSkinOffice2016DarkRS24;dsnap;dxSkinOffice2007PinkRS24;dxPSdxSpreadSheetLnkRS24;cxDataRS24;FireDACCommon;dxSkinDevExpressStyleRS24;dac240;dxOfficeCoreRS24;dxBarRS24;dxSkinMetropolisDarkRS24;DBXMySQLDriver;SMShared;dxPSRichEditControlLnkRS24;dxPScxCommonRS24;FireDACCommonODBC;FireDACCommonDriver;dxPSdxPDFViewerLnkRS24;inet;IndyIPCommon;dxSkinVS2010RS24;vcl;odacfmx240;dxSkinSharpPlusRS24;dcf;dxThemeRS24;dxSkinOffice2007GreenRS24;dxPScxGridLnkRS24;FireDAC;dxPScxVGridLnkRS24;dxSpreadSheetCoreConditionalFormattingDialogsRS24;dxSkinOffice2010BlueRS24;FireDACPgDriver;FireDACSqliteDriver;dxServerModeRS24;dxSpreadSheetCoreDialogsRS24;dacvcl240;cxSchedulerRS24;vclwinx;dxSkinOffice2007BlueRS24;dxPSCoreRS24;CustomIPTransport;vcldsnap;dxSkinGlassOceansRS24;dxRibbonCustomizationFormRS24;SMEdit;dxPScxSchedulerLnkRS24;dxSkinSummer2008RS24;dxSkinDarkRoomRS24;bindcomp;dxSkinFoggyRS24;dxorgcRS24;dxPDFViewerRS24;dxSkinOffice2010SilverRS24;EurekaLogCore;dxRichEditControlRS24;dbxcds;adortl;dxSkinSilverRS24;dxSkinVisualStudio2013DarkRS24;dxComnRS24;dxFlowChartRS24;cxVerticalGridRS24;frxDB24;dsnapxml;dbrtl;IndyProtocols;inetdbxpress;dxSkinOffice2007SilverRS24;dxGaugeControlRS24;dxSkinLiquidSkyRS24;$(DCC_UsePackage)</DCC_UsePackage>
+        <BT_BuildType>Debug</BT_BuildType>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <DCC_UsePackage>bindcompfmx;DBXSqliteDriver;rtl;dbrtl;DbxClientDriver;IndySystem;bindcomp;inetdb;DBXInterBaseDriver;DataSnapClient;DataSnapCommon;DBXOdbcDriver;DataSnapServer;DataSnapProviderClient;xmlrtl;DBXSybaseASEDriver;DbxCommonDriver;vclimg;IndyProtocols;DBXMySQLDriver;dbxcds;bindengine;vclactnband;vcldb;bindcompdbx;soaprtl;vcldsnap;bindcompvcl;vclie;DBXDb2Driver;vcltouch;websnap;DBXOracleDriver;CustomIPTransport;VclSmp;dsnap;DBXInformixDriver;IndyIPServer;IndyCore;vcl;DBXMSSQLDriver;IndyIPCommon;DBXFirebirdDriver;dsnapcon;inet;vclx;inetdbxpress;webdsnap;DBXSybaseASADriver;dbexpress;DataSnapIndy10ServerTransport;IndyIPClient;$(DCC_UsePackage)</DCC_UsePackage>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <BT_BuildType>Debug</BT_BuildType>
+        <DCC_UsePackage>DBXSqliteDriver;dxFlowChartAdvancedCustomizeFormRS24;dxRichEditInplaceRS24;dxSkinBlueprintRS24;dxSpreadSheetConditionalFormattingDialogsRS24;dxPSdxGaugeControlLnkRS24;vclactnband;dxSpreadSheetRS24;vclFireDAC;dxDockingRS24;tethering;dxSkinVisualStudio2013BlueRS24;dxPScxTLLnkRS24;dxBarExtItemsRS24;FireDACADSDriver;dxFireDACServerModeRS24;dxSkinOffice2007BlackRS24;vcltouch;vcldb;dxSkinXmas2008BlueRS24;dxSkinOffice2010BlackRS24;dxADOServerModeRS24;dxGDIPlusRS24;dxPSdxDBTVLnkRS24;dxSkinLilianRS24;dxNavBarRS24;vclx;cxTreeListRS24;dxSkinDevExpressDarkStyleRS24;dxtrmdRS24;dxRichEditControlCoreRS24;RESTBackendComponents;dxRibbonRS24;VCLRESTComponents;cxExportRS24;cxTreeListdxBarPopupMenuRS24;dxSkinOffice2013LightGrayRS24;cxPivotGridChartRS24;dxTabbedMDIRS24;vclie;dxSkinVisualStudio2013LightRS24;bindengine;CloudService;FireDACMySQLDriver;cxPivotGridOLAPRS24;dxSkinSharpRS24;dxSkinBlackRS24;dxPSLnksRS24;bindcompdbx;dxSkinCoffeeRS24;IndyIPServer;IndySystem;dxSkinOffice2013DarkGrayRS24;dsnapcon;FireDACMSAccDriver;fmxFireDAC;vclimg;dxBarDBNavRS24;dxSkinDarkSideRS24;dxSkinOffice2013WhiteRS24;dxPSdxLCLnkRS24;dxPScxExtCommonRS24;dxPScxPivotGridLnkRS24;soaprtl;DbxCommonDriver;xmlrtl;dxSkinMcSkinRS24;rtl;dxLayoutControlRS24;DbxClientDriver;cxGridRS24;dxSkinBlueRS24;dxSpellCheckerRS24;cxLibraryRS24;dxSkinStardustRS24;dxSkinCaramelRS24;appanalytics;dxSkinsCoreRS24;dxDBXServerModeRS24;dxSkinHighContrastRS24;IndyIPClient;dxMapControlRS24;bindcompvcl;dxPSdxMapControlLnkRS24;dxSkinTheAsphaltWorldRS24;cxPageControlRS24;dxPsPrVwAdvRS24;cxEditorsRS24;dxSkinSevenClassicRS24;VclSmp;cxSchedulerRibbonStyleEventEditorRS24;dxSkinPumpkinRS24;dxPSPrVwRibbonRS24;dxSpreadSheetReportDesignerRS24;dxSkinSevenRS24;dxdborRS24;dxmdsRS24;cxSchedulerGridRS24;RESTComponents;dxHttpIndyRequestRS24;cxPivotGridRS24;DBXInterBaseDriver;dxdbtrRS24;dxSkinMetropolisRS24;dxSkinMoneyTwinsRS24;dxPScxPCProdRS24;dxWizardControlRS24;bindcompfmx;dxPSdxOCLnkRS24;dxBarExtDBItemsRS24;dxPSdxFCLnkRS24;dxSkinOffice2016ColorfulRS24;inetdb;cxSchedulerTreeBrowserRS24;FireDACIBDriver;fmx;dxSkinSpringTimeRS24;dxSkinValentineRS24;dxSkinLondonLiquidSkyRS24;dxSpreadSheetInplaceRichEditRS24;dxSkinWhiteprintRS24;dbexpress;IndyCore;dxSkiniMaginaryRS24;dxTileControlRS24;dxSkinOffice2016DarkRS24;dsnap;dxSkinOffice2007PinkRS24;dxPSdxSpreadSheetLnkRS24;cxDataRS24;FireDACCommon;dxSkinDevExpressStyleRS24;dxOfficeCoreRS24;dxBarRS24;dxSkinMetropolisDarkRS24;DBXMySQLDriver;dxPSRichEditControlLnkRS24;dxPScxCommonRS24;FireDACCommonODBC;FireDACCommonDriver;dxPSdxPDFViewerLnkRS24;inet;IndyIPCommon;dxSkinVS2010RS24;vcl;dxSkinSharpPlusRS24;dxThemeRS24;dxSkinOffice2007GreenRS24;dxPScxGridLnkRS24;FireDAC;dxPScxVGridLnkRS24;dxSkinOffice2010BlueRS24;FireDACPgDriver;FireDACSqliteDriver;dxServerModeRS24;cxSchedulerRS24;vclwinx;dxSkinOffice2007BlueRS24;dxPSCoreRS24;CustomIPTransport;vcldsnap;dxSkinGlassOceansRS24;dxRibbonCustomizationFormRS24;dxPScxSchedulerLnkRS24;dxSkinSummer2008RS24;dxSkinDarkRoomRS24;bindcomp;dxSkinFoggyRS24;dxorgcRS24;dxPDFViewerRS24;dxSkinOffice2010SilverRS24;dxRichEditControlRS24;dbxcds;adortl;dxSkinSilverRS24;dxSkinVisualStudio2013DarkRS24;dxComnRS24;dxFlowChartRS24;cxVerticalGridRS24;dsnapxml;dbrtl;IndyProtocols;inetdbxpress;dxSkinOffice2007SilverRS24;dxGaugeControlRS24;dxSkinLiquidSkyRS24;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -73,8 +78,9 @@
         <DCC_RemoteDebug>true</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <DCC_DebugDCUs>false</DCC_DebugDCUs>
         <VerInfo_Locale>1033</VerInfo_Locale>
+        <Manifest_File>(None)</Manifest_File>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
@@ -87,15 +93,11 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Test\TestDML.pas"/>
-        <DCCReference Include="Test\FileBasedTest.pas"/>
         <DCCReference Include="Source\Attributes.pas"/>
+        <DCCReference Include="Source\Controller.pas"/>
         <DCCReference Include="Source\DDL.pas"/>
         <DCCReference Include="Source\DML.pas"/>
         <DCCReference Include="Source\Expressions.pas"/>
-        <DCCReference Include="Source\fMain.pas">
-            <Form>FormMain</Form>
-        </DCCReference>
         <DCCReference Include="Source\Parser.pas"/>
         <DCCReference Include="Source\PLSQL.pas"/>
         <DCCReference Include="Source\Printers_.pas"/>
@@ -104,12 +106,7 @@
         <DCCReference Include="Source\Streams.pas"/>
         <DCCReference Include="Source\Tokenizer.pas"/>
         <DCCReference Include="Source\Tokens.pas"/>
-        <DCCReference Include="Test\TestExpressions.pas"/>
-        <DCCReference Include="Test\TestDDL.pas"/>
-        <DCCReference Include="Test\TestPLSQL.pas"/>
-        <DCCReference Include="Test\TestRulers.pas"/>
         <DCCReference Include="Source\Utils.pas"/>
-        <DCCReference Include="Source\Controller.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -124,52 +121,19 @@
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Delphi.Personality.12</Borland.Personality>
-        <Borland.ProjectType/>
+        <Borland.ProjectType>Application</Borland.ProjectType>
         <BorlandProject>
             <Delphi.Personality>
-                <VersionInfo>
-                    <VersionInfo Name="IncludeVerInfo">False</VersionInfo>
-                    <VersionInfo Name="AutoIncBuild">False</VersionInfo>
-                    <VersionInfo Name="MajorVer">1</VersionInfo>
-                    <VersionInfo Name="MinorVer">0</VersionInfo>
-                    <VersionInfo Name="Release">0</VersionInfo>
-                    <VersionInfo Name="Build">0</VersionInfo>
-                    <VersionInfo Name="Debug">False</VersionInfo>
-                    <VersionInfo Name="PreRelease">False</VersionInfo>
-                    <VersionInfo Name="Special">False</VersionInfo>
-                    <VersionInfo Name="Private">False</VersionInfo>
-                    <VersionInfo Name="DLL">False</VersionInfo>
-                    <VersionInfo Name="Locale">1049</VersionInfo>
-                    <VersionInfo Name="CodePage">1251</VersionInfo>
-                </VersionInfo>
-                <VersionInfoKeys>
-                    <VersionInfoKeys Name="CompanyName"/>
-                    <VersionInfoKeys Name="FileDescription"/>
-                    <VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
-                    <VersionInfoKeys Name="InternalName"/>
-                    <VersionInfoKeys Name="LegalCopyright"/>
-                    <VersionInfoKeys Name="LegalTrademarks"/>
-                    <VersionInfoKeys Name="OriginalFilename"/>
-                    <VersionInfoKeys Name="ProductName"/>
-                    <VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
-                    <VersionInfoKeys Name="Comments"/>
-                    <VersionInfoKeys Name="CFBundleName"/>
-                    <VersionInfoKeys Name="CFBundleDisplayName"/>
-                    <VersionInfoKeys Name="CFBundleIdentifier"/>
-                    <VersionInfoKeys Name="CFBundleVersion"/>
-                    <VersionInfoKeys Name="CFBundlePackageType"/>
-                    <VersionInfoKeys Name="CFBundleSignature"/>
-                    <VersionInfoKeys Name="CFBundleAllowMixedLocalizations"/>
-                    <VersionInfoKeys Name="CFBundleExecutable"/>
-                </VersionInfoKeys>
                 <Source>
-                    <Source Name="MainSource">Test.dpr</Source>
+                    <Source Name="MainSource">PLSQLDev_Plugin.dpr</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="w:\Exe\Softwarer.bpl">File w:\Exe\Softwarer.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k170.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp170.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\RAD Studio\10.0\Bpl\xyz.bpl">File C:\Users\Public\Documents\RAD Studio\10.0\Bpl\xyz.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclsoapserver240.bpl">Embarcadero SOAP Server Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclsoapmidas240.bpl">Embarcadero SOAP Midas Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclfmxstd240.bpl">Embarcadero FMX Standard Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\fmxstyledesigner240.bpl">Embarcadero Style Designer Package</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k240.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp240.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
@@ -193,13 +157,20 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Test.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Win32\Debug\PLSQLDev_Plugin.dll" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>Test.exe</RemoteName>
+                        <RemoteName>PLSQLDev_Plugin.dll</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
+                <DeployClass Name="ProjectiOSDeviceResourceRules">
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="ProjectOSXResource">
                     <Platform Name="OSX32">
                         <RemoteDir>Contents\Resources</RemoteDir>
@@ -212,24 +183,16 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="Android_LauncherIcon144">
-                    <Platform Name="Android">
-                        <RemoteDir>res\drawable-xxhdpi</RemoteDir>
-                        <Operation>1</Operation>
-                    </Platform>
-                </DeployClass>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="Win32">
                         <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>0</Operation>
                     </Platform>
-                    <Platform Name="OSX32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
-                </DeployClass>
-                <DeployClass Name="AndroidLibnativeMipsFile">
-                    <Platform Name="Android">
-                        <RemoteDir>library\lib\mips</RemoteDir>
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -241,6 +204,18 @@
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_LauncherIcon144">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-xxhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidLibnativeMipsFile">
+                    <Platform Name="Android">
+                        <RemoteDir>library\lib\mips</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -258,6 +233,7 @@
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="Android">
@@ -273,6 +249,7 @@
                         <Operation>0</Operation>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.framework</Extensions>
                     </Platform>
@@ -328,7 +305,17 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="ProjectiOSInfoPList"/>
+                <DeployClass Name="ProjectiOSInfoPList">
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="AndroidLibnativeArmeabiFile">
                     <Platform Name="Android">
                         <RemoteDir>library\lib\armeabi</RemoteDir>
@@ -343,6 +330,7 @@
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -369,36 +357,9 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="UWP_DelphiLogo44">
-                    <Platform Name="Win32">
-                        <RemoteDir>Assets</RemoteDir>
-                        <Operation>1</Operation>
-                    </Platform>
-                    <Platform Name="Win64">
-                        <RemoteDir>Assets</RemoteDir>
-                        <Operation>1</Operation>
-                    </Platform>
-                </DeployClass>
-                <DeployClass Name="UWP_DelphiLogo150">
-                    <Platform Name="Win32">
-                        <RemoteDir>Assets</RemoteDir>
-                        <Operation>1</Operation>
-                    </Platform>
-                    <Platform Name="Win64">
-                        <RemoteDir>Assets</RemoteDir>
-                        <Operation>1</Operation>
-                    </Platform>
-                </DeployClass>
                 <DeployClass Name="Android_SplashImage640">
                     <Platform Name="Android">
                         <RemoteDir>res\drawable-large</RemoteDir>
-                        <Operation>1</Operation>
-                    </Platform>
-                </DeployClass>
-                <DeployClass Name="ProjectiOSEntitlements"/>
-                <DeployClass Name="AndroidGDBServer">
-                    <Platform Name="Android">
-                        <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -413,11 +374,57 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="ProjectOSXInfoPList"/>
-                <DeployClass Name="ProjectOSXEntitlements"/>
+                <DeployClass Name="UWP_DelphiLogo44">
+                    <Platform Name="Win32">
+                        <RemoteDir>Assets</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Win64">
+                        <RemoteDir>Assets</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSEntitlements">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="Android_LauncherIcon72">
                     <Platform Name="Android">
                         <RemoteDir>res\drawable-hdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidGDBServer">
+                    <Platform Name="Android">
+                        <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectOSXInfoPList">
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectOSXEntitlements">
+                    <Platform Name="OSX32">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="UWP_DelphiLogo150">
+                    <Platform Name="Win32">
+                        <RemoteDir>Assets</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Win64">
+                        <RemoteDir>Assets</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -480,6 +487,7 @@
                         <Operation>0</Operation>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\Resources\StartUp\</RemoteDir>
                         <Operation>0</Operation>
                     </Platform>
                     <Platform Name="iOSDevice32">
@@ -508,6 +516,7 @@
                         <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
@@ -543,7 +552,20 @@
                         <Operation>0</Operation>
                         <Extensions>.dll;.bpl</Extensions>
                     </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
@@ -551,9 +573,9 @@
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
-                <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Linux64" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
             </Deployment>
@@ -561,12 +583,6 @@
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">False</Platform>
             </Platforms>
-            <UnitTesting>
-                <TestFramework>DUnit / Delphi Win32</TestFramework>
-                <TestRunner>GUI</TestRunner>
-                <TestProjectName/>
-                <SourceProjectName/>
-            </UnitTesting>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>

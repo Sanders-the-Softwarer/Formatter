@@ -9,6 +9,9 @@
         <Projects Include="Test.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="PLSQLDev_Plugin.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -35,14 +38,23 @@
     <Target Name="Test:Make">
         <MSBuild Projects="Test.dproj" Targets="Make"/>
     </Target>
+    <Target Name="PLSQLDev_Plugin">
+        <MSBuild Projects="PLSQLDev_Plugin.dproj"/>
+    </Target>
+    <Target Name="PLSQLDev_Plugin:Clean">
+        <MSBuild Projects="PLSQLDev_Plugin.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="PLSQLDev_Plugin:Make">
+        <MSBuild Projects="PLSQLDev_Plugin.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="DebugTool;Test"/>
+        <CallTarget Targets="DebugTool;Test;PLSQLDev_Plugin"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="DebugTool:Clean;Test:Clean"/>
+        <CallTarget Targets="DebugTool:Clean;Test:Clean;PLSQLDev_Plugin:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="DebugTool:Make;Test:Make"/>
+        <CallTarget Targets="DebugTool:Make;Test:Make;PLSQLDev_Plugin:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

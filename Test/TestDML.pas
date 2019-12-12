@@ -62,6 +62,9 @@ type
     procedure В_Запросе_Можно_Употреблять_Конструкцию_Keep;
     procedure В_Запросе_Можно_Употреблять_Конструкцию_Keep_С_Переносом;
     procedure Форматирование_Подзапросов_В_Select;
+    procedure Переносы_По_And_В_Where;
+    procedure Выравнивание_Условий_В_Where;
+    procedure Commit_Rollback_Savepoint;
   end;
 
   { Тесты на insert }
@@ -213,6 +216,19 @@ procedure _Select.Форматирование_Подзапросов_В_Select;
 begin
   Settings.PreferredExpressionLength := 80;
   Settings.AlignExpressions := true;
+end;
+
+procedure _Select.Переносы_По_And_В_Where;
+begin
+end;
+
+procedure _Select.Выравнивание_Условий_В_Where;
+begin
+  Settings.AlignExpressions := true;
+end;
+
+procedure _Select.Commit_Rollback_Savepoint;
+begin
 end;
 
 procedure _Select.В_Запросе_Можно_Употреблять_Функцию_Listagg;

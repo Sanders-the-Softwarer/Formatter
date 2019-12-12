@@ -28,7 +28,7 @@ unit FileBasedTest;
 
 interface
 
-uses Classes, SysUtils, TestFramework, Printers_, Parser, Tokenizer, Streams;
+uses Classes, SysUtils, TestFramework, Printers_, Controller;
 
 type
   {  ласс автотестов, провер€ющих совпадение форматировани€ файла с результатом }
@@ -109,29 +109,10 @@ end;
 
 { —равнение форматированного текста с ожидаемым }
 procedure TFileBasedTest.Check(AText, AExpected: string);
-var
-  Parser: TParser;
-  Printer: TPrinter;
-  Expected, Actual: string;
+var Actual: string;
 begin
-  try
-    Parser := TParser.Create(
-                TCommentProcessor.Create(
-                  TMerger.Create(
-                    TWhitespaceSkipper.Create(
-                      TTokenizer.Create(
-                        TPositionStream.Create(
-                          TStringStream.Create(AText)))))), Settings);
-    Printer := TPrinter.CreateFormatterPrinter(nil);
-    Printer.Settings := Settings;
-    Parser.PrintAll(Printer);
-    Expected := Beautify(AExpected);
-    Actual   := Beautify(Printer.GetText);
-    CheckEquals(Expected, Actual);
-  finally
-    FreeAndNil(Parser);
-    FreeAndNil(Printer);
-  end;
+  Controller.MakeFormatted(AText, Settings, Actual);
+  CheckEquals(Beautify(AExpected), Beautify(Actual));
 end;
 
 end.
