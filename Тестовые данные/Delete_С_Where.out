@@ -3,3 +3,16 @@ from
     dual 
 where 
     dummy = 'Y'
+
+-- delete может быть без from
+delete 
+    dual 
+where 
+    dummy = 'Y'
+
+-- Точка с запятой не должна перепрыгивать на следующую строку
+delete 
+from 
+    dual 
+where 
+    dummy = 'Y';

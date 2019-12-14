@@ -128,6 +128,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function IsNamedNotation: boolean;
   end;
 
   { Аргументы вызова подпрограммы }
@@ -137,11 +139,12 @@ type
     function ParseBreak: boolean; override;
   public
     function OnePerLine: boolean; override;
+    function IsNamedNotation: boolean;
   end;
 
   { Список аргументов в скобках }
   TBracketedArguments = class(TOptionalBracketedStatement<TArguments>)
-  strict protected
+  public
     function MultiLine: boolean; override;
   end;
 
@@ -194,6 +197,7 @@ type
   TCaseSections = class(TStatementList<TCaseSection>)
   strict protected
     function ParseBreak: boolean; override;
+    function OnePerLine: boolean; override;
   end;
 
   { Выражение cast }
@@ -476,10 +480,11 @@ end;
 function TExpression.ParseDelimiter(out AResult: TObject): boolean;
 var
   T: TToken;
+  D: integer;
 begin
   T := NextToken;
   if T is TEpithet then TEpithet(T).IsKeyword := true;
-  if Operations.ContainsKey(T.Value) and ((T.Value <> ',') or (Self.Parent is TTerm)) then AResult := T;
+  if HasOperation(T, D) and ((T.Value <> ',') or (Self.Parent is TTerm)) then AResult := T;
   Result := Assigned(AResult);
   if AResult is TTerminal then TTerminal(AResult).OpType := otBinary;
 end;
@@ -565,7 +570,9 @@ end;
 
 procedure TQualifiedIndexedIdent.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Dot, _Ident, _Indexes, _Next]);
+  if _Indexes is TBracketedArguments and TBracketedArguments(_Indexes).MultiLine
+    then APrinter.PrintItems([_Dot, _Ident, _IndentNextLine, _Indexes, _Undent, _Next])
+    else APrinter.PrintItems([_Dot, _Ident, _Indexes, _Next]);
 end;
 
 function TQualifiedIndexedIdent.IsSimpleIdent: boolean;
@@ -592,10 +599,20 @@ end;
 
 procedure TArgument.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.StartRuler(Settings.AlignVariables);
-  APrinter.PrintRulerItem('ident', _Ident);
-  APrinter.PrintRulerItem('argument', _Assignment);
-  APrinter.PrintRulerItem('expression', _Expression);
+  if IsNamedNotation then
+    begin
+      APrinter.StartRuler(Settings.AlignVariables);
+      APrinter.PrintRulerItem('ident', _Ident);
+      APrinter.PrintRulerItem('argument', _Assignment);
+      APrinter.PrintRulerItem('expression', _Expression);
+    end
+  else
+    APrinter.PrintItem(_Expression);
+end;
+
+function TArgument.IsNamedNotation: boolean;
+begin
+  Result := Assigned(_Assignment);
 end;
 
 { TArguments }
@@ -607,7 +624,16 @@ end;
 
 function TArguments.OnePerLine: boolean;
 begin
-  Result := Self.Count > Settings.ArgumentSingleLineParamLimit;
+  Result := IsNamedNotation and (Self.Count > Settings.ArgumentSingleLineParamLimit);
+end;
+
+function TArguments.IsNamedNotation: boolean;
+var i: integer;
+begin
+  Result := false;
+  for i := 0 to Count - 1 do
+    if (Item(i) is TArgument) and (TArgument(Item(i)).IsNamedNotation) then
+      exit(true);
 end;
 
 { TCase }
@@ -659,6 +685,11 @@ end;
 function TCaseSections.ParseBreak: boolean;
 begin
   Result := not Assigned(Keyword(['when', 'else']));
+end;
+
+function TCaseSections.OnePerLine: boolean;
+begin
+  Result := false;
 end;
 
 { TCast }

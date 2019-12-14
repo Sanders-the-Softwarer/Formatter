@@ -1,0 +1,7 @@
+select 
+    * 
+from 
+    dual 
+where 
+    a = b 
+    and (c = d or e = f)

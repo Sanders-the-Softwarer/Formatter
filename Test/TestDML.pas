@@ -65,6 +65,9 @@ type
     procedure Переносы_По_And_В_Where;
     procedure Выравнивание_Условий_В_Where;
     procedure Commit_Rollback_Savepoint;
+    procedure Длинный_И_Сложный_Запрос_В_Форматировании_Которого_Куча_Мелких_Недостатков;
+    procedure Комментарий_Внутри_Скобок;
+    procedure Комментарий_Не_Должен_Приводить_К_Переносу_Значения_На_Следующую_Строку;
   end;
 
   { Тесты на insert }
@@ -175,6 +178,15 @@ procedure _Select.Запрос_Со_Start_With_И_Connect_By;
 begin
 end;
 
+procedure _Select.Комментарий_Внутри_Скобок;
+begin
+end;
+
+procedure _Select.Комментарий_Не_Должен_Приводить_К_Переносу_Значения_На_Следующую_Строку;
+begin
+  Settings.PreferredExpressionLength := 60;
+end;
+
 procedure _Select.Запрос_С_Алиасами_В_Полях;
 begin
 end;
@@ -225,6 +237,11 @@ end;
 procedure _Select.Выравнивание_Условий_В_Where;
 begin
   Settings.AlignExpressions := true;
+end;
+
+procedure _Select.Длинный_И_Сложный_Запрос_В_Форматировании_Которого_Куча_Мелких_Недостатков;
+begin
+
 end;
 
 procedure _Select.Commit_Rollback_Savepoint;

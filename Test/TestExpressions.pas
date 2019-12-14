@@ -38,11 +38,17 @@ type
     procedure Выражения_Состоят_Из_Операндов_Связанных_Бинарными_Операциями;
     procedure Выражение_Может_Содержать_Multiset_Операции;
     procedure Несколько_Апострофов_Подряд_В_Литерале;
+    procedure Форматирование_Case;
+    procedure And_И_Or_Большими_Буквами;
   end;
 
 implementation
 
 { _Expressions }
+
+procedure _Expressions.And_И_Or_Большими_Буквами;
+begin
+end;
 
 procedure _Expressions.В_Квалифицированных_Идентификаторах_Бывают_Скобки_Подряд;
 begin
@@ -114,6 +120,11 @@ end;
 
 procedure _Expressions.Операнд_Может_Сопровождаться_Постфиксными_Операциями;
 begin
+end;
+
+procedure _Expressions.Форматирование_Case;
+begin
+  Settings.PreferredExpressionLength := 60;
 end;
 
 initialization

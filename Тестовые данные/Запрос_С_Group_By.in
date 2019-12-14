@@ -1,1 +1,4 @@
 select * from dual group by dummy, dummy, dummy
+
+-- “очка с зап€той должна идти на той же строке, что и dummy
+select * from dual group by dummy, dummy;

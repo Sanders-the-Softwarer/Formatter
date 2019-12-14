@@ -458,7 +458,7 @@ begin
   _OpenBracket := Terminal('(');
   _Partition   := Keyword('partition');
   if Assigned(_Partition) then _By := Keyword('by');
-  if Assigned(_Partition) then TIdentFields.Parse(Self, Source, _PartitionFields);
+  if Assigned(_Partition) then TExpressionFields.Parse(Self, Source, _PartitionFields);
   TOrderBy.Parse(Self, Source, _OrderBy);
   _CloseBracket := Terminal(')');
   Result := true;
@@ -1038,12 +1038,8 @@ end;
 
 procedure TGroupBy.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Group);
-  APrinter.PrintItem(_By);
-  APrinter.NextLine;
-  APrinter.Indent;
+  APrinter.PrintItems([_Group, _By, _IndentNextLine]);
   inherited;
-  APrinter.NextLine;
   APrinter.Undent;
 end;
 
@@ -1061,7 +1057,6 @@ procedure THaving.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Having, _IndentNextLine, _Condition, _Undent]);
 end;
-
 
 { TStartWith }
 
@@ -1244,7 +1239,7 @@ function TDelete.InternalParse: boolean;
 begin
   _Delete := Keyword('delete');
   _From   := Keyword('from');
-  if not Assigned(_Delete) or not Assigned(_From) then exit(false);
+  if not Assigned(_Delete) then exit(false);
   TTableRef.Parse(Self, Source, _Table);
   TWhere.Parse(Self, Source, _Where);
   inherited;
@@ -1254,11 +1249,9 @@ end;
 procedure TDelete.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Delete);
-  APrinter.NextLine;
-  APrinter.PrintItem(_From);
+  APrinter.NextLineIf(_From);
   APrinter.PrintIndented(_Table);
-  APrinter.NextLine;
-  APrinter.PrintItem(_Where);
+  APrinter.NextLineIf(_Where);
   inherited;
 end;
 

@@ -55,6 +55,7 @@ type
     procedure Нужно_Написать_Тесты_На_MatchParamLimit;
     procedure Нужно_Написать_Тесты_На_ReplaceDefault;
     procedure Нужно_Написать_Тесты_На_ReplaceAsIs;
+    procedure Нужно_Добавить_Group_By_Rollup_Cube_Grouping_Sets;
   end;
 
 { _UnderConstruction }
@@ -85,6 +86,11 @@ begin
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_ReplaceAsIs;
+begin
+  Fail('Пока что не сделано');
+end;
+
+procedure _UnderConstruction.Нужно_Добавить_Group_By_Rollup_Cube_Grouping_Sets;
 begin
   Fail('Пока что не сделано');
 end;

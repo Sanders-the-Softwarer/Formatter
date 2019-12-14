@@ -83,7 +83,7 @@ type
     StatementStream: TBufferedStream<TStatement>;
     Settings: TFormatSettings;
     PrevSrcCaret, PrevResultCaret: integer;
-    IntoSync: boolean;
+    IntoSync, IntoUpdateSettings: boolean;
     procedure UpdateData;
     procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
     procedure CoordsToCaret(Memo: TMemo; const Line, Col: integer; out Pos: integer);
@@ -106,17 +106,20 @@ var
 begin
   FreeAndNil(StatementStream);
   { Скопируем настройки }
-  Settings.DeclarationSingleLineParamLimit := edDeclarationSingleLineParamLimit.Value;
-  Settings.ArgumentSingleLineParamLimit    := edArgumentSingleLineParamLimit.Value;
-  Settings.MatchParamLimit                 := edMatchParamLimit.Value;
-  Settings.AlignVariables                  := checkAlignVariables.Checked;
-  Settings.AlignFields                     := checkAlignFields.Checked;
-  Settings.AlignExpressions                := checkAlignExpressions.Checked;
-  Settings.AlignSpecialComments            := checkAlignSpecialComments.Checked;
-  Settings.AlignTableColumnComments        := checkAlignTableColumnComments.Checked;
-  Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
-  Settings.ReplaceAsIs                     := checkReplaceAsIs.Checked;
-  Settings.PreferredExpressionLength       := edPreferredExpressionLength.Value;
+  if not IntoUpdateSettings then
+  begin
+    Settings.DeclarationSingleLineParamLimit := edDeclarationSingleLineParamLimit.Value;
+    Settings.ArgumentSingleLineParamLimit    := edArgumentSingleLineParamLimit.Value;
+    Settings.MatchParamLimit                 := edMatchParamLimit.Value;
+    Settings.AlignVariables                  := checkAlignVariables.Checked;
+    Settings.AlignFields                     := checkAlignFields.Checked;
+    Settings.AlignExpressions                := checkAlignExpressions.Checked;
+    Settings.AlignSpecialComments            := checkAlignSpecialComments.Checked;
+    Settings.AlignTableColumnComments        := checkAlignTableColumnComments.Checked;
+    Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
+    Settings.ReplaceAsIs                     := checkReplaceAsIs.Checked;
+    Settings.PreferredExpressionLength       := edPreferredExpressionLength.Value;
+  end;
   { Создадим потоки }
   Text := edSrc.Text;
   Big  := (Text.Length > 1024 * 1024);
@@ -168,9 +171,25 @@ begin
   AlarmTokenPrinter := TPrinter.CreateAlarmTokenPrinter(edAlarmToken, tabAlarmToken);
   AlarmStatementPrinter := TPrinter.CreateAlarmStatementPrinter(edAlarmStatement, tabAlarmStatement);
   Self.WindowState  := wsMaximized;
-  Settings := TFormatSettings.Create;
+  Settings := TFormatSettings.Default;
   ResultPrinter.Settings := Settings;
   Printers_.SyncNotification := Self.SyncNotification;
+  try
+    IntoUpdateSettings := true;
+    edDeclarationSingleLineParamLimit.Value := Settings.DeclarationSingleLineParamLimit;
+    edArgumentSingleLineParamLimit.Value    := Settings.ArgumentSingleLineParamLimit;
+    edMatchParamLimit.Value                 := Settings.MatchParamLimit;
+    edPreferredExpressionLength.Value       := Settings.PreferredExpressionLength;
+    checkAlignFields.Checked                := Settings.AlignFields;
+    checkAlignVariables.Checked             := Settings.AlignVariables;
+    checkAlignSpecialComments.Checked       := Settings.AlignSpecialComments;
+    checkAlignTableColumnComments.Checked   := Settings.AlignTableColumnComments;
+    checkAlignExpressions.Checked           := Settings.AlignExpressions;
+    checkReplaceDefault.Checked             := Settings.ReplaceDefault;
+    checkReplaceAsIs.Checked                := Settings.ReplaceAsIs;
+  finally
+    IntoUpdateSettings := false;
+  end;
 end;
 
 { При синхронизации обновляется только активная страница, поэтому при смене страницы

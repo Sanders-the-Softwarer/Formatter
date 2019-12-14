@@ -1279,11 +1279,11 @@ end;
 constructor TFormatSettings.Default;
 begin
   DeclarationSingleLineParamLimit := 1;
-  ArgumentSingleLineParamLimit    := 3;
+  ArgumentSingleLineParamLimit    := 1;
   MatchParamLimit                 := 3;
   AlignVariables                  := true;
   AlignFields                     := true;
-  AlignExpressions                := true;
+  AlignExpressions                := false;
   AlignTableColumnComments        := true;
   AlignSpecialComments            := true;
   ReplaceDefault                  := true;
