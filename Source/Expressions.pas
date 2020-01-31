@@ -68,6 +68,7 @@ type
   TTermInfo = record
     SingleLineLen, MultiLineLen, PrevDelimiterLen, PostDelimiterLen, RulerNumber: integer;
     SingleLine, LineBreak, BreakBeforeDelimiter: boolean;
+    RulerChar: char;
   end;
 
   { Выражение }
@@ -406,8 +407,12 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         exit;
     { Разметим линейки }
     for i := Start to Finish do
-      if not TermInfo[i].LineBreak and TermInfo[i].SingleLine then
-        TermInfo[i].RulerNumber := Finish; { Start не подходит, так как может быть нулём }
+    begin
+      TermInfo[i].RulerNumber := Finish; { Start не подходит, так как может быть нулём }
+      if not TermInfo[i].LineBreak and TermInfo[i].SingleLine
+        then TermInfo[i].RulerChar := 'L'
+        else TermInfo[i].RulerChar := 'R';
+    end;
   end;
 
   { Расстановка переносов по самым низкоприоритетным операциям }
@@ -452,7 +457,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         APrinter.PrintItem(_IndentNextLine);
       if Item(i) is TTerm then
         TTerm(Item(i)).MultiLine := not TermInfo[i].SingleLine;
-      APrinter.PrintRulerItem(Format('%p-term-%d', [pointer(Self), TermInfo[i].RulerNumber]), Item(i));
+      APrinter.PrintRulerItem(Format('%p-term-%d-%s', [pointer(Self), TermInfo[i].RulerNumber, TermInfo[i].RulerChar]), Item(i));
       if TermInfo[i].SingleLine then
         APrinter.SupressNextLine(false)
       else if i > 0 then
@@ -461,8 +466,9 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         then APrinter.NextLine
         else SameLine := true;
       if not Assigned(Delimiter(i)) then continue;
-      if SameLine then APrinter.Ruler(Format('%p-delimiter-%d-before', [pointer(Self), TermInfo[i].RulerNumber]));
-      APrinter.PrintItem(Delimiter(i));
+      if not SameLine
+        then APrinter.PrintRulerItem(Format('%p-delimiter-%d-before', [pointer(Self), TermInfo[i].RulerNumber]), Delimiter(i))
+        else APrinter.PrintItem(Delimiter(i));
       if SameLine then APrinter.Ruler(Format('%p-delimiter-%d-after', [pointer(Self), TermInfo[i].RulerNumber]));
       if TermInfo[i].LineBreak and not TermInfo[i].BreakBeforeDelimiter then APrinter.NextLine;
     end;
