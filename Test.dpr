@@ -38,7 +38,8 @@ uses
   TestPLSQL in 'Test\TestPLSQL.pas',
   TestRulers in 'Test\TestRulers.pas',
   Utils in 'Source\Utils.pas',
-  Controller in 'Source\Controller.pas';
+  Controller in 'Source\Controller.pas',
+  TestBugs in 'Test\TestBugs.pas';
 
 {$R *.RES}
 

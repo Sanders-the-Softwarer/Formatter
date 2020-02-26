@@ -33,20 +33,19 @@ uses Classes, SysUtils, TestFramework, Printers_, Controller;
 type
   { Класс автотестов, проверяющих совпадение форматирования файла с результатом }
   TFileBasedTest = class(TTestCase)
-  private
+  protected
+    Settings: TFormatSettings;
+  protected
+    { Загрузка файлов и проверка форматирования }
+    procedure CheckFile(const AFileName: string); virtual;
+    { Запуск тестового метода }
+    procedure Invoke(AMethod: TTestMethod); override;
     { Чтение файла в строку }
     function LoadFile(const AFileName: string): string;
     { Приведение строки к наглядному для сравнения виду }
     function Beautify(const S: string): string;
     { Сравнение форматированного текста с ожидаемым }
     procedure Check(AText, AExpected: string);
-  protected
-    Settings: TFormatSettings;
-  protected
-    { Загрузка файлов и проверка форматирования }
-    procedure CheckFile(const AFileName: string);
-    { Запуск тестового метода }
-    procedure Invoke(AMethod: TTestMethod); override;
   public
     { Подготовка к выполнению теста }
     procedure SetUp; override;
@@ -71,7 +70,7 @@ end;
 { Загрузка файлов и проверка форматирования }
 procedure TFileBasedTest.CheckFile(const AFileName: string);
 begin
-  Check(LoadFile(AFileName + '.in'), LoadFile(AFileName + '.out'));
+  Check(LoadFile('.\Тестовые Данные\' + AFileName + '.in'), LoadFile('.\Тестовые Данные\' + AFileName + '.out'));
 end;
 
 { Запуск тестового метода }
@@ -87,7 +86,7 @@ var i: integer;
 begin
   with TStringList.Create do
   try
-    LoadFromFile('.\Тестовые Данные\' + AFileName);
+    LoadFromFile(AFileName);
     for i := 0 to Count - 1 do Strings[i] := TrimRight(Strings[i]);
     { С вероятностью 1/2 поставим либо не поставим на входе последний перевод
       строки, результат на выходе не должен от этого зависеть }

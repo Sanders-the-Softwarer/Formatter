@@ -1,0 +1,25 @@
+-- Поля t.skin_name и us.ribbon_minimize не должны заезжать в конец предыдущего комментария
+
+select
+    t.code,
+    t.usr,
+    t.password,
+    t.business,
+    t.person_num,
+    t.name,
+    t.name_first,
+    t.name_last,
+    t.name_parent,
+    t.mail,
+    t.is_disabled,
+    t.language,
+    -- для скина делаем отдельный тюнинг
+    t.skin_name,
+    t.grants_version,
+    -- другие пользовательские настройки
+    us.ribbon_minimize,
+    us.collection_code,
+    us.country_group_code,
+    us.mouse_capture_enable
+from
+    sm_v_current_user t

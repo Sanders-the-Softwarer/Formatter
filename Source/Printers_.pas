@@ -194,6 +194,7 @@ type
     Shift:   integer;
     BOL:     boolean;
     EmptyLine: boolean;
+    WasComment: boolean;
     Line:    integer;
     Col:     integer;
     Rulers:  TRulers;
@@ -687,8 +688,9 @@ var
   AllowLF, StartOfText: boolean;
   i: integer;
 begin
-  AllowLF := (SupNextLine = 0);
   StartOfText := (Line = 1) and (Col = 1);
+  AllowLF := (SupNextLine = 0) or WasComment;
+  WasComment := false;
   { Обработаем вставку пустой строки }
   if EmptyLine and not StartOfText then
   begin
@@ -757,6 +759,8 @@ begin
     Inc(Col, Value.Length);
     PrevToken := AToken;
   end;
+  { Если это был комментарий, взведём флажок }
+  WasComment := AToken is TComment;
   { Если после лексемы есть комментарии, напечатаем их }
   if Assigned(AToken) and Assigned(AToken.CommentsBelow) then
     for i := 0 to AToken.CommentsBelow.Count - 1 do
@@ -773,7 +777,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   var
     _Mode: TFormatterPrinterMode;
     _Shift, _Col, _Line, _PaddingCol: integer;
-    _BOL, _EmptyLine: boolean;
+    _BOL, _EmptyLine, _WasComment: boolean;
     _Builder: TStringBuilder;
     _Rulers: TRulers;
     _PrevToken: TToken;
@@ -800,6 +804,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     _PaddingCol := PaddingCol;
     _BOL     := BOL;
     _EmptyLine := EmptyLine;
+    _WasComment := WasComment;
     _Builder := Builder;
     _Rulers  := Rulers;
     _PrevToken := PrevToken;
@@ -816,6 +821,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     PaddingCol := _PaddingCol;
     BOL   := _BOL;
     EmptyLine := _EmptyLine;
+    WasComment := _WasComment;
     Builder := _Builder;
     PrevToken := _PrevToken;
     PrevStatement := _PrevStatement;

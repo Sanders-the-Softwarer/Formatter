@@ -1,0 +1,10 @@
+-- Блок должен быть правильно выровнен и содержать пробелы между словами
+
+comment on table  top_v_business_supplier_route                           is 'Маршруты поставщиков';
+comment on column top_v_business_supplier_route.business_supplier_code    is 'Поставщик';
+comment on column top_v_business_supplier_route.collection_code           is 'Коллекция';
+comment on column top_v_business_supplier_route.route_code                is 'Маршрут';
+comment on column top_v_business_supplier_route.state                     is 'Состояние (0 - удалена, 1 - активна)';
+comment on column top_v_business_supplier_route.business_supplier_code_hl is 'Поставщик';
+comment on column top_v_business_supplier_route.collection_code_hl        is 'Коллекция';
+comment on column top_v_business_supplier_route.route_code_hl             is 'Маршрут';
