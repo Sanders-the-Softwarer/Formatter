@@ -105,7 +105,7 @@ type
   public
     class function CreateTokenizerPrinter(AListBox: TListBox): TPrinter;
     class function CreateSyntaxTreePrinter(ATreeView: TTreeView): TPrinter;
-    class function CreateFormatterPrinter(AMemo: TMemo): TPrinter;
+    class function CreateFormatterPrinter(AMemo: TMemo = nil): TPrinter;
     class function CreateAlarmTokenPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
     class function CreateAlarmStatementPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
   end;
@@ -188,7 +188,6 @@ type
   { Принтер для вывода форматированного текста }
   TFormatterPrinter = class(TBasePrinter)
   strict private
-    Memo:    TMemo;
     Builder: TStringBuilder;
     Mode:    TFormatterPrinterMode;
     Shift:   integer;
@@ -202,18 +201,17 @@ type
     PaddingCol: integer;
     PrevStatement: TStatement;
     PrevToken: TToken;
-    IntoSync: boolean;
-    TokenPos, TokenLen: TDictionary<TToken, integer>;
     SpecialComments: TObjectList<TToken>;
     SupSpace, SupNextLine: integer;
     IsDraft: boolean;
     Text:    string;
     RulerEnabled: boolean;
   strict protected
+    TokenPos, TokenLen: TDictionary<TToken, integer>;
     function SpaceRequired(ALeft, ARight: TToken): boolean;
     function EmptyLineRequired(APrev, ANext: TStatement): boolean;
   public
-    constructor Create(AMemo: TMemo);
+    constructor Create;
     destructor Destroy; override;
     procedure BeginPrint; override;
     procedure EndPrint; override;
@@ -232,9 +230,19 @@ type
     procedure Ruler(const ARuler: string); override;
     function MakeDraftPrinter: TPrinter; override;
     function CurrentCol: integer; override;
+    function  GetText: string; override;
+  end;
+
+  { Принтер для вывода форматированного текста }
+  TGUIFormatterPrinter = class(TFormatterPrinter)
+  strict private
+    Memo: TMemo;
+    IntoSync: boolean;
+  public
+    constructor Create(AMemo: TMemo);
+    procedure EndPrint; override;
     procedure ControlChanged; override;
     procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
-    function  GetText: string; override;
   end;
 
   { Принтер для вывода последовательности лексем }
@@ -388,9 +396,11 @@ end;
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-class function TPrinter.CreateFormatterPrinter(AMemo: TMemo): TPrinter;
+class function TPrinter.CreateFormatterPrinter(AMemo: TMemo = nil): TPrinter;
 begin
-  Result := TFormatterPrinter.Create(AMemo);
+  if Assigned(AMemo)
+    then Result := TGUIFormatterPrinter.Create(AMemo)
+    else Result := TFormatterPrinter.Create;
 end;
 
 class function TPrinter.CreateSyntaxTreePrinter(ATreeView: TTreeView): TPrinter;
@@ -576,9 +586,8 @@ end;
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-constructor TFormatterPrinter.Create(AMemo: TMemo);
+constructor TFormatterPrinter.Create;
 begin
-  Memo     := AMemo;
   inherited Create;
   TokenPos := TDictionary<TToken, integer>.Create;
   TokenLen := TDictionary<TToken, integer>.Create;
@@ -613,7 +622,6 @@ procedure TFormatterPrinter.EndPrint;
 begin
   if Assigned(Builder) then Text := Builder.ToString else Text := '';
   FreeAndNil(Builder);
-  if Assigned(Memo) then Memo.Text := Text;
   PrevToken := nil;
   PrevStatement := nil;
   inherited;
@@ -976,7 +984,7 @@ end;
 { Создание принтера для пробной печати }
 function TFormatterPrinter.MakeDraftPrinter: TPrinter;
 begin
-  Result := TFormatterPrinter.Create(nil);
+  Result := TFormatterPrinter.Create;
   Result.Settings := Self.Settings;
   TFormatterPrinter(Result).IsDraft := true;
 end;
@@ -987,16 +995,43 @@ begin
   Result := Col;
 end;
 
-{ Реакция на действия пользователя в привязанном к принтере Memo }
-procedure TFormatterPrinter.ControlChanged;
+function TFormatterPrinter.GetText: string;
+begin
+  if Assigned(Builder)
+    then Result := Builder.ToString
+    else Result := Text;
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//               Принтер для печати форматированного текста в GUI             //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+constructor TGUIFormatterPrinter.Create(AMemo: TMemo);
+begin
+  Assert(AMemo <> nil);
+  Memo := AMemo;
+  inherited Create;
+end;
+
+{ При завершении печати выведем сформированный текст в Memo }
+procedure TGUIFormatterPrinter.EndPrint;
+begin
+  inherited;
+  Memo.Text := GetText;
+end;
+
+{ При действиях пользователя в Memo найдём текущую лексему и оповестим о ней
+  другие элементы интерфейса }
+procedure TGUIFormatterPrinter.ControlChanged;
 var
   P: integer;
   T: TToken;
 begin
-  if IntoSync or not Assigned(Memo) then exit;
+  if IntoSync then exit;
   try
     IntoSync := true;
-    { Найдём лексему под курсором и пошлём другим оповещение о синхронизации }
     P := Memo.SelStart;
     for T in TokenPos.Keys do
       if (TokenPos[T] <= P) and (TokenPos[T] + TokenLen[T] >= P) then
@@ -1006,11 +1041,11 @@ begin
   end;
 end;
 
-{ Обработка оповещения о синхронизации от других элементов интерфейса }
-procedure TFormatterPrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
+{ При оповещении от других элементов интерфейса выделим указанную лексему }
+procedure TGUIFormatterPrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
 var T: TToken;
 begin
-  if IntoSync or not Assigned(Memo) then exit;
+  if IntoSync then exit;
   try
     IntoSync := true;
     { Если лексема не указана - найдём подходящую по позиции }
@@ -1025,13 +1060,6 @@ begin
   finally
     IntoSync := false;
   end;
-end;
-
-function TFormatterPrinter.GetText: string;
-begin
-  if Assigned(Builder)
-    then Result := Builder.ToString
-    else Result := Text;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,28 @@
+with
+    a as 
+        (
+            select
+                *
+            from
+                dual
+        ),
+    b as 
+        (
+            select
+                *
+            from
+                dual
+        ),
+    c as 
+        (
+            select
+                *
+            from
+                dual
+        )
+select
+    *
+from
+    a,
+    b,
+    c
