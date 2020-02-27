@@ -1,0 +1,12 @@
+-- select into в элемент таблицы - нормальная конструкция и падать не должна
+
+select
+    max(c.main_currency_code),
+    max(c.base_currency_code)
+into
+    gv_calc_setting_tbl(p_delivery_country_code)
+from
+    top_dev_calc_setting c
+where
+    c.delivery_country_code = p_delivery_country_code
+    and c.state = 1;
