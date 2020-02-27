@@ -65,7 +65,11 @@ type
     procedure Оператор_Execute_Immediate;
     procedure Анонимный_Блок_С_Bind_Переменными;
     procedure Анонимный_Блок_С_Подстановками;
+  public
+    { отложим }
     procedure Комментарии_В_Пакете;
+  public
+    { отложим }
     procedure Пустота_Не_Должна_Сдвигать_Выравнивание;
   end;
 

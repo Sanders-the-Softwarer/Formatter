@@ -64,7 +64,7 @@ type
   end;
 
   { Команда call }
-  TCall = class(TStatement)
+  TCall = class(TSemicolonStatement)
   strict private
     _Call: TEpithet;
     _What: TStatement;
@@ -175,14 +175,16 @@ end;
 
 function TCall.InternalParse: boolean;
 begin
-  _Call := Keyword('call');
+  _Call := Keyword(['call', 'exec']);
   Result := Assigned(_Call);
   if Result then TQualifiedIndexedIdent.Parse(Self, Source, _What);
+  Result := Result and inherited;
 end;
 
 procedure TCall.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Call, _What]);
+  inherited;
 end;
 
 { TFileName }

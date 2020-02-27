@@ -277,11 +277,7 @@ procedure TTerm.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Prefix, _Number, _Literal, _SQLStatement, _Ident, _Suffix, _KeywordValue, _Case, _Cast]);
   if Assigned(_Select) then
-  begin
-    APrinter.NextLine;
     APrinter.PrintItem(_Select);
-    APrinter.NextLine;
-  end;
   if Assigned(_Expression) then
   begin
     APrinter.PrintItem(_OpenBracket);
@@ -576,9 +572,9 @@ end;
 
 procedure TQualifiedIndexedIdent.InternalPrintSelf(APrinter: TPrinter);
 begin
-  if _Indexes is TBracketedArguments and TBracketedArguments(_Indexes).MultiLine
+  {if _Indexes is TBracketedArguments and TBracketedArguments(_Indexes).MultiLine
     then APrinter.PrintItems([_Dot, _Ident, _IndentNextLine, _Indexes, _Undent, _Next])
-    else APrinter.PrintItems([_Dot, _Ident, _Indexes, _Next]);
+    else} APrinter.PrintItems([_Dot, _Ident, _Indexes, _Next]);
 end;
 
 function TQualifiedIndexedIdent.IsSimpleIdent: boolean;

@@ -2,34 +2,45 @@
 //                                                                            //
 //                           Форматизатор исходников                          //
 //                                                                            //
-//                        Вспомогательные  подпрограммы                       //
+//                         Автотесты на модуль SQL*Plus                       //
 //                                                                            //
 //                  Copyright(c) 2019 by Sanders the Softwarer                //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-unit Utils;
+unit TestSQLPLUS;
 
 interface
 
-uses SysUtils, Windows;
+uses
+  TestFramework, FileBasedTest;
 
-{ Вывод в отладочную консоль }
-procedure _Debug(const Msg: string; const Params: array of const);
+type
+
+  { Тесты на SQL*Plus }
+  _SQLPlus = class(TFileBasedTest)
+  published
+    procedure Exec;
+  public
+    { отложим }
+    procedure Последовательность_Exec;
+  end;
 
 implementation
 
-{ Вывод в отладочную консоль }
-procedure _Debug(const Msg: string; const Params: array of const);
-var S: string;
+{ _SQLPlus }
+
+procedure _SQLPlus.Exec;
 begin
-{  try
-    S := Format(Msg, Params);
-  except
-    S := Msg;
-  end;
-  OutputDebugString(@S[1]);}
 end;
 
+procedure _SQLPlus.Последовательность_Exec;
+begin
+end;
+
+initialization
+  RegisterTest(_SQLPlus.Suite);
+
 end.
+
 

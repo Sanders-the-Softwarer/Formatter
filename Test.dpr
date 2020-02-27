@@ -39,13 +39,15 @@ uses
   TestRulers in 'Test\TestRulers.pas',
   Utils in 'Source\Utils.pas',
   Controller in 'Source\Controller.pas',
-  TestBugs in 'Test\TestBugs.pas';
+  TestBugs in 'Test\TestBugs.pas',
+  TestSQLPLUS in 'Test\TestSQLPLUS.pas';
 
 {$R *.RES}
 
 type
   _UnderConstruction = class(TTestCase)
-  published
+  public
+    { отложим }
     procedure Нужно_Написать_Тесты_На_Команды_SQLPLUS;
     procedure Нужно_Написать_Тесты_На_Объектные_Типы;
     procedure Нужно_Написать_Тесты_На_Create_Trigger;

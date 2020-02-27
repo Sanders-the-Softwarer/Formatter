@@ -63,10 +63,18 @@ type
     procedure В_Запросе_Можно_Употреблять_Конструкцию_Keep_С_Переносом;
     procedure Форматирование_Подзапросов_В_Select;
     procedure Переносы_По_And_В_Where;
+  public
+    { отложим }
     procedure Выравнивание_Условий_В_Where;
+  published
     procedure Commit_Rollback_Savepoint;
+  public
+    { отложим }
     procedure Длинный_И_Сложный_Запрос_В_Форматировании_Которого_Куча_Мелких_Недостатков;
+  published
     procedure Комментарий_Внутри_Скобок;
+  public
+    { отложим }
     procedure Комментарий_Не_Должен_Приводить_К_Переносу_Значения_На_Следующую_Строку;
   end;
 
@@ -241,7 +249,6 @@ end;
 
 procedure _Select.Длинный_И_Сложный_Запрос_В_Форматировании_Которого_Куча_Мелких_Недостатков;
 begin
-
 end;
 
 procedure _Select.Commit_Rollback_Savepoint;

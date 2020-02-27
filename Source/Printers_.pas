@@ -195,6 +195,7 @@ type
     BOL:     boolean;
     EmptyLine: boolean;
     WasComment: boolean;
+    WasBOL: boolean;
     Line:    integer;
     Col:     integer;
     Rulers:  TRulers;
@@ -673,8 +674,11 @@ end;
 { Проверка, нужна ли пустая строка между двумя конструкциями }
 function TFormatterPrinter.EmptyLineRequired(APrev, ANext: TStatement): boolean;
 begin
-  { Команды set, @ лепим вместе }
-  if (APrev.ClassType = ANext.ClassType) and ((APrev.ClassType = TSet) or (APrev.ClassType = TAt)) then exit(false);
+  { Команды set, @, exec лепим вместе }
+  if (APrev.ClassType = ANext.ClassType) and
+     ((APrev.ClassType = TSet) or
+      (APrev.ClassType = TAt) or
+      (APrev.ClassType = TCall)) then exit(false);
   { Вставим пустую строку перед новой конструкцией верхнего уровня }
   if not Assigned(ANext.Parent) then exit(true);
   { Условия не выполнены }
@@ -690,30 +694,40 @@ var
 begin
   StartOfText := (Line = 1) and (Col = 1);
   AllowLF := (SupNextLine = 0) or WasComment;
-  WasComment := false;
   { Обработаем вставку пустой строки }
   if EmptyLine and not StartOfText then
   begin
-    if Assigned(Builder) and AllowLF then Builder.AppendLine;
-    Inc(Line);
+    if Assigned(Builder) and AllowLF then
+    begin
+      Builder.AppendLine;
+      Inc(Line);
+    end;
     BOL := true;
     EmptyLine := false;
   end;
   { Обработаем переход на новую строку }
-  if BOL then
+  if BOL and WasBOL then
+    BOL := false
+  else if BOL then
   begin
-    if Assigned(Builder) and AllowLF and not StartOfText then Builder.AppendLine.Append(StringOfChar(' ', Shift));
+    if Assigned(Builder) and AllowLF and not StartOfText then
+    begin
+      Builder.AppendLine;
+      WasBOL := true;
+    end;
     BOL := false;
     if AllowLF and not StartOfText then
     begin
       Inc(Line);
-      Col := Shift + 1;
+      Col := 1;
       PrevToken := nil;
     end;
   end;
   { Если задано выравнивание, вставим соответствующее количество пробелов }
   if (PaddingCol > Col) and Assigned(AToken) then
   begin
+    _Debug(' => col = %d, padding col = %d', [Col, PaddingCol]);
+    if WasBOL then Dec(PaddingCol, Shift);
     if Assigned(Builder) then Builder.Append(StringOfChar(' ', PaddingCol - Col));
     Col := PaddingCol;
     PaddingCol := 0;
@@ -725,9 +739,10 @@ begin
     Inc(Col);
   end;
   { Если до лексемы есть комментарии, напечатаем их }
-  if Assigned(AToken) and Assigned(AToken.CommentsAbove) then
+  if Assigned(AToken) and Assigned(AToken.CommentsAbove) and Assigned(Builder) and not IsDraft then
     for i := 0 to AToken.CommentsAbove.Count - 1 do
     begin
+      if not WasBOL then NextLine;
       PrintToken(AToken.CommentsAbove[i]);
       NextLine;
       PrintToken(nil);
@@ -736,6 +751,7 @@ begin
   if Assigned(AToken) then
   begin
     Value := AToken.Value;
+    Value := StringReplace(Value, #13, #13#10, [rfReplaceAll]);
     { Учтём настройки замены лексем на синонимы и вывод в нижнем регистре }
     if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and
        SameText(AToken.Value, 'default') and Settings.ReplaceDefault and AToken.CanReplace
@@ -748,6 +764,7 @@ begin
     { В режиме реальной печати - напечатаем лексему, иначе только учтём сдвиг позиции }
     if Assigned(Builder) then
     begin
+      if WasBOL then Builder.Append(StringOfChar(' ', Shift));
       if not IsDraft and not (AToken is TSpecialComment) then
       begin
         TokenPos.Add(AToken, Builder.Length);
@@ -756,15 +773,18 @@ begin
       Builder.Append(Value);
       AToken.Printed := true;
     end;
+    if WasBOL then Inc(Col, Shift);
     Inc(Col, Value.Length);
     PrevToken := AToken;
+    WasBOL := false;
   end;
   { Если это был комментарий, взведём флажок }
-  WasComment := AToken is TComment;
+  if Assigned(AToken) then WasComment := AToken is TComment;
   { Если после лексемы есть комментарии, напечатаем их }
-  if Assigned(AToken) and Assigned(AToken.CommentsBelow) then
+  if Assigned(AToken) and Assigned(AToken.CommentsBelow) and Assigned(Builder) and not IsDraft then
     for i := 0 to AToken.CommentsBelow.Count - 1 do
     begin
+      WasComment := true;
       NextLine;
       PrintToken(AToken.CommentsBelow[i]);
       NextLine;
@@ -777,7 +797,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   var
     _Mode: TFormatterPrinterMode;
     _Shift, _Col, _Line, _PaddingCol: integer;
-    _BOL, _EmptyLine, _WasComment: boolean;
+    _BOL, _EmptyLine, _WasComment, _WasBOL: boolean;
     _Builder: TStringBuilder;
     _Rulers: TRulers;
     _PrevToken: TToken;
@@ -805,6 +825,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     _BOL     := BOL;
     _EmptyLine := EmptyLine;
     _WasComment := WasComment;
+    _WasBOL  := WasBOL;
     _Builder := Builder;
     _Rulers  := Rulers;
     _PrevToken := PrevToken;
@@ -822,6 +843,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     BOL   := _BOL;
     EmptyLine := _EmptyLine;
     WasComment := _WasComment;
+    WasBOL := _WasBOL;
     Builder := _Builder;
     PrevToken := _PrevToken;
     PrevStatement := _PrevStatement;
@@ -947,7 +969,7 @@ begin
   if not RulerEnabled then exit;
   case Mode of
     fpmGetRulers: Rulers.Take(ARuler, Line, Col); { В режиме примерки запомним ширину фрагмента }
-    fpmSetRulers: PaddingCol := Rulers.Fix(ARuler); { В режиме разметки рассчитаем необходимое количество пробелов }
+    fpmSetRulers: PaddingCol := Rulers.Fix(ARuler) + Shift; { В режиме разметки рассчитаем необходимое количество пробелов }
   end;
 end;
 
@@ -1259,6 +1281,7 @@ end;
 procedure TRulers.Take(const ARuler: string; ALine, ACol: integer);
 var Width: integer;
 begin
+  _Debug('Rulers.Take ruler = "%s", line = %d, col = %d, prev col = %d', [ARuler, ALine, ACol, PrevCol]);
   if ALine <> PrevLine then DisablePadding := true;
   if DisablePadding then exit;
   if PrevLine <= 0 then raise Exception.Create('TRuler.NewLine required');
@@ -1267,6 +1290,7 @@ begin
   if MaxWidth.ContainsKey(ARuler)
     then MaxWidth[ARuler] := Math.Max(MaxWidth[ARuler], Width)
     else MaxWidth.Add(ARuler, Width);
+  _Debug(' => width = %d, max width = %d', [Width, MaxWidth[ARuler]]);
   PrevCol := ACol;
 end;
 
@@ -1278,6 +1302,7 @@ begin
   for i := 0 to Names.IndexOf(ARuler) do
     Inc(Result, MaxWidth[Names[i]]);
   Inc(Result);
+  _Debug('Rulers.Fix, ruler = "%s", fix = %d', [ARuler, Result]);
 end;
 
 { TFormatSettings }

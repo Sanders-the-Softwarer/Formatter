@@ -1,0 +1,5 @@
+-- При записи вызова в одну строку перед p_code не должно возникать indent-а
+
+begin
+    top_price_utils.save_top_price(p_code => v_new_price_hist_code);          
+end;

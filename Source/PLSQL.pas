@@ -544,6 +544,7 @@ type
   end;
 
   { Декларация записи }
+  [Aligned]
   TRecord = class(TStatement)
   strict private
     _Record: TEpithet;

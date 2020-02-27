@@ -1,0 +1,13 @@
+-- Алиас (brand_code_hl) не должен уходить на следующую строку
+
+select
+    (
+        select
+            l.name
+        from
+            sm_v_curr_lang_name l
+        where
+            l.obj_code = t.brand_code
+    ) brand_code_hl
+from
+    top_ref_capsule t;

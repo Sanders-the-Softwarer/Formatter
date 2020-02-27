@@ -447,6 +447,7 @@ begin
   if Check(Result, 'bulk', 'collect', 'into') then exit;
   if Check(Result, 'cross', 'apply') then exit;
   if Check(Result, 'full', 'join') then exit;
+  if Check(Result, 'full', 'natural', 'join') then exit;
   if Check(Result, 'full', 'outer', 'join') then exit;
   if Check(Result, 'end', 'case') then exit;
   if Check(Result, 'end', 'if') then exit;
@@ -456,6 +457,7 @@ begin
   if Check(Result, 'is', 'not', 'null') then exit;
   if Check(Result, 'is', 'null') then exit;
   if Check(Result, 'left', 'join') then exit;
+  if Check(Result, 'left', 'natural', 'join') then exit;
   if Check(Result, 'left', 'outer', 'join') then exit;
   if Check(Result, 'multiset', 'except') then exit;
   if Check(Result, 'multiset', 'except', 'all') then exit;
@@ -471,6 +473,7 @@ begin
   if Check(Result, 'not', 'like') then exit;
   if Check(Result, 'outer', 'apply') then exit;
   if Check(Result, 'right', 'join') then exit;
+  if Check(Result, 'right', 'natural', 'join') then exit;
   if Check(Result, 'right', 'outer', 'join') then exit;
   if Check(Result, 'self', 'as', 'result') then exit;
   if Check(Result, 'type', 'body') then exit;

@@ -1,4 +1,6 @@
             select
+                t.code,
+                t.name,
                 (
                     select
                         l.value
@@ -31,7 +33,8 @@
                         and e.subsystem_code = top_const.idtype_id_mdm
                         and e.table_code = v_table_code
                 )
-                       ext_code
+                       ext_code,
+                t.state
             from
                 top_v_ref_gender t
             order by

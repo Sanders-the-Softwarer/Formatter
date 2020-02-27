@@ -1005,7 +1005,7 @@ begin
   Result := inherited ParseDelimiter(AResult);
   if not Result then
   begin
-    AResult := Keyword(['join', 'inner join', 'full join', 'full outer join', 'left join', 'left outer join', 'right join', 'right outer join', 'cross apply', 'outer apply']);
+    AResult := Keyword(['join', 'inner join', 'full join', 'full natural join', 'full outer join', 'left join', 'left natural join', 'left outer join', 'right join', 'right natural join', 'right outer join', 'cross apply', 'outer apply']);
     Result  := Assigned(AResult);
   end;
 end;

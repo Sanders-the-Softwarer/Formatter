@@ -11,6 +11,12 @@ type
   published
     procedure Bug1;
     procedure Bug2;
+    procedure Bug3;
+    procedure Bug4;
+    procedure Bug5;
+    procedure Bug6;
+    procedure Bug7;
+    procedure Bug8;
   end;
 
 implementation
@@ -31,6 +37,35 @@ end;
 
 procedure _Bugs.Bug2;
 begin
+end;
+
+procedure _Bugs.Bug3;
+begin
+end;
+
+procedure _Bugs.Bug4;
+begin
+  Settings.PreferredExpressionLength := 60;
+end;
+
+procedure _Bugs.Bug5;
+begin
+  Settings.AlignVariables := true;
+end;
+
+procedure _Bugs.Bug6;
+begin
+  Settings.AlignVariables := true;
+end;
+
+procedure _Bugs.Bug7;
+begin
+  Settings.AlignVariables := true;
+end;
+
+procedure _Bugs.Bug8;
+begin
+  Settings.AlignVariables := true;
 end;
 
 initialization
