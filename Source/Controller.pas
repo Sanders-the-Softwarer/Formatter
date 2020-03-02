@@ -55,7 +55,7 @@ begin
     { Создадим парсер входного текста }
     Parser := MakeStatementStream(MakeTokenStream(AText), ASettings);
     { И выведем его результат на принтер }
-    Printer := TPrinter.CreateFormatterPrinter;
+    Printer := Printers_.CreateFormatterPrinter;
     Printer.Settings := ASettings;
     Parser.PrintAll(Printer);
     AResult := Printer.GetText;

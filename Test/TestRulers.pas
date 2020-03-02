@@ -38,7 +38,7 @@ type
 procedure _Rulers.SetUp;
 begin
   inherited;
-  Printer := TPrinter.CreateFormatterPrinter(nil);
+  Printer := Printers_.CreateFormatterPrinter;
   Printer.BeginPrint;
 end;
 

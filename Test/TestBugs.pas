@@ -27,7 +27,7 @@ implementation
 procedure _Bugs.CheckFile(const AFileName: string);
 var S: string;
 begin
-  S := LoadFile('.\Баги\' + Copy(AFileName, 4, 255) + '.bug');
+  S := LoadFile('..\Баги\' + Copy(AFileName, 4, 255) + '.bug');
   Check(S, S);
 end;
 

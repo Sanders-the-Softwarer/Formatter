@@ -12,6 +12,9 @@
         <Projects Include="PLSQLDev_Plugin.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="CmdLineFormatter.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -47,14 +50,23 @@
     <Target Name="PLSQLDev_Plugin:Make">
         <MSBuild Projects="PLSQLDev_Plugin.dproj" Targets="Make"/>
     </Target>
+    <Target Name="CmdLineFormatter">
+        <MSBuild Projects="CmdLineFormatter.dproj"/>
+    </Target>
+    <Target Name="CmdLineFormatter:Clean">
+        <MSBuild Projects="CmdLineFormatter.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CmdLineFormatter:Make">
+        <MSBuild Projects="CmdLineFormatter.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="DebugTool;Test;PLSQLDev_Plugin"/>
+        <CallTarget Targets="DebugTool;Test;PLSQLDev_Plugin;CmdLineFormatter"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="DebugTool:Clean;Test:Clean;PLSQLDev_Plugin:Clean"/>
+        <CallTarget Targets="DebugTool:Clean;Test:Clean;PLSQLDev_Plugin:Clean;CmdLineFormatter:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="DebugTool:Make;Test:Make;PLSQLDev_Plugin:Make"/>
+        <CallTarget Targets="DebugTool:Make;Test:Make;PLSQLDev_Plugin:Make;CmdLineFormatter:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

@@ -70,7 +70,7 @@ end;
 { Загрузка файлов и проверка форматирования }
 procedure TFileBasedTest.CheckFile(const AFileName: string);
 begin
-  Check(LoadFile('.\Фичи\' + AFileName + '.in'), LoadFile('.\Фичи\' + AFileName + '.out'));
+  Check(LoadFile('..\Фичи\' + AFileName + '.in'), LoadFile('..\Фичи\' + AFileName + '.out'));
 end;
 
 { Запуск тестового метода }

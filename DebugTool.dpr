@@ -16,7 +16,9 @@ uses
   Attributes in 'Source\Attributes.pas',
   SQLPlus in 'Source\SQLPlus.pas',
   Utils in 'Source\Utils.pas',
-  Controller in 'Source\Controller.pas';
+  Controller in 'Source\Controller.pas',
+  GUIPrinters in 'Source\GUIPrinters.pas',
+  FormatterPrinter in 'Source\FormatterPrinter.pas';
 
 {$R *.res}
 

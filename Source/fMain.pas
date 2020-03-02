@@ -98,6 +98,8 @@ implementation
 
 {$R *.dfm}
 
+uses GUIPrinters;
+
 { Подготовка и распечатка форматированного текста }
 procedure TFormMain.UpdateData;
 var
@@ -165,11 +167,11 @@ end;
 { При создании формы создаются принтеры и настройки, а также настраиваются оповещения }
 procedure TFormMain.FormShow(Sender: TObject);
 begin
-  TokenizerPrinter  := TPrinter.CreateTokenizerPrinter(edTokenizer);
-  SyntaxTreePrinter := TPrinter.CreateSyntaxTreePrinter(treeParser);
-  ResultPrinter     := TPrinter.CreateFormatterPrinter(edResult);
-  AlarmTokenPrinter := TPrinter.CreateAlarmTokenPrinter(edAlarmToken, tabAlarmToken);
-  AlarmStatementPrinter := TPrinter.CreateAlarmStatementPrinter(edAlarmStatement, tabAlarmStatement);
+  TokenizerPrinter  := GUIPrinters.CreateTokenizerPrinter(edTokenizer);
+  SyntaxTreePrinter := GUIPrinters.CreateSyntaxTreePrinter(treeParser);
+  ResultPrinter     := GUIPrinters.CreateFormatterPrinter(edResult);
+  AlarmTokenPrinter := GUIPrinters.CreateAlarmTokenPrinter(edAlarmToken, tabAlarmToken);
+  AlarmStatementPrinter := GUIPrinters.CreateAlarmStatementPrinter(edAlarmStatement, tabAlarmStatement);
   Self.WindowState  := wsMaximized;
   Settings := TFormatSettings.Default;
   ResultPrinter.Settings := Settings;
