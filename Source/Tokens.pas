@@ -63,6 +63,7 @@ type
     FLine, FCol: integer;
     FPrinted, FCanReplace: boolean;
     FCommentsAbove, FCommentsBelow, FCommentsBefore, FCommentsAfter: TList<TComment>;
+    FCommentFarAbove, FCommentFarBelow: TComment;
   public
     function TokenType: string; virtual; abstract;
   public
@@ -82,6 +83,8 @@ type
     property CommentsAbove: TList<TComment> read FCommentsAbove;
     property CommentsAfter: TList<TComment> read FCommentsAfter;
     property CommentsBelow: TList<TComment> read FCommentsBelow;
+    property CommentFarAbove: TComment read FCommentFarAbove write FCommentFarAbove;
+    property CommentFarBelow: TComment read FCommentFarBelow write FCommentFarBelow;
   end;
 
   { Неожиданная или неизвестная лексема - встретился символ, с которого не может начинаться лексема }

@@ -317,15 +317,17 @@ end;
 procedure TFormatterPrinter.PrintToken(AToken: TToken);
 var
   Value: string;
-  AllowLF, StartOfText, ForceNextLine: boolean;
+  HasToken, HasBuilder, AllowLF, StartOfText, ForceNextLine: boolean;
   i: integer;
 begin
+  HasToken := Assigned(AToken);
+  HasBuilder := Assigned(Builder);
   StartOfText := (Line = 1) and (Col = 1);
   AllowLF := (SupNextLine = 0) or WasComment;
   { Обработаем вставку пустой строки }
   if EmptyLine and not StartOfText then
   begin
-    if Assigned(Builder) and AllowLF then
+    if HasBuilder and AllowLF then
     begin
       Builder.AppendLine;
       Inc(Line);
@@ -338,7 +340,7 @@ begin
     BOL := false
   else if BOL then
   begin
-    if Assigned(Builder) and AllowLF and not StartOfText then
+    if HasBuilder and AllowLF and not StartOfText then
     begin
       Builder.AppendLine;
       WasBOL := true;
@@ -352,31 +354,45 @@ begin
     end;
   end;
   { Если задано выравнивание, вставим соответствующее количество пробелов }
-  if (PaddingCol > Col) and Assigned(AToken) then
+  if (PaddingCol > Col) and HasToken then
   begin
     _Debug(' => col = %d, padding col = %d', [Col, PaddingCol]);
     if WasBOL then Dec(PaddingCol, Shift);
-    if Assigned(Builder) then Builder.Append(StringOfChar(' ', PaddingCol - Col));
+    if HasBuilder then Builder.Append(StringOfChar(' ', PaddingCol - Col));
     Col := PaddingCol;
     PaddingCol := 0;
   end;
   { Если нужно, внедрим пробел между предыдущей и новой лексемами }
-  if Assigned(PrevToken) and Assigned(AToken) and SpaceRequired(PrevToken, AToken) then
+  if Assigned(PrevToken) and HasToken and SpaceRequired(PrevToken, AToken) then
   begin
-    if Assigned(Builder) then Builder.Append(' ');
+    if HasBuilder then Builder.Append(' ');
     Inc(Col);
   end;
   { Если до лексемы есть комментарии, напечатаем их }
-  if Assigned(AToken) and Assigned(AToken.CommentsAbove) and Assigned(Builder) and not IsDraft then
-    for i := 0 to AToken.CommentsAbove.Count - 1 do
+  if HasToken and HasBuilder and not IsDraft then
+  begin
+    if Assigned(AToken.CommentFarAbove) then
     begin
-      if not WasBOL then NextLine;
-      PrintToken(AToken.CommentsAbove[i]);
+      WasBOL := false;
+      NextLine;
+      PrintToken(AToken.CommentFarAbove);
+      NextLine;
+      PrintToken(nil);
+      WasBOL := false;
       NextLine;
       PrintToken(nil);
     end;
+    if Assigned(AToken.CommentsAbove) then
+      for i := 0 to AToken.CommentsAbove.Count - 1 do
+      begin
+        if not WasBOL then NextLine;
+        PrintToken(AToken.CommentsAbove[i]);
+        NextLine;
+        PrintToken(nil);
+      end;
+  end;
   { И, наконец, если задана лексема - напечатаем её }
-  if Assigned(AToken) then
+  if HasToken then
   begin
     Value := AToken.Value;
     Value := StringReplace(Value, #13, #13#10, [rfReplaceAll]);
@@ -390,7 +406,7 @@ begin
     if Attributes.HasAttribute(AToken.ClassType, LowerCaseAttribute)
       then Value := Value.ToLower;
     { В режиме реальной печати - напечатаем лексему, иначе только учтём сдвиг позиции }
-    if Assigned(Builder) then
+    if HasBuilder then
     begin
       if WasBOL then Builder.Append(StringOfChar(' ', Shift));
       if not IsDraft and not (AToken is TSpecialComment) then
@@ -407,9 +423,9 @@ begin
     WasBOL := false;
   end;
   { Если это был комментарий, взведём флажок }
-  if Assigned(AToken) then WasComment := AToken is TComment;
+  if HasToken then WasComment := AToken is TComment;
   { Если после лексемы есть комментарии, напечатаем их }
-  if Assigned(AToken) then
+  if HasToken then
   begin
     ForceNextLine := false;
     if Assigned(AToken.CommentsAfter) then
@@ -421,7 +437,7 @@ begin
         ForceNextLine := ForceNextLine or AToken.CommentsAfter[i].Value.StartsWith('--');
       end;
     if ForceNextLine then NextLine;
-    if Assigned(AToken.CommentsBelow) and Assigned(Builder) then
+    if Assigned(AToken.CommentsBelow) and HasBuilder then
       for i := 0 to AToken.CommentsBelow.Count - 1 do
       begin
         WasComment := true;
@@ -429,6 +445,18 @@ begin
         PrintToken(AToken.CommentsBelow[i]);
         NextLine;
       end;
+    if Assigned(AToken.CommentFarBelow) and HasBuilder then
+    begin
+      WasComment := true;
+      NextLine;
+      PrintToken(nil);
+      NextLine;
+      WasBOL := false;
+      PrintToken(nil);
+      NextLine;
+      PrintToken(AToken.CommentFarBelow);
+      NextLine;
+    end;
   end;
 end;
 

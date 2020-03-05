@@ -1,7 +1,7 @@
 type t_calc_data_rec is record
     (
         calculation_name             varchar2(200 char),
-        -- сугубо входные данные
+        -- СЃСѓРіСѓР±Рѕ РІС…РѕРґРЅС‹Рµ РґР°РЅРЅС‹Рµ
         collection_code              number(30),
         delivery_country_code        number(30),
         brand_code                   number(30),
@@ -15,17 +15,17 @@ type t_calc_data_rec is record
         calculation_date             date,
         currency_type_code           number(30),
         currency_code                number(30),
-        currency_alt_code            number(30),          -- альтернативная валюта, еще известная как default
-        production_region_code       number(30),          -- Выбранный регион производства
-        purchase_price               number,              -- Значения ЗЦ, валюты и VAT Type с приоритетного региона берутся
+        currency_alt_code            number(30),          -- Р°Р»СЊС‚РµСЂРЅР°С‚РёРІРЅР°СЏ РІР°Р»СЋС‚Р°, РµС‰Рµ РёР·РІРµСЃС‚РЅР°СЏ РєР°Рє default
+        production_region_code       number(30),          -- Р’С‹Р±СЂР°РЅРЅС‹Р№ СЂРµРіРёРѕРЅ РїСЂРѕРёР·РІРѕРґСЃС‚РІР°
+        purchase_price               number,              -- Р—РЅР°С‡РµРЅРёСЏ Р—Р¦, РІР°Р»СЋС‚С‹ Рё VAT Type СЃ РїСЂРёРѕСЂРёС‚РµС‚РЅРѕРіРѕ СЂРµРіРёРѕРЅР° Р±РµСЂСѓС‚СЃСЏ
         purchase_price_currency_code number(30),
         purchase_price_vat_type      number(1),
         calculation_method           number(1),
-        calculate_delivery           number(1),           -- надо ли рассчитывать доствку (0/1)
-        avia_delivery                number(1),           -- надо ли считать доставку авиа
-        avia_ratio                   number(9,2),         -- Доля ассортимента, доставляемого avia
-        transport_type_code          number(30),          -- Код транспорта
-        -- входные/выходные данные
+        calculate_delivery           number(1),           -- РЅР°РґРѕ Р»Рё СЂР°СЃСЃС‡РёС‚С‹РІР°С‚СЊ РґРѕСЃС‚РІРєСѓ (0/1)
+        avia_delivery                number(1),           -- РЅР°РґРѕ Р»Рё СЃС‡РёС‚Р°С‚СЊ РґРѕСЃС‚Р°РІРєСѓ Р°РІРёР°
+        avia_ratio                   number(9,2),         -- Р”РѕР»СЏ Р°СЃСЃРѕСЂС‚РёРјРµРЅС‚Р°, РґРѕСЃС‚Р°РІР»СЏРµРјРѕРіРѕ avia
+        transport_type_code          number(30),          -- РљРѕРґ С‚СЂР°РЅСЃРїРѕСЂС‚Р°
+        -- РІС…РѕРґРЅС‹Рµ/РІС‹С…РѕРґРЅС‹Рµ РґР°РЅРЅС‹Рµ
         weight                       number,
         volume                       number,
         licensor_code                number(30),
@@ -37,12 +37,12 @@ type t_calc_data_rec is record
         hs_code                      number(30),
         rrp_gross                    number(30,4),
         vat_rate                     number,
-        calculate_customs            number(1),           -- надо ли рассчитывать таможенную стоимость (0/1)
-        -- сугубо выходные данные
+        calculate_customs            number(1),           -- РЅР°РґРѕ Р»Рё СЂР°СЃСЃС‡РёС‚С‹РІР°С‚СЊ С‚Р°РјРѕР¶РµРЅРЅСѓСЋ СЃС‚РѕРёРјРѕСЃС‚СЊ (0/1)
+        -- СЃСѓРіСѓР±Рѕ РІС‹С…РѕРґРЅС‹Рµ РґР°РЅРЅС‹Рµ
         lc_net_default_currency      number,
         rrp_net                      number(30,4),
-        planned_mup                  number,              -- отношение RRP net / LC net
-        target_mup                   number,              -- плановый маркап из справочника
+        planned_mup                  number,              -- РѕС‚РЅРѕС€РµРЅРёРµ RRP net / LC net
+        target_mup                   number,              -- РїР»Р°РЅРѕРІС‹Р№ РјР°СЂРєР°Рї РёР· СЃРїСЂР°РІРѕС‡РЅРёРєР°
         err_text                     varchar2(4000 char),
         rrp_usd                      number(30,4),
         vat_cost_main_currency       number,

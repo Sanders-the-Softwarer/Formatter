@@ -76,14 +76,23 @@ type
   { Класс выкусывает комментарии из основного потока и привязывает их к значимым лексемам }
   TCommentProcessor = class(TNextStream<TToken, TToken>)
   strict private
+    LeftPos: TDictionary<integer, integer>;
     T1, T2, T3: TToken;
+    function SourceNext: TToken;
     procedure ReadNext;
     function AppliedAfter(C: TComment; T: TToken): boolean;
-    function Applied(C: TComment; T: TToken; Strong: boolean): boolean;
+    function AppliedAbove(C: TComment; T: TToken): boolean;
+    function AppliedFarAbove(C: TComment; T: TToken): boolean;
+    function AppliedFarAboveStrong(C: TComment; T: TToken): boolean;
+    function AppliedFarBelowStrong(C: TComment; T: TToken): boolean;
+    function AppliedBelow(C: TComment; T: TToken): boolean;
     procedure Compress;
   strict protected
     function InternalEof: boolean; override;
     function InternalNext: TToken; override;
+  public
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
   end;
 
 implementation
@@ -345,6 +354,18 @@ end;
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
+procedure TCommentProcessor.AfterConstruction;
+begin
+  inherited;
+  LeftPos := TDictionary<integer, integer>.Create;
+end;
+
+procedure TCommentProcessor.BeforeDestruction;
+begin
+  FreeAndNil(LeftPos);
+  inherited;
+end;
+
 function TCommentProcessor.InternalEof: boolean;
 begin
   Compress;
@@ -360,16 +381,22 @@ begin
   T3 := nil;
 end;
 
+function TCommentProcessor.SourceNext: TToken;
+begin
+  Result := Source.Next;
+  if not LeftPos.ContainsKey(Result.Line) then LeftPos.Add(Result.Line, Result.Col);
+end;
+
 procedure TCommentProcessor.ReadNext;
 begin
   if Source.Eof then
     { неоткуда }
   else if not Assigned(T1) then
-    T1 := Source.Next
+    T1 := SourceNext
   else if not Assigned(T2) then
-    T2 := Source.Next
+    T2 := SourceNext
   else if not Assigned(T3) then
-    T3 := Source.Next
+    T3 := SourceNext
   else
     { пока больше не нужно }
 end;
@@ -379,9 +406,30 @@ begin
   Result := Assigned(C) and Assigned(T) and (C.Line = T.Line) and (C.Col > T.Col);
 end;
 
-function TCommentProcessor.Applied(C: TComment; T: TToken; Strong: boolean): boolean;
+function TCommentProcessor.AppliedAbove(C: TComment; T: TToken): boolean;
 begin
-  Result := Assigned(C) and Assigned(T) and (not Strong or (C.Col = T.Col)) and (Abs(C.Line - T.Line) <= 1);
+  Result := Assigned(C) and Assigned(T) and (C.Col = T.Col) and (T.Line - C.Line = 1);
+end;
+
+function TCommentProcessor.AppliedFarAbove(C: TComment; T: TToken): boolean;
+begin
+  Result := Assigned(C) and Assigned(T) and (C.Line < T.Line);
+end;
+
+function TCommentProcessor.AppliedFarAboveStrong(C: TComment; T: TToken): boolean;
+begin
+  Result := Assigned(C) and Assigned(T) and (C.Line < T.Line - 1) and (C.Col = T.Col);
+end;
+
+function TCommentProcessor.AppliedFarBelowStrong(C: TComment; T: TToken): boolean;
+begin
+  Result := Assigned(C) and Assigned(T) and (C.Line > T.Line + 1) and (LeftPos[T.Line] = C.Col);
+end;
+
+
+function TCommentProcessor.AppliedBelow(C: TComment; T: TToken): boolean;
+begin
+  Result := Assigned(C) and Assigned(T) and (C.Line = T.Line + 1);
 end;
 
 procedure TCommentProcessor.Compress;
@@ -389,9 +437,12 @@ var C: TComment;
 begin
   { Если начинаем с комментария, пока возможно будем привязывать его к следующей лексеме }
   ReadNext; ReadNext;
-  while (T1 is TComment) and Applied(T1 as TComment, T2, true) do
+  while T1 is TComment do
   begin
-    T2.AddCommentAbove(T1 as TComment);
+    C := T1 as TComment;
+    if AppliedAbove(C, T2)
+      then T2.AddCommentAbove(C)
+      else T2.CommentFarAbove := C;
     T1 := T2;
     T2 := T3;
     T3 := nil;
@@ -404,10 +455,18 @@ begin
     C := T2 as TComment;
     if AppliedAfter(C, T1) then
       T1.AddCommentAfter(C)
-    else if Applied(T2 as TComment, T3, true) then
+    else if AppliedAbove(C, T3) then
       T3.AddCommentAbove(C)
+    else if AppliedBelow(C, T1) then
+      T1.AddCommentBelow(C)
+    else if AppliedFarAboveStrong(C, T3) then
+      T3.CommentFarAbove := C
+    else if AppliedFarBelowStrong(C, T1) then
+      T1.CommentFarBelow := C
+    else if AppliedFarAbove(C, T3) then
+      T3.CommentFarAbove := C
     else
-      T1.AddCommentBelow(C);
+      T1.CommentFarBelow := C;
     T2 := T3;
     T3 := nil;
     ReadNext;

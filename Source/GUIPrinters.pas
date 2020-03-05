@@ -173,8 +173,8 @@ begin
           AToken := T;
     { И выделим её в тексте }
     if not TokenPos.ContainsKey(AToken) then exit;
-    Memo.SelStart := TokenPos[AToken];
-    Memo.SelLength := TokenLen[AToken];
+    Memo.SelStart := TokenPos[AToken] + TokenLen[AToken];
+    Memo.SelLength := -TokenLen[AToken]; { благодаря выделению в обратную сторону для длинных лексем скроллбар мотается к началу, а не к концу }
   finally
     IntoSync := false;
   end;
