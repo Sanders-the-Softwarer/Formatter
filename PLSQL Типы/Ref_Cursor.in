@@ -1,0 +1,1 @@
+type t_something_cur is ref cursor;
