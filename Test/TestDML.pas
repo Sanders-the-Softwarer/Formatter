@@ -71,8 +71,6 @@ type
   public
     { отложим }
     procedure Длинный_И_Сложный_Запрос_В_Форматировании_Которого_Куча_Мелких_Недостатков;
-  published
-    procedure Комментарий_Внутри_Скобок;
   public
     { отложим }
     procedure Комментарий_Не_Должен_Приводить_К_Переносу_Значения_На_Следующую_Строку;
@@ -183,10 +181,6 @@ begin
 end;
 
 procedure _Select.Запрос_Со_Start_With_И_Connect_By;
-begin
-end;
-
-procedure _Select.Комментарий_Внутри_Скобок;
 begin
 end;
 

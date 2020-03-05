@@ -28,7 +28,7 @@ unit FileBasedTest;
 
 interface
 
-uses Classes, SysUtils, TestFramework, Printers_, Controller;
+uses Classes, SysUtils, StrUtils, TestFramework, Printers_, Controller;
 
 type
   { Класс автотестов, проверяющих совпадение форматирования файла с результатом }
@@ -36,8 +36,13 @@ type
   protected
     Settings: TFormatSettings;
   protected
+    { Настройки каталога размещения и расширений входного-выходного файлов }
+    function GetDir: string; virtual;
+    function GetExtIn: string; virtual;
+    function GetExtOut: string; virtual;
+  protected
     { Загрузка файлов и проверка форматирования }
-    procedure CheckFile(const AFileName: string); virtual;
+    procedure CheckFile(AFileName: string);
     { Запуск тестового метода }
     procedure Invoke(AMethod: TTestMethod); override;
     { Чтение файла в строку }
@@ -67,10 +72,36 @@ begin
   FreeAndNil(Settings);
 end;
 
-{ Загрузка файлов и проверка форматирования }
-procedure TFileBasedTest.CheckFile(const AFileName: string);
+{ Настройки каталога размещения и расширений входного-выходного файлов }
+
+function TFileBasedTest.GetDir: string;
 begin
-  Check(LoadFile('..\Фичи\' + AFileName + '.in'), LoadFile('..\Фичи\' + AFileName + '.out'));
+  Result := '..\Фичи\';
+end;
+
+function TFileBasedTest.GetExtIn: string;
+begin
+  Result := '.in';
+end;
+
+function TFileBasedTest.GetExtOut: string;
+begin
+  Result := '.out';
+end;
+
+{ Загрузка файлов и проверка форматирования }
+procedure TFileBasedTest.CheckFile(AFileName: string);
+var Dir, FileNameIn, FileNameOut, TextIn, TextOut: string;
+begin
+  if AFileName.StartsWith('_') then AFileName := AFileName.Substring(1);
+  Dir := IncludeTrailingPathDelimiter(GetDir);
+  FileNameIn  := Dir + AFileName + GetExtIn;
+  FileNameOut := Dir + AFileName + GetExtOut;
+  TextIn      := LoadFile(FileNameIn);
+  if FileExists(FileNameOut)
+    then TextOut := LoadFile(FileNameOut)
+    else TextOut := TextIn;
+  Check(TextIn, TextOut);
 end;
 
 { Запуск тестового метода }
@@ -88,11 +119,7 @@ begin
   try
     LoadFromFile(AFileName);
     for i := 0 to Count - 1 do Strings[i] := TrimRight(Strings[i]);
-    { С вероятностью 1/2 поставим либо не поставим на входе последний перевод
-      строки, результат на выходе не должен от этого зависеть }
-    if (Random >= 0.5) and AFileName.EndsWith('.in')
-      then Result := Text
-      else Result := TrimRight(Text);
+    Result := TrimRight(Text);
   finally
     Free;
   end;
@@ -110,6 +137,11 @@ end;
 procedure TFileBasedTest.Check(AText, AExpected: string);
 var Actual: string;
 begin
+  { С вероятностью 1/2 поставим либо не поставим на входе последний перевод
+    строки, результат на выходе не должен от этого зависеть }
+  if Random >= 0.5
+    then AText := TrimRight(AText) + #13
+    else AText := TrimRight(AText);
   Controller.MakeFormatted(AText, Settings, Actual);
   CheckEquals(Beautify(AExpected), Beautify(Actual));
 end;

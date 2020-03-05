@@ -13,7 +13,7 @@ unit TestPLSQL;
 interface
 
 uses
-  TestFramework, FileBasedTest;
+  SysUtils, TestFramework, FileBasedTest;
 
 type
 
@@ -71,6 +71,25 @@ type
   public
     { отложим }
     procedure Пустота_Не_Должна_Сдвигать_Выравнивание;
+  end;
+
+  { Тесты на выравнивание конструкций PL/SQL }
+  _Выравнивание = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure Комментарий_Разрывает_Выравнивание_В_Блоке_Переменных;
+    procedure Выравнивание_Комментариев_Справа_От_Деклараций;
+  end;
+
+  { Тесты на расстановку комментариев }
+  _Комментарии = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure Отдельно_Стоящие_Комментарии;
+    procedure Комментарий_Справа_От_Переменной;
+    procedure Комментарий_Не_Должен_Убивать_Закрывающую_Скобку;
   end;
 
 implementation
@@ -271,8 +290,46 @@ procedure _PLSQL.Функция;
 begin
 end;
 
+{ _Выравнивание }
+
+function _Выравнивание.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Выравнивание';
+end;
+
+procedure _Выравнивание.Комментарий_Разрывает_Выравнивание_В_Блоке_Переменных;
+begin
+  Settings.AlignVariables := true;
+end;
+
+procedure _Выравнивание.Выравнивание_Комментариев_Справа_От_Деклараций;
+begin
+  Settings.AlignVariables := true;
+end;
+
+{ _Комментарии }
+
+function _Комментарии.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Комментарии';
+end;
+
+procedure _Комментарии.Комментарий_Не_Должен_Убивать_Закрывающую_Скобку;
+begin
+end;
+
+procedure _Комментарии.Комментарий_Справа_От_Переменной;
+begin
+end;
+
+procedure _Комментарии.Отдельно_Стоящие_Комментарии;
+begin
+end;
+
 initialization
   RegisterTest(_PLSQL.Suite);
+  RegisterTest(_Выравнивание.Suite);
+  RegisterTest(_Комментарии.Suite);
 
 end.
 

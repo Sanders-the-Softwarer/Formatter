@@ -557,7 +557,7 @@ end;
 
 function TIdentField.InternalParse: boolean;
 begin
-  Result := TQualifiedIdent.Parse(Self, Source, _FieldName);
+  Result := TQualifiedIndexedIdent.Parse(Self, Source, _FieldName);
 end;
 
 function TIdentField.StatementName: string;

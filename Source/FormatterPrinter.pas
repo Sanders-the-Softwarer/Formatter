@@ -317,7 +317,7 @@ end;
 procedure TFormatterPrinter.PrintToken(AToken: TToken);
 var
   Value: string;
-  AllowLF, StartOfText: boolean;
+  AllowLF, StartOfText, ForceNextLine: boolean;
   i: integer;
 begin
   StartOfText := (Line = 1) and (Col = 1);
@@ -409,14 +409,27 @@ begin
   { Если это был комментарий, взведём флажок }
   if Assigned(AToken) then WasComment := AToken is TComment;
   { Если после лексемы есть комментарии, напечатаем их }
-  if Assigned(AToken) and Assigned(AToken.CommentsBelow) and Assigned(Builder) and not IsDraft then
-    for i := 0 to AToken.CommentsBelow.Count - 1 do
-    begin
-      WasComment := true;
-      NextLine;
-      PrintToken(AToken.CommentsBelow[i]);
-      NextLine;
-    end;
+  if Assigned(AToken) then
+  begin
+    ForceNextLine := false;
+    if Assigned(AToken.CommentsAfter) then
+      for i := 0 to AToken.CommentsAfter.Count - 1 do
+      begin
+        WasComment := true;
+        Ruler('right-comment');
+        PrintToken(AToken.CommentsAfter[i]);
+        ForceNextLine := ForceNextLine or AToken.CommentsAfter[i].Value.StartsWith('--');
+      end;
+    if ForceNextLine then NextLine;
+    if Assigned(AToken.CommentsBelow) and Assigned(Builder) then
+      for i := 0 to AToken.CommentsBelow.Count - 1 do
+      begin
+        WasComment := true;
+        NextLine;
+        PrintToken(AToken.CommentsBelow[i]);
+        NextLine;
+      end;
+  end;
 end;
 
 { Вывод синтаксической конструкции с расстановкой выравниваний }

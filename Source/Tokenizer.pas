@@ -78,6 +78,7 @@ type
   strict private
     T1, T2, T3: TToken;
     procedure ReadNext;
+    function AppliedAfter(C: TComment; T: TToken): boolean;
     function Applied(C: TComment; T: TToken; Strong: boolean): boolean;
     procedure Compress;
   strict protected
@@ -373,12 +374,18 @@ begin
     { пока больше не нужно }
 end;
 
+function TCommentProcessor.AppliedAfter(C: TComment; T: TToken): boolean;
+begin
+  Result := Assigned(C) and Assigned(T) and (C.Line = T.Line) and (C.Col > T.Col);
+end;
+
 function TCommentProcessor.Applied(C: TComment; T: TToken; Strong: boolean): boolean;
 begin
   Result := Assigned(C) and Assigned(T) and (not Strong or (C.Col = T.Col)) and (Abs(C.Line - T.Line) <= 1);
 end;
 
 procedure TCommentProcessor.Compress;
+var C: TComment;
 begin
   { Если начинаем с комментария, пока возможно будем привязывать его к следующей лексеме }
   ReadNext; ReadNext;
@@ -394,9 +401,13 @@ begin
   ReadNext;
   while T2 is TComment do
   begin
-    if Applied(T2 as TComment, T3, true)
-      then T3.AddCommentAbove(T2 as TComment)
-      else T1.AddCommentBelow(T2 as TComment);
+    C := T2 as TComment;
+    if AppliedAfter(C, T1) then
+      T1.AddCommentAfter(C)
+    else if Applied(T2 as TComment, T3, true) then
+      T3.AddCommentAbove(C)
+    else
+      T1.AddCommentBelow(C);
     T2 := T3;
     T3 := nil;
     ReadNext;

@@ -241,6 +241,7 @@ type
   strict protected
     function ParseBreak: boolean; override;
     function AllowUnexpected: boolean; override;
+    function AllowStatement(AStatement: TStatement): boolean; override;
   end;
 
   { Курсор }
@@ -933,6 +934,11 @@ end;
 function TVariableDeclarations.AllowUnexpected: boolean;
 begin
   Result := false;
+end;
+
+function TVariableDeclarations.AllowStatement(AStatement: TStatement): boolean;
+begin
+  Result := (Count = 0) or (AStatement.FirstToken.Line - Item(Count - 1).FirstToken.Line < 2);
 end;
 
 { TProcedureCall }

@@ -117,6 +117,7 @@ type
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
+    function StatementName: string; override;
     function IsSimpleIdent: boolean;
   end;
 
@@ -572,9 +573,12 @@ end;
 
 procedure TQualifiedIndexedIdent.InternalPrintSelf(APrinter: TPrinter);
 begin
-  {if _Indexes is TBracketedArguments and TBracketedArguments(_Indexes).MultiLine
-    then APrinter.PrintItems([_Dot, _Ident, _IndentNextLine, _Indexes, _Undent, _Next])
-    else} APrinter.PrintItems([_Dot, _Ident, _Indexes, _Next]);
+  APrinter.PrintItems([_Dot, _Ident, _Indexes, _Next]);
+end;
+
+function TQualifiedIndexedIdent.StatementName: string;
+begin
+  Result := Concat([_Dot, _Ident, _Indexes, _Next]);
 end;
 
 function TQualifiedIndexedIdent.IsSimpleIdent: boolean;

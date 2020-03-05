@@ -80,6 +80,7 @@ type
     property Printed: boolean read FPrinted write FPrinted;
     property CanReplace: boolean read FCanReplace write FCanReplace;
     property CommentsAbove: TList<TComment> read FCommentsAbove;
+    property CommentsAfter: TList<TComment> read FCommentsAfter;
     property CommentsBelow: TList<TComment> read FCommentsBelow;
   end;
 

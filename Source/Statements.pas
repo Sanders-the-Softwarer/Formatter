@@ -62,6 +62,7 @@ type
   strict private
     FParent: TStatement;
     FSettings: TFormatSettings;
+    FFirstToken: TToken;
     function GetSettings: TFormatSettings;
   strict protected
     function GetKeywords: TStrings; virtual;
@@ -92,6 +93,7 @@ type
     procedure MatchChildren;
     property Parent: TStatement read FParent;
     property Settings: TFormatSettings read GetSettings write FSettings;
+    property FirstToken: TToken read FFirstToken;
   public
     function Name: string; virtual;
     function StatementType: string; virtual;
@@ -113,6 +115,7 @@ type
     function ParseBreak: boolean; virtual;
     procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject; ALast: boolean); virtual;
     function OnePerLine: boolean; virtual;
+    function AllowStatement(AStatement: TStatement): boolean; virtual;
     function AllowUnexpected: boolean; virtual;
   public
     procedure AfterConstruction; override;
@@ -327,6 +330,8 @@ begin
   if Source.Eof
     then Result := UnexpectedEOF
     else Result := Source.Next;
+  if not Assigned(FFirstToken)
+    then FFirstToken := Result;
 end;
 
 function TStatement.Keyword(const AKeyword: string): TEpithet;
@@ -556,6 +561,11 @@ begin
   Result := true;
 end;
 
+function TStatementList<S>.AllowStatement(AStatement: TStatement): boolean;
+begin
+  Result := true;
+end;
+
 function TStatementList<S>.AllowUnexpected: boolean;
 begin
   Result := true;
@@ -563,7 +573,7 @@ end;
 
 function TStatementList<S>.ParseStatement(out AResult: TStatement): boolean;
 begin
-  Result := S.Parse(Self, Source, AResult);
+  Result := S.Parse(Self, Source, AResult) and AllowStatement(AResult);
 end;
 
 function TStatementList<S>.ParseDelimiter(out AResult: TObject): boolean;

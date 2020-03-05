@@ -7,70 +7,80 @@ uses TestFramework, FileBasedTest;
 type
   _Bugs = class(TFileBasedTest)
   protected
-    procedure CheckFile(const AFileName: string); override;
+    function GetDir: string; override;
+    function GetExtIn: string; override;
   published
-    procedure Bug1;
-    procedure Bug2;
-    procedure Bug3;
-    procedure Bug4;
-    procedure Bug5;
-    procedure Bug6;
-    procedure Bug7;
-    procedure Bug8;
-    procedure Bug9;
+    procedure _1;
+    procedure _2;
+    procedure _3;
+    procedure _4;
+    procedure _5;
+    procedure _6;
+    procedure _7;
+    procedure _8;
+    procedure _9;
+    procedure _10;
   end;
 
 implementation
 
 { TBugs }
 
-procedure _Bugs.CheckFile(const AFileName: string);
-var S: string;
+function _Bugs.GetDir: string;
 begin
-  S := LoadFile('..\Баги\' + Copy(AFileName, 4, 255) + '.bug');
-  Check(S, S);
+  Result := '..\Баги\';
 end;
 
-procedure _Bugs.Bug1;
+function _Bugs.GetExtIn: string;
+begin
+  Result := '.bug';
+end;
+
+procedure _Bugs._1;
 begin
   Settings.AlignTableColumnComments := true;
 end;
 
-procedure _Bugs.Bug2;
+procedure _Bugs._2;
 begin
 end;
 
-procedure _Bugs.Bug3;
+procedure _Bugs._3;
 begin
 end;
 
-procedure _Bugs.Bug4;
+procedure _Bugs._4;
 begin
   Settings.PreferredExpressionLength := 60;
 end;
 
-procedure _Bugs.Bug5;
+procedure _Bugs._5;
 begin
   Settings.AlignVariables := true;
 end;
 
-procedure _Bugs.Bug6;
+procedure _Bugs._6;
 begin
   Settings.AlignVariables := true;
 end;
 
-procedure _Bugs.Bug7;
+procedure _Bugs._7;
 begin
   Settings.AlignVariables := true;
 end;
 
-procedure _Bugs.Bug8;
+procedure _Bugs._8;
 begin
   Settings.AlignVariables := true;
 end;
 
-procedure _Bugs.Bug9;
+procedure _Bugs._9;
 begin
+end;
+
+procedure _Bugs._10;
+begin
+  Settings.AlignVariables := true;
 end;
 
 initialization

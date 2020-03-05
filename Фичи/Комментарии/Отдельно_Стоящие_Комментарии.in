@@ -1,0 +1,23 @@
+-- Заголовочные комментарии должны печататься со сдвигом, а отдельно стоящие - не липнуть ни к предыдущим, ни к последующим значимым строкам
+create or replace package top_calc_utils is
+
+    -- Author  : ALADANILOV
+    -- Created : 02.05.2018 11:13:18
+    -- Purpose : support price calculations for different assorment
+
+    gc_method_target_mup constant integer := 1;
+
+    /* Раз */
+
+    gc_method_manual_lc constant integer := 2;
+    gc_method_purchase_price constant integer := 3;
+ 
+    -- Два
+    -- Три
+
+    gc_method_supplier constant integer := 4;
+
+    -- Четыре
+    /* Пять */
+
+end;
