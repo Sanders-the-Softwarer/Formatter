@@ -37,13 +37,21 @@ type
     _Operators: TStatement;
     _Exception: TEpithet;
     _ExceptionHandlers: TStatement;
-    _End: TEpithet;
-    _EndName: TEpithet;
+    _End: TStatement;
   strict protected
     property Header: TStatement read _Header;
     function GetHeaderClass: TStatementClass; virtual; abstract;
     function InternalParse: boolean; override;
     function GetKeywords: TStrings; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Завершение программного блока }
+  TEnd = class(TStatement)
+  strict private
+    _End, _EndName: TEpithet;
+  strict protected
+    function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
@@ -215,6 +223,10 @@ type
   strict protected
     function ParseStatement(out AResult: TStatement): boolean; override;
     function ParseBreak: boolean; override;
+  public
+    function EmptyLineBefore: boolean; override;
+    function EmptyLineAfter: boolean; override;
+    function EmptyLineInside: boolean; override;
   end;
 
   { Объявление переменной }
@@ -621,8 +633,7 @@ begin
   _Exception := Keyword('exception');
   if Assigned(_Exception) then TExceptionStatements.Parse(Self, Source, _ExceptionHandlers);
   { end }
-  _End := Keyword('end');
-  if not (Parent is TStatements) then _EndName := Identifier;
+  TEnd.Parse(Self, Source, _End);
   inherited;
 end;
 
@@ -636,13 +647,27 @@ begin
                                    _Operators,         _UndentNextLine,
                        _Exception, _IndentNextLine,
                                    _ExceptionHandlers, _UndentNextLine,
-                       _End,       _EndName]);
+                       _End]);
   inherited;
 end;
 
 function TProgramBlock.GetKeywords: TStrings;
 begin
   Result := Keywords;
+end;
+
+{ TEnd }
+
+function TEnd.InternalParse: boolean;
+begin
+  _End := Keyword('end');
+  Result := Assigned(_End);
+  if Result and not (Parent.Parent is TStatements) then _EndName := Identifier;
+end;
+
+procedure TEnd.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_End, _EndName]);
 end;
 
 { TPackageHeader }
@@ -867,6 +892,21 @@ end;
 function TDeclarations.ParseBreak: boolean;
 begin
   Result := Any([Keyword(['begin', 'end'])]);
+end;
+
+function TDeclarations.EmptyLineBefore: boolean;
+begin
+  Result := Parent is TPackage;
+end;
+
+function TDeclarations.EmptyLineAfter: boolean;
+begin
+  Result := Parent is TPackage;
+end;
+
+function TDeclarations.EmptyLineInside: boolean;
+begin
+  Result := Parent is TPackage;
 end;
 
 { TVariableDeclaration }
@@ -1666,6 +1706,7 @@ initialization
   Keywords.Add('as');
   Keywords.Add('begin');
   Keywords.Add('end');
+  Keywords.Add('exception');
   Keywords.Add('function');
   Keywords.Add('is');
   Keywords.Add('procedure');

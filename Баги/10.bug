@@ -1,11 +1,11 @@
 -- Комментарии не должны убегать чёрт знает куда вправо
 type t_calc_param_rec is record
     (
-        volume              number,     -- объем
-        weight              number,     -- вес
-        currency_usd_rate   number,     -- курс пересчета из USD в базовую валюту курсов
-        currency_alt_rate   number,     -- курс пересчета из адьернативной (дефолтной) валюты расчетов в базовую валюту курсов
-        currency_rate       number,     -- курс пересчета из валюты плановых показателей в базовую валюту курсов
-        vat_rate            number,     -- ставка НДС
-        currency_production_rate number -- курс пересчета из валюты региона производства в базовую валюту курсов
+        volume                   number, -- объем
+        weight                   number, -- вес
+        currency_usd_rate        number, -- курс пересчета из USD в базовую валюту курсов
+        currency_alt_rate        number, -- курс пересчета из адьернативной (дефолтной) валюты расчетов в базовую валюту курсов
+        currency_rate            number, -- курс пересчета из валюты плановых показателей в базовую валюту курсов
+        vat_rate                 number, -- ставка НДС
+        currency_production_rate number  -- курс пересчета из валюты региона производства в базовую валюту курсов
     );

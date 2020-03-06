@@ -229,7 +229,6 @@ end;
 procedure _Select.Форматирование_Подзапросов_В_Select;
 begin
   Settings.PreferredExpressionLength := 80;
-  Settings.AlignExpressions := true;
 end;
 
 procedure _Select.Переносы_По_And_В_Where;

@@ -54,15 +54,14 @@ type
     Builder: TStringBuilder;
     Mode:    TFormatterPrinterMode;
     Shift:   integer;
-    BOL:     boolean;
+    EOLCount: integer;
+    ForceNextLine: boolean;
     EmptyLine: boolean;
     WasComment: boolean;
-    WasBOL: boolean;
     Line:    integer;
     Col:     integer;
     Rulers:  TRulers;
     PaddingCol: integer;
-    PrevStatement: TStatement;
     PrevToken: TToken;
     SpecialComments: TObjectList<TToken>;
     SupSpace, SupNextLine: integer;
@@ -72,7 +71,6 @@ type
   strict protected
     TokenPos, TokenLen: TDictionary<TToken, integer>;
     function SpaceRequired(ALeft, ARight: TToken): boolean;
-    function EmptyLineRequired(APrev, ANext: TStatement): boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -98,7 +96,7 @@ type
 
 implementation
 
-uses Utils, Attributes, SQLPlus;
+uses Utils, Attributes, SQLPlus, PLSQL;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -226,11 +224,13 @@ end;
 procedure TFormatterPrinter.BeginPrint;
 begin
   inherited;
+  FreeAndNil(Builder);
   Builder := TStringBuilder.Create;
   Shift   := 0;
   Line    := 1;
   Col     := 1;
-  BOL     := false;
+  ForceNextLine := false;
+  EOLCount := 666; { начало текста съедает стартовые пустые строки }
   PaddingCol := 0;
   TokenPos.Clear;
   TokenLen.Clear;
@@ -243,7 +243,6 @@ begin
   if Assigned(Builder) then Text := Builder.ToString else Text := '';
   FreeAndNil(Builder);
   PrevToken := nil;
-  PrevStatement := nil;
   inherited;
 end;
 
@@ -299,97 +298,75 @@ begin
   Result := true;
 end;
 
-{ Проверка, нужна ли пустая строка между двумя конструкциями }
-function TFormatterPrinter.EmptyLineRequired(APrev, ANext: TStatement): boolean;
-begin
-  { Команды set, @, exec лепим вместе }
-  if (APrev.ClassType = ANext.ClassType) and
-     ((APrev.ClassType = TSet) or
-      (APrev.ClassType = TAt) or
-      (APrev.ClassType = TCall)) then exit(false);
-  { Вставим пустую строку перед новой конструкцией верхнего уровня }
-  if not Assigned(ANext.Parent) then exit(true);
-  { Условия не выполнены }
-  Result := false;
-end;
-
 { Вывод очередной лексемы с навешиванием всех наворотов по форматированию }
 procedure TFormatterPrinter.PrintToken(AToken: TToken);
 var
   Value: string;
-  HasToken, HasBuilder, AllowLF, StartOfText, ForceNextLine: boolean;
-  i: integer;
+  HasToken, HasBuilder, AllowLF: boolean;
+  i, EOLLimit: integer;
 begin
   HasToken := Assigned(AToken);
   HasBuilder := Assigned(Builder);
-  StartOfText := (Line = 1) and (Col = 1);
   AllowLF := (SupNextLine = 0) or WasComment;
-  { Обработаем вставку пустой строки }
-  if EmptyLine and not StartOfText then
-  begin
-    if HasBuilder and AllowLF then
+  { Обработаем переход на новую строку и вставку пустой строки }
+  if EmptyLine then
     begin
-      Builder.AppendLine;
-      Inc(Line);
-    end;
-    BOL := true;
+      EOLLimit := 2;
+      EmptyLine := false;
+      ForceNextLine := false;
+    end
+  else if ForceNextLine then
+    begin
+      EOLLimit := 1;
+      ForceNextLine := false;
+    end
+  else
+    EOLLimit := 0;
+  while (EOLCount < EOLLimit) and AllowLF do
+  begin
+    if HasBuilder then Builder.AppendLine;
+    Inc(EOLCount);
+    Inc(Line);
+    Col := 1;
+    PrevToken := nil;
     EmptyLine := false;
-  end;
-  { Обработаем переход на новую строку }
-  if BOL and WasBOL then
-    BOL := false
-  else if BOL then
-  begin
-    if HasBuilder and AllowLF and not StartOfText then
-    begin
-      Builder.AppendLine;
-      WasBOL := true;
-    end;
-    BOL := false;
-    if AllowLF and not StartOfText then
-    begin
-      Inc(Line);
-      Col := 1;
-      PrevToken := nil;
-    end;
-  end;
-  { Если задано выравнивание, вставим соответствующее количество пробелов }
-  if (PaddingCol > Col) and HasToken then
-  begin
-    _Debug(' => col = %d, padding col = %d', [Col, PaddingCol]);
-    if WasBOL then Dec(PaddingCol, Shift);
-    if HasBuilder then Builder.Append(StringOfChar(' ', PaddingCol - Col));
-    Col := PaddingCol;
-    PaddingCol := 0;
-  end;
-  { Если нужно, внедрим пробел между предыдущей и новой лексемами }
-  if Assigned(PrevToken) and HasToken and SpaceRequired(PrevToken, AToken) then
-  begin
-    if HasBuilder then Builder.Append(' ');
-    Inc(Col);
+    ForceNextLine := false;
   end;
   { Если до лексемы есть комментарии, напечатаем их }
   if HasToken and HasBuilder and not IsDraft then
   begin
     if Assigned(AToken.CommentFarAbove) then
     begin
-      WasBOL := false;
-      NextLine;
+      EmptyLine := true;
       PrintToken(AToken.CommentFarAbove);
-      NextLine;
-      PrintToken(nil);
-      WasBOL := false;
-      NextLine;
+      EmptyLine := true;
       PrintToken(nil);
     end;
     if Assigned(AToken.CommentsAbove) then
       for i := 0 to AToken.CommentsAbove.Count - 1 do
       begin
-        if not WasBOL then NextLine;
+        NextLine;
         PrintToken(AToken.CommentsAbove[i]);
         NextLine;
         PrintToken(nil);
       end;
+  end;
+  { Если задано выравнивание, вставим соответствующее количество пробелов }
+  if (PaddingCol > Col) and HasToken then
+  begin
+    _Debug(' => col = %d, padding col = %d', [Col, PaddingCol]);
+    if EOLCount = 0 then Dec(PaddingCol, Shift);
+    if HasBuilder then Builder.Append(StringOfChar(' ', PaddingCol - Col));
+    Col := PaddingCol;
+    PaddingCol := 0;
+    EOLCount := 0;
+  end;
+  { Если нужно, внедрим пробел между предыдущей и новой лексемами }
+  if Assigned(PrevToken) and HasToken and SpaceRequired(PrevToken, AToken) then
+  begin
+    if HasBuilder then Builder.Append(' ');
+    Inc(Col);
+    EOLCount := 0;
   end;
   { И, наконец, если задана лексема - напечатаем её }
   if HasToken then
@@ -408,7 +385,7 @@ begin
     { В режиме реальной печати - напечатаем лексему, иначе только учтём сдвиг позиции }
     if HasBuilder then
     begin
-      if WasBOL then Builder.Append(StringOfChar(' ', Shift));
+      if EOLCount > 0 then Builder.Append(StringOfChar(' ', Shift));
       if not IsDraft and not (AToken is TSpecialComment) then
       begin
         TokenPos.Add(AToken, Builder.Length);
@@ -417,26 +394,23 @@ begin
       Builder.Append(Value);
       AToken.Printed := true;
     end;
-    if WasBOL then Inc(Col, Shift);
+    if EOLCount > 0 then Inc(Col, Shift);
     Inc(Col, Value.Length);
     PrevToken := AToken;
-    WasBOL := false;
+    EOLCount := 0;
   end;
   { Если это был комментарий, взведём флажок }
   if HasToken then WasComment := AToken is TComment;
   { Если после лексемы есть комментарии, напечатаем их }
   if HasToken then
   begin
-    ForceNextLine := false;
     if Assigned(AToken.CommentsAfter) then
       for i := 0 to AToken.CommentsAfter.Count - 1 do
       begin
-        WasComment := true;
         Ruler('right-comment');
         PrintToken(AToken.CommentsAfter[i]);
-        ForceNextLine := ForceNextLine or AToken.CommentsAfter[i].Value.StartsWith('--');
+        if AToken.CommentsAfter[i].Value.StartsWith('--') then NextLine;
       end;
-    if ForceNextLine then NextLine;
     if Assigned(AToken.CommentsBelow) and HasBuilder then
       for i := 0 to AToken.CommentsBelow.Count - 1 do
       begin
@@ -448,14 +422,9 @@ begin
     if Assigned(AToken.CommentFarBelow) and HasBuilder then
     begin
       WasComment := true;
-      NextLine;
-      PrintToken(nil);
-      NextLine;
-      WasBOL := false;
-      PrintToken(nil);
-      NextLine;
+      EmptyLine := true;
       PrintToken(AToken.CommentFarBelow);
-      NextLine;
+      EmptyLine := true;
     end;
   end;
 end;
@@ -465,23 +434,31 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
 
   var
     _Mode: TFormatterPrinterMode;
-    _Shift, _Col, _Line, _PaddingCol: integer;
-    _BOL, _EmptyLine, _WasComment, _WasBOL: boolean;
+    _Shift, _Col, _Line, _PaddingCol, _EOLCount: integer;
+    _ForceNextLine, _EmptyLine, _WasComment: boolean;
     _Builder: TStringBuilder;
     _Rulers: TRulers;
     _PrevToken: TToken;
-    _PrevStatement: TStatement;
 
   { Печать выражения без наворотов, связанных с выравниваниями }
   procedure SimplePrintStatement(AStatement: TStatement);
-  var _Shift: integer;
+  var
+    _Shift: integer;
+    _EmptyBefore, _EmptyInside, _EmptyAfter: boolean;
   begin
-    EmptyLine := EmptyLine or (Assigned(PrevStatement) and Assigned(AStatement) and EmptyLineRequired(PrevStatement, AStatement));
-    PrevStatement := AStatement;
+    { Соберём указания по расстановке пустых строк }
+    _EmptyBefore := AStatement.EmptyLineBefore;
+    _EmptyInside := not Assigned(AStatement.Parent) or AStatement.Parent.EmptyLineInside;
+    _EmptyAfter  := AStatement.EmptyLineAfter;
+    { Пустая строка перед конструкцией }
+    EmptyLine := EmptyLine or _EmptyBefore or _EmptyInside;
+    { Печать и проверка отступа }
     _Shift := Shift;
     inherited PrintStatement(AStatement);
     if Shift <> _Shift then
       raise Exception.CreateFmt('Invalid indents into %s - was %d but %d now', [AStatement.ClassName, _Shift, Shift]);
+    { Пустая строка после конструкции }
+    EmptyLine := EmptyLine or _EmptyInside or _EmptyAfter;
   end;
 
   { Сохранение конфигурации для возврата к ней после примерки выравнивания }
@@ -491,14 +468,13 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     _Col     := Col;
     _Line    := Line;
     _PaddingCol := PaddingCol;
-    _BOL     := BOL;
+    _EOLCount   := EOLCount;
+    _ForceNextLine := ForceNextLine;
     _EmptyLine := EmptyLine;
     _WasComment := WasComment;
-    _WasBOL  := WasBOL;
     _Builder := Builder;
     _Rulers  := Rulers;
     _PrevToken := PrevToken;
-    _PrevStatement := PrevStatement;
     _Mode    := Mode;
   end;
 
@@ -509,13 +485,12 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     Col   := _Col;
     Line  := _Line;
     PaddingCol := _PaddingCol;
-    BOL   := _BOL;
+    EOLCount   := _EOLCount;
+    ForceNextLine := _ForceNextLine;
     EmptyLine := _EmptyLine;
     WasComment := _WasComment;
-    WasBOL := _WasBOL;
     Builder := _Builder;
     PrevToken := _PrevToken;
-    PrevStatement := _PrevStatement;
   end;
 
   { Окончательное восстановление конфигурации после печати с выравниваниями }
@@ -586,7 +561,7 @@ end;
 { Переход на следующую строку }
 procedure TFormatterPrinter.NextLine;
 begin
-  BOL := true;
+  ForceNextLine := true;
 end;
 
 { Установка режима подавления переводов строки }
@@ -684,6 +659,7 @@ end;
 
 procedure TRulers.NewLine(ALine: integer);
 begin
+  _Debug('Rulers.NewLine prev = %d, line = %d', [PrevLine, ALine]);
   if PrevLine < ALine
     then PrevLine := ALine
     else DisablePadding := true;

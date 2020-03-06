@@ -1,10 +1,10 @@
 create or replace package top_calc_utils is
 
-    -- номера методов
-    gc_method_target_mup     constant integer := 1;
-    gc_method_manual_lc      constant integer := 2;
+    -- Методы расчёта
+    gc_method_target_mup constant integer := 1;
+    gc_method_manual_lc constant integer := 2;
     gc_method_purchase_price constant integer := 3;
-    gc_method_supplier       constant integer := 4;
+    gc_method_supplier constant integer := 4;
 
     -- стек ошибок
     gv_errors t_varchar_table := t_varchar_table();

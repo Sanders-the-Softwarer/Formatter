@@ -5,11 +5,13 @@ create or replace package top_service_api is
 Важное замечание - чтобы снизить зависимость системы ТОР от этого пакета, делаем его stateless
 Все процедуры и функции для передачи значений должны использовать out параметры, возвращаемое значение (функций)
 */
+
     function get_rounded_price
         (
             p_currency in varchar2,
             p_value    in number
         ) 
         return number;
+
 end top_service_api;
 /

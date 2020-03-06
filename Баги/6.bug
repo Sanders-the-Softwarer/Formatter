@@ -1,11 +1,13 @@
 --  омментарии не должны сбивать выравнивание
 
 create or replace package top_dev_style_sop_link_api is
+
     procedure style_list_lock
         (
             p_dev_style_code_tbl t_number_table,
             p_wait_on_errors     number          
             -- определ€ет, что незаблокированные будут добавлены в очередь ожидани€
         );
+
 end;
 /

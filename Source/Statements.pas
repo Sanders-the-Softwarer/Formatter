@@ -85,6 +85,9 @@ type
   public
     class function Parse(AParent: TStatement; Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function Candidates: TArray<TStatementClass>; virtual;
+    function EmptyLineBefore: boolean; virtual;
+    function EmptyLineAfter: boolean; virtual;
+    function EmptyLineInside: boolean; virtual;
   public
     constructor Create(AParent: TStatement; ASource: TBufferedStream<TToken>); virtual;
     procedure PrintSelf(APrinter: TPrinter);
@@ -235,6 +238,24 @@ end;
 class function TStatement.Candidates: TArray<TStatementClass>;
 begin
   Result := TArray<TStatementClass>.Create(Self);
+end;
+
+{ Определение необходимости пустой строки перед конструкцией }
+function TStatement.EmptyLineBefore: boolean;
+begin
+  Result := false;
+end;
+
+{ Определение необходимости пустой строки после конструкции }
+function TStatement.EmptyLineAfter: boolean;
+begin
+  Result := false;
+end;
+
+{ Определение необходимости пустой строки между элементами конструкции }
+function TStatement.EmptyLineInside: boolean;
+begin
+  Result := false;
 end;
 
 { Конструирование названия выражения, выводимого в синтаксическое дерево }

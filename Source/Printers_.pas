@@ -315,7 +315,7 @@ begin
   AlignSpecialComments            := true;
   ReplaceDefault                  := true;
   ReplaceAsIs                     := true;
-  PreferredExpressionLength       := 60;
+  PreferredExpressionLength       := 120;
 end;
 
 constructor TFormatSettings.ForTest;

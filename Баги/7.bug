@@ -2,6 +2,6 @@
 
 procedure manual_links_save
     (
-        p_recalculated_styles   out varchar2 
+        p_recalculated_styles out varchar2 
         -- список моделей, которые были пересчитаны, т.к. находились в листе ожидания
     );

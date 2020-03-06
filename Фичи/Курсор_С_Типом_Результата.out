@@ -1,4 +1,5 @@
 create package x is
+
     cursor c 
         return dual%rowtype 
     is 
@@ -6,4 +7,5 @@ create package x is
             * 
         from 
             dual;
+
 end;
