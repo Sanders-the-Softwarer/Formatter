@@ -20,6 +20,7 @@ type
     procedure _8;
     procedure _9;
     procedure _10;
+    procedure _11;
   end;
 
 implementation
@@ -81,6 +82,10 @@ end;
 procedure _Bugs._10;
 begin
   Settings.AlignVariables := true;
+end;
+
+procedure _Bugs._11;
+begin
 end;
 
 initialization
