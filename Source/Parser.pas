@@ -149,7 +149,8 @@ class function TParser.ParseType(AParent: TStatement; ASource: TBufferedStream<T
 begin
   Result := TRecord.Parse(AParent, ASource, AResult) or
             TObject_.Parse(AParent, ASource, AResult) or
-            TPLSQLTable.Parse(AParent, ASource, AResult);
+            TPLSQLTable.Parse(AParent, ASource, AResult) or
+            TRefCursor.Parse(AParent, ASource, AResult);
 end;
 
 { Разбор произвольной заранее неизвестной конструкции }

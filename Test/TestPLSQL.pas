@@ -44,7 +44,6 @@ type
     procedure Объявление_Исключений;
     procedure Прагмы;
     procedure Записи;
-    procedure Табличные_Типы;
     procedure Оператор_Присваивания;
     procedure Вызовы_Процедур;
     procedure Выравнивание_В_Вызовах_Процедур;
@@ -101,6 +100,16 @@ type
   published
     procedure В_Пакете;
     procedure В_Пакете_С_Блоком_Инициализации;
+  end;
+
+  { Тесты на PL/SQL типы }
+  _PLSQL_Типы = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure Ref_Cursor;
+    procedure Ref_Cursor_Returning;
+    procedure Табличные_Типы;
   end;
 
 implementation
@@ -285,10 +294,6 @@ procedure _PLSQL.Серии_Переменных_И_Операторов;
 begin
 end;
 
-procedure _PLSQL.Табличные_Типы;
-begin
-end;
-
 procedure _PLSQL.Тело_Пакета;
 begin
 end;
@@ -360,11 +365,31 @@ procedure _Пустые_Строки.В_Пакете_С_Блоком_Иници�
 begin
 end;
 
+{ _PLSQL_Типы }
+
+function _PLSQL_Типы.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\PLSQL Типы';
+end;
+
+procedure _PLSQL_Типы.Ref_Cursor;
+begin
+end;
+
+procedure _PLSQL_Типы.Ref_Cursor_Returning;
+begin
+end;
+
+procedure _PLSQL_Типы.Табличные_Типы;
+begin
+end;
+
 initialization
   RegisterTest(_PLSQL.Suite);
   RegisterTest(_Выравнивание.Suite);
   RegisterTest(_Комментарии.Suite);
   RegisterTest(_Пустые_Строки.Suite);
+  RegisterTest(_PLSQL_Типы.Suite);
 
 end.
 

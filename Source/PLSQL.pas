@@ -579,6 +579,15 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Декларация ref cursor }
+  TRefCursor = class(TStatement)
+  strict private
+    _Ref, _Cursor, _Returning, _TypeName: TEpithet;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
   { Объект object }
   [Aligned]
   TObject_ = class(TStatement)
@@ -1447,6 +1456,23 @@ end;
 procedure TPLSQLTable.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Table, _Of, _TypeRef, _Index, _By, _IndexType]);
+end;
+
+{ TRefCursor }
+
+function TRefCursor.InternalParse: boolean;
+begin
+  _Ref := Keyword('ref');
+  if not Assigned(_Ref) then exit(true);
+  _Cursor := Keyword('cursor');
+  _Returning := Keyword('returning');
+  if Assigned(_Returning) then _TypeName := Identifier;
+  Result := true;
+end;
+
+procedure TRefCursor.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Ref, _Cursor, _Returning, _TypeName]);
 end;
 
 { TObject_ }
