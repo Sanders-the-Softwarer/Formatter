@@ -18,6 +18,7 @@ type
     procedure Indent; override;
     procedure Undent; override;
     procedure NextLine; override;
+    procedure CancelNextLine; override;
     procedure SupressNextLine(ASupress: boolean); override;
     procedure SupressSpaces(ASupress: boolean); override;
     procedure PrintSpecialComment(AValue: string); override;
@@ -84,6 +85,7 @@ type
     procedure Indent; override;
     procedure Undent; override;
     procedure NextLine; override;
+    procedure CancelNextLine; override;
     procedure SupressNextLine(ASupress: boolean); override;
     procedure SupressSpaces(ASupress: boolean); override;
     procedure PrintSpecialComment(AValue: string); override;
@@ -179,6 +181,11 @@ begin
 end;
 
 procedure TBasePrinter.NextLine;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.CancelNextLine;
 begin
   { ничего не делаем }
 end;
@@ -562,6 +569,12 @@ end;
 procedure TFormatterPrinter.NextLine;
 begin
   ForceNextLine := true;
+end;
+
+{ Отмена перехода на следующую строку }
+procedure TFormatterPrinter.CancelNextLine;
+begin
+  ForceNextLine := false;
 end;
 
 { Установка режима подавления переводов строки }

@@ -1,0 +1,11 @@
+fetch 
+    data_cur 
+bulk collect into 
+    data_tab;
+
+fetch 
+    data_cur 
+bulk collect into 
+    data_tab 
+limit 
+    100;

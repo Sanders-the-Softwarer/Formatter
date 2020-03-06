@@ -49,7 +49,8 @@ unit Statements;
 
 interface
 
-uses Classes, SysUtils, System.Generics.Collections, Streams, Tokens, Printers_;
+uses Classes, SysUtils, System.Generics.Collections, Utils, Streams, Tokens,
+  Printers_;
 
 type
 
@@ -65,7 +66,7 @@ type
     FFirstToken: TToken;
     function GetSettings: TFormatSettings;
   strict protected
-    function GetKeywords: TStrings; virtual;
+    function GetKeywords: TKeywords; virtual;
     function InternalParse: boolean; virtual;
     procedure InternalMatch(AStatement: TStatement); virtual;
     procedure InternalMatchChildren; virtual;
@@ -323,7 +324,7 @@ begin
   raise Exception.CreateFmt('Cannot parse %s - InternalParse is absent', [ClassName]);
 end;
 
-function TStatement.GetKeywords: TStrings;
+function TStatement.GetKeywords: TKeywords;
 begin
   if Assigned(Parent) then Result := Parent.GetKeywords else Result := nil;
 end;
@@ -678,6 +679,7 @@ end;
 
 procedure TSemicolonStatement.InternalPrintSelf(APrinter: TPrinter);
 begin
+  APrinter.CancelNextLine;
   APrinter.PrintItem(_Semicolon);
 end;
 

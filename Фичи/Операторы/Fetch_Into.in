@@ -1,0 +1,25 @@
+fetch 
+    data_cur 
+into 
+    data_rec;
+
+fetch 
+    data_cur 
+into 
+    a, 
+    b, 
+    c, 
+    d, 
+    e;
+
+fetch 
+    data_cur 
+into 
+    data(i).a, 
+    data(i).b, 
+    data(i).c;
+
+fetch 
+    my_package.data_cur 
+into 
+    my_package.data_rec;

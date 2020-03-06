@@ -12,14 +12,15 @@ unit DML;
 
 interface
 
-uses Classes, SysUtils, Math, Tokens, Statements, Printers_, Attributes, Expressions;
+uses Classes, SysUtils, Math, Tokens, Statements, Printers_, Attributes,
+  Expressions, Utils;
 
 type
 
   { Общий предок DML-операторов }
   TDML = class(TSemicolonStatement)
   strict protected
-    function GetKeywords: TStrings; override;
+    function GetKeywords: TKeywords; override;
   end;
 
   { Расширение понятия операнда для SQL-выражений }
@@ -32,7 +33,7 @@ type
   TSqlExpression = class(TExpression)
   strict protected
     function ParseStatement(out AResult: TStatement): boolean; override;
-    function GetKeywords: TStrings; override;
+    function GetKeywords: TKeywords; override;
     function ForcedLineBreaks: boolean; override;
   end;
 
@@ -204,7 +205,7 @@ implementation
 uses Parser;
 
 var
-  Keywords, SqlExpressionKeywords: TStringList;
+  DMLKeywords, SqlExpressionKeywords: TKeywords;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -361,9 +362,9 @@ type
 
 { TDML }
 
-function TDML.GetKeywords: TStrings;
+function TDML.GetKeywords: TKeywords;
 begin
-  Result := Keywords;
+  Result := DMLKeywords;
 end;
 
 { TSQLTerm }
@@ -384,14 +385,15 @@ begin
   Result := TSQLTerm.Parse(Self, Source, AResult);
 end;
 
-function TSQLExpression.GetKeywords: TStrings;
+function TSQLExpression.GetKeywords: TKeywords;
 begin
+  { SQL-выражение объединяет ключевые слова выражения с ключевыми словами DML,
+    поэтому приходится так забавно его заполнить }
   Result := SqlExpressionKeywords;
   if Assigned(Result) then exit;
-  Result := TStringList.Create;
-  Result.Assign(Keywords);
-  Result.AddStrings(inherited);
-  SqlExpressionKeywords := TStringList(Result);
+  Result := TKeywords.Create(inherited, []);
+  Result.AddStrings(DMLKeywords);
+  SqlExpressionKeywords := Result;
 end;
 
 function TSQLExpression.ForcedLineBreaks: boolean;
@@ -1407,36 +1409,13 @@ begin
 end;
 
 initialization
-  Keywords := TStringList.Create;
-  Keywords.Sorted := true;
-  Keywords.Duplicates := dupIgnore;
-  Keywords.CaseSensitive := false;
-  Keywords.Add('comment');
-  Keywords.Add('connect');
-  Keywords.Add('create');
-  Keywords.Add('delete');
-  Keywords.Add('from');
-  Keywords.Add('group');
-  Keywords.Add('having');
-  Keywords.Add('insert');
-  Keywords.Add('intersect');
-  Keywords.Add('into');
-  Keywords.Add('join');
-  Keywords.Add('merge');
-  Keywords.Add('minus');
-  Keywords.Add('on');
-  Keywords.Add('order');
-  Keywords.Add('select');
-  Keywords.Add('set');
-  Keywords.Add('start');
-  Keywords.Add('union');
-  Keywords.Add('update');
-  Keywords.Add('using');
-  Keywords.Add('values');
-  Keywords.Add('where');
+  DMLKeywords := TKeywords.Create([
+    'comment', 'connect', 'create', 'delete', 'from', 'group', 'having',
+    'insert', 'intersect', 'into', 'join', 'merge', 'minus', 'on', 'order',
+    'select', 'set', 'start', 'union', 'update', 'using', 'values', 'where']);
 
 finalization
-  FreeAndNil(Keywords);
+  FreeAndNil(DMLKeywords);
   FreeAndNil(SqlExpressionKeywords);
 
 end.

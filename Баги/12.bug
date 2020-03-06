@@ -1,0 +1,5 @@
+create view a.b as
+    select
+        *
+    from
+        dual;

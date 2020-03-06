@@ -32,7 +32,7 @@ unit Expressions;
 interface
 
 uses Classes, SysUtils, Math, Tokens, Statements, Printers_, Attributes,
-  System.Generics.Collections;
+  System.Generics.Collections, Utils;
 
 type
 
@@ -81,7 +81,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
     function ParseDelimiter(out AResult: TObject): boolean; override;
     function ParseBreak: boolean; override;
-    function GetKeywords: TStrings; override;
+    function GetKeywords: TKeywords; override;
     function OnePerLine: boolean; override;
     function ForcedLineBreaks: boolean; virtual;
   public
@@ -155,7 +155,7 @@ implementation
 uses Parser, DML, PLSQL;
 
 var
-  Keywords: TStringList;
+  ExpressionKeywords: TKeywords;
   Operations: TDictionary<String, integer>;
 
 function HasOperation(AOperation: TToken; out APriority: integer): boolean;
@@ -498,9 +498,9 @@ begin
   Result := true;
 end;
 
-function TExpression.GetKeywords: TStrings;
+function TExpression.GetKeywords: TKeywords;
 begin
-  Result := Keywords;
+  Result := ExpressionKeywords;
 end;
 
 function TExpression.OnePerLine: boolean;
@@ -727,12 +727,7 @@ end;
 
 initialization
   { Заполняем список ключевых слов для выражений }
-  Keywords := TStringList.Create;
-  Keywords.Sorted := true;
-  Keywords.Duplicates := dupIgnore;
-  Keywords.CaseSensitive := false;
-  Keywords.Add('case');
-  Keywords.Add('when');
+  ExpressionKeywords := TKeywords.Create(['case', 'when']);
   { Заполняем список операций с их приоритетами (Внимание! приоритеты имеются в
     виду с точки зрения расстановки переносов и не обязаны соответствовать
     чему-то другому)}
@@ -770,7 +765,7 @@ initialization
   Operations.Add('multiset union distinct', 6);
 
 finalization
-  FreeAndNil(Keywords);
+  FreeAndNil(ExpressionKeywords);
   FreeAndNil(Operations);
 
 end.

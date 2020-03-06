@@ -187,11 +187,19 @@ end;
 
 { Вычисление очередного выходного символа сводится к вызову ParseAny }
 function TParser.InternalNext: TStatement;
+var
+  MarkBefore, MarkAfter: TMark;
 begin
+  MarkBefore := Source.Mark;
   if ParseAny(nil, Source, Result) or
-     TUnexpectedToken.Parse(nil, Source, Result)
-    then Result.Settings := Self.Settings
-    else Result := TEOFStatement.Create(nil, Source);
+     TUnexpectedToken.Parse(nil, Source, Result) then
+    begin
+      MarkAfter := Source.Mark;
+      if MarkBefore = MarkAfter then raise Exception.Create('There is no progress in parsing input stream, parser aborted');
+      Result.Settings := Self.Settings;
+    end
+  else
+    Result := TEOFStatement.Create(nil, Source);
 end;
 
 { TEOFStatement }

@@ -1,0 +1,30 @@
+open 
+    p_cur 
+for 
+    select 
+        * 
+    from 
+        dual;
+
+open 
+    p_package.g_cur 
+for 
+    select 
+        * 
+    from 
+        dual;
+
+open 
+    p_cur 
+for 
+    'select * from dual';
+
+open 
+    p_cur 
+for 
+    v_select;
+
+open 
+    p_cur 
+for 
+    'select ' || '* ' || 'from ' || 'dual';

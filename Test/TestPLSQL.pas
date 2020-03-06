@@ -93,6 +93,17 @@ type
     procedure Многострочный_Комментарий_Сдвигается_Целиком;
   end;
 
+  { Тесты на операторы PL/SQL }
+  _Операторы = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure Fetch_Into;
+    procedure Fetch_Bulk_Collect_Limit;
+    procedure Open_For;
+    procedure Open_For_Using;
+  end;
+
   { Тесты на расстановку пустых строк }
   _Пустые_Строки = class(TFileBasedTest)
   protected
@@ -384,10 +395,34 @@ procedure _PLSQL_Типы.Табличные_Типы;
 begin
 end;
 
+{ _Операторы }
+
+function _Операторы.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Операторы';
+end;
+
+procedure _Операторы.Open_For;
+begin
+end;
+
+procedure _Операторы.Open_For_Using;
+begin
+end;
+
+procedure _Операторы.Fetch_Into;
+begin
+end;
+
+procedure _Операторы.Fetch_Bulk_Collect_Limit;
+begin
+end;
+
 initialization
   RegisterTest(_PLSQL.Suite);
   RegisterTest(_Выравнивание.Suite);
   RegisterTest(_Комментарии.Suite);
+  RegisterTest(_Операторы.Suite);
   RegisterTest(_Пустые_Строки.Suite);
   RegisterTest(_PLSQL_Типы.Suite);
 

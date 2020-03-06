@@ -12,7 +12,15 @@ unit Utils;
 
 interface
 
-uses SysUtils, Windows;
+uses Classes, SysUtils, Windows;
+
+type
+  { Класс для списков ключевых слов }
+  TKeywords = class(TStringList)
+  public
+    constructor Create(AKeywords: array of string); overload;
+    constructor Create(AParent: TKeywords; AKeywords: array of string); overload;
+  end;
 
 { Вывод в отладочную консоль }
 procedure _Debug(const Msg: string; const Params: array of const);
@@ -29,6 +37,24 @@ begin
     S := Msg;
   end;
   OutputDebugString(@S[1]);}
+end;
+
+{ TKeywords }
+
+constructor TKeywords.Create(AKeywords: array of string);
+begin
+  Create(nil, AKeywords);
+end;
+
+constructor TKeywords.Create(AParent: TKeywords; AKeywords: array of string);
+var i: integer;
+begin
+  inherited Create;
+  Sorted := true;
+  Duplicates := dupIgnore;
+  CaseSensitive := false;
+  if Assigned(AParent) then AddStrings(AParent);
+  for i := Low(AKeywords) to High(AKeywords) do Add(AKeywords[i]);
 end;
 
 end.

@@ -24,7 +24,7 @@ unit PLSQL;
 interface
 
 uses Classes, Windows, SysUtils, Math, Streams, Tokens, Statements, Expressions,
-  Printers_, Attributes;
+  Printers_, Attributes, Utils;
 
 type
 
@@ -42,7 +42,7 @@ type
     property Header: TStatement read _Header;
     function GetHeaderClass: TStatementClass; virtual; abstract;
     function InternalParse: boolean; override;
-    function GetKeywords: TStrings; override;
+    function GetKeywords: TKeywords; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
@@ -73,9 +73,8 @@ type
   { Заголовок пакета }
   TPackageHeader = class(TStatement)
   strict private
-    _Package, _Body: TEpithet;
-    _PackageName: TEpithet;
-    _AsIs: TEpithet;
+    _Package, _Body, _AsIs: TEpithet;
+    _PackageName: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -474,11 +473,12 @@ type
   { Оператор fetch }
   TFetch = class(TSemicolonStatement)
   strict private
-    _Fetch, _Cursor, _Into: TEpithet;
-    _Targets: TStatement;
+    _Fetch, _Into, _Limit: TEpithet;
+    _Cursor, _Targets, _LimitValue: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+    function GetKeywords: TKeywords; override;
   end;
 
   { Оператор close }
@@ -547,8 +547,8 @@ type
   { Декларация типа }
   TType = class(TSemicolonStatement)
   strict private
-    _Type, _TypeName, _Force, _AsIs: TEpithet;
-    _Body: TStatement;
+    _Type, _Force, _AsIs: TEpithet;
+    _TypeName, _Body: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -582,7 +582,8 @@ type
   { Декларация ref cursor }
   TRefCursor = class(TStatement)
   strict private
-    _Ref, _Cursor, _Returning, _TypeName: TEpithet;
+    _Ref, _Cursor, _Returning: TEpithet;
+    _TypeRef: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -624,7 +625,7 @@ implementation
 uses Parser, DML;
 
 var
-  Keywords: TStringList;
+  PLSQLKeywords, FetchKeywords: TKeywords;
 
 { TProgramBlock }
 
@@ -660,9 +661,9 @@ begin
   inherited;
 end;
 
-function TProgramBlock.GetKeywords: TStrings;
+function TProgramBlock.GetKeywords: TKeywords;
 begin
-  Result := Keywords;
+  Result := PLSQLKeywords;
 end;
 
 { TEnd }
@@ -690,7 +691,7 @@ begin
   { Проверим наличие body }
   _Body := Keyword('body');
   { Проверим название пакета }
-  _PackageName := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _PackageName);
   { Проверим наличие is }
   _AsIs := Keyword(['is', 'as']);
   if Assigned(_AsIs) then _AsIs.CanReplace := true;
@@ -1404,7 +1405,7 @@ function TType.InternalParse: boolean;
 begin
   _Type := Keyword('type');
   if not Assigned(_Type) then exit(false);
-  _TypeName := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _TypeName);
   _Force := Keyword('force');
   _AsIs := Keyword(['as', 'is']);
   if Assigned(_AsIs) then _AsIs.CanReplace := true;
@@ -1463,16 +1464,16 @@ end;
 function TRefCursor.InternalParse: boolean;
 begin
   _Ref := Keyword('ref');
-  if not Assigned(_Ref) then exit(true);
+  if not Assigned(_Ref) then exit(false);
   _Cursor := Keyword('cursor');
   _Returning := Keyword('returning');
-  if Assigned(_Returning) then _TypeName := Identifier;
+  if Assigned(_Returning) then TTypeRef.Parse(Self, Source, _TypeRef);
   Result := true;
 end;
 
 procedure TRefCursor.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Ref, _Cursor, _Returning, _TypeName]);
+  APrinter.PrintItems([_Ref, _Cursor, _Returning, _TypeRef]);
 end;
 
 { TObject_ }
@@ -1632,21 +1633,29 @@ function TFetch.InternalParse: boolean;
 begin
   _Fetch := Keyword('fetch');
   if not Assigned(_Fetch) then exit(false);
-  _Cursor := Identifier;
-  _Into := Keyword('into');
-  TIdentFields.Parse(Self, Source, _Targets);
+  TQualifiedIdent.Parse(Self, Source, _Cursor);
+  _Into := Keyword(['into', 'bulk collect into']);
+  if Assigned(_Into) then TIdentFields.Parse(Self, Source, _Targets);
+  _Limit := Keyword('limit');
+  if Assigned(_Limit) then TParser.ParseExpression(Self, Source, _LimitValue);
   inherited;
   Result := true;
 end;
 
 procedure TFetch.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Fetch);
-  APrinter.PrintIndented(_Cursor);
-  APrinter.NextLine;
-  APrinter.PrintItem(_Into);
-  APrinter.PrintIndented(_Targets);
+  APrinter.PrintItems([_Fetch, _IndentNextLine,
+                               _Cursor, _UndentNextLine,
+                       _Into,  _IndentNextLine,
+                               _Targets, _UndentNextLine,
+                       _Limit, _IndentNextLine,
+                               _LimitValue, _Undent]);
   inherited;
+end;
+
+function TFetch.GetKeywords: TKeywords;
+begin
+  Result := FetchKeywords;
 end;
 
 { TClose }
@@ -1725,21 +1734,12 @@ begin
 end;
 
 initialization
-  Keywords := TStringList.Create;
-  Keywords.Sorted := true;
-  Keywords.Duplicates := dupIgnore;
-  Keywords.CaseSensitive := false;
-  Keywords.Add('as');
-  Keywords.Add('begin');
-  Keywords.Add('end');
-  Keywords.Add('exception');
-  Keywords.Add('function');
-  Keywords.Add('is');
-  Keywords.Add('procedure');
-  Keywords.Add('type');
-  Keywords.Add('using');
+  PLSQLKeywords := TKeywords.Create(['as', 'begin', 'end', 'exception', 'function',
+    'is', 'procedure', 'type', 'using']);
+  FetchKeywords := TKeywords.Create(PLSQLKeywords, ['limit']);
 
 finalization
-  FreeAndNil(Keywords);
+  FreeAndNil(PLSQLKeywords);
+  FreeAndNil(FetchKeywords);
 
 end.

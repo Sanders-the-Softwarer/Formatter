@@ -32,8 +32,8 @@ type
   { Команда drop }
   TDrop = class(TSemicolonStatement)
   strict private
-    _Drop, _ObjectType, _Body, _ObjectName, _Force, _Cascade, _Constraints: TEpithet;
-    _Unexpected: TStatement;
+    _Drop, _ObjectType, _Body, _Force, _Cascade, _Constraints: TEpithet;
+    _ObjectName, _Unexpected: TStatement;
     _Slash: TTerminal;
     function IsTable: boolean;
     function IsType: boolean;
@@ -47,10 +47,8 @@ type
   { Объект view }
   TView = class(TStatement)
   strict private
-    _View: TEpithet;
-    _ViewName: TEpithet;
-    _As: TEpithet;
-    _Select: TStatement;
+    _View, _As: TEpithet;
+    _ViewName, _Select: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -61,9 +59,8 @@ type
   { Объект index }
   TIndex = class(TSemicolonStatement)
   strict private
-    _Unique, _Index, _IndexName, _On, _TableName: TEpithet;
-    _Fields: TStatement;
-    _Tablespace: TStatement;
+    _Unique, _Index, _On: TEpithet;
+    _IndexName, _TableName, _Fields, _Tablespace: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -71,9 +68,6 @@ type
 
   { Объект type body }
   TTypeBody = class(TProgramBlock)
-  strict private
-    _TypeBody, _AsIs: TEpithet;
-    _TypeName: TStatement;
   strict protected
     function GetHeaderClass: TStatementClass; override;
   end;
@@ -81,7 +75,8 @@ type
   { Заголовок type body }
   TTypeBodyHeader = class(TStatement)
   strict private
-    _TypeBody, _TypeName, _AsIs: TEpithet;
+    _TypeBody, _AsIs: TEpithet;
+    _TypeName: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -90,8 +85,8 @@ type
   { Объект table }
   TTable = class(TSemicolonStatement)
   strict private
-    _Global, _Temporary, _Table, _TableName: TEpithet;
-    _Items: TStatement;
+    _Global, _Temporary, _Table: TEpithet;
+    _TableName, _Items: TStatement;
     _Organization, _Index: TEpithet;
     _Tablespace: TStatement;
     _LobStores: TStatement;
@@ -156,8 +151,8 @@ type
   { Описание foreign key }
   TForeignKey = class(TConstraint)
   strict private
-    _Foreign, _Key, _References, _TableName: TEpithet;
-    _RefFields, _TargetFields: TStatement;
+    _Foreign, _Key, _References: TEpithet;
+    _RefFields, _TableName, _TargetFields: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -195,10 +190,8 @@ type
   { Выражение lob store as }
   TLobStore = class(TStatement)
   strict private
-    _Lob: TEpithet;
-    _Column: TStatement;
-    _Store, _As, _TableName: TEpithet;
-    _Stored: TStatement;
+    _Lob, _Store, _As: TEpithet;
+    _Column, _Stored, _TableName: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -232,8 +225,8 @@ type
   { Объект sequence }
   TSequence = class(TStatement)
   strict private
-    _Sequence, _Name: TEpithet;
-    _Parts: TStatement;
+    _Sequence: TEpithet;
+    _Name, _Parts: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -308,7 +301,7 @@ function TView.InternalParse: boolean;
 begin
   _View := Keyword('view');
   if not Assigned(_View) then exit(false);
-  _ViewName := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _ViewName);
   _As := Keyword('as');
   TSelect.Parse(Self, Source, _Select);
   Result := true;
@@ -332,9 +325,9 @@ begin
   _Unique := Keyword('unique');
   _Index  := Keyword('index');
   if not Assigned(_Index) then exit(false);
-  _IndexName := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _IndexName);
   _On := Keyword('on');
-  _TableName := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _TableName);
   TSingleLine<TBracketedStatement<TExpressionFields>>.Parse(Self, Source, _Fields);
   TTablespace.Parse(Self, Source, _Tablespace);
   inherited;
@@ -361,7 +354,7 @@ begin
   Result := true;
   _TypeBody := Keyword('type body');
   if not Assigned(_TypeBody) then exit(false);
-  _TypeName := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _TypeName);
   _AsIs := Keyword(['as', 'is']);
   if Assigned(_AsIs) then _AsIs.CanReplace := true;
 end;
@@ -379,7 +372,7 @@ begin
   _Temporary := Keyword('temporary');
   _Table  := Keyword('table');
   if not Assigned(_Table) then exit(false);
-  _TableName := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _TableName);
   TBracketedStatement<TCommaList<TTableItem>>.Parse(Self, Source, _Items);
   if Assigned(_Temporary) then
     begin
@@ -541,7 +534,7 @@ begin
   TBracketedStatement<TQualifiedIdent>.Parse(Self, Source, _Column);
   _Store := Keyword('store');
   _As := Keyword('as');
-  _TableName := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _TableName);
   TBracketedStatement<TTablespace>.Parse(Self, Source, _Stored);
 end;
 
@@ -570,7 +563,7 @@ begin
   _Key := Keyword('key');
   TSingleLine<TBracketedStatement<TIdentFields>>.Parse(Self, Source, _RefFields);
   _References := Keyword('references');
-  _TableName  := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _TableName);
   TSingleLine<TBracketedStatement<TIdentFields>>.Parse(Self, Source, _TargetFields);
   Result := true;
 end;
@@ -638,7 +631,7 @@ begin
   _ObjectType := Keyword(['table', 'procedure', 'function', 'package', 'view', 'index', 'type', 'sequence', 'trigger']);
   if not Assigned(_ObjectType) then TUnexpectedToken.Parse(Self, Source, _Unexpected);
   if Assigned(_ObjectType) and ((_ObjectType.Value = 'package') or (_ObjectType.Value = 'type')) then _Body := Keyword('body');
-  _ObjectName := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _ObjectName);
   if IsTable then
   begin
     _Cascade := Keyword('cascade');
@@ -678,7 +671,7 @@ begin
   Result := true;
   _Sequence := Keyword('sequence');
   if not Assigned(_Sequence) then exit(false);
-  _Name := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _Name);
   TSequencePartList.Parse(Self, Source, _Parts);
 end;
 
