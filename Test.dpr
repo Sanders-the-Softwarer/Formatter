@@ -20,7 +20,6 @@ uses
   TestFramework,
   TestDML in 'Test\TestDML.pas',
   FileBasedTest in 'Test\FileBasedTest.pas',
-  Attributes in 'Source\Attributes.pas',
   DDL in 'Source\DDL.pas',
   DML in 'Source\DML.pas',
   Expressions in 'Source\Expressions.pas',

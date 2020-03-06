@@ -193,8 +193,6 @@ type
 
 implementation
 
-uses Attributes;
-
 { TStatement }
 
 constructor TStatement.Create(AParent: TStatement; ASource: TBufferedStream<TToken>);
@@ -305,7 +303,7 @@ end;
 
 function TStatement.Aligned: boolean;
 begin
-  Result := Attributes.HasAttribute(ClassType, AlignedAttribute);
+  Result := false;
 end;
 
 procedure TStatement.MatchChildren;
@@ -469,9 +467,8 @@ end;
 
 function TStatement.GetSettings: TFormatSettings;
 begin
-  if Assigned(Parent)
-    then Result := Parent.Settings
-    else Result := FSettings;
+  if not Assigned(FSettings) and Assigned(Parent) then FSettings := Parent.Settings;
+  Result := FSettings;
 end;
 
 { TStatementList }

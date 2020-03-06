@@ -98,7 +98,7 @@ type
 
 implementation
 
-uses Utils, Attributes, SQLPlus, PLSQL;
+uses Utils, SQLPlus, PLSQL;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -387,8 +387,6 @@ begin
     if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and
        SameText(AToken.Value, 'as') and Settings.ReplaceAsIs and AToken.CanReplace
       then Value := 'is';
-    if Attributes.HasAttribute(AToken.ClassType, LowerCaseAttribute)
-      then Value := Value.ToLower;
     { В режиме реальной печати - напечатаем лексему, иначе только учтём сдвиг позиции }
     if HasBuilder then
     begin

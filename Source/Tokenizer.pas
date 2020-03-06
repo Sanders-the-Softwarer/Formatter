@@ -488,10 +488,10 @@ function TMerger.InternalNext: TToken;
   function Check(var AResult: TToken; const S1, S2: string; const S3: string = ''; const S4: string = ''): boolean;
   var S: string;
   begin
-    if not (T1 is TEpithet) or not SameText(S1, T1.Value) then exit(false);
-    if not (T2 is TEpithet) or not SameText(S2, T2.Value) then exit(false);
-    if (S3 <> '') and not (T3 is TEpithet) and not SameText(S3, T3.Value) then exit(false);
-    if (S4 <> '') and not (T4 is TEpithet) and not SameText(S4, T4.Value) then exit(false);
+    if not (T1 is TEpithet) or not SameStr(S1, T1.Value) then exit(false);
+    if not (T2 is TEpithet) or not SameStr(S2, T2.Value) then exit(false);
+    if (S3 <> '') and not (T3 is TEpithet) and (not Assigned(T3) or not SameStr(S3, T3.Value)) then exit(false);
+    if (S4 <> '') and not (T4 is TEpithet) and (not Assigned(T4) or not SameStr(S4, T4.Value)) then exit(false);
     S := S1 + ' ' + S2;
     if S3 <> ''
       then S := S + ' ' + S3
@@ -522,8 +522,10 @@ begin
   if Check(Result, 'end', 'case') then exit;
   if Check(Result, 'end', 'if') then exit;
   if Check(Result, 'end', 'loop') then exit;
+
   if Check(Result, 'inner', 'join') then exit;
   if Check(Result, 'instead', 'of') then exit;
+
   if Check(Result, 'is', 'not', 'null') then exit;
   if Check(Result, 'is', 'null') then exit;
   if Check(Result, 'left', 'join') then exit;

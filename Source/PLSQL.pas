@@ -24,7 +24,7 @@ unit PLSQL;
 interface
 
 uses Classes, Windows, SysUtils, Math, Streams, Tokens, Statements, Expressions,
-  Printers_, Attributes, Utils;
+  Printers_, Utils;
 
 type
 
@@ -206,7 +206,6 @@ type
   end;
 
   { Блок параметров подпрограммы }
-  [Aligned]
   TParamsDeclaration = class(TCommaList<TParamDeclaration>)
   strict private
     _OpenBracket: TTerminal;
@@ -215,6 +214,7 @@ type
     function InternalParse: boolean; override;
     function ParseBreak: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+    function Aligned: boolean; override;
   end;
 
   { Блок деклараций }
@@ -247,12 +247,12 @@ type
   end;
 
   { Блок переменных }
-  [Aligned]
   TVariableDeclarations = class(TStatementList<TVariableDeclaration>)
   strict protected
     function ParseBreak: boolean; override;
     function AllowUnexpected: boolean; override;
     function AllowStatement(AStatement: TStatement): boolean; override;
+    function Aligned: boolean; override;
   end;
 
   { Курсор }
@@ -557,7 +557,6 @@ type
   end;
 
   { Декларация записи }
-  [Aligned]
   TRecord = class(TStatement)
   strict private
     _Record: TEpithet;
@@ -565,6 +564,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+    function Aligned: boolean; override;
   end;
 
   { Декларация табличного типа }
@@ -590,7 +590,6 @@ type
   end;
 
   { Объект object }
-  [Aligned]
   TObject_ = class(TStatement)
   strict private
     _Object: TEpithet;
@@ -598,6 +597,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+    function Aligned: boolean; override;
   end;
 
   { Список членов класса }
@@ -872,6 +872,11 @@ end;
 
 { TParamsDeclaration }
 
+function TParamsDeclaration.Aligned: boolean;
+begin
+  Result := true;
+end;
+
 function TParamsDeclaration.InternalParse: boolean;
 begin
   _OpenBracket := Terminal('(');
@@ -984,6 +989,11 @@ end;
 function TVariableDeclarations.AllowUnexpected: boolean;
 begin
   Result := false;
+end;
+
+function TVariableDeclarations.Aligned: boolean;
+begin
+  Result := true;
 end;
 
 function TVariableDeclarations.AllowStatement(AStatement: TStatement): boolean;
@@ -1427,6 +1437,11 @@ end;
 
 { TRecord }
 
+function TRecord.Aligned: boolean;
+begin
+  Result := true;
+end;
+
 function TRecord.InternalParse: boolean;
 begin
   _Record := Keyword('record');
@@ -1477,6 +1492,11 @@ begin
 end;
 
 { TObject_ }
+
+function TObject_.Aligned: boolean;
+begin
+  Result := true;
+end;
 
 function TObject_.InternalParse: boolean;
 begin

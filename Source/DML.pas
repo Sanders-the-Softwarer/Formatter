@@ -12,7 +12,7 @@ unit DML;
 
 interface
 
-uses Classes, SysUtils, Math, Tokens, Statements, Printers_, Attributes,
+uses Classes, SysUtils, Math, Tokens, Statements, Printers_,
   Expressions, Utils;
 
 type
@@ -194,10 +194,10 @@ type
     property MatchedTo: TIdentField read _Match write _Match;
   end;
 
-  [Aligned]
   TExpressionFields = class(TCommaList<TExpressionField>)
   strict protected
     procedure InternalMatch(AStatement: TStatement); override;
+    function Aligned: boolean; override;
   end;
 
 implementation
@@ -637,6 +637,11 @@ end;
 
 { TExpressionFields }
 
+function TExpressionFields.Aligned: boolean;
+begin
+  Result := true;
+end;
+
 procedure TExpressionFields.InternalMatch(AStatement: TStatement);
 var
   Count, i: integer;
@@ -764,10 +769,10 @@ type
   end;
 
   { Список полей в select }
-  [Aligned]
   TSelectFields = class(TExpressionFields)
   strict protected
     function ParseStatement(out AResult: TStatement): boolean; override;
+    function Aligned: boolean; override;
   end;
 
   { Указание таблицы в select }
@@ -971,6 +976,11 @@ end;
 
 { TSelectFields }
 
+function TSelectFields.Aligned: boolean;
+begin
+  Result := true;
+end;
+
 function TSelectFields.ParseStatement(out AResult: TStatement): boolean;
 begin
   Result := TSelectField.Parse(Self, Source, AResult);
@@ -1166,10 +1176,10 @@ type
   end;
 
   { Список присвоений в update }
-  [Aligned]
   TUpdateAssignments = class(TCommaList<TUpdateAssignment>)
   strict protected
     function ParseBreak: boolean; override;
+    function Aligned: boolean; override;
   end;
 
 { TUpdate }
@@ -1225,6 +1235,11 @@ begin
 end;
 
 { TUpdateAssignments }
+
+function TUpdateAssignments.Aligned: boolean;
+begin
+  Result := true;
+end;
 
 function TUpdateAssignments.ParseBreak: boolean;
 begin

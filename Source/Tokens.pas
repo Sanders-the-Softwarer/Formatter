@@ -26,7 +26,7 @@ unit Tokens;
 
 interface
 
-uses System.SysUtils, System.Generics.Collections, Attributes;
+uses System.SysUtils, System.Generics.Collections;
 
 type
 
@@ -64,6 +64,8 @@ type
     FPrinted, FCanReplace: boolean;
     FCommentsAbove, FCommentsBelow, FCommentsBefore, FCommentsAfter: TList<TComment>;
     FCommentFarAbove, FCommentFarBelow: TComment;
+  strict protected
+    function ModifyValue(const AValue: string): string; virtual;
   public
     function TokenType: string; virtual; abstract;
   public
@@ -114,10 +116,12 @@ type
   end;
 
   { Идентификатор либо ключевое слово }
-  [LowerCase]
+//  [LowerCase]
   TEpithet = class(TToken)
-  private
+  strict private
     FIsKeyword, FIsIdent: boolean;
+  strict protected
+    function ModifyValue(const AValue: string): string; override;
   public
     function TokenType: string; override;
     property IsIdent: boolean read FIsIdent write FIsIdent;
@@ -173,7 +177,7 @@ end;
 
 constructor TToken.Create(AChar: TPositionedChar);
 begin
-  FValue := AChar.Value;
+  FValue := ModifyValue(AChar.Value);
   FLine  := AChar.Line;
   FCol   := AChar.Col;
 end;
@@ -181,12 +185,12 @@ end;
 constructor TToken.Create(const AValue: string; AChar: TPositionedChar);
 begin
   Create(AChar);
-  FValue := AValue;
+  FValue := ModifyValue(AValue);
 end;
 
 constructor TToken.Create(const AValue: string; ALine, ACol: integer);
 begin
-  FValue := AValue;
+  FValue := ModifyValue(AValue);
   FLine  := ALine;
   FCol   := ACol;
 end;
@@ -224,6 +228,11 @@ begin
   FCommentsAfter.Add(AComment);
 end;
 
+function TToken.ModifyValue(const AValue: string): string;
+begin
+  Result := AValue;
+end;
+
 { TUnknownToken }
 
 function TUnknownToken.TokenType: string;
@@ -248,6 +257,11 @@ begin
     Result := 'Идентификатор'
   else
     Result := 'Неидентифицированное слово';
+end;
+
+function TEpithet.ModifyValue(const AValue: string): string;
+begin
+  Result := LowerCase(AValue);
 end;
 
 { TComment }

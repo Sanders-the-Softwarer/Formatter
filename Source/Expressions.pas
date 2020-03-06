@@ -31,7 +31,7 @@ unit Expressions;
 
 interface
 
-uses Classes, SysUtils, Math, Tokens, Statements, Printers_, Attributes,
+uses Classes, SysUtils, Math, Tokens, Statements, Printers_,
   System.Generics.Collections, Utils;
 
 type
@@ -135,10 +135,10 @@ type
   end;
 
   { Аргументы вызова подпрограммы }
-  [Aligned]
   TArguments = class(TCommaList<TArgument>)
   strict protected
     function ParseBreak: boolean; override;
+    function Aligned: boolean; override;
   public
     function OnePerLine: boolean; override;
     function IsNamedNotation: boolean;
@@ -632,6 +632,11 @@ end;
 function TArguments.OnePerLine: boolean;
 begin
   Result := IsNamedNotation and (Self.Count > Settings.ArgumentSingleLineParamLimit);
+end;
+
+function TArguments.Aligned: boolean;
+begin
+  Result := true;
 end;
 
 function TArguments.IsNamedNotation: boolean;

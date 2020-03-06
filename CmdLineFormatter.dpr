@@ -7,7 +7,6 @@ program CmdLineFormatter;
 uses
   Classes,
   SysUtils,
-  Attributes in 'Source\Attributes.pas',
   Controller in 'Source\Controller.pas',
   DDL in 'Source\DDL.pas',
   DML in 'Source\DML.pas',

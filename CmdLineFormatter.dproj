@@ -84,7 +84,6 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Source\Attributes.pas"/>
         <DCCReference Include="Source\Controller.pas"/>
         <DCCReference Include="Source\DDL.pas"/>
         <DCCReference Include="Source\DML.pas"/>

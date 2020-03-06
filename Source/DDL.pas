@@ -12,7 +12,7 @@ unit DDL;
 
 interface
 
-uses Tokens, Statements, Printers_, Attributes, Streams, PLSQL;
+uses Tokens, Statements, Printers_, Streams, PLSQL;
 
 type
 
@@ -216,10 +216,10 @@ type
   end;
 
   { Группа комментариев }
-  [Aligned]
   TComments = class(TStatementList<TComment>)
   strict protected
     function ParseBreak: boolean; override;
+    function Aligned: boolean; override;
   end;
 
   { Объект sequence }
@@ -616,6 +616,11 @@ begin
 end;
 
 { TComments }
+
+function TComments.Aligned: boolean;
+begin
+  Result := true;
+end;
 
 function TComments.ParseBreak: boolean;
 begin

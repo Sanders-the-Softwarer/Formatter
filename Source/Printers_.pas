@@ -135,7 +135,7 @@ function _UndentNextLine: TObject;
 
 implementation
 
-uses Attributes, SQLPlus, FormatterPrinter;
+uses SQLPlus, FormatterPrinter;
 
 { Создание принтера для вывода форматированного текста }
 function CreateFormatterPrinter: TPrinter;
