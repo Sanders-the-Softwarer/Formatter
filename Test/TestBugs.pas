@@ -22,6 +22,7 @@ type
     procedure _10;
     procedure _11;
     procedure _12;
+    procedure _13;
   end;
 
 implementation
@@ -90,6 +91,10 @@ begin
 end;
 
 procedure _Bugs._12;
+begin
+end;
+
+procedure _Bugs._13;
 begin
 end;
 

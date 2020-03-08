@@ -1,0 +1,7 @@
+set a 1
+
+@x:\dir\1.sql
+@@x:\dir\2.sql
+@x:\dir\3.sql
+
+set b 2

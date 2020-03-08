@@ -13,7 +13,7 @@ unit TestDDL;
 interface
 
 uses
-  TestFramework, FileBasedTest;
+  SysUtils, TestFramework, FileBasedTest;
 
 type
 
@@ -53,7 +53,14 @@ type
   _Comment = class(TFileBasedTest)
   published
     procedure Comment_On_Table;
-    procedure Выравнивание_В_Comment;
+  end;
+
+  { Команды SQL }
+  _Команды_SQL = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure Grant;
   end;
 
 implementation
@@ -157,15 +164,22 @@ procedure _Comment.Comment_On_Table;
 begin
 end;
 
-procedure _Comment.Выравнивание_В_Comment;
+{ _Команды_SQL }
+
+function _Команды_SQL.GetDir: string;
 begin
-  Settings.AlignTableColumnComments := true;
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды SQL';
+end;
+
+procedure _Команды_SQL.Grant;
+begin
 end;
 
 initialization
   RegisterTest(_Create.Suite);
   RegisterTest(_Drop.Suite);
   RegisterTest(_Comment.Suite);
+  RegisterTest(_Команды_SQL.Suite);
 
 end.
 

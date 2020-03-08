@@ -67,6 +67,7 @@ type
     edPreferredExpressionLength: TSpinEdit;
     Label4: TLabel;
     checkAlignExpressions: TCheckBox;
+    checkAlignColumns: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -115,6 +116,7 @@ begin
     Settings.MatchParamLimit                 := edMatchParamLimit.Value;
     Settings.AlignVariables                  := checkAlignVariables.Checked;
     Settings.AlignFields                     := checkAlignFields.Checked;
+    Settings.AlignColumns                    := checkAlignColumns.Checked;
     Settings.AlignExpressions                := checkAlignExpressions.Checked;
     Settings.AlignSpecialComments            := checkAlignSpecialComments.Checked;
     Settings.AlignTableColumnComments        := checkAlignTableColumnComments.Checked;
@@ -183,6 +185,7 @@ begin
     edMatchParamLimit.Value                 := Settings.MatchParamLimit;
     edPreferredExpressionLength.Value       := Settings.PreferredExpressionLength;
     checkAlignFields.Checked                := Settings.AlignFields;
+    checkAlignColumns.Checked               := Settings.AlignColumns;
     checkAlignVariables.Checked             := Settings.AlignVariables;
     checkAlignSpecialComments.Checked       := Settings.AlignSpecialComments;
     checkAlignTableColumnComments.Checked   := Settings.AlignTableColumnComments;

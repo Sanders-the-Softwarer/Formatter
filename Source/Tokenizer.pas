@@ -266,7 +266,7 @@ function TTokenizer.InternalNext: TToken;
                                       '%isopen');
   var
     Value: string;
-    Starts, Exact, PrevExact: boolean;    
+    Starts, Exact, Found, PrevExact: boolean;
     i: integer;
   begin
     Restore;
@@ -278,17 +278,17 @@ function TTokenizer.InternalNext: TToken;
       Starts := false;
       for i := 1 to N do
       begin
-        Exact := Exact or (Tokens[i] = Value);
-        Starts := Starts or ((Tokens[i] <> Value) and (Tokens[i].StartsWith(Value)));
+        Value := Value.ToLower;
+        Found := (Tokens[i] = Value);
+        Exact := Exact or Found;
+        Starts := Starts or not Found and Tokens[i].StartsWith(Value);
       end;
     until not Starts;
     Result := Exact or PrevExact;
     if Exact then
       ApplyLastChar
     else if PrevExact then
-      RefuseLastChar
-{    else
-      raise Exception.Create('Tokenizer: internal error #1');}
+      RefuseLastChar;
   end;
 
 begin
@@ -522,10 +522,9 @@ begin
   if Check(Result, 'end', 'case') then exit;
   if Check(Result, 'end', 'if') then exit;
   if Check(Result, 'end', 'loop') then exit;
-
+  if Check(Result, 'identified', 'by') then exit;
   if Check(Result, 'inner', 'join') then exit;
   if Check(Result, 'instead', 'of') then exit;
-
   if Check(Result, 'is', 'not', 'null') then exit;
   if Check(Result, 'is', 'null') then exit;
   if Check(Result, 'left', 'join') then exit;
@@ -552,6 +551,9 @@ begin
   if Check(Result, 'union', 'all') then exit;
   if Check(Result, 'when', 'matched', 'then') then exit;
   if Check(Result, 'when', 'not', 'matched', 'then') then exit;
+  if Check(Result, 'with', 'admin', 'option') then exit;
+  if Check(Result, 'with', 'grant', 'option') then exit;
+  if Check(Result, 'with', 'hierarchy', 'option') then exit;
   { –аз не удалось - возвращаем первую лексему }
   Source.Restore(P2);
   Result := Transit(T1);

@@ -444,7 +444,6 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     i: integer;
     SameLine: boolean;
   begin
-    Assert(not Settings.AlignExpressions, 'Здесь бага, нужно починить, выражение в where сдвигается на позицию левее, чем нужно');
     APrinter.StartRuler(Settings.AlignExpressions);
     for i := 0 to Count - 1 do
     begin

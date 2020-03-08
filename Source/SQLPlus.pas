@@ -53,6 +53,12 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Список команд @ }
+  TAtList = class(TStatementList<TAt>)
+  strict protected
+    function AllowUnexpected: boolean; override;
+  end;
+
   { Команда spool }
   TSpool = class(TStatement)
   strict private
@@ -214,14 +220,21 @@ begin
 end;
 
 procedure TFileName.InternalPrintSelf(APrinter: TPrinter);
-var T: TToken;
+var
+  T: TToken;
+  S: boolean;
 begin
+  S := false;
   for T in _Tokens do
   begin
     APrinter.PrintItem(T);
-    APrinter.SupressSpaces(true); { первую лексему печатаем с пробелом, чтобы отделить от spool }
+    if not S then
+    begin
+      APrinter.SupressSpaces(true); { первую лексему печатаем с пробелом, чтобы отделить от spool }
+      S := true;
+    end;
   end;
-  APrinter.SupressSpaces(false);
+  if S then APrinter.SupressSpaces(false);
 end;
 
 { TStandaloneAnonymousBlock }
@@ -236,6 +249,13 @@ procedure TStandaloneAnonymousBlock.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Block);
   APrinter.NextLineIf(_Slash);
+end;
+
+{ TAtList }
+
+function TAtList.AllowUnexpected: boolean;
+begin
+  Result := false;
 end;
 
 end.

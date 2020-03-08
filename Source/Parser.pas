@@ -94,7 +94,8 @@ class function TParser.ParseDDL(AParent: TStatement; ASource: TBufferedStream<TT
 begin
   Result := TCreate.Parse(AParent, ASource, AResult) or
             TDrop.Parse(AParent, ASource, AResult) or
-            TComments.Parse(AParent, ASource, AResult);
+            TComments.Parse(AParent, ASource, AResult) or
+            TGrants.Parse(AParent, ASource, AResult);
 end;
 
 { Разбор операторов PL/SQL }
@@ -127,7 +128,7 @@ begin
   Result := TClear.Parse(AParent, ASource, AResult) or
             TWhenever.Parse(AParent, ASource, AResult) or
             TSet.Parse(AParent, ASource, AResult) or
-            TAt.Parse(AParent, ASource, AResult) or
+            TAtList.Parse(AParent, ASource, AResult) or
             TSpool.Parse(AParent, ASource, AResult) or
             TCall.Parse(AParent, ASource, AResult);
 end;

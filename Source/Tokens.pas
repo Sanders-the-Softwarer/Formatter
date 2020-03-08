@@ -106,9 +106,11 @@ type
 
   { Символьная лексема }
   TTerminal = class(TToken)
-  private
+  strict private
     FOpType: TOpType;
     FIntoNumber: boolean;
+  strict protected
+    function ModifyValue(const AValue: string): string; override;
   public
     function TokenType: string; override;
     property OpType: TOpType read FOpType write FOpType; { позволяет отличить унарные плюсы-минусы от бинарных }
@@ -290,6 +292,11 @@ end;
 function TTerminal.TokenType: string;
 begin
   Result := 'Символ';
+end;
+
+function TTerminal.ModifyValue(const AValue: string): string;
+begin
+  Result := AValue.ToLower;
 end;
 
 { TUnexpectedEOF }

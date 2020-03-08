@@ -43,7 +43,6 @@ type
     procedure Запрос_С_Подстановками;
     procedure Указание_Направления_Сортировки_И_Расположения_Null_В_Order_By;
     procedure Связывание_Запросов_Через_Операции_Над_Множествами;
-    procedure Выравнивание_Полей_В_Запросе;
     procedure Сопоставление_Полей_В_Into;
     procedure Сопоставление_Полей_В_Into_С_Выравниванием;
     procedure Запрос_С_Ansi_Синтаксисом;
@@ -63,10 +62,6 @@ type
     procedure В_Запросе_Можно_Употреблять_Конструкцию_Keep_С_Переносом;
     procedure Форматирование_Подзапросов_В_Select;
     procedure Переносы_По_And_В_Where;
-  public
-    { отложим }
-    procedure Выравнивание_Условий_В_Where;
-  published
     procedure Commit_Rollback_Savepoint;
   public
     { отложим }
@@ -97,7 +92,6 @@ type
     procedure Update_С_Алиасом;
     procedure Update_С_Подзапросом;
     procedure Update_С_Множественными_Присваиваниями;
-    procedure Выравнивание_В_Update;
     procedure Update_С_Where;
     procedure Update_С_Returning;
     procedure Update_С_Сопоставлением_В_Returning;
@@ -235,11 +229,6 @@ procedure _Select.Переносы_По_And_В_Where;
 begin
 end;
 
-procedure _Select.Выравнивание_Условий_В_Where;
-begin
-  Settings.AlignExpressions := true;
-end;
-
 procedure _Select.Длинный_И_Сложный_Запрос_В_Форматировании_Которого_Куча_Мелких_Недостатков;
 begin
 end;
@@ -255,11 +244,6 @@ end;
 procedure _Select.В_Запросе_Можно_Употреблять_Функцию_Listagg_С_Переносом;
 begin
   Settings.PreferredExpressionLength := 60;
-end;
-
-procedure _Select.Выравнивание_Полей_В_Запросе;
-begin
-  Settings.AlignFields := true;
 end;
 
 procedure _Select.Запрос_Из_Вложенных_Структур_И_Табличных_Типов;
@@ -388,11 +372,6 @@ end;
 procedure _Update.Update_С_Сопоставлением_В_Returning;
 begin
   Settings.MatchParamLimit := 5;
-end;
-
-procedure _Update.Выравнивание_В_Update;
-begin
-  Settings.AlignFields := true;
 end;
 
 procedure _Update.Простой_Update;

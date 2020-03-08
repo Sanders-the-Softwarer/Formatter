@@ -35,9 +35,7 @@ type
     procedure Типы_Переменных;
     procedure Параметры_In_Out_Nocopy;
     procedure Параметры_Значения_По_Умолчанию;
-    procedure Выравнивание_В_Параметрах_Подпрограмм;
     procedure Константы_И_Значения_По_Умолчанию;
-    procedure Выравнивание_В_Переменных;
     procedure Объявление_Курсора;
     procedure Параметризированный_Курсор;
     procedure Курсор_С_Типом_Результата;
@@ -46,7 +44,6 @@ type
     procedure Записи;
     procedure Оператор_Присваивания;
     procedure Вызовы_Процедур;
-    procedure Выравнивание_В_Вызовах_Процедур;
     procedure Возврат_Из_Подпрограммы;
     procedure Оператор_Null;
     procedure Оператор_Raise;
@@ -78,7 +75,15 @@ type
     function GetDir: string; override;
   published
     procedure Комментарий_Разрывает_Выравнивание_В_Блоке_Переменных;
-    procedure Выравнивание_Комментариев_Справа_От_Деклараций;
+    procedure Комментариев_Справа_От_Деклараций;
+    procedure Колонок_В_Таблице;
+    procedure В_Comment;
+    procedure Полей_В_Update;
+    procedure Полей_В_Запросе;
+    procedure Переменных;
+    procedure Параметров_Подпрограмм;
+    procedure Аргументов_В_Вызовах_Подпрограмм;
+    procedure Условий_В_Where;
   end;
 
   { Тесты на расстановку комментариев }
@@ -111,6 +116,7 @@ type
   published
     procedure В_Пакете;
     procedure В_Пакете_С_Блоком_Инициализации;
+    procedure Команды_at_Собираем_Вместе;
   end;
 
   { Тесты на PL/SQL типы }
@@ -157,22 +163,6 @@ end;
 
 procedure _PLSQL.Вызовы_Процедур;
 begin
-end;
-
-procedure _PLSQL.Выравнивание_В_Вызовах_Процедур;
-begin
-  Settings.AlignVariables := true;
-  Settings.ArgumentSingleLineParamLimit := 3;
-end;
-
-procedure _PLSQL.Выравнивание_В_Параметрах_Подпрограмм;
-begin
-  Settings.AlignVariables := true;
-end;
-
-procedure _PLSQL.Выравнивание_В_Переменных;
-begin
-  Settings.AlignVariables := true;
 end;
 
 procedure _PLSQL.Заголовок_Пакета;
@@ -329,7 +319,48 @@ begin
   Settings.AlignVariables := true;
 end;
 
-procedure _Выравнивание.Выравнивание_Комментариев_Справа_От_Деклараций;
+procedure _Выравнивание.Параметров_Подпрограмм;
+begin
+  Settings.AlignVariables := true;
+end;
+
+procedure _Выравнивание.Переменных;
+begin
+  Settings.AlignVariables := true;
+end;
+
+procedure _Выравнивание.Полей_В_Update;
+begin
+  Settings.AlignFields := true;
+end;
+
+procedure _Выравнивание.Полей_В_Запросе;
+begin
+  Settings.AlignFields := true;
+end;
+
+procedure _Выравнивание.Условий_В_Where;
+begin
+  Settings.AlignExpressions := true;
+end;
+
+procedure _Выравнивание.Аргументов_В_Вызовах_Подпрограмм;
+begin
+  Settings.AlignVariables := true;
+  Settings.ArgumentSingleLineParamLimit := 3;
+end;
+
+procedure _Выравнивание.В_Comment;
+begin
+  Settings.AlignTableColumnComments := true;
+end;
+
+procedure _Выравнивание.Колонок_В_Таблице;
+begin
+  Settings.AlignColumns := true;
+end;
+
+procedure _Выравнивание.Комментариев_Справа_От_Деклараций;
 begin
   Settings.AlignVariables := true;
 end;
@@ -373,6 +404,10 @@ begin
 end;
 
 procedure _Пустые_Строки.В_Пакете_С_Блоком_Инициализации;
+begin
+end;
+
+procedure _Пустые_Строки.Команды_at_Собираем_Вместе;
 begin
 end;
 

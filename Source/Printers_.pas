@@ -58,6 +58,7 @@ type
     MatchParamLimit: integer;
     AlignVariables: boolean;
     AlignFields: boolean;
+    AlignColumns: boolean;
     AlignExpressions: boolean;
     AlignTableColumnComments: boolean;
     AlignSpecialComments: boolean;
@@ -311,6 +312,7 @@ begin
   MatchParamLimit                 := 3;
   AlignVariables                  := true;
   AlignFields                     := true;
+  AlignColumns                    := true;
   AlignExpressions                := false;
   AlignTableColumnComments        := true;
   AlignSpecialComments            := true;

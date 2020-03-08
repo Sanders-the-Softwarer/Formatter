@@ -12,7 +12,7 @@ unit DDL;
 
 interface
 
-uses Tokens, Statements, Printers_, Streams, PLSQL;
+uses SysUtils, Tokens, Statements, Printers_, Streams, PLSQL;
 
 type
 
@@ -250,6 +250,38 @@ type
     function ParseBreak: boolean; override;
   end;
 
+  { Команда grant }
+  TGrant = class(TSemicolonStatement)
+  strict private
+    _Grant, _On, _To, _Grantee, _IdentifiedBy, _Password, _WithAdminOption, _WithGrantOption, _WithHierarchyOption: TEpithet;
+    _Privileges, _Object: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Список грантов }
+  TGrants = class(TStatementList<TGrant>)
+  strict protected
+    function AllowUnexpected: boolean; override;
+  end;
+
+  { Грантуемая привилегия }
+  TPrivilege = class(TStatement)
+  strict private
+    Tokens: array of TToken;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Список грантуемых привилегий }
+  TPrivileges = class(TCommaList<TPrivilege>)
+  strict protected
+    function ParseBreak: boolean; override;
+    function OnePerLine: boolean; override;
+  end;
+
 implementation
 
 uses Parser, DML, Expressions;
@@ -373,7 +405,7 @@ begin
   _Table  := Keyword('table');
   if not Assigned(_Table) then exit(false);
   TQualifiedIdent.Parse(Self, Source, _TableName);
-  TBracketedStatement<TCommaList<TTableItem>>.Parse(Self, Source, _Items);
+  TBracketedStatement<TAligned<TCommaList<TTableItem>>>.Parse(Self, Source, _Items);
   if Assigned(_Temporary) then
     begin
       _On := Keyword('on');
@@ -446,7 +478,15 @@ end;
 
 procedure TTableField.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Name, _Type, _Default, _Value, _Not, _Null]);
+  APrinter.StartRuler(Settings.AlignColumns);
+  APrinter.Ruler('name');
+  APrinter.PrintItem(_Name);
+  APrinter.Ruler('type');
+  APrinter.PrintItem(_Type);
+  APrinter.Ruler('default');
+  APrinter.PrintItems([_Default, _Value]);
+  APrinter.Ruler('not null');
+  APrinter.PrintItems([_Not, _Null]);
 end;
 
 { TConstraint }
@@ -714,5 +754,96 @@ var _Dummy: TStatement;
 begin
   Result := not TSequencePart.Parse(Self, Source, _Dummy);
 end;
+
+{ TGrant }
+
+function TGrant.InternalParse: boolean;
+begin
+  _Grant := Keyword('grant');
+  if not Assigned(_Grant) then exit(false);
+  TPrivileges.Parse(Self, Source, _Privileges);
+  _On := Keyword('on');
+  if Assigned(_On) then TQualifiedIdent.Parse(Self, Source, _Object);
+  _To := Keyword('to');
+  _Grantee := Identifier;
+  _IdentifiedBy := Keyword('identified by');
+  if Assigned(_IdentifiedBy) then _Password := Identifier;
+  _WithAdminOption := Keyword('with admin option');
+  _WithHierarchyOption := Keyword('with hierarchy option');
+  _WithGrantOption := Keyword('with grant option');
+  Result := true;
+  inherited;
+end;
+
+procedure TGrant.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Grant, _Privileges, _On, _Object, _To, _Grantee,
+    _IdentifiedBy, _Password, _WithAdminOption, _WithHierarchyOption, _WithGrantOption]);
+  inherited;
+end;
+
+{ TPrivileges }
+
+function TPrivileges.ParseBreak: boolean;
+begin
+  Result := Any([Terminal(';'), Keyword(['on', 'to', 'with', 'with admin option', 'with grant option', 'with hierarchy option'])]);
+end;
+
+function TPrivileges.OnePerLine: boolean;
+begin
+  Result := false;
+end;
+
+{ TPrivilege }
+
+function TPrivilege.InternalParse: boolean;
+var
+  Savepoint: TMark;
+  T: TToken;
+  L: integer;
+begin
+  Savepoint := Source.Mark;
+  { Сначала идут один или несколько идентификаторов }
+  T := NextToken;
+  while (T is TEpithet) and not SameStr(T.Value, 'on') and not SameStr(T.Value, 'to') do
+  begin
+    TEpithet(T).IsIdent := true;
+    Savepoint := Source.Mark;
+    L := Length(Tokens);
+    SetLength(Tokens, L + 1);
+    Tokens[L] := T;
+    T := NextToken;
+  end;
+  { Если теперь не открывающая скобка, разбор окончен }
+  if not SameStr(T.Value, '(') then
+  begin
+    Source.Restore(Savepoint);
+    exit(Length(Tokens) > 0);
+  end;
+  { А если открывающая - читаем названия колонок вплоть до закрывающей }
+  repeat
+    if T is TEpithet then TEpithet(T).IsIdent := true;
+    L := Length(Tokens);
+    SetLength(Tokens, L + 1);
+    Tokens[L] := T;
+    if SameStr(T.Value, ')')
+      then exit(true)
+      else T := NextToken;
+  until false;
+end;
+
+procedure TPrivilege.InternalPrintSelf(APrinter: TPrinter);
+var i: integer;
+begin
+  for i := Low(Tokens) to High(Tokens) do APrinter.PrintItem(Tokens[i]);
+end;
+
+{ TGrants }
+
+function TGrants.AllowUnexpected: boolean;
+begin
+  Result := false;
+end;
+
 end.
 

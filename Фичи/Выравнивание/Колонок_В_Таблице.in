@@ -1,0 +1,5 @@
+create table x(
+    x  integer                            not null, -- целое
+    yy varchar2(300 char) default 'yy',             -- строковое
+    z  date               default sysdate not null  -- без запятой в конце
+);

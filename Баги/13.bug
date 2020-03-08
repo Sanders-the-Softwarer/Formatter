@@ -1,0 +1,8 @@
+-- Суффиксы %type и подобные должны быть регистронезависимы
+
+declare
+    i my.table%RowType;
+    j my.table.column%TYPE := Sql%NotFound;
+begin
+    null;
+end;

@@ -191,6 +191,16 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+  {  онструкци€ дл€ выравнивани€ во вложенной }
+  TAligned<T: TStatement> = class(TStatement)
+  strict private
+    _Stmt: TStatement;
+  strict protected
+    function Aligned: boolean; override;
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
 implementation
 
 { TStatement }
@@ -519,7 +529,7 @@ begin
     if StatementOk then
     begin
       Delimiter := nil;
-      DelimiterOk := ParseDelimiter(Delimiter) and (P <> Source.Mark); { пустой разделитель не считаетс€ }
+      DelimiterOk := ParseDelimiter(Delimiter) and (P <> Source.Mark); { пустой разделитель не канает }
       if DelimiterOk then
         begin
           Delimiters.Add(Delimiter);
@@ -532,7 +542,7 @@ begin
         end;
     end;
     { ≈сли нет либо конструкции, либо разделител€, проверим услови€ выхода }
-    if not StatementOk or not DelimiterOk then
+    if not StatementOk or (AllowUnexpected and not DelimiterOk) then
     begin
       BreakOk := ParseBreak;
       Source.Restore(P);
@@ -739,6 +749,23 @@ begin
   APrinter.SupressNextLine(true);
   APrinter.PrintItem(_Stmt);
   APrinter.SupressNextLine(false);
+end;
+
+{ TAligned<T> }
+
+function TAligned<T>.Aligned: boolean;
+begin
+  Result := true;
+end;
+
+function TAligned<T>.InternalParse: boolean;
+begin
+  Result := T.Parse(Self, Source, _Stmt);
+end;
+
+procedure TAligned<T>.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Stmt);
 end;
 
 end.
