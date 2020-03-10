@@ -29,14 +29,14 @@ implementation
 
 { Вывод в отладочную консоль }
 procedure _Debug(const Msg: string; const Params: array of const);
-//var S: string;
+var S: string;
 begin
-{  try
+  try
     S := Format(Msg, Params);
   except
     S := Msg;
   end;
-  OutputDebugString(@S[1]);}
+  OutputDebugString(@S[1]);
 end;
 
 { TKeywords }

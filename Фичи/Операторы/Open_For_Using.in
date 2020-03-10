@@ -1,5 +1,22 @@
-open p_cur for 'select :1 from dual' using 'x';
+open 
+    p_cur 
+for 
+    'select :1 from dual' 
+using 
+    'x';
 
-open p_cur for 'select :1 from dual' using 666;
+open 
+    p_cur 
+for 
+    'select :1 from dual' 
+using 
+    666;
 
-open p_cur for 'select :1 from dual where :2 = :3' using in p_a, in out p_b, out p_c;
+open 
+    p_cur 
+for 
+    'select :1 from dual where :2 = :3' 
+using 
+    in p_a, 
+    in out p_b, 
+    out p_c;

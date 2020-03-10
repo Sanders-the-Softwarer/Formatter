@@ -62,31 +62,27 @@ type
     FValue: string;
     FLine, FCol: integer;
     FPrinted, FCanReplace: boolean;
-    FCommentsAbove, FCommentsBelow, FCommentsBefore, FCommentsAfter: TList<TComment>;
-    FCommentFarAbove, FCommentFarBelow: TComment;
+    FComments: array[0..4] of TComment;
   strict protected
     function ModifyValue(const AValue: string): string; virtual;
+    function GetComment(Index: integer): TComment;
+    procedure SetComment(Index: integer; AComment: TComment);
   public
     function TokenType: string; virtual; abstract;
   public
     constructor Create(const AValue: string; AChar: TPositionedChar); overload;
     constructor Create(AChar: TPositionedChar); overload;
     constructor Create(const AValue: string; ALine, ACol: integer); overload;
-    destructor Destroy; override;
-    procedure AddCommentAbove(AComment: TComment);
-    procedure AddCommentBelow(AComment: TComment);
-    procedure AddCommentBefore(AComment: TComment);
-    procedure AddCommentAfter(AComment: TComment);
     property Value: string read FValue;
     property Line: integer read FLine;
     property Col: integer read FCol;
     property Printed: boolean read FPrinted write FPrinted;
     property CanReplace: boolean read FCanReplace write FCanReplace;
-    property CommentsAbove: TList<TComment> read FCommentsAbove;
-    property CommentsAfter: TList<TComment> read FCommentsAfter;
-    property CommentsBelow: TList<TComment> read FCommentsBelow;
-    property CommentFarAbove: TComment read FCommentFarAbove write FCommentFarAbove;
-    property CommentFarBelow: TComment read FCommentFarBelow write FCommentFarBelow;
+    property CommentFarAbove: TComment index 0 read GetComment write SetComment;
+    property CommentAbove: TComment index 1 read GetComment write SetComment;
+    property CommentAfter: TComment index 2 read GetComment write SetComment;
+    property CommentBelow: TComment index 3 read GetComment write SetComment;
+    property CommentFarBelow: TComment index 4 read GetComment write SetComment;
   end;
 
   { Неожиданная или неизвестная лексема - встретился символ, с которого не может начинаться лексема }
@@ -118,8 +114,7 @@ type
   end;
 
   { Идентификатор либо ключевое слово }
-//  [LowerCase]
-  TEpithet = class(TToken)
+TEpithet = class(TToken)
   strict private
     FIsKeyword, FIsIdent: boolean;
   strict protected
@@ -134,6 +129,9 @@ type
   TComment = class(TToken)
   public
     function TokenType: string; override;
+    function LineComment: boolean;
+    function Height: integer;
+    function ShiftedValue(ACol: integer): string;
   end;
 
   { Число }
@@ -197,42 +195,21 @@ begin
   FCol   := ACol;
 end;
 
-destructor TToken.Destroy;
-begin
-  FreeAndNil(FCommentsAbove);
-  FreeAndNil(FCommentsBelow);
-  FreeAndNil(FCommentsBefore);
-  FreeAndNil(FCommentsAfter);
-  inherited;
-end;
-
-procedure TToken.AddCommentAbove(AComment: TComment);
-begin
-  if not Assigned(FCommentsAbove) then FCommentsAbove := TList<TComment>.Create;
-  FCommentsAbove.Add(AComment);
-end;
-
-procedure TToken.AddCommentBelow(AComment: TComment);
-begin
-  if not Assigned(FCommentsBelow) then FCommentsBelow := TList<TComment>.Create;
-  FCommentsBelow.Add(AComment);
-end;
-
-procedure TToken.AddCommentBefore(AComment: TComment);
-begin
-  if not Assigned(FCommentsBefore) then FCommentsBefore := TList<TComment>.Create;
-  FCommentsBefore.Add(AComment);
-end;
-
-procedure TToken.AddCommentAfter(AComment: TComment);
-begin
-  if not Assigned(FCommentsAfter) then FCommentsAfter := TList<TComment>.Create;
-  FCommentsAfter.Add(AComment);
-end;
-
 function TToken.ModifyValue(const AValue: string): string;
 begin
   Result := AValue;
+end;
+
+function TToken.GetComment(Index: integer): TComment;
+begin
+  Result := FComments[Index];
+end;
+
+procedure TToken.SetComment(Index: integer; AComment: TComment);
+begin
+  if Assigned(FComments[Index])
+    then raise Exception.CreateFmt('Trying to link comment [%s] while comment [%s] is already linked', [AComment.Value, FComments[Index].Value])
+    else FComments[Index] := AComment;
 end;
 
 { TUnknownToken }
@@ -271,6 +248,49 @@ end;
 function TComment.TokenType: string;
 begin
   Result := 'Комментарий';
+end;
+
+{ Признак строчного (до перевода строки) комментария }
+function TComment.LineComment: boolean;
+begin
+  Result := Value.StartsWith('--');
+end;
+
+{ Высота комментария в строках }
+function TComment.Height: integer;
+var i: integer;
+begin
+  Result := 1;
+  for i := Length(Value) downto 1 do if Value[i] = #13 then Inc(Result);
+end;
+
+{ Внесение в текст многострочного комментария поправки на разницу между тем,
+  в какой позиции он будет выведен, и той, в которой был в оригинале }
+function TComment.ShiftedValue(ACol: integer): string;
+var
+  D, i, j: integer;
+  C: char;
+begin
+  D := ACol - Col;
+  i := 1;
+  while i <= Length(Value) do
+  begin
+    C := Value[i];
+    Result := Result + C;
+    Inc(i);
+    if C = #13 then
+      if D > 0 then
+        Result := Result + StringOfChar(' ', D)
+      else if D < 0 then
+        begin
+          j := 0;
+          while (j < -D) and (Value[i + j + 1] = ' ') do
+          begin
+            Inc(i);
+            Inc(j);
+          end;
+        end;
+      end;
 end;
 
 { TNumber }

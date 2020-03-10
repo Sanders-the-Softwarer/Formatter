@@ -28,6 +28,7 @@ type
     procedure Create_Unique_Index;
     procedure Create_Functional_Index;
     procedure Create_Table;
+    procedure Create_Table_Partitioned;
     procedure Create_Indexed_Table;
     procedure Create_Temporary_Table;
     procedure Поля_Таблиц_Разных_Типов;
@@ -55,8 +56,8 @@ type
     procedure Comment_On_Table;
   end;
 
-  { Команды SQL }
-  _Команды_SQL = class(TFileBasedTest)
+  { Команды DDL }
+  _Команды_DDL = class(TFileBasedTest)
   protected
     function GetDir: string; override;
   published
@@ -93,6 +94,11 @@ end;
 
 procedure _Create.Create_Table;
 begin
+end;
+
+procedure _Create.Create_Table_Partitioned;
+begin
+  Settings.AlignColumns := true;
 end;
 
 procedure _Create.Create_Temporary_Table;
@@ -164,14 +170,14 @@ procedure _Comment.Comment_On_Table;
 begin
 end;
 
-{ _Команды_SQL }
+{ _Команды_DDL }
 
-function _Команды_SQL.GetDir: string;
+function _Команды_DDL.GetDir: string;
 begin
-  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды SQL';
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды DDL';
 end;
 
-procedure _Команды_SQL.Grant;
+procedure _Команды_DDL.Grant;
 begin
 end;
 
@@ -179,7 +185,7 @@ initialization
   RegisterTest(_Create.Suite);
   RegisterTest(_Drop.Suite);
   RegisterTest(_Comment.Suite);
-  RegisterTest(_Команды_SQL.Suite);
+  RegisterTest(_Команды_DDL.Suite);
 
 end.
 

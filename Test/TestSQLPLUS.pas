@@ -21,8 +21,6 @@ type
   _SQLPlus = class(TFileBasedTest)
   published
     procedure Exec;
-  public
-    { отложим }
     procedure Последовательность_Exec;
   end;
 

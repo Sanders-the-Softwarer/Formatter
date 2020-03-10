@@ -88,6 +88,7 @@ type
     _Global, _Temporary, _Table: TEpithet;
     _TableName, _Items: TStatement;
     _Organization, _Index: TEpithet;
+    _PartitionBy: TStatement;
     _Tablespace: TStatement;
     _LobStores: TStatement;
     _On, _Commit, _DeleteOrPreserve, _Rows: TEpithet;
@@ -201,6 +202,46 @@ type
   TLobStores = class(TStatementList<TLobStore>)
   strict protected
     function ParseBreak: boolean; override;
+  end;
+
+  { Выражение partition by }
+  TPartitions = class(TStatement)
+  strict private
+    _PartitionBy, _SubpartitionBy: TEpithet;
+    _PRange, _PList, _SRange, _SList, _Partitions: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Условие range partition }
+  TPartitionRange = class(TStatement)
+  strict private
+    _Range: TEpithet;
+    _Fields, _Expression: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Условие list partition }
+  TPartitionList = class(TStatement)
+  strict private
+    _List: TEpithet;
+    _Fields: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Описание партиции }
+  TPartition = class(TStatement)
+  strict private
+    _Partition, _Name, _Values, _Less, _Than: TEpithet;
+    _Expression, _Subpartitions: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Команда comment }
@@ -406,6 +447,7 @@ begin
   if not Assigned(_Table) then exit(false);
   TQualifiedIdent.Parse(Self, Source, _TableName);
   TBracketedStatement<TAligned<TCommaList<TTableItem>>>.Parse(Self, Source, _Items);
+  TPartitions.Parse(Self, Source, _PartitionBy);
   if Assigned(_Temporary) then
     begin
       _On := Keyword('on');
@@ -428,6 +470,7 @@ procedure TTable.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Global, _Temporary, _Table, _TableName, _IndentNextLine,
                        _Items]);
+  APrinter.NextLineIf(_PartitionBy);
   APrinter.NextLineIf([_Organization, _Index]);
   APrinter.NextLineIf([_Tablespace]);
   APrinter.NextLineIf([_LobStores]);
@@ -629,6 +672,82 @@ procedure TCheck.InternalPrintSelf(APrinter: TPrinter);
 begin
   inherited;
   APrinter.PrintItems([_Check, _Condition]);
+end;
+
+{ TPartitions }
+
+function TPartitions.InternalParse: boolean;
+begin
+  _PartitionBy := Keyword('partition by');
+  if not Assigned(_PartitionBy) then exit(false);
+  TPartitionRange.Parse(Self, Source, _PRange);
+  if not Assigned(_PRange) then TPartitionList.Parse(Self, Source, _PList);
+  _SubpartitionBy := Keyword('subpartition by');
+  if Assigned(_SubpartitionBy) then
+  begin
+    TPartitionRange.Parse(Self, Source, _SRange);
+    if not Assigned(_SRange) then TPartitionList.Parse(Self, Source, _SList);
+  end;
+  TBracketedStatement<TCommaList<TPartition>>.Parse(Self, Source, _Partitions);
+  Result := true;
+end;
+
+procedure TPartitions.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_PartitionBy, _PRange, _PList, _NextLine,
+                       _SubpartitionBy, _SRange, _SList, _IndentNextLine,
+                       _Partitions, _UndentNextLine]);
+end;
+
+{ TPartitionRange }
+
+function TPartitionRange.InternalParse: boolean;
+begin
+  _Range := Keyword('range');
+  if not Assigned(_Range) then exit(false);
+  TSingleLine<TBracketedStatement<TIdentFields>>.Parse(Self, Source, _Fields);
+  TParser.ParseExpression(Self, Source, _Expression);
+  Result := true;
+end;
+
+procedure TPartitionRange.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Range, _Fields, _Expression]);
+end;
+
+{ TPartitionList }
+
+function TPartitionList.InternalParse: boolean;
+begin
+  _List := Keyword('list');
+  Result := Assigned(_List);
+  if Result then TSingleLine<TBracketedStatement<TIdentFields>>.Parse(Self, Source, _Fields);
+end;
+
+procedure TPartitionList.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_List, _Fields]);
+end;
+
+{ TPartition }
+
+function TPartition.InternalParse: boolean;
+begin
+  _Partition := Keyword(['partition', 'subpartition']);
+  if not Assigned(_Partition) then exit(false);
+  _Name := Identifier;
+  _Values := Keyword('values');
+  _Less   := Keyword('less');
+  _Than   := Keyword('than');
+  TParser.ParseExpression(Self, Source, _Expression);
+  TBracketedStatement<TCommaList<TPartition>>.Parse(Self, Source, _Subpartitions);
+end;
+
+procedure TPartition.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Partition, _Name, _Values, _Less, _Than, _Expression, _Indent]);
+  APrinter.NextLineIf(_Subpartitions);
+  APrinter.Undent;
 end;
 
 { TComment }

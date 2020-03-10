@@ -249,7 +249,7 @@ type
   strict private
     _Over: TEpithet;
     _OpenBracket: TTerminal;
-    _Partition, _By: TEpithet;
+    _PartitionBy: TEpithet;
     _PartitionFields: TStatement;
     _OrderBy: TStatement;
     _CloseBracket: TTerminal;
@@ -458,9 +458,8 @@ begin
   _Over := Keyword('over');
   if not Assigned(_Over) then exit(false);
   _OpenBracket := Terminal('(');
-  _Partition   := Keyword('partition');
-  if Assigned(_Partition) then _By := Keyword('by');
-  if Assigned(_Partition) then TExpressionFields.Parse(Self, Source, _PartitionFields);
+  _PartitionBy := Keyword(['partition by', 'partition']);
+  if Assigned(_PartitionBy) then TExpressionFields.Parse(Self, Source, _PartitionFields);
   TOrderBy.Parse(Self, Source, _OrderBy);
   _CloseBracket := Terminal(')');
   Result := true;
@@ -468,19 +467,12 @@ end;
 
 procedure TOver.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Over);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_OpenBracket);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItems([_Partition, _By]);
-  APrinter.PrintIndented(_PartitionFields);
-  APrinter.PrintItem(_OrderBy);
-  APrinter.NextLine;
-  APrinter.Undent;
-  APrinter.PrintItem(_CloseBracket);
-  APrinter.Undent;
+  APrinter.PrintItems([_Over, _IndentNextLine,
+                              _OpenBracket,    _IndentNextLine,
+                                               _PartitionBy,    _IndentNextLine,
+                                                                _PartitionFields, _UndentNextLine,
+                                               _OrderBy, _UndentNextLine,
+                              _CloseBracket,   _Undent]);
 end;
 
 { TKeep }
@@ -499,11 +491,11 @@ end;
 
 procedure TKeep.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Keep, _NextLine, _Indent,
-                              _OpenBracket, _NextLine, _Indent,
+  APrinter.PrintItems([_Keep, _IndentNextLine,
+                              _OpenBracket, _IndentNextLine,
                                             _Rank, _NextLine,
                                             _FirstOrLast, _NextLine,
-                                            _OrderBy, _NextLine, _Undent,
+                                            _OrderBy, _UndentNextLine,
                               _CloseBracket, _Undent]);
 end;
 

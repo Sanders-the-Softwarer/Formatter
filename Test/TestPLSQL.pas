@@ -45,27 +45,14 @@ type
     procedure Оператор_Присваивания;
     procedure Вызовы_Процедур;
     procedure Возврат_Из_Подпрограммы;
-    procedure Оператор_Null;
-    procedure Оператор_Raise;
     procedure Оператор_If;
     procedure Оператор_Case;
-    procedure Оператор_Loop;
     procedure Оператор_For;
     procedure Оператор_While;
     procedure Оператор_ForAll;
-    procedure Оператор_Pipe_Row;
-    procedure Оператор_Open_For;
-    procedure Оператор_Fetch;
-    procedure Оператор_Close;
-    procedure Оператор_Exit;
-    procedure Оператор_Execute_Immediate;
     procedure Анонимный_Блок_С_Bind_Переменными;
     procedure Анонимный_Блок_С_Подстановками;
-  public
-    { отложим }
     procedure Комментарии_В_Пакете;
-  public
-    { отложим }
     procedure Пустота_Не_Должна_Сдвигать_Выравнивание;
   end;
 
@@ -84,6 +71,8 @@ type
     procedure Параметров_Подпрограмм;
     procedure Аргументов_В_Вызовах_Подпрограмм;
     procedure Условий_В_Where;
+    procedure Параметров_В_Open_For;
+    procedure Параметров_В_Execute_Immediate;
   end;
 
   { Тесты на расстановку комментариев }
@@ -96,6 +85,7 @@ type
     procedure Комментарий_Не_Должен_Убивать_Закрывающую_Скобку;
     procedure Заголовочный_Комментарий;
     procedure Многострочный_Комментарий_Сдвигается_Целиком;
+    procedure Комментарий_Не_Должен_Приводить_К_Переносу_Значения_На_Следующую_Строку;
   end;
 
   { Тесты на операторы PL/SQL }
@@ -107,6 +97,13 @@ type
     procedure Fetch_Bulk_Collect_Limit;
     procedure Open_For;
     procedure Open_For_Using;
+    procedure Close;
+    procedure Exit;
+    procedure Execute_Immediate;
+    procedure Null;
+    procedure Loop;
+    procedure Raise_;
+    procedure Pipe_Row;
   end;
 
   { Тесты на расстановку пустых строк }
@@ -211,22 +208,6 @@ procedure _PLSQL.Оператор_Case;
 begin
 end;
 
-procedure _PLSQL.Оператор_Close;
-begin
-end;
-
-procedure _PLSQL.Оператор_Execute_Immediate;
-begin
-end;
-
-procedure _PLSQL.Оператор_Exit;
-begin
-end;
-
-procedure _PLSQL.Оператор_Fetch;
-begin
-end;
-
 procedure _PLSQL.Оператор_For;
 begin
 end;
@@ -236,26 +217,6 @@ begin
 end;
 
 procedure _PLSQL.Оператор_If;
-begin
-end;
-
-procedure _PLSQL.Оператор_Loop;
-begin
-end;
-
-procedure _PLSQL.Оператор_Null;
-begin
-end;
-
-procedure _PLSQL.Оператор_Open_For;
-begin
-end;
-
-procedure _PLSQL.Оператор_Pipe_Row;
-begin
-end;
-
-procedure _PLSQL.Оператор_Raise;
 begin
 end;
 
@@ -319,6 +280,16 @@ begin
   Settings.AlignVariables := true;
 end;
 
+procedure _Выравнивание.Параметров_В_Execute_Immediate;
+begin
+  Settings.AlignVariables := true;
+end;
+
+procedure _Выравнивание.Параметров_В_Open_For;
+begin
+  Settings.AlignVariables := true;
+end;
+
 procedure _Выравнивание.Параметров_Подпрограмм;
 begin
   Settings.AlignVariables := true;
@@ -370,6 +341,11 @@ end;
 function _Комментарии.GetDir: string;
 begin
   Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Комментарии';
+end;
+
+procedure _Комментарии.Комментарий_Не_Должен_Приводить_К_Переносу_Значения_На_Следующую_Строку;
+begin
+  Settings.PreferredExpressionLength := 60;
 end;
 
 procedure _Комментарии.Комментарий_Не_Должен_Убивать_Закрывающую_Скобку;
@@ -437,6 +413,14 @@ begin
   Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Операторы';
 end;
 
+procedure _Операторы.Loop;
+begin
+end;
+
+procedure _Операторы.Null;
+begin
+end;
+
 procedure _Операторы.Open_For;
 begin
 end;
@@ -445,7 +429,27 @@ procedure _Операторы.Open_For_Using;
 begin
 end;
 
+procedure _Операторы.Pipe_Row;
+begin
+end;
+
+procedure _Операторы.Raise_;
+begin
+end;
+
 procedure _Операторы.Fetch_Into;
+begin
+end;
+
+procedure _Операторы.Close;
+begin
+end;
+
+procedure _Операторы.Execute_Immediate;
+begin
+end;
+
+procedure _Операторы.Exit;
 begin
 end;
 

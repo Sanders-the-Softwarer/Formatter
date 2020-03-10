@@ -63,12 +63,7 @@ type
     procedure Форматирование_Подзапросов_В_Select;
     procedure Переносы_По_And_В_Where;
     procedure Commit_Rollback_Savepoint;
-  public
-    { отложим }
     procedure Длинный_И_Сложный_Запрос_В_Форматировании_Которого_Куча_Мелких_Недостатков;
-  public
-    { отложим }
-    procedure Комментарий_Не_Должен_Приводить_К_Переносу_Значения_На_Следующую_Строку;
   end;
 
   { Тесты на insert }
@@ -176,11 +171,6 @@ end;
 
 procedure _Select.Запрос_Со_Start_With_И_Connect_By;
 begin
-end;
-
-procedure _Select.Комментарий_Не_Должен_Приводить_К_Переносу_Значения_На_Следующую_Строку;
-begin
-  Settings.PreferredExpressionLength := 60;
 end;
 
 procedure _Select.Запрос_С_Алиасами_В_Полях;

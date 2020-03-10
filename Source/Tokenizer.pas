@@ -408,24 +408,23 @@ end;
 
 function TCommentProcessor.AppliedAbove(C: TComment; T: TToken): boolean;
 begin
-  Result := Assigned(C) and Assigned(T) and (C.Col = T.Col) and (T.Line - C.Line = 1);
+  Result := Assigned(C) and Assigned(T) and (C.Col = T.Col) and (T.Line - C.Line = C.Height);
 end;
 
 function TCommentProcessor.AppliedFarAbove(C: TComment; T: TToken): boolean;
 begin
-  Result := Assigned(C) and Assigned(T) and (C.Line < T.Line);
+  Result := Assigned(C) and Assigned(T) and (T.Line - C.Line > C.Height);
 end;
 
 function TCommentProcessor.AppliedFarAboveStrong(C: TComment; T: TToken): boolean;
 begin
-  Result := Assigned(C) and Assigned(T) and (C.Line < T.Line - 1) and (C.Col = T.Col);
+  Result := Assigned(C) and Assigned(T) and (T.Line - C.Line > C.Height) and (C.Col = T.Col);
 end;
 
 function TCommentProcessor.AppliedFarBelowStrong(C: TComment; T: TToken): boolean;
 begin
   Result := Assigned(C) and Assigned(T) and (C.Line > T.Line + 1) and (LeftPos[T.Line] = C.Col);
 end;
-
 
 function TCommentProcessor.AppliedBelow(C: TComment; T: TToken): boolean;
 begin
@@ -441,7 +440,7 @@ begin
   begin
     C := T1 as TComment;
     if AppliedAbove(C, T2)
-      then T2.AddCommentAbove(C)
+      then T2.CommentAbove := C
       else T2.CommentFarAbove := C;
     T1 := T2;
     T2 := T3;
@@ -454,11 +453,11 @@ begin
   begin
     C := T2 as TComment;
     if AppliedAfter(C, T1) then
-      T1.AddCommentAfter(C)
+      T1.CommentAfter := C
     else if AppliedAbove(C, T3) then
-      T3.AddCommentAbove(C)
+      T3.CommentAbove := C
     else if AppliedBelow(C, T1) then
-      T1.AddCommentBelow(C)
+      T1.CommentBelow := C
     else if AppliedFarAboveStrong(C, T3) then
       T3.CommentFarAbove := C
     else if AppliedFarBelowStrong(C, T1) then
@@ -523,6 +522,7 @@ begin
   if Check(Result, 'end', 'if') then exit;
   if Check(Result, 'end', 'loop') then exit;
   if Check(Result, 'identified', 'by') then exit;
+  if Check(Result, 'in', 'out') then exit;
   if Check(Result, 'inner', 'join') then exit;
   if Check(Result, 'instead', 'of') then exit;
   if Check(Result, 'is', 'not', 'null') then exit;
@@ -543,10 +543,12 @@ begin
   if Check(Result, 'not', 'in') then exit;
   if Check(Result, 'not', 'like') then exit;
   if Check(Result, 'outer', 'apply') then exit;
+  if Check(Result, 'partition', 'by') then exit;
   if Check(Result, 'right', 'join') then exit;
   if Check(Result, 'right', 'natural', 'join') then exit;
   if Check(Result, 'right', 'outer', 'join') then exit;
   if Check(Result, 'self', 'as', 'result') then exit;
+  if Check(Result, 'subpartition', 'by') then exit;
   if Check(Result, 'type', 'body') then exit;
   if Check(Result, 'union', 'all') then exit;
   if Check(Result, 'when', 'matched', 'then') then exit;

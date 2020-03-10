@@ -349,19 +349,18 @@ begin
       EmptyLine := true;
       PrintToken(nil);
     end;
-    if Assigned(AToken.CommentsAbove) then
-      for i := 0 to AToken.CommentsAbove.Count - 1 do
-      begin
-        NextLine;
-        PrintToken(AToken.CommentsAbove[i]);
-        NextLine;
-        PrintToken(nil);
-      end;
+    if Assigned(AToken.CommentAbove) then
+    begin
+      NextLine;
+      PrintToken(AToken.CommentAbove);
+      NextLine;
+      PrintToken(nil);
+    end;
   end;
   { Если задано выравнивание, вставим соответствующее количество пробелов }
   if (PaddingCol > Col) and HasToken then
   begin
-    _Debug(' => col = %d, padding col = %d', [Col, PaddingCol]);
+    _Debug('Padding, col = %d, padding col = %d', [Col, PaddingCol]);
     if EOLCount = 0 then Dec(PaddingCol, Shift);
     if HasBuilder then Builder.Append(StringOfChar(' ', PaddingCol - Col));
     Col := PaddingCol;
@@ -378,7 +377,13 @@ begin
   { И, наконец, если задана лексема - напечатаем её }
   if HasToken then
   begin
-    Value := AToken.Value;
+    if AToken is TComment then
+      if EOLCount > 0 then
+        Value := TComment(AToken).ShiftedValue(Shift + 1)
+      else
+        Value := TComment(AToken).ShiftedValue(Col)
+    else
+      Value := AToken.Value;
     Value := StringReplace(Value, #13, #13#10, [rfReplaceAll]);
     { Учтём настройки замены лексем на синонимы и вывод в нижнем регистре }
     if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and
@@ -409,21 +414,19 @@ begin
   { Если после лексемы есть комментарии, напечатаем их }
   if HasToken then
   begin
-    if Assigned(AToken.CommentsAfter) then
-      for i := 0 to AToken.CommentsAfter.Count - 1 do
-      begin
-        Ruler('right-comment');
-        PrintToken(AToken.CommentsAfter[i]);
-        if AToken.CommentsAfter[i].Value.StartsWith('--') then NextLine;
-      end;
-    if Assigned(AToken.CommentsBelow) and HasBuilder then
-      for i := 0 to AToken.CommentsBelow.Count - 1 do
-      begin
-        WasComment := true;
-        NextLine;
-        PrintToken(AToken.CommentsBelow[i]);
-        NextLine;
-      end;
+    if Assigned(AToken.CommentAfter) then
+    begin
+      Ruler('right-comment');
+      PrintToken(AToken.CommentAfter);
+      if AToken.CommentAfter.LineComment then NextLine;
+    end;
+    if Assigned(AToken.CommentBelow) and HasBuilder then
+    begin
+      WasComment := true;
+      NextLine;
+      PrintToken(AToken.CommentBelow);
+      NextLine;
+    end;
     if Assigned(AToken.CommentFarBelow) and HasBuilder then
     begin
       WasComment := true;

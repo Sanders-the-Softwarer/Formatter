@@ -1,1 +1,5 @@
-create table x (i integer) tablespace tmp
+create table x 
+    (
+        i integer
+    ) 
+    tablespace tmp

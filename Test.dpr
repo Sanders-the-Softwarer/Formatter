@@ -39,7 +39,8 @@ uses
   Utils in 'Source\Utils.pas',
   Controller in 'Source\Controller.pas',
   TestBugs in 'Test\TestBugs.pas',
-  TestSQLPLUS in 'Test\TestSQLPLUS.pas';
+  TestSQLPLUS in 'Test\TestSQLPLUS.pas',
+  FormatterPrinter in 'Source\FormatterPrinter.pas';
 
 {$R *.RES}
 

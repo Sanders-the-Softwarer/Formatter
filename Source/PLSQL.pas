@@ -28,8 +28,14 @@ uses Classes, Windows, SysUtils, Math, Streams, Tokens, Statements, Expressions,
 
 type
 
+  { Базовый класс для операторов PL/SQL }
+  TPLSQLStatement = class(TSemicolonStatement)
+  strict protected
+    function GetKeywords: TKeywords; override;
+  end;
+
   { Программный блок - та или иная конструкция на основе begin .. end }
-  TProgramBlock = class(TSemicolonStatement)
+  TProgramBlock = class(TPLSQLStatement)
   strict private
     _Header: TStatement;
     _Declarations: TStatement;
@@ -229,7 +235,7 @@ type
   end;
 
   { Объявление переменной }
-  TVariableDeclaration = class(TSemicolonStatement)
+  TVariableDeclaration = class(TPLSQLStatement)
   strict private
     class var SkipSemicolonCheck: boolean;
   strict private
@@ -256,7 +262,7 @@ type
   end;
 
   { Курсор }
-  TCursor = class(TSemicolonStatement)
+  TCursor = class(TPLSQLStatement)
   strict private
     _Cursor: TEpithet;
     _CursorName: TEpithet;
@@ -271,7 +277,7 @@ type
   end;
 
   { Объявление исключения }
-  TExceptionDeclaration = class(TSemicolonStatement)
+  TExceptionDeclaration = class(TPLSQLStatement)
   strict private
     _Name, _Exception: TEpithet;
   strict protected
@@ -289,7 +295,7 @@ type
   end;
 
   { Присваивание }
-  TAssignment = class(TSemicolonStatement)
+  TAssignment = class(TPLSQLStatement)
   strict private
     _Target: TStatement;
     _Assignment: TTerminal;
@@ -300,7 +306,7 @@ type
   end;
 
   { Вызов процедуры }
-  TProcedureCall = class(TSemicolonStatement)
+  TProcedureCall = class(TPLSQLStatement)
   strict private
     _Call: TStatement;
   strict protected
@@ -309,7 +315,7 @@ type
   end;
 
   { Оператор return }
-  TReturn = class(TSemicolonStatement)
+  TReturn = class(TPLSQLStatement)
   strict private
     _Return: TEpithet;
     _Value: TStatement;
@@ -319,7 +325,7 @@ type
   end;
 
   { Оператор null }
-  TNull = class(TSemicolonStatement)
+  TNull = class(TPLSQLStatement)
   strict private
     _Null: TEpithet;
   strict protected
@@ -328,7 +334,7 @@ type
   end;
 
   { Оператор raise }
-  TRaise = class(TSemicolonStatement)
+  TRaise = class(TPLSQLStatement)
   strict private
     _Raise, _ExceptionName: TEpithet;
   strict protected
@@ -337,7 +343,7 @@ type
   end;
 
   { Условный оператор }
-  TIf = class(TSemicolonStatement)
+  TIf = class(TPLSQLStatement)
   strict private
     _If: TEpithet;
     _Condition: TStatement;
@@ -431,7 +437,7 @@ type
   end;
 
   { Оператор forall }
-  TForAll = class(TSemicolonStatement)
+  TForAll = class(TPLSQLStatement)
   strict private
     _ForAll: TEpithet;
     _Variable: TEpithet;
@@ -451,7 +457,7 @@ type
   end;
 
   { Оператор pipe row }
-  TPipeRow = class(TSemicolonStatement)
+  TPipeRow = class(TPLSQLStatement)
   strict private
     _Pipe, _Row: TEpithet;
     _Arguments: TStatement;
@@ -461,17 +467,37 @@ type
   end;
 
   { Оператор open for }
-  TOpenFor = class(TSemicolonStatement)
+  TOpenFor = class(TPLSQLStatement)
   strict private
-    _Open, _Cursor, _For: TEpithet;
-    _Select: TStatement;
+    _Open, _For: TEpithet;
+    _Cursor, _Select, _Using: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция using (для open for и execute immediate)}
+  TUsing = class(TStatement)
+  strict private
+    _Using: TEpithet;
+    _Params: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Параметр в операторе open for .. using }
+  TUsingParam = class(TStatement)
+  strict private
+    _Accessor: TEpithet;
+    _Value: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор fetch }
-  TFetch = class(TSemicolonStatement)
+  TFetch = class(TPLSQLStatement)
   strict private
     _Fetch, _Into, _Limit: TEpithet;
     _Cursor, _Targets, _LimitValue: TStatement;
@@ -482,7 +508,7 @@ type
   end;
 
   { Оператор close }
-  TClose = class(TSemicolonStatement)
+  TClose = class(TPLSQLStatement)
   strict private
     _Close: TEpithet;
     _Cursor: TStatement;
@@ -492,7 +518,7 @@ type
   end;
 
   { Оператор exit }
-  TExit = class(TSemicolonStatement)
+  TExit = class(TPLSQLStatement)
   strict private
     _Exit, _When: TEpithet;
     _Condition: TStatement;
@@ -502,14 +528,10 @@ type
   end;
 
   { Оператор execute immediate }
-  TExecuteImmediate = class(TSemicolonStatement)
+  TExecuteImmediate = class(TPLSQLStatement)
   strict private
-    _Execute, _Immediate: TEpithet;
-    _Command: TStatement;
-    _Into: TEpithet;
-    _IntoFields: TStatement;
-    _Using: TEpithet;
-    _UsingFields: TStatement;
+    _Execute, _Immediate, _Into: TEpithet;
+    _Command, _IntoFields, _Using: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -535,7 +557,7 @@ type
   end;
 
   { Декларация pragma }
-  TPragma = class(TSemicolonStatement)
+  TPragma = class(TPLSQLStatement)
   strict private
     _Pragma: TEpithet;
     _Body: TStatement;
@@ -545,7 +567,7 @@ type
   end;
 
   { Декларация типа }
-  TType = class(TSemicolonStatement)
+  TType = class(TPLSQLStatement)
   strict private
     _Type, _Force, _AsIs: TEpithet;
     _TypeName, _Body: TStatement;
@@ -626,6 +648,13 @@ uses Parser, DML;
 
 var
   PLSQLKeywords, FetchKeywords: TKeywords;
+
+{ TPLSQLStatement }
+
+function TPLSQLStatement.GetKeywords: TKeywords;
+begin
+  Result := PLSQLKeywords;
+end;
 
 { TProgramBlock }
 
@@ -840,7 +869,7 @@ end;
 function TParamDeclaration.InternalParse: boolean;
 begin
   _ParamName := Identifier;
-  _In := Keyword('in');
+  _In := Keyword(['in', 'in out']);
   _Out := Keyword('out');
   _Nocopy := Keyword('nocopy');
   TTypeRef.Parse(Self, Source, _ParamType);
@@ -1292,21 +1321,54 @@ function TOpenFor.InternalParse: boolean;
 begin
   _Open := Keyword('open');
   if not Assigned(_Open) then exit(false);
-  _Cursor := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _Cursor);
   _For := Keyword('for');
-  TSelect.Parse(Self, Source, _Select);
+  if not TSelect.Parse(Self, Source, _Select) then TParser.ParseExpression(Self, Source, _Select);
+  TUsing.Parse(Self, Source, _Using);
   inherited;
   Result := true;
 end;
 
 procedure TOpenFor.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Open);
-  APrinter.PrintIndented(_Cursor);
-  APrinter.NextLine;
-  APrinter.PrintItem(_For);
-  APrinter.PrintIndented(_Select);
+  APrinter.PrintItems([_Open,  _IndentNextLine,
+                               _Cursor, _UndentNextLine,
+                       _For,   _IndentNextLine,
+                               _Select, _UndentNextLine,
+                       _Using]);
   inherited;
+end;
+
+{ TUsing }
+
+function TUsing.InternalParse: boolean;
+begin
+  _Using := Keyword('using');
+  Result := Assigned(_Using);
+  if Result then TAligned<TCommaList<TUsingParam>>.Parse(Self, Source, _Params);
+end;
+
+procedure TUsing.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Using, _IndentNextLine, _Params, _Undent]);
+end;
+
+{ TUsingParam }
+
+function TUsingParam.InternalParse: boolean;
+begin
+  _Accessor := Keyword(['in', 'out', 'in out']);
+  TParser.ParseExpression(Self, Source, _Value);
+  Result := Assigned(_Accessor) or Assigned(_Value);
+end;
+
+procedure TUsingParam.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.StartRuler(Settings.AlignVariables);
+  APrinter.Ruler('accessor');
+  APrinter.PrintItem(_Accessor);
+  APrinter.Ruler('value');
+  APrinter.PrintItem(_Value);
 end;
 
 { TPragma }
@@ -1343,13 +1405,9 @@ end;
 
 procedure TLoop.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Loop);
-  APrinter.NextLine;
-  APrinter.Indent;
+  APrinter.PrintItems([_Loop, _IndentNextLine]);
   inherited;
-  APrinter.NextLine;
-  APrinter.Undent;
-  APrinter.PrintItems([_EndLoop, _Semicolon]);
+  APrinter.PrintItems([_UndentNextLine, _EndLoop, _Semicolon]);
 end;
 
 { TFor }
@@ -1723,18 +1781,18 @@ begin
   TParser.ParseExpression(Self, Source, _Command);
   _Into := Keyword('into');
   if Assigned(_Into) then TIdentFields.Parse(Self, Source, _IntoFields);
-  _Using := Keyword('using');
-  if Assigned(_Using) then TExpressionFields.Parse(Self, Source, _UsingFields);
+  TUsing.Parse(Self, Source, _Using);
   inherited;
   Result := true;
 end;
 
 procedure TExecuteImmediate.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Execute, _Immediate]);
-  APrinter.PrintIndented(_Command);
-  APrinter.NextLineIf([_Into, _NextLine, _Indent, _IntoFields, _Undent]);
-  APrinter.NextLineIf([_Using, _NextLine, _Indent, _UsingFields, _Undent]);
+  APrinter.PrintItems([_Execute, _Immediate,  _IndentNextLine,
+                                 _Command,    _UndentNextLine,
+                       _Into,    _IndentNextLine,
+                                 _IntoFields, _UndentNextLine,
+                       _Using]);
   inherited;
 end;
 
