@@ -23,7 +23,6 @@ uses
   DDL in 'Source\DDL.pas',
   DML in 'Source\DML.pas',
   Expressions in 'Source\Expressions.pas',
-  fMain in 'Source\fMain.pas' {FormMain},
   Parser in 'Source\Parser.pas',
   PLSQL in 'Source\PLSQL.pas',
   Printers_ in 'Source\Printers_.pas',

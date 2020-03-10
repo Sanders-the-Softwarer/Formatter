@@ -54,6 +54,7 @@ type
     procedure Анонимный_Блок_С_Подстановками;
     procedure Комментарии_В_Пакете;
     procedure Пустота_Не_Должна_Сдвигать_Выравнивание;
+    procedure Добавление_In;
   end;
 
   { Тесты на выравнивание конструкций PL/SQL }
@@ -113,7 +114,9 @@ type
   published
     procedure В_Пакете;
     procedure В_Пакете_С_Блоком_Инициализации;
-    procedure Команды_at_Собираем_Вместе;
+    procedure at_Собираются_Вместе;
+    procedure Exec_Собираются_Вместе;
+    procedure Set_Собираются_Вместе;
   end;
 
   { Тесты на PL/SQL типы }
@@ -160,6 +163,11 @@ end;
 
 procedure _PLSQL.Вызовы_Процедур;
 begin
+end;
+
+procedure _PLSQL.Добавление_In;
+begin
+  Settings.AddInAccessSpecificator := true;
 end;
 
 procedure _PLSQL.Заголовок_Пакета;
@@ -375,15 +383,23 @@ begin
   Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Пустые строки';
 end;
 
+procedure _Пустые_Строки.at_Собираются_Вместе;
+begin
+end;
+
+procedure _Пустые_Строки.Exec_Собираются_Вместе;
+begin
+end;
+
+procedure _Пустые_Строки.Set_Собираются_Вместе;
+begin
+end;
+
 procedure _Пустые_Строки.В_Пакете;
 begin
 end;
 
 procedure _Пустые_Строки.В_Пакете_С_Блоком_Инициализации;
-begin
-end;
-
-procedure _Пустые_Строки.Команды_at_Собираем_Вместе;
 begin
 end;
 

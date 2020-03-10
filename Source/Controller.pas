@@ -30,7 +30,7 @@ procedure MakeFormatted(const AText: string; ASettings: TFormatSettings; out ARe
 function MakeTokenStream(const AText: string): TBufferedStream<TToken>;
 
 { Создание потока синтаксических конструкций из потока лексем }
-function MakeStatementStream(ATokenStream: TBufferedStream<TToken>; ASettings: TFormatSettings): TParser;
+function MakeStatementStream(ATokenStream: TBufferedStream<TToken>; ASettings: TFormatSettings): TBufferedStream<TStatement>;
 
 implementation
 
@@ -39,7 +39,7 @@ uses Tokenizer;
 { Форматирование текста, полученного в виде строки, с возвратом результата в строку }
 procedure MakeFormatted(const AText: string; ASettings: TFormatSettings; out AResult: string);
 var
-  Parser: TParser;
+  Parser: TBufferedStream<TStatement>;
   Printer: TPrinter;
   Settings: TFormatSettings;
 begin
@@ -73,9 +73,9 @@ begin
 end;
 
 { Создание потока синтаксических конструкций из потока лексем }
-function MakeStatementStream(ATokenStream: TBufferedStream<TToken>; ASettings: TFormatSettings): TParser;
+function MakeStatementStream(ATokenStream: TBufferedStream<TToken>; ASettings: TFormatSettings): TBufferedStream<TStatement>;
 begin
-  Result := TParser.Create(ATokenStream, ASettings);
+  Result := TSameTypeLinker.Create(TParser.Create(ATokenStream, ASettings));
 end;
 
 end.

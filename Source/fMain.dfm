@@ -191,6 +191,7 @@ object FormMain: TFormMain
       object tabSettings: TTabSheet
         Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
         ExplicitLeft = 2
+        ExplicitTop = 39
         object Label1: TLabel
           Left = 5
           Top = 15
@@ -319,7 +320,7 @@ object FormMain: TFormMain
           Left = 162
           Top = 96
           Width = 153
-          Height = 175
+          Height = 80
           Caption = '  '#1047#1072#1084#1077#1085#1103#1090#1100'  '
           TabOrder = 3
           object checkReplaceDefault: TCheckBox
@@ -366,6 +367,25 @@ object FormMain: TFormMain
           TabOrder = 5
           Value = 60
           OnChange = UpdateRequired
+        end
+        object GroupBox2: TGroupBox
+          Left = 162
+          Top = 182
+          Width = 153
+          Height = 89
+          Caption = ' '#1044#1086#1073#1072#1074#1083#1103#1090#1100' '
+          TabOrder = 6
+          object checkAddInAccessSpecificator: TCheckBox
+            Left = 13
+            Top = 26
+            Width = 128
+            Height = 17
+            Caption = 'in '#1074' '#1087#1072#1088#1072#1084#1077#1090#1088#1099
+            Checked = True
+            State = cbChecked
+            TabOrder = 0
+            OnClick = UpdateRequired
+          end
         end
       end
     end

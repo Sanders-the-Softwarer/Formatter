@@ -522,14 +522,10 @@ end;
 procedure TTableField.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.StartRuler(Settings.AlignColumns);
-  APrinter.Ruler('name');
-  APrinter.PrintItem(_Name);
-  APrinter.Ruler('type');
-  APrinter.PrintItem(_Type);
-  APrinter.Ruler('default');
-  APrinter.PrintItems([_Default, _Value]);
-  APrinter.Ruler('not null');
-  APrinter.PrintItems([_Not, _Null]);
+  APrinter.PrintRulerItem('name', _Name);
+  APrinter.PrintRulerItem('type', _Type);
+  APrinter.PrintRulerItems('default', [_Default, _Value]);
+  APrinter.PrintRulerItems('notnull', [_Not, _Null]);
 end;
 
 { TConstraint }

@@ -1,0 +1,21 @@
+-- and из between-а не должен переноситься на другую строку при разбиении по and
+
+select 
+    *
+from
+    dual
+where
+    sysdate > trunc(sysdate)
+    and dummy between 'W' and 'Y'
+    and rownum > 0;
+
+-- И даже если между between и and есть другие операции 
+
+select 
+    *
+from
+    dual
+where
+    sysdate > trunc(sysdate)
+    and dummy between case when rownum > 0 then 'W' else 'U' end and 'Y'
+    and rownum > 0;

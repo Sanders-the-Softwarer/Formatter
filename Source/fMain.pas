@@ -68,6 +68,8 @@ type
     Label4: TLabel;
     checkAlignExpressions: TCheckBox;
     checkAlignColumns: TCheckBox;
+    GroupBox2: TGroupBox;
+    checkAddInAccessSpecificator: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -122,6 +124,7 @@ begin
     Settings.AlignTableColumnComments        := checkAlignTableColumnComments.Checked;
     Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
     Settings.ReplaceAsIs                     := checkReplaceAsIs.Checked;
+    Settings.AddInAccessSpecificator         := checkAddInAccessSpecificator.Checked;
     Settings.PreferredExpressionLength       := edPreferredExpressionLength.Value;
   end;
   { Создадим потоки }
@@ -192,6 +195,7 @@ begin
     checkAlignExpressions.Checked           := Settings.AlignExpressions;
     checkReplaceDefault.Checked             := Settings.ReplaceDefault;
     checkReplaceAsIs.Checked                := Settings.ReplaceAsIs;
+    checkAddInAccessSpecificator.Checked    := Settings.AddInAccessSpecificator;
   finally
     IntoUpdateSettings := false;
   end;

@@ -1,0 +1,6 @@
+declare
+    a             boolean      :=      true;
+    bbbb constant number;
+    cc   constant char(1 byte) default 'a';
+begin
+end;

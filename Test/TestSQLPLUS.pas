@@ -21,7 +21,6 @@ type
   _SQLPlus = class(TFileBasedTest)
   published
     procedure Exec;
-    procedure Последовательность_Exec;
   end;
 
 implementation
@@ -29,10 +28,6 @@ implementation
 { _SQLPlus }
 
 procedure _SQLPlus.Exec;
-begin
-end;
-
-procedure _SQLPlus.Последовательность_Exec;
 begin
 end;
 

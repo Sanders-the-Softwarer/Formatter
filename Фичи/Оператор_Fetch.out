@@ -1,0 +1,10 @@
+begin
+    fetch 
+        c 
+    into 
+        a, 
+        b, 
+        c, 
+        d, 
+        e;
+end;

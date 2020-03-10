@@ -198,16 +198,17 @@ type
   TParamDeclaration = class(TStatement)
   strict private
     _ParamName: TEpithet;
-    _In: TEpithet;
-    _Out: TEpithet;
+    _InOut: TEpithet;
     _Nocopy: TEpithet;
     _ParamType: TStatement;
     _Assignment: TToken;
     _DefaultValue: TStatement;
+    FreeAccessor: boolean;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
+    procedure BeforeDestruction; override;
     function StatementName: string; override;
   end;
 
@@ -491,9 +492,12 @@ type
   strict private
     _Accessor: TEpithet;
     _Value: TStatement;
+    FreeAccessor: boolean;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    procedure BeforeDestruction; override;
   end;
 
   { Оператор fetch }
@@ -869,11 +873,10 @@ end;
 function TParamDeclaration.InternalParse: boolean;
 begin
   _ParamName := Identifier;
-  _In := Keyword(['in', 'in out']);
-  _Out := Keyword('out');
+  _InOut  := Keyword(['in', 'out', 'in out']);
   _Nocopy := Keyword('nocopy');
   TTypeRef.Parse(Self, Source, _ParamType);
-  if not Assigned(_ParamName) and not Assigned(_In) and not Assigned(_Out) and not Assigned(_Nocopy) and not Assigned(_ParamType) then exit(false);
+  if not Assigned(_ParamName) and not Assigned(_InOut) and not Assigned(_Nocopy) and not Assigned(_ParamType) then exit(false);
   _Assignment := Terminal(':=');
   if not Assigned(_Assignment) then _Assignment := Keyword('default');
   if Assigned(_Assignment) then
@@ -891,12 +894,20 @@ end;
 
 procedure TParamDeclaration.InternalPrintSelf(APrinter: TPrinter);
 begin
+  FreeAccessor := Settings.AddInAccessSpecificator and not Assigned(_InOut);
+  if FreeAccessor then _InOut := TEpithet.Create('in', -1, -1);
   APrinter.StartRuler(Settings.AlignVariables);
   APrinter.PrintRulerItem('name', _ParamName);
-  APrinter.PrintRulerItems('modifiers', [_In, _Out, _Nocopy]);
-  APrinter.PrintRulerItem ('type', _ParamType);
-  APrinter.PrintRulerItem ('assignment', _Assignment);
-  APrinter.PrintRulerItem ('value', _DefaultValue);
+  APrinter.PrintRulerItems('modifiers', [_InOut, _Nocopy]);
+  APrinter.PrintRulerItem('type', _ParamType);
+  APrinter.PrintRulerItem('assignment', _Assignment);
+  APrinter.PrintRulerItem('value', _DefaultValue);
+end;
+
+procedure TParamDeclaration.BeforeDestruction;
+begin
+  if FreeAccessor then FreeAndNil(_InOut);
+  inherited;
 end;
 
 { TParamsDeclaration }
@@ -1364,11 +1375,17 @@ end;
 
 procedure TUsingParam.InternalPrintSelf(APrinter: TPrinter);
 begin
+  FreeAccessor := Settings.AddInAccessSpecificator and not Assigned(_Accessor);
+  if FreeAccessor then _Accessor := TEpithet.Create('in', -1, -1);
   APrinter.StartRuler(Settings.AlignVariables);
-  APrinter.Ruler('accessor');
-  APrinter.PrintItem(_Accessor);
-  APrinter.Ruler('value');
-  APrinter.PrintItem(_Value);
+  APrinter.PrintRulerItem('accessor', _Accessor);
+  APrinter.PrintRulerItem('value', _Value);
+end;
+
+procedure TUsingParam.BeforeDestruction;
+begin
+  if FreeAccessor then FreeAndNil(_Accessor);
+  inherited;
 end;
 
 { TPragma }

@@ -1,0 +1,27 @@
+procedure x
+    (
+        a integer,
+        b out varchar2,
+        c in date,
+        d blob
+    )
+    is
+begin
+    null;
+end;
+
+execute immediate
+    'begin :a := :b + :c; end'
+using
+    out a,
+    b,
+    in c;
+
+open
+    v_cur
+for
+    'select * from dual where :a = :b + :c'
+using
+    a,
+    in out b,
+    in c;

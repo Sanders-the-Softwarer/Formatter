@@ -98,7 +98,6 @@ end;
 
 procedure _Create.Create_Table_Partitioned;
 begin
-  Settings.AlignColumns := true;
 end;
 
 procedure _Create.Create_Temporary_Table;

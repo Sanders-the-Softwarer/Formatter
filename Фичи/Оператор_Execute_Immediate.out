@@ -1,0 +1,14 @@
+begin
+    execute immediate 
+        'some expression';
+    execute immediate 
+        p_str 
+    into 
+        p_a, 
+        p_b, 
+        p_c 
+    using 
+        p_d, 
+        p_e, 
+        p_f;
+end;

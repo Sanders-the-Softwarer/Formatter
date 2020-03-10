@@ -17,7 +17,8 @@ uses
   Streams in 'Source\Streams.pas',
   Tokenizer in 'Source\Tokenizer.pas',
   Tokens in 'Source\Tokens.pas',
-  Utils in 'Source\Utils.pas';
+  Utils in 'Source\Utils.pas',
+  FormatterPrinter in 'Source\FormatterPrinter.pas';
 
 const
   Desc  = 'Formatter';

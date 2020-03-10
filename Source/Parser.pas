@@ -36,7 +36,8 @@ unit Parser;
 
 interface
 
-uses Windows, System.SysUtils, Streams, Tokens, Statements, Printers_;
+uses Windows, System.SysUtils, Streams, Tokens, Statements, Printers_,
+  System.Generics.Collections;
 
 type
   { Синтаксический анализатор }
@@ -55,6 +56,25 @@ type
     class function ParseType(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseAny(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseExpression(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+  end;
+
+  { Конструкция для группировки элементов одного типа }
+  TSameTypeList = class(TStatement)
+  strict private
+    FStatements: array of TStatement;
+  strict protected
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    constructor Create(S: TStatement); reintroduce;
+    procedure Add(S: TStatement);
+    function ItemType: TStatementClass;
+    function Transparent: boolean; override;
+  end;
+
+  { Поток, объединяющий однотипные выражения в блоки }
+  TSameTypeLinker = class(TNextStream<TStatement, TStatement>)
+  strict protected
+    function InternalNext: TStatement; override;
   end;
 
 implementation
@@ -128,7 +148,7 @@ begin
   Result := TClear.Parse(AParent, ASource, AResult) or
             TWhenever.Parse(AParent, ASource, AResult) or
             TSet.Parse(AParent, ASource, AResult) or
-            TAtList.Parse(AParent, ASource, AResult) or
+            TAt.Parse(AParent, ASource, AResult) or
             TSpool.Parse(AParent, ASource, AResult) or
             TCall.Parse(AParent, ASource, AResult);
 end;
@@ -208,6 +228,70 @@ end;
 procedure TEOFStatement.InternalPrintSelf(APrinter: TPrinter);
 begin
   { ничего не делаем }
+end;
+
+{ TSameTypeLinker }
+
+function TSameTypeLinker.InternalNext: TStatement;
+var
+  S: TStatement;
+  List: TSameTypeList;
+begin
+  { Прочитаем очередной элемент }
+  S := Source.Next;
+  { Если элемент не группируемый, просто его вернём }
+  if not S.Grouping then exit(Transit(S));
+  { В противном случае начнём новую группу }
+  List := TSameTypeList.Create(S);
+  { Прочитаем следующие элементы того же класса и добавим их в группу }
+  while not Source.Eof do
+  begin
+    Source.SaveMark;
+    S := Source.Next;
+    if List.ItemType = S.ClassType then
+      List.Add(S)
+    else
+      begin
+        Source.Restore;
+        break;
+      end;
+  end;
+  { Всё, группа идёт на выход }
+  Result := List;
+end;
+
+{ TSameTypeList }
+
+constructor TSameTypeList.Create(S: TStatement);
+begin
+  inherited Create(nil, nil);
+  Add(S);
+end;
+
+procedure TSameTypeList.Add(S: TStatement);
+var L: integer;
+begin
+  L := Length(FStatements);
+  SetLength(FStatements, L + 1);
+  FStatements[L] := S;
+  S.Parent := Self;
+end;
+
+procedure TSameTypeList.InternalPrintSelf(APrinter: TPrinter);
+var i: integer;
+begin
+  for i := Low(FStatements) to High(FStatements) do
+    APrinter.PrintItems([FStatements[i], _NextLine]);
+end;
+
+function TSameTypeList.ItemType: TStatementClass;
+begin
+  Result := TStatementClass(FStatements[0].ClassType);
+end;
+
+function TSameTypeList.Transparent: boolean;
+begin
+  Result := false;
 end;
 
 end.

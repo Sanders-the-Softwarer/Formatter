@@ -297,12 +297,14 @@ end;
 
 { Печать выражения - делаем каждый объект TStatement узлом дерева и привязываем к нему дочерние }
 procedure TSyntaxTreePrinter.PrintStatement(AStatement: TStatement);
+var Transparent: boolean;
 begin
-  Parents.Push(TreeView.Items.AddChild(Parents.Peek, '< ' + Trim(AStatement.Name) + ' >'));
+  Transparent := AStatement.Transparent;
+  if not Transparent then Parents.Push(TreeView.Items.AddChild(Parents.Peek, '< ' + Trim(AStatement.Name) + ' >'));
   try
     inherited;
   finally
-    Parents.Pop;
+    if not Transparent then Parents.Pop;
   end;
 end;
 

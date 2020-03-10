@@ -23,6 +23,10 @@ type
     procedure _11;
     procedure _12;
     procedure _13;
+    procedure _14;
+    procedure _15;
+    procedure _16;
+    procedure _17;
   end;
 
 implementation
@@ -96,6 +100,24 @@ end;
 
 procedure _Bugs._13;
 begin
+end;
+
+procedure _Bugs._14;
+begin
+end;
+
+procedure _Bugs._15;
+begin
+end;
+
+procedure _Bugs._16;
+begin
+  Settings.ArgumentSingleLineParamLimit := 1;
+end;
+
+procedure _Bugs._17;
+begin
+  Settings.PreferredExpressionLength := 120;
 end;
 
 initialization

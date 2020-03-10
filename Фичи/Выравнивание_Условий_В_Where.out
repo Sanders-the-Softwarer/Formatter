@@ -1,0 +1,9 @@
+select
+    *
+from
+    t
+where
+    a (+)        > 1
+    and bb       < 2
+    and ccc      = 3
+    and dddd (+) = 4;

@@ -41,6 +41,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function Grouping: boolean; override;
   end;
 
   { Команда @ }
@@ -51,12 +53,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Список команд @ }
-  TAtList = class(TStatementList<TAt>)
-  strict protected
-    function AllowUnexpected: boolean; override;
+  public
+    function Grouping: boolean; override;
   end;
 
   { Команда spool }
@@ -77,6 +75,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function Grouping: boolean; override;
   end;
 
   { Имя файла }
@@ -147,6 +147,11 @@ begin
   APrinter.PrintItems([_Set, _Target, _Value]);
 end;
 
+function TSet.Grouping: boolean;
+begin
+  Result := true;
+end;
+
 { TAt }
 
 function TAt.InternalParse: boolean;
@@ -161,6 +166,11 @@ begin
   APrinter.SupressSpaces(true);
   APrinter.PrintItems([_At, _FileName]);
   APrinter.SupressSpaces(false);
+end;
+
+function TAt.Grouping: boolean;
+begin
+  Result := true;
 end;
 
 { TSpool }
@@ -178,6 +188,11 @@ begin
 end;
 
 { TCall }
+
+function TCall.Grouping: boolean;
+begin
+  Result := true;
+end;
 
 function TCall.InternalParse: boolean;
 begin
@@ -249,13 +264,6 @@ procedure TStandaloneAnonymousBlock.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Block);
   APrinter.NextLineIf(_Slash);
-end;
-
-{ TAtList }
-
-function TAtList.AllowUnexpected: boolean;
-begin
-  Result := false;
 end;
 
 end.

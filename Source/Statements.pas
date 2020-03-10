@@ -95,13 +95,15 @@ type
     function Aligned: boolean; virtual;
     procedure Match(AStatement: TStatement);
     procedure MatchChildren;
-    property Parent: TStatement read FParent;
+    property Parent: TStatement read FParent write FParent;
     property Settings: TFormatSettings read GetSettings write FSettings;
     property FirstToken: TToken read FFirstToken;
   public
     function Name: string; virtual;
     function StatementType: string; virtual;
     function StatementName: string; virtual;
+    function Transparent: boolean; virtual;
+    function Grouping: boolean; virtual;
   end;
   {$TypeInfo Off}
 
@@ -174,6 +176,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     property InnerStatement: TStatement read _Stmt;
+    function Transparent: boolean; override;
   end;
 
   { Конструкция заданного типа в скобках, допускающая пустые скобки }
@@ -189,6 +192,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function Transparent: boolean; override;
   end;
 
   { Конструкция для выравнивания во вложенной }
@@ -199,6 +204,8 @@ type
     function Aligned: boolean; override;
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function Transparent: boolean; override;
   end;
 
 implementation
@@ -303,6 +310,18 @@ end;
 function TStatement.StatementName: string;
 begin
   Result := '';
+end;
+
+{ Выражение по умолчанию видно в синтаксическом дереве }
+function TStatement.Transparent: boolean;
+begin
+  Result := false;
+end;
+
+{ Выражение по умолчанию не группируется с однотипными }
+function TStatement.Grouping: boolean;
+begin
+  Result := false;
 end;
 
 { Обработчик печати по умолчанию }
@@ -730,6 +749,11 @@ begin
   APrinter.PrintItem(_CloseBracket);
 end;
 
+function TBracketedStatement<T>.Transparent: boolean;
+begin
+  Result := true;
+end;
+
 { TOptionalBracketedStatement<T> }
 
 function TOptionalBracketedStatement<T>.AllowEmpty: boolean;
@@ -751,6 +775,11 @@ begin
   APrinter.SupressNextLine(false);
 end;
 
+function TSingleLine<T>.Transparent: boolean;
+begin
+  Result := true;
+end;
+
 { TAligned<T> }
 
 function TAligned<T>.Aligned: boolean;
@@ -766,6 +795,11 @@ end;
 procedure TAligned<T>.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Stmt);
+end;
+
+function TAligned<T>.Transparent: boolean;
+begin
+  Result := true;
 end;
 
 end.

@@ -64,6 +64,7 @@ type
     AlignSpecialComments: boolean;
     ReplaceDefault: boolean;
     ReplaceAsIs: boolean;
+    AddInAccessSpecificator: boolean;
     PreferredExpressionLength: integer;
   public
     constructor Default;
@@ -318,6 +319,7 @@ begin
   AlignSpecialComments            := true;
   ReplaceDefault                  := true;
   ReplaceAsIs                     := true;
+  AddInAccessSpecificator         := true;
   PreferredExpressionLength       := 120;
 end;
 

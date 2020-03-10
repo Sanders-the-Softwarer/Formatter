@@ -66,8 +66,8 @@ type
 
   { Информация о форматировании выражения }
   TTermInfo = record
-    SingleLineLen, MultiLineLen, PrevDelimiterLen, PostDelimiterLen, RulerNumber: integer;
-    SingleLine, LineBreak, BreakBeforeDelimiter: boolean;
+    Priority, SingleLineLen, MultiLineLen, PrevDelimiterLen, PostDelimiterLen, RulerNumber: integer;
+    HasOp, SingleLine, LineBreak, BreakBeforeDelimiter: boolean;
     RulerChar: char;
   end;
 
@@ -313,7 +313,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   procedure CollectInfo;
   var
     DraftPrinter: TPrinter;
-    i, Priority: integer;
+    i: integer;
   begin
     SetLength(TermInfo, Count);
     DraftPrinter := APrinter.MakeDraftPrinter;
@@ -331,10 +331,16 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         DraftPrinter.SupressNextLine(false);
         DraftPrinter.NextLine;
         DraftPrinter.PrintItem(Delimiter(i));
-        if HasOperation(TToken(Delimiter(i)), Priority) then
+        TermInfo[i].Priority := 666;
+        TermInfo[i].HasOp := HasOperation(TToken(Delimiter(i)), TermInfo[i].Priority);
+        if TermInfo[i].HasOp then
         begin
-          TermInfo[i].BreakBeforeDelimiter := (Priority < 0);
-          if (Priority >= 0) then
+          if (i > 0) and Assigned(Delimiter(i)) and Assigned(Delimiter(i-1))
+            and ((Delimiter(i) as TToken).Value = 'and')
+            and ((Delimiter(i - 1) as TToken).Value.Contains('between')) then
+            TermInfo[i].Priority := 666;
+          TermInfo[i].BreakBeforeDelimiter := (TermInfo[i].Priority < 0);
+          if not TermInfo[i].BreakBeforeDelimiter then
             TermInfo[i].PostDelimiterLen := DraftPrinter.CurrentCol
           else if i < Count - 1 then
             TermInfo[i + 1].PrevDelimiterLen := DraftPrinter.CurrentCol;
@@ -367,8 +373,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
          (Start = 0) and
          (Finish = Count - 1) and
          (i > Start) and
-         HasOperation(TToken(Delimiter(i - 1)), Priority) and
-         (Priority < 0) then
+         (TermInfo[i - 1].Priority < 0) then
       begin
         SLLen := MaxInt div 4;
         MLLen := MaxInt div 4;
@@ -392,8 +397,9 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     Min := MaxInt;
     Max := -MaxInt;
     for i := Start to Finish do
-      if not TermInfo[i].LineBreak and HasOperation(TToken(Delimiter(i)), Prio) then
+      if not TermInfo[i].LineBreak and TermInfo[i].HasOp then
       begin
+        Prio := TermInfo[i].Priority;
         if Min > Prio then Min := Prio;
         if Max < Prio then Max := Prio;
       end;
@@ -414,21 +420,18 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
 
   { Расстановка переносов по самым низкоприоритетным операциям }
   procedure PutLineBreaks(Start, Finish: integer);
-  var
-    i, MinPriority, CurPriority, Prev: integer;
+  var i, MinPriority, Prev: integer;
   begin
     { Определим наименьший приоритет операции в выбранном фрагменте }
     MinPriority := MaxInt;
     for i := Start to Finish - 1 do
-      if HasOperation(TToken(Delimiter(i)), CurPriority) and
-         (CurPriority < MinPriority)
-        then MinPriority := CurPriority;
+      if TermInfo[i].Priority < MinPriority then MinPriority := TermInfo[i].Priority;
     { И расставим переносы по таким операциям }
     Prev := Start;
     for i := Start to Finish do
     begin
-      if not HasOperation(TToken(Delimiter(i)), CurPriority) then continue;
-      if CurPriority > MinPriority then continue;
+      if not TermInfo[i].HasOp then continue;
+      if TermInfo[i].Priority > MinPriority then continue;
       TermInfo[i].LineBreak := true;
       if (Prev > Start) or (i < Finish) then CheckForBreaks(Prev, i);
       Prev := i + 1;
@@ -572,13 +575,19 @@ begin
 end;
 
 procedure TQualifiedIndexedIdent.InternalPrintSelf(APrinter: TPrinter);
+var MultiLineIndexes: boolean;
 begin
-  APrinter.PrintItems([_Dot, _Ident, _Indexes, _Next]);
+  MultiLineIndexes := (_Indexes is TBracketedArguments) and TBracketedArguments(_Indexes).MultiLine;
+  APrinter.PrintItems([_Dot, _Ident]);
+  if MultiLineIndexes then APrinter.PrintItem(_IndentNextLine);
+  APrinter.PrintItem(_Indexes);
+  if MultiLineIndexes then APrinter.PrintItem(_UndentNextLine);
+  APrinter.PrintItem(_Next);
 end;
 
 function TQualifiedIndexedIdent.StatementName: string;
 begin
-  Result := Concat([_Dot, _Ident, _Indexes, _Next]);
+  Result := Concat([_Dot, _Ident, _Next]);
 end;
 
 function TQualifiedIndexedIdent.IsSimpleIdent: boolean;
@@ -742,6 +751,7 @@ initialization
   Operations.Add('not between', 2);
   Operations.Add('like', 3);
   Operations.Add('not like', 3);
+  Operations.Add('escape', 4);
   Operations.Add('in', 3);
   Operations.Add('not in', 3);
   Operations.Add('=', 4);

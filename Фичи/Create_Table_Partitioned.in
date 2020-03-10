@@ -4,7 +4,7 @@ create table ut_debug_info
         system_code number(3),
         created date
     )
-    partition by range(created) interval(numtoyminterval(1, 'MONTH'))
+    partition by range (created) interval(numtoyminterval(1, 'MONTH'))
     subpartition by list (system_code)
         (
             partition ut_debug_info_p_empty values less than (to_date('01.01.2013', 'dd.mm.yyyy'))
