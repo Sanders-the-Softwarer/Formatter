@@ -52,7 +52,7 @@ type
     edDeclarationSingleLineParamLimit: TSpinEdit;
     Label1: TLabel;
     Label2: TLabel;
-    edArgumentSingleLineParamLimit: TSpinEdit;
+    edNamedArgumentSingleLineParamLimit: TSpinEdit;
     GroupBox1: TGroupBox;
     checkAlignFields: TCheckBox;
     checkAlignVariables: TCheckBox;
@@ -70,6 +70,9 @@ type
     checkAlignColumns: TCheckBox;
     GroupBox2: TGroupBox;
     checkAddInAccessSpecificator: TCheckBox;
+    Label5: TLabel;
+    Label6: TLabel;
+    edPositionalArgumentSingleLineParamLimit: TSpinEdit;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -87,6 +90,7 @@ type
     Settings: TFormatSettings;
     PrevSrcCaret, PrevResultCaret: integer;
     IntoSync, IntoUpdateSettings: boolean;
+    function CorrectCRLF: boolean;
     procedure UpdateData;
     procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
     procedure CoordsToCaret(Memo: TMemo; const Line, Col: integer; out Pos: integer);
@@ -103,6 +107,18 @@ implementation
 
 uses GUIPrinters;
 
+{ Приведение переносов строк к стандартному виду }
+function TFormMain.CorrectCRLF: boolean;
+var Src, Dest: string;
+begin
+  Src := edSrc.Text;
+  Dest := StringReplace(Src,  #13#10, #10, [rfReplaceAll]);
+  Dest := StringReplace(Dest, #13,    #10, [rfReplaceAll]);
+  Dest := StringReplace(Dest, #10, #13#10, [rfReplaceAll]);
+  Result := Dest <> Src;
+  if Result then edSrc.Text := Dest;
+end;
+
 { Подготовка и распечатка форматированного текста }
 procedure TFormMain.UpdateData;
 var
@@ -114,7 +130,8 @@ begin
   if not IntoUpdateSettings then
   begin
     Settings.DeclarationSingleLineParamLimit := edDeclarationSingleLineParamLimit.Value;
-    Settings.ArgumentSingleLineParamLimit    := edArgumentSingleLineParamLimit.Value;
+    Settings.NamedArgumentSingleLineParamLimit := edNamedArgumentSingleLineParamLimit.Value;
+    Settings.PositionalArgumentSingleLineParamLimit := edPositionalArgumentSingleLineParamLimit.Value;
     Settings.MatchParamLimit                 := edMatchParamLimit.Value;
     Settings.AlignVariables                  := checkAlignVariables.Checked;
     Settings.AlignFields                     := checkAlignFields.Checked;
@@ -184,7 +201,8 @@ begin
   try
     IntoUpdateSettings := true;
     edDeclarationSingleLineParamLimit.Value := Settings.DeclarationSingleLineParamLimit;
-    edArgumentSingleLineParamLimit.Value    := Settings.ArgumentSingleLineParamLimit;
+    edNamedArgumentSingleLineParamLimit.Value := Settings.NamedArgumentSingleLineParamLimit;
+    edPositionalArgumentSingleLineParamLimit.Value := Settings.PositionalArgumentSingleLineParamLimit;
     edMatchParamLimit.Value                 := Settings.MatchParamLimit;
     edPreferredExpressionLength.Value       := Settings.PreferredExpressionLength;
     checkAlignFields.Checked                := Settings.AlignFields;
@@ -211,7 +229,7 @@ end;
 { Реакция на действия, требующие заново напечатать текст }
 procedure TFormMain.UpdateRequired(Sender: TObject);
 begin
-  UpdateData;
+  if not CorrectCRLF then UpdateData;
 end;
 
 { Оповещение принтера о движении пользователя по списку непропечатанных лексем }

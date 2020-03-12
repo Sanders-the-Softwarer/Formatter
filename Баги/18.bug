@@ -1,0 +1,6 @@
+-- v_tbl должен распознаваться как значение в values, а не как отдельная конструкция ниже
+insert 
+into 
+    top_lc_calc_region_gtt 
+values 
+    v_tbl(i);

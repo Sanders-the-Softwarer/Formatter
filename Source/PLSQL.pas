@@ -84,6 +84,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function StatementName: string; override;
   end;
 
   { Пакет }
@@ -736,6 +738,11 @@ begin
   APrinter.NextLine;
 end;
 
+function TPackageHeader.StatementName: string;
+begin
+  Result := Concat([_Package, _Body, _PackageName]);
+end;
+
 { TPackage }
 
 function TPackage.StatementName: string;
@@ -1184,7 +1191,7 @@ end;
 
 procedure TIf.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_If, _Condition, _Sections, _EndIf]);
+  APrinter.PrintItems([_If, _Condition, _Sections, _NextLine, _EndIf]);
   inherited;
 end;
 

@@ -29,6 +29,7 @@ implementation
 
 { Вывод в отладочную консоль }
 procedure _Debug(const Msg: string; const Params: array of const);
+{$IfDef DEBUG_OUTPUT}
 var S: string;
 begin
   try
@@ -37,6 +38,9 @@ begin
     S := Msg;
   end;
   OutputDebugString(@S[1]);
+{$Else}
+begin
+{$EndIf}
 end;
 
 { TKeywords }

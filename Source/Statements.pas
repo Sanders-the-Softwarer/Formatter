@@ -592,6 +592,7 @@ begin
   for i := 0 to Count - 1 do
   begin
     APrinter.PrintItem(Statements[i]);
+    APrinter.CancelNextLine;
     PrintDelimiter(APrinter, Delimiters[i], i >= Count - 1);
   end;
 end;

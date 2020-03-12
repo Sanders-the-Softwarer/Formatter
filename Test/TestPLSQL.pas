@@ -326,7 +326,7 @@ end;
 procedure _Выравнивание.Аргументов_В_Вызовах_Подпрограмм;
 begin
   Settings.AlignVariables := true;
-  Settings.ArgumentSingleLineParamLimit := 3;
+  Settings.NamedArgumentSingleLineParamLimit := 3;
 end;
 
 procedure _Выравнивание.В_Comment;

@@ -639,7 +639,8 @@ end;
 
 function TArguments.OnePerLine: boolean;
 begin
-  Result := IsNamedNotation and (Self.Count > Settings.ArgumentSingleLineParamLimit);
+  Result := IsNamedNotation and (Self.Count > Settings.NamedArgumentSingleLineParamLimit)
+            or (Self.Count > Settings.PositionalArgumentSingleLineParamLimit);
 end;
 
 function TArguments.Aligned: boolean;

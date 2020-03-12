@@ -27,6 +27,9 @@ type
     procedure _15;
     procedure _16;
     procedure _17;
+    procedure _18;
+    procedure _19;
+    procedure _20;
   end;
 
 implementation
@@ -49,6 +52,10 @@ begin
 end;
 
 procedure _Bugs._2;
+begin
+end;
+
+procedure _Bugs._20;
 begin
 end;
 
@@ -108,16 +115,26 @@ end;
 
 procedure _Bugs._15;
 begin
+  Settings.NamedArgumentSingleLineParamLimit := 1;
+  Settings.PositionalArgumentSingleLineParamLimit := 4;
 end;
 
 procedure _Bugs._16;
 begin
-  Settings.ArgumentSingleLineParamLimit := 1;
+  Settings.NamedArgumentSingleLineParamLimit := 1;
 end;
 
 procedure _Bugs._17;
 begin
   Settings.PreferredExpressionLength := 120;
+end;
+
+procedure _Bugs._18;
+begin
+end;
+
+procedure _Bugs._19;
+begin
 end;
 
 initialization

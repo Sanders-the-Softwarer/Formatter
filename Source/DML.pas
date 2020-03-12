@@ -64,14 +64,8 @@ type
   { Оператор insert }
   TInsert = class(TDML)
   strict private
-    _Insert: TEpithet;
-    _Into: TEpithet;
-    _Table: TStatement;
-    _Fields: TStatement;
-    _Select: TStatement;
-    _Values: TEpithet;
-    _ValueList: TStatement;
-    _Returning: TStatement;
+    _Insert, _Into, _Values: TEpithet;
+    _Table, _Fields, _ValueList, _Returning: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalMatchChildren; override;
@@ -1117,32 +1111,37 @@ end;
 
 function TInsert.InternalParse: boolean;
 begin
-  Result := true;
   _Insert := Keyword('insert');
   if not Assigned(_Insert) then exit(false);
   _Into := Keyword('into');
   TTableRef.Parse(Self, Source, _Table);
   TBracketedStatement<TIdentFields>.Parse(Self, Source, _Fields);
-  if TSelect.Parse(Self, Source, _Select) then exit;
   _Values := Keyword('values');
-  TBracketedStatement<TExpressionFields>.Parse(Self, Source, _ValueList);
+  if not Assigned(_Values) then TSelect.Parse(Self, Source, _ValueList);
+  if not Assigned(_ValueList) then TBracketedStatement<TExpressionFields>.Parse(Self, Source, _ValueList);
+  if not Assigned(_ValueList) then TParser.ParseExpression(Self, Source, _ValueList);
   TReturning.Parse(Self, Source, _Returning);
   inherited;
+  Result := true;
 end;
 
 procedure TInsert.InternalMatchChildren;
 begin
   if not Assigned(_Fields) then exit;
-  _Select.Match(TBracketedStatement<TIdentFields>(_Fields).InnerStatement);
   _ValueList.Match(TBracketedStatement<TIdentFields>(_Fields).InnerStatement);
 end;
 
 procedure TInsert.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Insert, _NextLine, _Into, _IndentNextLine, _Table,
-                       _NextLine, _Fields, _UndentNextLine, _Select, _Values,
-                       _IndentNextLine, _ValueList, _Undent]);
-  APrinter.NextLineIf([_Returning]);
+  APrinter.PrintItems([_Insert, _NextLine,
+                       _Into,   _IndentNextLine,
+                                _Table, _NextLine,
+                                _Fields, _UndentNextLine,
+                       _Values, _IndentNextLine]);
+  if not Assigned(_Values) then APrinter.Undent;
+  APrinter.PrintItem(_ValueList);
+  if Assigned(_Values) then APrinter.Undent;
+  APrinter.PrintItems([_NextLine, _Returning]);
   inherited;
 end;
 

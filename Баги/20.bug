@@ -1,0 +1,17 @@
+-- Запрос с over() слишком уж неадекватно форматируется. Как минимум, он не должен переноситься как over <crlf> ( <crlf> ) <crlf>
+
+              select
+                    t.*,
+                    case when sum(case when t.quantity_total > 0 then 1 end)
+                        over
+                            (
+                            ) =
+                        sum(case when t.quantity_total > 0 and t.hs_code is not null then 1 end)
+                            over
+                                (
+                                ) then 1 else 0 end is_all_sku_has_hs_codes
+                from
+dual
+
+
+

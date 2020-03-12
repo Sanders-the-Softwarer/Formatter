@@ -190,8 +190,7 @@ object FormMain: TFormMain
       end
       object tabSettings: TTabSheet
         Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
-        ExplicitLeft = 2
-        ExplicitTop = 39
+        ExplicitLeft = 8
         object Label1: TLabel
           Left = 5
           Top = 15
@@ -207,18 +206,34 @@ object FormMain: TFormMain
           Caption = #1040#1088#1075#1091#1084#1077#1085#1090#1086#1074' '#1074' '#1086#1076#1085#1091' '#1089#1090#1088#1086#1082#1091' '#1085#1077' '#1073#1086#1083#1100#1096#1077', '#1095#1077#1084
         end
         object Label3: TLabel
-          Left = 5
-          Top = 71
+          Left = 3
+          Top = 124
           Width = 219
           Height = 13
           Caption = #1057#1086#1087#1086#1089#1090#1072#1074#1083#1103#1090#1100' '#1087#1086#1083#1103' '#1074#1099#1088#1072#1078#1077#1085#1080#1103#1084' '#1085#1072#1095#1080#1085#1072#1103' '#1089
         end
         object Label4: TLabel
           Left = 3
-          Top = 281
+          Top = 332
           Width = 233
           Height = 13
           Caption = #1064#1080#1088#1080#1085#1072' '#1074#1099#1088#1072#1078#1077#1085#1080#1081' '#1087#1086' '#1074#1086#1079#1084#1086#1078#1085#1086#1089#1090#1080' '#1085#1077' '#1073#1086#1083#1077#1077
+        end
+        object Label5: TLabel
+          Left = 180
+          Top = 68
+          Width = 69
+          Height = 13
+          Alignment = taRightJustify
+          Caption = #1048#1084#1077#1085#1086#1074#1072#1085#1085#1099#1093
+        end
+        object Label6: TLabel
+          Left = 181
+          Top = 96
+          Width = 68
+          Height = 13
+          Alignment = taRightJustify
+          Caption = #1055#1086#1079#1080#1094#1080#1086#1085#1085#1099#1093
         end
         object edDeclarationSingleLineParamLimit: TSpinEdit
           Left = 269
@@ -231,9 +246,9 @@ object FormMain: TFormMain
           Value = 1
           OnChange = UpdateRequired
         end
-        object edArgumentSingleLineParamLimit: TSpinEdit
-          Left = 269
-          Top = 40
+        object edNamedArgumentSingleLineParamLimit: TSpinEdit
+          Left = 267
+          Top = 65
           Width = 46
           Height = 22
           MaxValue = 1000
@@ -244,7 +259,7 @@ object FormMain: TFormMain
         end
         object GroupBox1: TGroupBox
           Left = 3
-          Top = 96
+          Top = 147
           Width = 153
           Height = 175
           Caption = '  '#1042#1099#1088#1072#1074#1085#1080#1074#1072#1090#1100'  '
@@ -318,7 +333,7 @@ object FormMain: TFormMain
         end
         object GroupBox3: TGroupBox
           Left = 162
-          Top = 96
+          Top = 147
           Width = 153
           Height = 80
           Caption = '  '#1047#1072#1084#1077#1085#1103#1090#1100'  '
@@ -347,8 +362,8 @@ object FormMain: TFormMain
           end
         end
         object edMatchParamLimit: TSpinEdit
-          Left = 269
-          Top = 68
+          Left = 267
+          Top = 121
           Width = 46
           Height = 22
           MaxValue = 1000
@@ -359,7 +374,7 @@ object FormMain: TFormMain
         end
         object edPreferredExpressionLength: TSpinEdit
           Left = 267
-          Top = 278
+          Top = 329
           Width = 46
           Height = 22
           MaxValue = 1000
@@ -370,7 +385,7 @@ object FormMain: TFormMain
         end
         object GroupBox2: TGroupBox
           Left = 162
-          Top = 182
+          Top = 233
           Width = 153
           Height = 89
           Caption = ' '#1044#1086#1073#1072#1074#1083#1103#1090#1100' '
@@ -386,6 +401,17 @@ object FormMain: TFormMain
             TabOrder = 0
             OnClick = UpdateRequired
           end
+        end
+        object edPositionalArgumentSingleLineParamLimit: TSpinEdit
+          Left = 267
+          Top = 93
+          Width = 46
+          Height = 22
+          MaxValue = 1000
+          MinValue = 0
+          TabOrder = 7
+          Value = 3
+          OnChange = UpdateRequired
         end
       end
     end

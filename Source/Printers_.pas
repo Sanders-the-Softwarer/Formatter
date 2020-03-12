@@ -54,7 +54,8 @@ type
   TFormatSettings = class
   public
     DeclarationSingleLineParamLimit: integer;
-    ArgumentSingleLineParamLimit: integer;
+    NamedArgumentSingleLineParamLimit: integer;
+    PositionalArgumentSingleLineParamLimit: integer;
     MatchParamLimit: integer;
     AlignVariables: boolean;
     AlignFields: boolean;
@@ -309,7 +310,8 @@ end;
 constructor TFormatSettings.Default;
 begin
   DeclarationSingleLineParamLimit := 1;
-  ArgumentSingleLineParamLimit    := 1;
+  NamedArgumentSingleLineParamLimit := 1;
+  PositionalArgumentSingleLineParamLimit := 4;
   MatchParamLimit                 := 3;
   AlignVariables                  := true;
   AlignFields                     := true;
@@ -326,7 +328,8 @@ end;
 constructor TFormatSettings.ForTest;
 begin
   DeclarationSingleLineParamLimit := 99;
-  ArgumentSingleLineParamLimit    := 99;
+  NamedArgumentSingleLineParamLimit := 99;
+  PositionalArgumentSingleLineParamLimit := 999;
   PreferredExpressionLength       := 9999;
   MatchParamLimit                 := 99;
 end;
