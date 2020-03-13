@@ -1,4 +1,0 @@
-begin
-  raise invalid_number;
-  raise;
-end;

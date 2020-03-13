@@ -1,8 +1,0 @@
-update 
-    t 
-set 
-    a    = 1, 
-    bbb  = 2, 
-    cc   = 3, 
-    dddd = 4, 
-    e    = 5

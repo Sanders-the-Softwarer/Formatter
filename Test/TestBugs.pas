@@ -117,6 +117,7 @@ procedure _Bugs._15;
 begin
   Settings.NamedArgumentSingleLineParamLimit := 1;
   Settings.PositionalArgumentSingleLineParamLimit := 4;
+  Settings.PreferredExpressionLength := 120;
 end;
 
 procedure _Bugs._16;

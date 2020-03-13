@@ -63,7 +63,6 @@ type
     procedure Форматирование_Подзапросов_В_Select;
     procedure Переносы_По_And_В_Where;
     procedure Commit_Rollback_Savepoint;
-    procedure Длинный_И_Сложный_Запрос_В_Форматировании_Которого_Куча_Мелких_Недостатков;
   end;
 
   { Тесты на insert }
@@ -216,10 +215,6 @@ begin
 end;
 
 procedure _Select.Переносы_По_And_В_Where;
-begin
-end;
-
-procedure _Select.Длинный_И_Сложный_Запрос_В_Форматировании_Которого_Куча_Мелких_Недостатков;
 begin
 end;
 

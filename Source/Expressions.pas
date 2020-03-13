@@ -671,7 +671,11 @@ end;
 
 procedure TCase.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Case, _Expression, _Sections, _End]);
+  APrinter.PrintItems([_Case, _IndentNextLine, _Expression, _NextLine]);
+  if Assigned(_Expression) then APrinter.Undent;
+  APrinter.PrintItems([_Sections, _NextLine]);
+  if not Assigned(_Expression) then APrinter.Undent;
+  APrinter.PrintItem(_End);
 end;
 
 { TCaseSection }
@@ -698,7 +702,9 @@ end;
 
 procedure TCaseSection.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_When, _Condition, _Then, _Else, _Value]);
+  if Assigned(_When)
+    then APrinter.PrintItems([_When, _Condition, _Then, _IndentNextLine, _Value, _Undent])
+    else APrinter.PrintItems([_Else, _IndentNextLine, _Value, _Undent]);
 end;
 
 { TCaseSections }
@@ -710,7 +716,7 @@ end;
 
 function TCaseSections.OnePerLine: boolean;
 begin
-  Result := false;
+  Result := true;
 end;
 
 { TCast }
