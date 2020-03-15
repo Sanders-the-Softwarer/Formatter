@@ -1,35 +1,22 @@
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                           Форматизатор исходников                          //
+//                                                                            //
+//                        Печать форматированного текста                      //
+//                                                                            //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
 unit FormatterPrinter;
 
 interface
 
 uses
-  Classes, SysUtils, Math, System.Generics.Collections, Printers_, Tokens, Statements;
+  Classes, SysUtils, Math, System.Generics.Collections, PrinterIntf, BasePrinter,
+  Tokens, Statements;
 
 type
-
-  { Базовая (пустая) реализация принтера }
-  TBasePrinter = class(TPrinter)
-  public
-    procedure BeginPrint; override;
-    procedure PrintItem(AItem: TObject); override;
-    procedure PrintToken(AToken: TToken); virtual;
-    procedure PrintStatement(AStatement: TStatement); virtual;
-    procedure EndPrint; override;
-    procedure Indent; override;
-    procedure Undent; override;
-    procedure NextLine; override;
-    procedure CancelNextLine; override;
-    procedure SupressNextLine(ASupress: boolean); override;
-    procedure SupressSpaces(ASupress: boolean); override;
-    procedure PrintSpecialComment(AValue: string); override;
-    procedure StartRuler(Enabled: boolean); override;
-    procedure Ruler(const ARuler: string); override;
-    function  MakeDraftPrinter: TPrinter; override;
-    function  CurrentCol: integer; override;
-    procedure ControlChanged; override;
-    procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
-    function  GetText: string; override;
-  end;
 
   { Информация о выравниваниях }
   TRulers = class
@@ -57,6 +44,7 @@ type
     Shift:   integer;
     EOLCount: integer;
     ForceNextLine: boolean;
+    NextLineComment: TToken;
     EmptyLine: boolean;
     WasComment: boolean;
     Line:    integer;
@@ -90,7 +78,9 @@ type
     procedure SupressSpaces(ASupress: boolean); override;
     procedure PrintSpecialComment(AValue: string); override;
     procedure StartRuler(Enabled: boolean); override;
+  protected
     procedure Ruler(const ARuler: string); override;
+  public
     function MakeDraftPrinter: TPrinter; override;
     function CurrentCol: integer; override;
     function  GetText: string; override;
@@ -99,111 +89,6 @@ type
 implementation
 
 uses Utils, SQLPlus, PLSQL;
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-//                   Дефолтовая (пустая) реализация принтера                  //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-
-procedure TBasePrinter.BeginPrint;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.EndPrint;
-begin
-  { ничего не делаем }
-end;
-
-{ Разбиваем PrintItem на PrintToken и PrintStatement }
-procedure TBasePrinter.PrintItem(AItem: TObject);
-begin
-  if AItem is TToken then
-    PrintToken(AItem as TToken)
-  else if AItem is TStatement then
-    PrintStatement(AItem as TStatement);
-end;
-
-procedure TBasePrinter.PrintToken(AToken: TToken);
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.PrintSpecialComment(AValue: string);
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.StartRuler;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.Ruler(const ARuler: string);
-begin
-  { ничего не делаем }
-end;
-
-function TBasePrinter.MakeDraftPrinter: TPrinter;
-begin
-  Result := TBasePrinter.Create;
-end;
-
-function TBasePrinter.CurrentCol: integer;
-begin
-  Result := -1;
-end;
-
-procedure TBasePrinter.ControlChanged;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.PrintStatement(AStatement: TStatement);
-begin
-  AStatement.PrintSelf(Self);
-end;
-
-procedure TBasePrinter.Indent;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.Undent;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.NextLine;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.CancelNextLine;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.SupressNextLine;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.SupressSpaces(ASupress: boolean);
-begin
-  { ничего не делаем }
-end;
-
-function TBasePrinter.GetText: string;
-begin
-  Result := '';
-end;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -242,11 +127,21 @@ begin
   TokenPos.Clear;
   TokenLen.Clear;
   SpecialComments.Clear;
+  NextLineComment := nil;
 end;
 
 { Вывод готового результата }
 procedure TFormatterPrinter.EndPrint;
+var T: TToken;
 begin
+  if Assigned(NextLineComment) then
+  begin
+    EmptyLine := false;
+    ForceNextLine := false;
+    T := NextLineComment;
+    NextLineComment := nil;
+    PrintToken(T);
+  end;
   if Assigned(Builder) then Text := Builder.ToString else Text := '';
   FreeAndNil(Builder);
   PrevToken := nil;
@@ -310,7 +205,7 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
 var
   Value: string;
   HasToken, HasBuilder, AllowLF: boolean;
-  i, EOLLimit: integer;
+  EOLLimit: integer;
 begin
   HasToken := Assigned(AToken);
   HasBuilder := Assigned(Builder);
@@ -331,6 +226,12 @@ begin
     EOLLimit := 0;
   while (EOLCount < EOLLimit) and AllowLF do
   begin
+    if Assigned(NextLineComment) then
+    begin
+      Ruler('right-comment');
+      PrintToken(NextLineComment);
+      NextLineComment := nil;
+    end;
     if HasBuilder then Builder.AppendLine;
     Inc(EOLCount);
     Inc(Line);
@@ -415,11 +316,9 @@ begin
   if HasToken then
   begin
     if Assigned(AToken.CommentAfter) then
-    begin
-      Ruler('right-comment');
-      PrintToken(AToken.CommentAfter);
-      if AToken.CommentAfter.LineComment then NextLine;
-    end;
+      if AToken.CommentAfter.LineComment
+        then NextLineComment := AToken.CommentAfter
+        else PrintToken(AToken.CommentAfter);
     if Assigned(AToken.CommentBelow) and HasBuilder then
     begin
       WasComment := true;
@@ -446,7 +345,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     _ForceNextLine, _EmptyLine, _WasComment: boolean;
     _Builder: TStringBuilder;
     _Rulers: TRulers;
-    _PrevToken: TToken;
+    _PrevToken, _NextLineComment: TToken;
 
   { Печать выражения без наворотов, связанных с выравниваниями }
   procedure SimplePrintStatement(AStatement: TStatement);
@@ -484,6 +383,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     _Rulers  := Rulers;
     _PrevToken := PrevToken;
     _Mode    := Mode;
+    _NextLineComment := NextLineComment;
   end;
 
   { Восстановление той части конфигурации, которая нужна для печати с выравниваниями }
@@ -499,6 +399,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     WasComment := _WasComment;
     Builder := _Builder;
     PrevToken := _PrevToken;
+    NextLineComment := _NextLineComment;
   end;
 
   { Окончательное восстановление конфигурации после печати с выравниваниями }
@@ -625,6 +526,7 @@ end;
 procedure TFormatterPrinter.Ruler(const ARuler: string);
 begin
   if not RulerEnabled then exit;
+  PrintItem(nil);
   case Mode of
     fpmGetRulers: Rulers.Take(ARuler, Line, Col); { В режиме примерки запомним ширину фрагмента }
     fpmSetRulers: PaddingCol := Rulers.Fix(ARuler) + Shift; { В режиме разметки рассчитаем необходимое количество пробелов }
@@ -697,14 +599,19 @@ begin
 end;
 
 function TRulers.Fix(const ARuler: string): integer;
-var i: integer;
+var i: integer; S: string;
 begin
   Result := 0;
   if DisablePadding then exit;
+  S := '1';
   for i := 0 to Names.IndexOf(ARuler) do
+  begin
     Inc(Result, MaxWidth[Names[i]]);
+    S := S + ' + ' + IntToStr(MaxWidth[Names[i]]) + ' {' + Names[i] + '}';
+  end;
   Inc(Result);
   _Debug('Rulers.Fix, ruler = "%s", fix = %d', [ARuler, Result]);
+  _Debug('Sum = %s', [S]);
 end;
 
 end.

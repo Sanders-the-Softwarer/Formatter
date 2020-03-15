@@ -4,7 +4,7 @@
 //                                                                            //
 //                       Вызовы основной функциональности                     //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -15,19 +15,26 @@ unit Controller;
   По сути, этот модуль - интерфейс для различных клиентов функциональности
   (консольный форматизатор, плагин к PL/SQL Developer, тестовое приложение,
   отладочное приложение и т. п.), скрывающий от них детали внутренней
-  реализации (потоки и т. п., о чём им думать решительно незачем)
+  реализации (потоки и т. п., о чём им думать решительно незачем).
+
+  Процедура MakeFormatted проходит все шаги преобразований и формирует из
+  строки на входе строку на выходе. Функция MakeMinimalTokenStream формирует
+  входной поток лексем с расставленными координатами и выброшенными пробелами.
 
 ------------------------------------------------------------------------------ }
 
 interface
 
-uses SysUtils, Printers_, Streams, Tokens, Statements, Parser;
+uses SysUtils, PrinterIntf, Streams, Tokens, Statements, Parser;
 
 { Форматирование текста, полученного в виде строки, с возвратом результата в строку }
 procedure MakeFormatted(const AText: string; ASettings: TFormatSettings; out AResult: string);
 
-{ Создание потока лексем из текста, полученного в виде строки }
-function MakeTokenStream(const AText: string): TBufferedStream<TToken>;
+{ Создание минимально обработанного потока лексем из текста, полученного в виде строки }
+function MakeMinimalTokenStream(const AText: string): TBufferedStream<TToken>;
+
+{ Создание дополнительно обработанного потока лексем из минимально обработанного }
+function MakeAdvancedTokenStream(ATokenStream: TBufferedStream<TToken>): TBufferedStream<TToken>;
 
 { Создание потока синтаксических конструкций из потока лексем }
 function MakeStatementStream(ATokenStream: TBufferedStream<TToken>; ASettings: TFormatSettings): TBufferedStream<TStatement>;
@@ -53,9 +60,9 @@ begin
         ASettings := Settings;
       end;
     { Создадим парсер входного текста }
-    Parser := MakeStatementStream(MakeTokenStream(AText), ASettings);
+    Parser := MakeStatementStream(MakeAdvancedTokenStream(MakeMinimalTokenStream(AText)), ASettings);
     { И выведем его результат на принтер }
-    Printer := Printers_.CreateFormatterPrinter;
+    Printer := CreateFormatterPrinter;
     Printer.Settings := ASettings;
     Parser.PrintAll(Printer);
     AResult := Printer.GetText;
@@ -66,10 +73,17 @@ begin
   end;
 end;
 
-{ Создание потока лексем из текста, полученного в виде строки }
-function MakeTokenStream(const AText: string): TBufferedStream<TToken>;
+{ Создание минимально обработанного потока лексем из текста, полученного в виде строки }
+function MakeMinimalTokenStream(const AText: string): TBufferedStream<TToken>;
 begin
-  Result := TMerger.Create(TCommentProcessor.Create(TSkipSpecCommentProcessor.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(AText)))))));
+  Result := TSkipSpecCommentProcessor.Create(TWhitespaceSkipper.Create(TTokenizer.Create(TPositionStream.Create(TStringStream.Create(AText)))));
+end;
+
+{ Создание потока лексем из текста, полученного в виде строки }
+function MakeAdvancedTokenStream(ATokenStream: TBufferedStream<TToken>): TBufferedStream<TToken>;
+begin
+  Assert(ATokenStream <> nil);
+  Result := TMerger.Create(TCommentProcessor.Create(ATokenStream));
 end;
 
 { Создание потока синтаксических конструкций из потока лексем }

@@ -4,7 +4,7 @@
 //                                                                            //
 //                      Синтаксические конструкции PL/SQL                     //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -23,8 +23,8 @@ unit PLSQL;
 
 interface
 
-uses Classes, Windows, SysUtils, Math, Streams, Tokens, Statements, Expressions,
-  Printers_, Utils;
+uses Classes, Windows, SysUtils, Math, Streams, Tokens, Statements, Commons,
+  PrinterIntf, Utils;
 
 type
 
@@ -79,7 +79,7 @@ type
   { Заголовок пакета }
   TPackageHeader = class(TStatement)
   strict private
-    _Package, _Body, _AsIs: TEpithet;
+    _Package, _Body, _AuthId, _AsIs: TEpithet;
     _PackageName: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -100,7 +100,7 @@ type
   TSubroutineHeaderBase = class(TStatement)
   strict private
     _Map: TEpithet;
-    _MemberOrConstructor: TEpithet;
+    _FunctionType: TEpithet;
     _ProcedureOrFunction: TEpithet;
     _Name: TEpithet;
     _Params: TStatement;
@@ -178,24 +178,6 @@ type
     function StatementName: string; override;
   end;
 
-  { Название типа данных }
-  TTypeRef = class(TStatement)
-  strict private
-    _Ident: TStatement;
-    _Type: TTerminal;
-    _OpenBracket: TTerminal;
-    _Size: TNumber;
-    _Comma: TTerminal;
-    _Precision: TNumber;
-    _Unit: TEpithet;
-    _CloseBracket: TTerminal;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function IsSimpleIdent: boolean;
-  end;
-
   { Параметр подпрограммы }
   TParamDeclaration = class(TStatement)
   strict private
@@ -223,6 +205,7 @@ type
     function InternalParse: boolean; override;
     function ParseBreak: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
     function Aligned: boolean; override;
   end;
 
@@ -261,6 +244,7 @@ type
     function ParseBreak: boolean; override;
     function AllowUnexpected: boolean; override;
     function AllowStatement(AStatement: TStatement): boolean; override;
+  public
     function Aligned: boolean; override;
   end;
 
@@ -592,6 +576,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
     function Aligned: boolean; override;
   end;
 
@@ -625,6 +610,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
     function Aligned: boolean; override;
   end;
 
@@ -650,7 +636,7 @@ type
 
 implementation
 
-uses Parser, DML;
+uses Parser, Expressions, DML;
 
 var
   PLSQLKeywords, FetchKeywords: TKeywords;
@@ -707,7 +693,7 @@ function TEnd.InternalParse: boolean;
 begin
   _End := Keyword('end');
   Result := Assigned(_End);
-  if Result and not (Parent.Parent is TStatements) then _EndName := Identifier;
+  if Result then _EndName := Identifier;
 end;
 
 procedure TEnd.InternalPrintSelf(APrinter: TPrinter);
@@ -727,6 +713,8 @@ begin
   _Body := Keyword('body');
   { Проверим название пакета }
   TQualifiedIdent.Parse(Self, Source, _PackageName);
+  { Проверим наличие authid }
+  _AuthId := Keyword(['authid definer', 'authid current_user']);
   { Проверим наличие is }
   _AsIs := Keyword(['is', 'as']);
   if Assigned(_AsIs) then _AsIs.CanReplace := true;
@@ -734,7 +722,7 @@ end;
 
 procedure TPackageHeader.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Package, _Body, _PackageName, _AsIs]);
+  APrinter.PrintItems([_Package, _Body, _PackageName, _AuthId, _AsIs]);
   APrinter.NextLine;
 end;
 
@@ -760,7 +748,7 @@ end;
 function TSubroutineHeaderBase.InternalParse: boolean;
 begin
   _Map := Keyword('map');
-  _MemberOrConstructor := Keyword(['member', 'constructor']);
+  _FunctionType := Keyword(['member', 'static', 'constructor']);
   { Проверим procedure/function }
   _ProcedureOrFunction := Keyword(['procedure', 'function']);
   if not Assigned(_ProcedureOrFunction) then exit(false);
@@ -780,7 +768,7 @@ end;
 
 procedure TSubroutineHeaderBase.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Map, _MemberOrConstructor, _ProcedureOrFunction, _Name, _Indent]);
+  APrinter.PrintItems([_Map, _FunctionType, _ProcedureOrFunction, _Name, _Indent]);
   {$B+}
   FIndentedBeforeIs := APrinter.NextLineIf([_Params]) or
                        APrinter.NextLineIf([_Return, _SelfAsResult, _ReturnType]) or
@@ -792,7 +780,7 @@ end;
 
 function TSubroutineHeaderBase.StatementName: string;
 begin
-  Result := Concat([_MemberOrConstructor, _ProcedureOrFunction, _Name]);
+  Result := Concat([_FunctionType, _ProcedureOrFunction, _Name]);
 end;
 
 { TTriggerHeader }
@@ -837,42 +825,6 @@ end;
 function TTrigger.StatementName: string;
 begin
   Result := Header.StatementName;
-end;
-
-{ TTypeRef }
-
-function TTypeRef.InternalParse: boolean;
-begin
-  { Если распознали идентификатор, тип данных распознан }
-  TQualifiedIdent.Parse(Self, Source, _Ident);
-  if not Assigned(_Ident) then exit(false);
-  { Проверим %[row]type }
-  _Type := Terminal(['%type', '%rowtype']);
-  { Проверим указание размера }
-  _OpenBracket := Terminal('(');
-  if Assigned(_OpenBracket) then
-  begin
-    _Size := Number;
-    _Unit := Keyword(['char', 'byte']);
-    if not Assigned(_Unit) then _Comma := Terminal(',');
-    if Assigned(_Comma) then
-    begin
-      _Comma.IntoNumber := true;
-      _Precision := Number;
-    end;
-    _CloseBracket := Terminal(')');
-  end;
-  Result := true;
-end;
-
-procedure TTypeRef.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Ident, _Type, _OpenBracket, _Size, _Comma, _Precision, _Unit, _CloseBracket]);
-end;
-
-function TTypeRef.IsSimpleIdent: boolean;
-begin
-  Result := not Assigned(_Type) and not Assigned(_OpenBracket);
 end;
 
 { TParamDeclaration }
@@ -953,7 +905,7 @@ end;
 
 function TDeclarations.ParseBreak: boolean;
 begin
-  Result := Any([Keyword(['begin', 'end'])]);
+  Result := Any([Keyword(['begin', 'end', 'create']), Terminal('/')]);
 end;
 
 function TDeclarations.EmptyLineBefore: boolean;
@@ -1161,8 +1113,9 @@ end;
 
 function TStatements.ParseDelimiter(out AResult: TObject): boolean;
 begin
-  AResult := nil;
-  Result  := true;
+  AResult := NextToken;
+  Result  := AResult is TLabel;
+  if not Result then AResult := nil;
 end;
 
 function TStatements.ParseBreak: boolean;
@@ -1837,7 +1790,7 @@ end;
 
 initialization
   PLSQLKeywords := TKeywords.Create(['as', 'begin', 'end', 'exception', 'function',
-    'is', 'procedure', 'type', 'using']);
+    'is', 'procedure', 'using']);
   FetchKeywords := TKeywords.Create(PLSQLKeywords, ['limit']);
 
 finalization

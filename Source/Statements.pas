@@ -4,7 +4,7 @@
 //                                                                            //
 //           Базовые классы выражений для синтаксического анализатора         //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -50,7 +50,7 @@ unit Statements;
 interface
 
 uses Classes, SysUtils, System.Generics.Collections, Utils, Streams, Tokens,
-  Printers_;
+  PrinterIntf;
 
 type
 
@@ -201,11 +201,11 @@ type
   strict private
     _Stmt: TStatement;
   strict protected
-    function Aligned: boolean; override;
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function Transparent: boolean; override;
+    function Aligned: boolean; override;
   end;
 
 implementation

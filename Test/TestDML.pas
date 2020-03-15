@@ -4,7 +4,7 @@
 //                                                                            //
 //                           Автотесты на модуль DML                          //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -97,6 +97,7 @@ type
     procedure Простой_Delete;
     procedure Delete_С_Алиасом;
     procedure Delete_С_Where;
+    procedure Delete_С_Returning;
   end;
 
   { Тесты на merge }
@@ -364,6 +365,10 @@ begin
 end;
 
 { _Delete }
+
+procedure _Delete.Delete_С_Returning;
+begin
+end;
 
 procedure _Delete.Delete_С_Where;
 begin

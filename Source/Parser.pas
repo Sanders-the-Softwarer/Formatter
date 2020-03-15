@@ -4,7 +4,7 @@
 //                                                                            //
 //                          Синтаксический анализатор                         //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,7 +36,7 @@ unit Parser;
 
 interface
 
-uses Windows, System.SysUtils, Streams, Tokens, Statements, Printers_,
+uses Windows, System.SysUtils, Streams, Tokens, Statements, PrinterIntf,
   System.Generics.Collections;
 
 type
@@ -121,7 +121,8 @@ end;
 { Разбор операторов PL/SQL }
 class function TParser.ParsePLSQL(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
-  Result := TReturn.Parse(AParent, ASource, AResult) or
+  Result := TPragma.Parse(AParent, ASource, AResult) or
+            TReturn.Parse(AParent, ASource, AResult) or
             TNull.Parse(AParent, ASource, AResult) or
             TRaise.Parse(AParent, ASource, AResult) or
             TIf.Parse(AParent, ASource, AResult) or

@@ -7,7 +7,7 @@ uses
   Tokens in 'Source\Tokens.pas',
   Tokenizer in 'Source\Tokenizer.pas',
   Parser in 'Source\Parser.pas',
-  Printers_ in 'Source\Printers_.pas',
+  PrinterIntf in 'Source\PrinterIntf.pas',
   PLSQL in 'Source\PLSQL.pas',
   Expressions in 'Source\Expressions.pas',
   DML in 'Source\DML.pas',
@@ -17,7 +17,9 @@ uses
   Utils in 'Source\Utils.pas',
   Controller in 'Source\Controller.pas',
   GUIPrinters in 'Source\GUIPrinters.pas',
-  FormatterPrinter in 'Source\FormatterPrinter.pas';
+  FormatterPrinter in 'Source\FormatterPrinter.pas',
+  Commons in 'Source\Commons.pas',
+  BasePrinter in 'Source\BasePrinter.pas';
 
 {$R *.res}
 

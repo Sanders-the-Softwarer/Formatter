@@ -4,7 +4,7 @@
 //                                                                            //
 //                          Автотесты на модуль PLSQL                         //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -94,17 +94,27 @@ type
   protected
     function GetDir: string; override;
   published
+    procedure Close;
+    procedure Execute_Immediate;
+    procedure Exit;
     procedure Fetch_Into;
     procedure Fetch_Bulk_Collect_Limit;
+    procedure Goto_;
+    procedure Loop;
+    procedure Null;
     procedure Open_For;
     procedure Open_For_Using;
-    procedure Close;
-    procedure Exit;
-    procedure Execute_Immediate;
-    procedure Null;
-    procedure Loop;
-    procedure Raise_;
     procedure Pipe_Row;
+    procedure Raise_;
+    procedure Прагма_Inline_В_Коде;
+  end;
+
+  { Тесты на пакеты }
+  _Пакеты = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure С_Указанием_AuthId;
   end;
 
   { Тесты на расстановку пустых строк }
@@ -117,6 +127,15 @@ type
     procedure at_Собираются_Вместе;
     procedure Exec_Собираются_Вместе;
     procedure Set_Собираются_Вместе;
+  end;
+
+  { Тесты на SQL типы }
+  _SQL_Типы = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure Object_;
+    procedure Timestamp_With_Time_Zone;
   end;
 
   { Тесты на PL/SQL типы }
@@ -429,6 +448,10 @@ begin
   Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Операторы';
 end;
 
+procedure _Операторы.Goto_;
+begin
+end;
+
 procedure _Операторы.Loop;
 begin
 end;
@@ -453,6 +476,10 @@ procedure _Операторы.Raise_;
 begin
 end;
 
+procedure _Операторы.Прагма_Inline_В_Коде;
+begin
+end;
+
 procedure _Операторы.Fetch_Into;
 begin
 end;
@@ -473,12 +500,40 @@ procedure _Операторы.Fetch_Bulk_Collect_Limit;
 begin
 end;
 
+{ _Пакеты }
+
+function _Пакеты.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Пакеты';
+end;
+
+procedure _Пакеты.С_Указанием_AuthId;
+begin
+end;
+
+{ _SQL_Типы }
+
+function _SQL_Типы.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\SQL Типы';
+end;
+
+procedure _SQL_Типы.Object_;
+begin
+end;
+
+procedure _SQL_Типы.Timestamp_With_Time_Zone;
+begin
+end;
+
 initialization
   RegisterTest(_PLSQL.Suite);
   RegisterTest(_Выравнивание.Suite);
   RegisterTest(_Комментарии.Suite);
   RegisterTest(_Операторы.Suite);
+  RegisterTest(_Пакеты.Suite);
   RegisterTest(_Пустые_Строки.Suite);
+  RegisterTest(_SQL_Типы.Suite);
   RegisterTest(_PLSQL_Типы.Suite);
 
 end.

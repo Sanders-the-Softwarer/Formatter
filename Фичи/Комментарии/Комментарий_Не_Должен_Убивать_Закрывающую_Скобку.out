@@ -1,0 +1,4 @@
+select
+    ((2 = 2)) -- d
+from
+    dual

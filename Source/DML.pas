@@ -4,7 +4,7 @@
 //                                                                            //
 //                       Синтаксические конструкции DML                       //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -12,7 +12,7 @@ unit DML;
 
 interface
 
-uses Classes, SysUtils, Math, Tokens, Statements, Printers_,
+uses Classes, SysUtils, Math, Tokens, Statements, PrinterIntf, Commons,
   Expressions, Utils;
 
 type
@@ -89,10 +89,8 @@ type
   { Оператор delete }
   TDelete = class(TDML)
   strict private
-    _Delete: TEpithet;
-    _From: TEpithet;
-    _Table: TStatement;
-    _Where: TStatement;
+    _Delete, _From: TEpithet;
+    _Table, _Where, _Returning: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -191,6 +189,7 @@ type
   TExpressionFields = class(TCommaList<TExpressionField>)
   strict protected
     procedure InternalMatch(AStatement: TStatement); override;
+  public
     function Aligned: boolean; override;
   end;
 
@@ -1250,16 +1249,18 @@ begin
   if not Assigned(_Delete) then exit(false);
   TTableRef.Parse(Self, Source, _Table);
   TWhere.Parse(Self, Source, _Where);
+  TReturning.Parse(Self, Source, _Returning);
   inherited;
   Result := true;
 end;
 
 procedure TDelete.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Delete);
-  APrinter.NextLineIf(_From);
-  APrinter.PrintIndented(_Table);
-  APrinter.NextLineIf(_Where);
+  APrinter.PrintItems([_Delete, _NextLine,
+                       _From,   _IndentNextLine,
+                                _Table, _UndentNextLine,
+                       _Where, _NextLine,
+                       _Returning]);
   inherited;
 end;
 
@@ -1418,7 +1419,8 @@ initialization
   DMLKeywords := TKeywords.Create([
     'comment', 'connect', 'create', 'delete', 'from', 'group', 'having',
     'insert', 'intersect', 'into', 'join', 'merge', 'minus', 'on', 'order',
-    'select', 'set', 'start', 'union', 'update', 'using', 'values', 'where']);
+    'returning', 'select', 'set', 'start', 'union', 'update', 'using',
+    'values', 'where']);
 
 finalization
   FreeAndNil(DMLKeywords);

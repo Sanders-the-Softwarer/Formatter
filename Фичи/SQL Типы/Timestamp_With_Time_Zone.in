@@ -1,0 +1,15 @@
+function x 
+    return timestamp with time zone
+is
+    t timestamp(9) with time zone;
+begin
+    t := current_timestamp;
+    return t;
+end;
+
+create table x 
+    (
+        id integer,
+        dt timestamp(9) with time zone,
+        msg varchar2(1 char)
+    );

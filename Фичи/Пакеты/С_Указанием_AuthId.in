@@ -1,0 +1,15 @@
+create or replace package x authid definer as
+
+    function y 
+        return integer;
+
+end;
+/
+
+create or replace package y authid current_user as
+    
+    function x 
+        return integer;
+
+end;
+/

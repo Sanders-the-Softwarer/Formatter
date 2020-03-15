@@ -4,7 +4,7 @@
 //                                                                            //
 //   Синтаксические конструкции арифметических-логических-прочих выражений    //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -31,7 +31,7 @@ unit Expressions;
 
 interface
 
-uses Classes, SysUtils, Math, Tokens, Statements, Printers_,
+uses Classes, SysUtils, Math, Tokens, Statements, PrinterIntf,
   System.Generics.Collections, Utils;
 
 type
@@ -90,69 +90,9 @@ type
     function Aligned: boolean; override;
   end;
 
-  { Квалифицированный идентификатор }
-  TQualifiedIdent = class(TStatement)
-  strict private
-    _SemicolonOrAmpersand: TTerminal;
-    _Dot: TTerminal;
-    _Name: TEpithet;
-    _Next: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function StatementName: string; override;
-    function IsSimpleIdent: boolean;
-  end;
-
-  { Индексированный квалифицированный идентификатор }
-  TQualifiedIndexedIdent = class(TStatement)
-  strict private
-    _Indexes: TStatement;
-    _Dot: TTerminal;
-    _Ident: TStatement;
-    _Next: TStatement;
-  strict protected
-    function TopStatement: boolean;
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function StatementName: string; override;
-    function IsSimpleIdent: boolean;
-  end;
-
-  { Аргумент вызова подпрограммы }
-  TArgument = class(TStatement)
-  strict private
-    _Ident: TEpithet;
-    _Assignment: TTerminal;
-    _Expression: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function IsNamedNotation: boolean;
-  end;
-
-  { Аргументы вызова подпрограммы }
-  TArguments = class(TCommaList<TArgument>)
-  strict protected
-    function ParseBreak: boolean; override;
-    function Aligned: boolean; override;
-  public
-    function OnePerLine: boolean; override;
-    function IsNamedNotation: boolean;
-  end;
-
-  { Список аргументов в скобках }
-  TBracketedArguments = class(TOptionalBracketedStatement<TArguments>)
-  public
-    function MultiLine: boolean; override;
-  end;
-
 implementation
 
-uses Parser, DML, PLSQL;
+uses Parser, Commons, DML, PLSQL;
 
 var
   ExpressionKeywords: TKeywords;
@@ -469,7 +409,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
       if not SameLine
         then APrinter.PrintRulerItem(Format('%p-delimiter-%d-before', [pointer(Self), TermInfo[i].RulerNumber]), Delimiter(i))
         else APrinter.PrintItem(Delimiter(i));
-      if SameLine then APrinter.Ruler(Format('%p-delimiter-%d-after', [pointer(Self), TermInfo[i].RulerNumber]));
+      if SameLine then APrinter.PrintRulerItem(Format('%p-delimiter-%d-after', [pointer(Self), TermInfo[i].RulerNumber]), nil);
       if TermInfo[i].LineBreak and not TermInfo[i].BreakBeforeDelimiter then APrinter.NextLine;
     end;
   end;
@@ -531,130 +471,6 @@ end;
 function TExpression.Aligned: boolean;
 begin
   Result := not (Self.Parent is TExpression);
-end;
-
-{ TQualifiedIdent }
-
-function TQualifiedIdent.InternalParse: boolean;
-begin
-  if Parent is TQualifiedIdent then _Dot := Terminal('.') else _SemicolonOrAmpersand := Terminal([':', '&']);
-  _Name := Identifier;
-  Result := Assigned(_Name) and (Assigned(_Dot) = (Parent is TQualifiedIdent));
-  if Result then TQualifiedIdent.Parse(Self, Source, _Next);
-end;
-
-procedure TQualifiedIdent.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_SemicolonOrAmpersand, _Dot, _Name, _Next]);
-end;
-
-function TQualifiedIdent.StatementName: string;
-begin
-  Result := Concat([_SemicolonOrAmpersand, _Dot, _Name, _Next]);
-end;
-
-function TQualifiedIdent.IsSimpleIdent: boolean;
-begin
-  Result := not Assigned(_Next);
-end;
-
-{ TQualifiedIndexedIdent }
-
-function TQualifiedIndexedIdent.TopStatement: boolean;
-begin
-  Result := not (Parent is TQualifiedIndexedIdent);
-end;
-
-function TQualifiedIndexedIdent.InternalParse: boolean;
-begin
-  if not TopStatement then _Dot := Terminal('.');
-  if TopStatement or Assigned(_Dot) then TQualifiedIdent.Parse(Self, Source, _Ident);
-  if not TopStatement or Assigned(_Ident) then TBracketedArguments.Parse(Self, Source, _Indexes);
-  if Assigned(_Indexes) or Assigned(_Ident) then TQualifiedIndexedIdent.Parse(Self, Source, _Next);
-  Result := Assigned(_Indexes) or Assigned(_Ident);
-end;
-
-procedure TQualifiedIndexedIdent.InternalPrintSelf(APrinter: TPrinter);
-var MultiLineIndexes: boolean;
-begin
-  MultiLineIndexes := (_Indexes is TBracketedArguments) and TBracketedArguments(_Indexes).MultiLine;
-  APrinter.PrintItems([_Dot, _Ident]);
-  if MultiLineIndexes then APrinter.PrintItem(_IndentNextLine);
-  APrinter.PrintItem(_Indexes);
-  if MultiLineIndexes then APrinter.PrintItem(_UndentNextLine);
-  APrinter.PrintItem(_Next);
-end;
-
-function TQualifiedIndexedIdent.StatementName: string;
-begin
-  Result := Concat([_Dot, _Ident, _Next]);
-end;
-
-function TQualifiedIndexedIdent.IsSimpleIdent: boolean;
-begin
-  Result := Assigned(_Ident) and not Assigned(_Next) and (_Ident as TQualifiedIdent).IsSimpleIdent;
-end;
-
-{ TArgument }
-
-function TArgument.InternalParse: boolean;
-var P: integer;
-begin
-  P := Source.Mark;
-  _Ident := Identifier;
-  _Assignment := Terminal('=>');
-  if not Assigned(_Ident) or not Assigned(_Assignment) then
-  begin
-    _Ident := nil;
-    _Assignment := nil;
-    Source.Restore(P);
-  end;
-  Result := TParser.ParseExpression(Self, Source, _Expression);
-end;
-
-procedure TArgument.InternalPrintSelf(APrinter: TPrinter);
-begin
-  if IsNamedNotation then
-    begin
-      APrinter.StartRuler(Settings.AlignVariables);
-      APrinter.PrintRulerItem('ident', _Ident);
-      APrinter.PrintRulerItem('argument', _Assignment);
-      APrinter.PrintRulerItem('expression', _Expression);
-    end
-  else
-    APrinter.PrintItem(_Expression);
-end;
-
-function TArgument.IsNamedNotation: boolean;
-begin
-  Result := Assigned(_Assignment);
-end;
-
-{ TArguments }
-
-function TArguments.ParseBreak: boolean;
-begin
-  Result := Any([Terminal([';', ')'])]);
-end;
-
-function TArguments.OnePerLine: boolean;
-begin
-  Result := IsNamedNotation and (Self.Count > Settings.NamedArgumentSingleLineParamLimit)
-            or (Self.Count > Settings.PositionalArgumentSingleLineParamLimit);
-end;
-
-function TArguments.Aligned: boolean;
-begin
-  Result := true;
-end;
-
-function TArguments.IsNamedNotation: boolean;
-var i: integer;
-begin
-  Result := false;
-  for i := 0 to Count - 1 do
-    if (Item(i) is TArgument) and (TArgument(Item(i)).IsNamedNotation) then
-      exit(true);
 end;
 
 { TCase }
@@ -736,13 +552,6 @@ end;
 procedure TCast.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Cast, _OpenBracket, _Expression, _As, _TypeRef, _CloseBracket]);
-end;
-
-{ TBracketedArguments }
-
-function TBracketedArguments.MultiLine: boolean;
-begin
-  Result := (InnerStatement is TArguments) and TArguments(InnerStatement).OnePerLine;
 end;
 
 initialization

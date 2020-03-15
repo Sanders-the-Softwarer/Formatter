@@ -4,7 +4,7 @@
 //                                                                            //
 //                           Классы символов и лексем                         //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -114,7 +114,7 @@ type
   end;
 
   { Идентификатор либо ключевое слово }
-TEpithet = class(TToken)
+  TEpithet = class(TToken)
   strict private
     FIsKeyword, FIsIdent: boolean;
   strict protected
@@ -123,6 +123,14 @@ TEpithet = class(TToken)
     function TokenType: string; override;
     property IsIdent: boolean read FIsIdent write FIsIdent;
     property IsKeyword: boolean read FIsKeyword write FIsKeyword;
+  end;
+
+  { Метка }
+  TLabel = class(TToken)
+  strict protected
+    function ModifyValue(const AValue: string): string; override;
+  public
+    function TokenType: string; override;
   end;
 
   { Комментарий }
@@ -325,6 +333,19 @@ function TUnexpectedEOF.TokenType: string;
 begin
   Result := 'Конец входного файла';
 end;
+
+{ TLabel }
+
+function TLabel.TokenType: string;
+begin
+  Result := 'Метка';
+end;
+
+function TLabel.ModifyValue(const AValue: string): string;
+begin
+  Result := AValue.ToLower;
+end;
+
 
 initialization
   UnexpectedEOF := TUnexpectedEOF.Create;

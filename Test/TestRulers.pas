@@ -6,7 +6,7 @@ uses SysUtils, TestFramework, System.Generics.Collections;
 
 implementation
 
-uses Printers_, Tokens, Statements;
+uses PrinterIntf, Tokens, Statements;
 
 type
   _Rulers = class(TTestCase)
@@ -38,7 +38,7 @@ type
 procedure _Rulers.SetUp;
 begin
   inherited;
-  Printer := Printers_.CreateFormatterPrinter;
+  Printer := CreateFormatterPrinter;
   Printer.BeginPrint;
 end;
 

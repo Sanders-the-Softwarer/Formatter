@@ -4,7 +4,7 @@
 //                                                                            //
 //                         Автотесты на модуль SQL*Plus                       //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 

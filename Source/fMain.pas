@@ -4,7 +4,7 @@
 //                                                                            //
 //              Главная и единственная форма тестового приложения             //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -26,9 +26,10 @@ unit fMain;
 interface
 
 uses
+  Tokens { должен идти до StdCtrls, чтобы TLabel не мешала загрузке формы },
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, Printers_,
-  Vcl.ExtCtrls, Vcl.Samples.Spin, Controller, Streams, Tokens, Statements, Tokenizer;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, PrinterIntf,
+  Vcl.ExtCtrls, Vcl.Samples.Spin, Controller, Streams, Statements, Tokenizer;
 
 type
   TFormMain = class(TForm)
@@ -85,7 +86,7 @@ type
     procedure pgDestChange(Sender: TObject);
   private
     TokenizerPrinter, SyntaxTreePrinter, ResultPrinter, AlarmTokenPrinter, AlarmStatementPrinter: TPrinter;
-    TokenStream: TBufferedStream<TToken>;
+    MinTokenStream, AdvTokenStream: TBufferedStream<TToken>;
     StatementStream: TBufferedStream<TStatement>;
     Settings: TFormatSettings;
     PrevSrcCaret, PrevResultCaret: integer;
@@ -121,9 +122,6 @@ end;
 
 { Подготовка и распечатка форматированного текста }
 procedure TFormMain.UpdateData;
-var
-  Text: string;
-  Big: boolean;
 begin
   FreeAndNil(StatementStream);
   { Скопируем настройки }
@@ -145,17 +143,16 @@ begin
     Settings.PreferredExpressionLength       := edPreferredExpressionLength.Value;
   end;
   { Создадим потоки }
-  Text := edSrc.Text;
-  Big  := (Text.Length > 1024 * 1024);
-  TokenStream     := Controller.MakeTokenStream(edSrc.Text);
-  StatementStream := Controller.MakeStatementStream(TokenStream, Settings);
+  MinTokenStream  := Controller.MakeMinimalTokenStream(edSrc.Text);
+  AdvTokenStream  := Controller.MakeAdvancedTokenStream(MinTokenStream);
+  StatementStream := Controller.MakeStatementStream(AdvTokenStream, Settings);
   { Напечатаем данные }
   StatementStream.PrintAll(ResultPrinter);
-  if not Big then StatementStream.PrintAll(SyntaxTreePrinter);
-  if not Big then StatementStream.PrintAll(AlarmStatementPrinter);
-  { Сюда печатаем из TokenStream, чтобы увидеть лексемы, выпавшие при печати из синтаксического анализа }
-  if not Big then TokenStream.PrintAll(TokenizerPrinter);
-  if not Big then TokenStream.PrintAll(AlarmTokenPrinter);
+  StatementStream.PrintAll(SyntaxTreePrinter);
+  StatementStream.PrintAll(AlarmStatementPrinter);
+  { Сюда печатаем из MinTokenStream, чтобы увидеть лексемы, выпавшие при печати из синтаксического анализа }
+  MinTokenStream.PrintAll(TokenizerPrinter);
+  MinTokenStream.PrintAll(AlarmTokenPrinter);
   { Толкнём синхронизацию }
   PrevSrcCaret := -1;
 end;
@@ -197,7 +194,7 @@ begin
   Self.WindowState  := wsMaximized;
   Settings := TFormatSettings.Default;
   ResultPrinter.Settings := Settings;
-  Printers_.SyncNotification := Self.SyncNotification;
+  PrinterIntf.SyncNotification := Self.SyncNotification;
   try
     IntoUpdateSettings := true;
     edDeclarationSingleLineParamLimit.Value := Settings.DeclarationSingleLineParamLimit;

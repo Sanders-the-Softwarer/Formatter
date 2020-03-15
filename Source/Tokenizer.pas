@@ -4,7 +4,7 @@
 //                                                                            //
 //                           Лексический  анализатор                          //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -165,11 +165,11 @@ function TTokenizer.InternalNext: TToken;
   end;
 
   { Считывание идентификатора }
-  function ParseIdent: boolean;
+  function ParseIdent(AFromCurrent: boolean = false): boolean;
   var
     C, F: char;
   begin
-    Restore;
+    if not AFromCurrent then Restore;
     F := NextChar;
     if F = '"' then
       repeat
@@ -232,6 +232,31 @@ function TTokenizer.InternalNext: TToken;
     RefuseLastChar;
   end;
 
+  { Считывание Q-литерала }
+  function ParseQLiteral: boolean;
+  var
+    C, L: char;
+  begin
+    Restore;
+    C := NextChar;
+    if C in ['N', 'n'] then C := NextChar;
+    if not (C in ['Q', 'q']) then exit(false);
+    if NextChar <> '''' then exit(false);
+    L := NextChar;
+    case L of
+      '{': L := '}';
+      '[': L := ']';
+      '(': L := ')';
+      '<': L := '>';
+    end;
+    repeat
+      C := NextChar;
+    until C in [L, #0];
+    NextChar;
+    ApplyLastChar;
+    Result := true;
+  end;
+
   { Считывание литерала }
   function ParseLiteral: boolean;
   var
@@ -252,6 +277,18 @@ function TTokenizer.InternalNext: TToken;
         break;
     until false;
     if C <> #0 then RefuseLastChar else ApplyLastChar;
+  end;
+
+  { Считывание метки }
+  function ParseLabel: boolean;
+  begin
+    Restore;
+    Result := (NextChar = '<') and
+              (NextChar = '<') and
+              ParseIdent(true) and
+              (NextChar = '>') and
+              (NextChar = '>');
+    if Result then ApplyLastChar;
   end;
 
   { Считывание многосимвольных лексем }
@@ -302,8 +339,12 @@ begin
     Result := TComment.Create(TokenValue, Start)
   else if ParseBracedComment then
     Result := TComment.Create(TokenValue, Start)
+  else if ParseLabel then
+    Result := TLabel.Create(TokenValue, Start)
   else if ParseTerminal then
     Result := TTerminal.Create(TokenValue, Start)
+  else if ParseQLiteral then
+    Result := TLiteral.Create(TokenValue, Start)
   else if ParseIdent then
     Result := TEpithet.Create(TokenValue, Start)
   else if ParseNumber then
@@ -436,7 +477,7 @@ var C: TComment;
 begin
   { Если начинаем с комментария, пока возможно будем привязывать его к следующей лексеме }
   ReadNext; ReadNext;
-  while T1 is TComment do
+  while (T1 is TComment) and Assigned(T2) do
   begin
     C := T1 as TComment;
     if AppliedAbove(C, T2)
@@ -489,8 +530,8 @@ function TMerger.InternalNext: TToken;
   begin
     if not (T1 is TEpithet) or not SameStr(S1, T1.Value) then exit(false);
     if not (T2 is TEpithet) or not SameStr(S2, T2.Value) then exit(false);
-    if (S3 <> '') and not (T3 is TEpithet) and (not Assigned(T3) or not SameStr(S3, T3.Value)) then exit(false);
-    if (S4 <> '') and not (T4 is TEpithet) and (not Assigned(T4) or not SameStr(S4, T4.Value)) then exit(false);
+    if (S3 <> '') and (not (T3 is TEpithet) or not Assigned(T3) or not SameStr(S3, T3.Value)) then exit(false);
+    if (S4 <> '') and (not (T4 is TEpithet) or not Assigned(T4) or not SameStr(S4, T4.Value)) then exit(false);
     S := S1 + ' ' + S2;
     if S3 <> ''
       then S := S + ' ' + S3
@@ -501,6 +542,12 @@ function TMerger.InternalNext: TToken;
         if S3 <> '' then Source.Restore(P4);
     AResult := TEpithet.Create(S, T1.Line, T1.Col);
     Result := true;
+    T1.Printed := true;
+    T2.Printed := true;
+    TEpithet(T1).IsKeyword := true;
+    TEpithet(T2).IsKeyword := true;
+    if S3 <> '' then begin T3.Printed := true; TEpithet(T3).IsKeyword := true; end;
+    if S4 <> '' then begin T4.Printed := true; TEpithet(T4).IsKeyword := true; end;
   end;
 
 begin
@@ -513,6 +560,8 @@ begin
   P4 := Source.Mark;
   if not Source.Eof then T4 := Source.Next else T4 := nil;
   { И попробуем их скомбинировать }
+  if Check(Result, 'authid', 'current_user') then exit;
+  if Check(Result, 'authid', 'definer') then exit;
   if Check(Result, 'bulk', 'collect', 'into') then exit;
   if Check(Result, 'cross', 'apply') then exit;
   if Check(Result, 'full', 'join') then exit;
@@ -556,6 +605,7 @@ begin
   if Check(Result, 'with', 'admin', 'option') then exit;
   if Check(Result, 'with', 'grant', 'option') then exit;
   if Check(Result, 'with', 'hierarchy', 'option') then exit;
+  if Check(Result, 'with', 'time', 'zone') then exit;
   { Раз не удалось - возвращаем первую лексему }
   Source.Restore(P2);
   Result := Transit(T1);

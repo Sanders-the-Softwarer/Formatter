@@ -4,7 +4,7 @@
 //                                                                            //
 //                          Ѕазовый класс  автотестов                         //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -28,7 +28,7 @@ unit FileBasedTest;
 
 interface
 
-uses Classes, SysUtils, StrUtils, TestFramework, Printers_, Controller;
+uses Classes, SysUtils, StrUtils, TestFramework, PrinterIntf, Controller;
 
 type
   {  ласс автотестов, провер€ющих совпадение форматировани€ файла с результатом }

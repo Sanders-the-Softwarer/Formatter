@@ -2,9 +2,9 @@
 //                                                                            //
 //                           Форматизатор исходников                          //
 //                                                                            //
-//               Вывод информации форматирования в GUI-интерфейс              //
+//                Вывод форматированного текста в GUI-интерфейс               //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -13,7 +13,8 @@ unit GUIPrinters;
 interface
 
 uses
-  SysUtils, StdCtrls, ExtCtrls, ComCtrls, System.Generics.Collections, Printers_;
+  SysUtils, StdCtrls, ExtCtrls, ComCtrls, System.Generics.Collections,
+  PrinterIntf, Tokens;
 
 { Функции создания принтеров различных типов }
 function CreateTokenizerPrinter(AListBox: TListBox): TPrinter;
@@ -24,7 +25,7 @@ function CreateAlarmStatementPrinter(AListBox: TListBox; ATabSheet: TTabSheet): 
 
 implementation
 
-uses FormatterPrinter, Tokens, Statements;
+uses BasePrinter, FormatterPrinter, Statements;
 
 type
 

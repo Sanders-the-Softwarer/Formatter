@@ -1,0 +1,77 @@
+create or replace type t_string_agg is object
+    (
+        g_string varchar2(32767),
+        static function odciaggregateinitialize
+            (
+                sctx in out t_string_agg
+            )
+            return number,
+        member function odciaggregateiterate
+            (
+                self in out t_string_agg,
+                value in varchar2
+            )
+            return number,
+        member function odciaggregateterminate
+            (
+                self in t_string_agg,
+                returnvalue out varchar2,
+                flags in number
+            )
+            return number,
+        member function odciaggregatemerge
+            (
+                self in out t_string_agg,
+                ctx2 in t_string_agg
+            )
+            return number
+    );
+/
+
+create or replace type body t_string_agg is
+    static function odciaggregateinitialize
+        (
+            sctx in out t_string_agg
+        )
+        return number
+        is
+    begin
+        sctx := t_string_agg(null);
+        return odciconst.success;
+    end;
+    member function odciaggregateiterate
+        (
+            self in out t_string_agg,
+            value in varchar2
+        )
+        return number
+        is
+    begin
+        self.g_string := self.g_string || ',' || value;
+        return odciconst.success;
+    end;
+    member function odciaggregateterminate
+        (
+            self in t_string_agg,
+            returnvalue out varchar2,
+            flags in number
+        )
+        return number
+        is
+    begin
+        returnvalue := rtrim(ltrim(self.g_string, ','), ',');
+        return odciconst.success;
+    end;
+    member function odciaggregatemerge
+        (
+            self in out t_string_agg,
+            ctx2 in t_string_agg
+        )
+        return number
+        is
+    begin
+        self.g_string := self.g_string || ',' || ctx2.g_string;
+        return odciconst.success;
+    end;
+end;
+/

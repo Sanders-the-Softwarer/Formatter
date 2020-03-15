@@ -25,7 +25,7 @@ uses
   Expressions in 'Source\Expressions.pas',
   Parser in 'Source\Parser.pas',
   PLSQL in 'Source\PLSQL.pas',
-  Printers_ in 'Source\Printers_.pas',
+  PrinterIntf in 'Source\PrinterIntf.pas',
   SQLPlus in 'Source\SQLPlus.pas',
   Statements in 'Source\Statements.pas',
   Streams in 'Source\Streams.pas',
@@ -39,7 +39,9 @@ uses
   Controller in 'Source\Controller.pas',
   TestBugs in 'Test\TestBugs.pas',
   TestSQLPLUS in 'Test\TestSQLPLUS.pas',
-  FormatterPrinter in 'Source\FormatterPrinter.pas';
+  FormatterPrinter in 'Source\FormatterPrinter.pas',
+  Commons in 'Source\Commons.pas',
+  BasePrinter in 'Source\BasePrinter.pas';
 
 {$R *.RES}
 

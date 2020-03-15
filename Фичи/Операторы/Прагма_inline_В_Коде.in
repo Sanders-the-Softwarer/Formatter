@@ -1,0 +1,4 @@
+begin
+    pragma inline(read_buff, 'YES');
+    result := substr(p_context.buf, p_context.buf_pos, 1);
+end;

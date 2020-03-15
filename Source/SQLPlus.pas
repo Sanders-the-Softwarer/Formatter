@@ -4,7 +4,7 @@
 //                                                                            //
 //                    Синтаксические конструкции SQL*Plus                     //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -12,7 +12,7 @@ unit SQLPlus;
 
 interface
 
-uses SysUtils, Statements, Tokens, Printers_, System.Generics.Collections;
+uses SysUtils, Statements, Tokens, PrinterIntf, System.Generics.Collections;
 
 type
   { Команда clear }
@@ -100,7 +100,7 @@ type
 
 implementation
 
-uses Parser, Streams, PLSQL, Expressions;
+uses Parser, Streams, Commons, PLSQL;
 
 { TClear }
 

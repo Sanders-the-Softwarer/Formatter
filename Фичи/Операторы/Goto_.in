@@ -1,0 +1,9 @@
+begin
+    <<begin>>
+    begin
+        <<null>>
+        null;
+    end label;
+    <<goto>>
+    goto begin;
+end;

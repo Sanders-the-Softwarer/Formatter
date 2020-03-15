@@ -1,3 +1,13 @@
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                           Форматизатор исходников                          //
+//                                                                            //
+//                          Тесты на найденные ошибки                         //
+//                                                                            //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
 unit TestBugs;
 
 interface
@@ -5,6 +15,7 @@ interface
 uses TestFramework, FileBasedTest;
 
 type
+  { Автотесты на найденные ошибки, просто по порядковым номерам }
   _Bugs = class(TFileBasedTest)
   protected
     function GetDir: string; override;
@@ -30,6 +41,10 @@ type
     procedure _18;
     procedure _19;
     procedure _20;
+    procedure _21;
+    procedure _22;
+    procedure _23;
+    procedure _24;
   end;
 
 implementation
@@ -56,6 +71,24 @@ begin
 end;
 
 procedure _Bugs._20;
+begin
+  Settings.PreferredExpressionLength := 120;
+end;
+
+procedure _Bugs._21;
+begin
+  Settings.AlignVariables := true;
+end;
+
+procedure _Bugs._22;
+begin
+end;
+
+procedure _Bugs._23;
+begin
+end;
+
+procedure _Bugs._24;
 begin
 end;
 

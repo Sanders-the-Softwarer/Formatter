@@ -8,17 +8,19 @@ uses
   Controller in 'Source\Controller.pas',
   DDL in 'Source\DDL.pas',
   DML in 'Source\DML.pas',
+  Commons in 'Source\Commons.pas',
   Expressions in 'Source\Expressions.pas',
   Parser in 'Source\Parser.pas',
   PLSQL in 'Source\PLSQL.pas',
-  Printers_ in 'Source\Printers_.pas',
+  PrinterIntf in 'Source\PrinterIntf.pas',
   SQLPlus in 'Source\SQLPlus.pas',
   Statements in 'Source\Statements.pas',
   Streams in 'Source\Streams.pas',
   Tokenizer in 'Source\Tokenizer.pas',
   Tokens in 'Source\Tokens.pas',
   Utils in 'Source\Utils.pas',
-  FormatterPrinter in 'Source\FormatterPrinter.pas';
+  FormatterPrinter in 'Source\FormatterPrinter.pas',
+  BasePrinter in 'Source\BasePrinter.pas';
 
 const
   Desc  = 'Formatter';

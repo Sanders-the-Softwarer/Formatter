@@ -4,7 +4,7 @@
 //                                                                            //
 //                       Синтаксические конструкции DDL                       //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -12,7 +12,7 @@ unit DDL;
 
 interface
 
-uses SysUtils, Tokens, Statements, Printers_, Streams, PLSQL;
+uses SysUtils, Tokens, Statements, PrinterIntf, Streams, Commons, PLSQL;
 
 type
 
@@ -260,6 +260,7 @@ type
   TComments = class(TStatementList<TComment>)
   strict protected
     function ParseBreak: boolean; override;
+  public
     function Aligned: boolean; override;
   end;
 
@@ -737,6 +738,7 @@ begin
   _Than   := Keyword('than');
   TParser.ParseExpression(Self, Source, _Expression);
   TBracketedStatement<TCommaList<TPartition>>.Parse(Self, Source, _Subpartitions);
+  Result  := true;
 end;
 
 procedure TPartition.InternalPrintSelf(APrinter: TPrinter);

@@ -4,7 +4,7 @@
 //                                                                            //
 //               Базовые классы потока синтаксических конструкций             //
 //                                                                            //
-//                  Copyright(c) 2019 by Sanders the Softwarer                //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,7 +36,7 @@ unit Streams;
 
 interface
 
-uses SysUtils, System.Generics.Collections, Tokens, Windows, Printers_;
+uses SysUtils, System.Generics.Collections, Tokens, Windows, PrinterIntf;
 
 type
 

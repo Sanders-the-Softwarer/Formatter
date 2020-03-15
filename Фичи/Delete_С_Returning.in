@@ -1,0 +1,6 @@
+delete
+    t
+returning
+    id
+into
+    p_id;
