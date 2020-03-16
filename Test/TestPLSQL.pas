@@ -109,6 +109,19 @@ type
     procedure Прагма_Inline_В_Коде;
   end;
 
+  { Тесты на SELECT }
+  _Запросы = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure Ansi_Синтаксис;
+    procedure Database_Links;
+    procedure For_Update;
+    procedure Left_Right_Full_Join;
+    procedure Using;
+    procedure Лишние_Слова_В_Joinах;
+  end;
+
   { Тесты на пакеты }
   _Пакеты = class(TFileBasedTest)
   protected
@@ -526,10 +539,42 @@ procedure _SQL_Типы.Timestamp_With_Time_Zone;
 begin
 end;
 
+{ _Запросы }
+
+function _Запросы.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Запросы';
+end;
+
+procedure _Запросы.Ansi_Синтаксис;
+begin
+end;
+
+procedure _Запросы.Left_Right_Full_Join;
+begin
+end;
+
+procedure _Запросы.Using;
+begin
+end;
+
+procedure _Запросы.Лишние_Слова_В_Joinах;
+begin
+end;
+
+procedure _Запросы.Database_Links;
+begin
+end;
+
+procedure _Запросы.For_Update;
+begin
+end;
+
 initialization
   RegisterTest(_PLSQL.Suite);
   RegisterTest(_Выравнивание.Suite);
   RegisterTest(_Комментарии.Suite);
+  RegisterTest(_Запросы.Suite);
   RegisterTest(_Операторы.Suite);
   RegisterTest(_Пакеты.Suite);
   RegisterTest(_Пустые_Строки.Suite);

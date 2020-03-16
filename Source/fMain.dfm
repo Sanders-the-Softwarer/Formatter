@@ -160,7 +160,7 @@ object FormMain: TFormMain
       Margins.Top = 0
       Margins.Right = 0
       Margins.Bottom = 5
-      ActivePage = tabSrc
+      ActivePage = tabSettings
       Align = alClient
       TabOrder = 0
       object tabSrc: TTabSheet
@@ -213,7 +213,7 @@ object FormMain: TFormMain
         end
         object Label4: TLabel
           Left = 3
-          Top = 332
+          Top = 351
           Width = 233
           Height = 13
           Caption = #1064#1080#1088#1080#1085#1072' '#1074#1099#1088#1072#1078#1077#1085#1080#1081' '#1087#1086' '#1074#1086#1079#1084#1086#1078#1085#1086#1089#1090#1080' '#1085#1077' '#1073#1086#1083#1077#1077
@@ -373,7 +373,7 @@ object FormMain: TFormMain
         end
         object edPreferredExpressionLength: TSpinEdit
           Left = 267
-          Top = 329
+          Top = 348
           Width = 46
           Height = 22
           MaxValue = 1000
@@ -386,7 +386,7 @@ object FormMain: TFormMain
           Left = 162
           Top = 233
           Width = 153
-          Height = 89
+          Height = 51
           Caption = ' '#1044#1086#1073#1072#1074#1083#1103#1090#1100' '
           TabOrder = 6
           object checkAddInAccessSpecificator: TCheckBox
@@ -411,6 +411,25 @@ object FormMain: TFormMain
           TabOrder = 7
           Value = 3
           OnChange = UpdateRequired
+        end
+        object GroupBox4: TGroupBox
+          Left = 162
+          Top = 290
+          Width = 153
+          Height = 51
+          Caption = ' '#1057#1076#1074#1080#1075#1072#1090#1100' '
+          TabOrder = 8
+          object checkIndentBrackets: TCheckBox
+            Left = 13
+            Top = 26
+            Width = 128
+            Height = 17
+            Caption = #1057#1082#1086#1073#1082#1080
+            Checked = True
+            State = cbChecked
+            TabOrder = 0
+            OnClick = UpdateRequired
+          end
         end
       end
     end

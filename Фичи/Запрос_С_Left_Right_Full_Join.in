@@ -1,1 +1,0 @@
-select * from a left join b on (a.id = b.id) right join c using (id, id, id) full join d on (date_from > sysdate)

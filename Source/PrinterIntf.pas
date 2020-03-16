@@ -66,6 +66,7 @@ type
     ReplaceDefault: boolean;
     ReplaceAsIs: boolean;
     AddInAccessSpecificator: boolean;
+    IndentBrackets: boolean;
     PreferredExpressionLength: integer;
   public
     constructor Default;
@@ -324,6 +325,7 @@ begin
   ReplaceDefault                  := true;
   ReplaceAsIs                     := true;
   AddInAccessSpecificator         := true;
+  IndentBrackets                  := true;
   PreferredExpressionLength       := 120;
 end;
 
@@ -334,6 +336,7 @@ begin
   PositionalArgumentSingleLineParamLimit := 999;
   PreferredExpressionLength       := 9999;
   MatchParamLimit                 := 99;
+  IndentBrackets := true;
 end;
 
 end.

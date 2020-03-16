@@ -45,10 +45,6 @@ type
     procedure Связывание_Запросов_Через_Операции_Над_Множествами;
     procedure Сопоставление_Полей_В_Into;
     procedure Сопоставление_Полей_В_Into_С_Выравниванием;
-    procedure Запрос_С_Ansi_Синтаксисом;
-    procedure Запрос_С_Using;
-    procedure Запрос_С_Left_Right_Full_Join;
-    procedure Запрос_С_Лишними_Словами_В_Joinах;
     procedure Запрос_С_Оракловым_Синтаксисом_Внешних_Соединений;
     procedure Запрос_С_Outer_Cross_Apply;
     procedure Запрос_С_Distinct_Unique_All;
@@ -185,10 +181,6 @@ procedure _Select.Запрос_С_Выражениями_И_Алиасами;
 begin
 end;
 
-procedure _Select.Запрос_С_Лишними_Словами_В_Joinах;
-begin
-end;
-
 procedure _Select.Запрос_С_Into;
 begin
 end;
@@ -240,19 +232,11 @@ procedure _Select.Запрос_С_Lateral;
 begin
 end;
 
-procedure _Select.Запрос_С_Left_Right_Full_Join;
-begin
-end;
-
 procedure _Select.Запрос_С_Order_By;
 begin
 end;
 
 procedure _Select.Запрос_С_Outer_Cross_Apply;
-begin
-end;
-
-procedure _Select.Запрос_С_Using;
 begin
 end;
 
@@ -265,10 +249,6 @@ begin
 end;
 
 procedure _Select.Запрос_Из_Табличной_Функции;
-begin
-end;
-
-procedure _Select.Запрос_С_Ansi_Синтаксисом;
 begin
 end;
 

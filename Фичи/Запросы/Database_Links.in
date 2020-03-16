@@ -1,0 +1,4 @@
+select
+    my_schema.my_package.my_function@dblink.server.world(a => 1, b => 2)
+from
+    dual@remote.server

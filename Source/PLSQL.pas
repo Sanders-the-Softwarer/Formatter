@@ -768,14 +768,15 @@ end;
 
 procedure TSubroutineHeaderBase.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Map, _FunctionType, _ProcedureOrFunction, _Name, _Indent]);
+  APrinter.PrintItems([_Map, _FunctionType, _ProcedureOrFunction, _Name]);
+  if Settings.IndentBrackets then APrinter.Indent;
   {$B+}
   FIndentedBeforeIs := APrinter.NextLineIf([_Params]) or
                        APrinter.NextLineIf([_Return, _SelfAsResult, _ReturnType]) or
                        APrinter.NextLineIf([_Deterministic]) or
                        APrinter.NextLineIf([_Pipelined]);
   {$B-}
-  APrinter.Undent;
+  if Settings.IndentBrackets then APrinter.Undent;
 end;
 
 function TSubroutineHeaderBase.StatementName: string;

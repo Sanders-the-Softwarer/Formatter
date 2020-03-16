@@ -101,7 +101,7 @@ uses Parser;
 
 function TQualifiedIdent.InternalParse: boolean;
 begin
-  if Parent is TQualifiedIdent then _Dot := Terminal('.') else _SemicolonOrAmpersand := Terminal([':', '&']);
+  if Parent is TQualifiedIdent then _Dot := Terminal(['.', '@']) else _SemicolonOrAmpersand := Terminal([':', '&']);
   _Name := Identifier;
   Result := Assigned(_Name) and (Assigned(_Dot) = (Parent is TQualifiedIdent));
   if Result then TQualifiedIdent.Parse(Self, Source, _Next);
@@ -147,9 +147,11 @@ var MultiLineIndexes: boolean;
 begin
   MultiLineIndexes := (_Indexes is TBracketedArguments) and TBracketedArguments(_Indexes).MultiLine;
   APrinter.PrintItems([_Dot, _Ident]);
-  if MultiLineIndexes then APrinter.PrintItem(_IndentNextLine);
+  if Settings.IndentBrackets then APrinter.Indent;
+  if MultiLineIndexes then APrinter.PrintItem(_NextLine);
   APrinter.PrintItem(_Indexes);
-  if MultiLineIndexes then APrinter.PrintItem(_UndentNextLine);
+  if Settings.IndentBrackets then APrinter.Undent;
+  if MultiLineIndexes then APrinter.PrintItem(_NextLine);
   APrinter.PrintItem(_Next);
 end;
 

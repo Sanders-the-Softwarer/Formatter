@@ -55,6 +55,7 @@ type
     _Having: TStatement;
     _OrderBy: TStatement;
     _AdditionalSelect: TStatement;
+    _ForUpdate: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalMatch(AStatement: TStatement); override;
@@ -333,6 +334,17 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalMatchChildren; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция for update }
+  TForUpdate = class(TStatement)
+  strict private
+    _For, _Update, _Of, _WaitMode, _Skip, _Locked: TEpithet;
+    _WaitTime: TNumber;
+    _Columns: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
@@ -678,6 +690,29 @@ begin
   APrinter.NextLineIf([_Into, _IndentNextLine, _Targets, _Undent]);
 end;
 
+{ TForUpdate }
+
+function TForUpdate.InternalParse: boolean;
+begin
+  _For := Keyword('for');
+  if not Assigned(_For) then exit(false);
+  _Update := Keyword('update');
+  _Of := Keyword('of');
+  if Assigned(_Of) then TIdentFields.Parse(Self, Source, _Columns);
+  _WaitMode := Keyword(['wait', 'nowait']);
+  if Assigned(_WaitMode) then _WaitTime := Number;
+  _Skip := Keyword('skip');
+  _Locked := Keyword('locked');
+  Result := true;
+end;
+
+procedure TForUpdate.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_For, _Update, _Of]);
+  APrinter.NextLineIf([_Indent, _Columns,  _UndentNextLine]);
+  APrinter.PrintItems([_WaitMode, _WaitTime, _Skip, _Locked]);
+end;
+
 { TTableClause }
 
 function TTableRef.InternalParse: boolean;
@@ -851,6 +886,7 @@ begin
   THaving.Parse(Self, Source, _Having);
   TOrderBy.Parse(Self, Source, _OrderBy);
   TAdditionalSelect.Parse(Self, Source, _AdditionalSelect);
+  TForUpdate.Parse(Self, Source, _ForUpdate);
   inherited;
   Result := true;
 end;
@@ -859,19 +895,20 @@ procedure TSelect.InternalPrintSelf(APrinter: TPrinter);
 begin
   TExpressionFields(_Fields).Match(TIdentFields(_IntoFields));
   APrinter.PrintItems([_With,
-                       _Select,    _Mode,           _IndentNextLine,
-                                   _Fields,         _UndentNextLine,
-                       _Into,      _IndentNextLine,
-                                   _IntoFields,     _UndentNextLine,
-                       _From,      _IndentNextLine,
-                                   _Tables,         _Undent]);
-  APrinter.NextLineIf([_Where]);
-  APrinter.NextLineIf([_StartWith]);
-  APrinter.NextLineIf([_ConnectBy]);
-  APrinter.NextLineIf([_GroupBy]);
-  APrinter.NextLineIf([_Having]);
-  APrinter.NextLineIf([_OrderBy]);
-  APrinter.NextLineIf([_AdditionalSelect]);
+                       _Select,           _Mode,           _IndentNextLine,
+                                          _Fields,         _UndentNextLine,
+                       _Into,             _IndentNextLine,
+                                          _IntoFields,     _UndentNextLine,
+                       _From,             _IndentNextLine,
+                                          _Tables,         _UndentNextLine,
+                       _Where,            _NextLine,
+                       _StartWith,        _NextLine,
+                       _ConnectBy,        _NextLine,
+                       _GroupBy,          _NextLine,
+                       _Having,           _NextLine,
+                       _OrderBy,          _NextLine,
+                       _AdditionalSelect, _NextLine,
+                       _ForUpdate]);
   inherited;
 end;
 
@@ -992,7 +1029,10 @@ procedure TSelectTableRef.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Lateral);
   inherited;
-  APrinter.PrintIndented([_On, _JoinCondition, _Using, _Fields]);
+  APrinter.Indent;
+  APrinter.NextLineIf([_On, _IndentNextLine, _JoinCondition, _Undent]);
+  APrinter.NextLineIf([_Using, _IndentNextLine, _Fields, _Undent]);
+  APrinter.Undent;
 end;
 
 { TSelectTables }
@@ -1417,7 +1457,7 @@ end;
 
 initialization
   DMLKeywords := TKeywords.Create([
-    'comment', 'connect', 'create', 'delete', 'from', 'group', 'having',
+    'comment', 'connect', 'create', 'delete', 'for', 'from', 'group', 'having',
     'insert', 'intersect', 'into', 'join', 'merge', 'minus', 'on', 'order',
     'returning', 'select', 'set', 'start', 'union', 'update', 'using',
     'values', 'where']);

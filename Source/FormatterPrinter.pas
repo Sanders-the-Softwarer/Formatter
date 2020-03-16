@@ -170,6 +170,8 @@ begin
   if ARight.Value = ';' then exit;
   { Точку прижимаем с обеих сторон ко всему }
   if (ALeft.Value = '.') or (ARight.Value = '.') then exit;
+  { Собаку прижимаем с обеих сторон ко всему }
+  if (ALeft.Value = '@') or (ARight.Value = '@') then exit;
   { Двоеточие/амперсанд прижимаем к следующему за ним идентификатору }
   if ((ALeft.Value = ':') or (ALeft.Value = '&')) and (ARight is TEpithet) then exit;
   { Запятую прижимаем справа ко всему }

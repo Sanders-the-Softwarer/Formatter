@@ -1,0 +1,31 @@
+select
+    *
+from
+    dual
+for update;
+
+select
+    *
+from
+    dual
+for update of
+    dual.dummy,
+    sys.dual.dummy;
+
+select
+    *
+from
+    dual
+for update nowait;
+
+select
+    *
+from
+    dual
+for update wait 10;
+
+select
+    *
+from
+    dual
+for update skip locked;	

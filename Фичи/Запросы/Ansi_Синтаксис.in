@@ -4,4 +4,5 @@ from
     a 
         join 
     b 
-        using (id)
+        on 
+            a.id = b.id

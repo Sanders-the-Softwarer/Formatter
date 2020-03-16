@@ -74,6 +74,8 @@ type
     Label5: TLabel;
     Label6: TLabel;
     edPositionalArgumentSingleLineParamLimit: TSpinEdit;
+    GroupBox4: TGroupBox;
+    checkIndentBrackets: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -141,6 +143,7 @@ begin
     Settings.ReplaceAsIs                     := checkReplaceAsIs.Checked;
     Settings.AddInAccessSpecificator         := checkAddInAccessSpecificator.Checked;
     Settings.PreferredExpressionLength       := edPreferredExpressionLength.Value;
+    Settings.IndentBrackets                  := checkIndentBrackets.Checked;
   end;
   { Создадим потоки }
   MinTokenStream  := Controller.MakeMinimalTokenStream(edSrc.Text);
@@ -211,6 +214,7 @@ begin
     checkReplaceDefault.Checked             := Settings.ReplaceDefault;
     checkReplaceAsIs.Checked                := Settings.ReplaceAsIs;
     checkAddInAccessSpecificator.Checked    := Settings.AddInAccessSpecificator;
+    checkIndentBrackets.Checked             := Settings.IndentBrackets;
   finally
     IntoUpdateSettings := false;
   end;

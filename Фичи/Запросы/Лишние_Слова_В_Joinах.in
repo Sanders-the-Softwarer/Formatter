@@ -1,0 +1,20 @@
+select 
+    * 
+from 
+    a 
+        left outer join 
+    b 
+        on 
+            (a.id = b.id) 
+        right outer join 
+    c 
+        using 
+            (id, id, id)
+        full outer join 
+    d 
+        on 
+            (date_from > sysdate) 
+        inner join 
+    e 
+        on 
+            (1 = 2)
