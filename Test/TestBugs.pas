@@ -50,6 +50,7 @@ type
     procedure _27;
     procedure _28;
     procedure _29;
+    procedure _30;
   end;
 
 implementation
@@ -119,6 +120,10 @@ begin
 end;
 
 procedure _Bugs._3;
+begin
+end;
+
+procedure _Bugs._30;
 begin
 end;
 

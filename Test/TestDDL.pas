@@ -62,6 +62,8 @@ type
   protected
     function GetDir: string; override;
   published
+    procedure Create_Synonym;
+    procedure Drop_Synonym;
     procedure Grant;
   end;
 
@@ -179,6 +181,14 @@ end;
 function _Команды_DDL.GetDir: string;
 begin
   Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды DDL';
+end;
+
+procedure _Команды_DDL.Create_Synonym;
+begin
+end;
+
+procedure _Команды_DDL.Drop_Synonym;
+begin
 end;
 
 procedure _Команды_DDL.Grant;

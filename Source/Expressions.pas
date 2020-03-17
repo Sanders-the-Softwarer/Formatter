@@ -300,7 +300,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   { Примерка ширины печати в различных вариантах и разбиение на строки }
   procedure CheckForBreaks(Start: integer = 0; Finish: integer = -1);
   var
-    SLLen, MLLen, i, Priority: integer;
+    SLLen, MLLen, i: integer;
   begin
     if Finish < 0 then Finish := Count - 1;
     { Прикинем ширину, если печатать в одну строку }

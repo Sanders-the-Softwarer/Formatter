@@ -244,7 +244,7 @@ begin
   { Прочитаем очередной элемент }
   S := Source.Next;
   { Если элемент не группируемый, просто его вернём }
-  if not S.Grouping then exit(Transit(S));
+  if S.Grouping = nil then exit(Transit(S));
   { В противном случае начнём новую группу }
   List := TSameTypeList.Create(S);
   { Прочитаем следующие элементы того же класса и добавим их в группу }
@@ -252,7 +252,7 @@ begin
   begin
     Source.SaveMark;
     S := Source.Next;
-    if List.ItemType = S.ClassType then
+    if List.ItemType = S.Grouping then
       List.Add(S)
     else
       begin
@@ -276,6 +276,7 @@ procedure TSameTypeList.Add(S: TStatement);
 var L: integer;
 begin
   L := Length(FStatements);
+  Assert((L = 0) or (S.Grouping = ItemType));
   SetLength(FStatements, L + 1);
   FStatements[L] := S;
   S.Parent := Self;
@@ -290,7 +291,7 @@ end;
 
 function TSameTypeList.ItemType: TStatementClass;
 begin
-  Result := TStatementClass(FStatements[0].ClassType);
+  Result := FStatements[0].Grouping;
 end;
 
 function TSameTypeList.Transparent: boolean;

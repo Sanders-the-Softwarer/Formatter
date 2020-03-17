@@ -593,6 +593,7 @@ begin
   if Check(Result, 'not', 'like') then exit;
   if Check(Result, 'outer', 'apply') then exit;
   if Check(Result, 'partition', 'by') then exit;
+  if Check(Result, 'public', 'synonym') then exit;
   if Check(Result, 'right', 'join') then exit;
   if Check(Result, 'right', 'natural', 'join') then exit;
   if Check(Result, 'right', 'outer', 'join') then exit;

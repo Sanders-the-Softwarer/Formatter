@@ -78,6 +78,7 @@ type
     procedure Команд_Whenever;
     procedure Команд_Define;
     procedure Грантов;
+    procedure Синонимов;
   end;
 
   { Тесты на расстановку комментариев }
@@ -146,6 +147,7 @@ type
     procedure Define_Собираются_Вместе;
     procedure Set_Собираются_Вместе;
     procedure Whenever_Собираются_Вместе;
+    procedure Синонимы_Собираются_Вместе;
   end;
 
   { Тесты на SQL типы }
@@ -388,6 +390,11 @@ begin
   Settings.AlignSQLPLUS := true;
 end;
 
+procedure _Выравнивание.Синонимов;
+begin
+  Settings.AlignSQLPLUS := true;
+end;
+
 procedure _Выравнивание.Колонок_В_Таблице;
 begin
   Settings.AlignColumns := true;
@@ -477,6 +484,10 @@ begin
 end;
 
 procedure _Пустые_Строки.В_Пакете_С_Блоком_Инициализации;
+begin
+end;
+
+procedure _Пустые_Строки.Синонимы_Собираются_Вместе;
 begin
 end;
 

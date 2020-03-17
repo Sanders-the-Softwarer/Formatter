@@ -27,6 +27,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function StatementName: string; override;
+    function Grouping: TStatementClass; override;
   end;
 
   { Команда drop }
@@ -42,6 +43,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function StatementName: string; override;
+    function Grouping: TStatementClass; override;
   end;
 
   { Объект view }
@@ -255,7 +257,7 @@ type
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    function Grouping: boolean; override;
+    function Grouping: TStatementClass; override;
   end;
 
   { Объект sequence }
@@ -286,6 +288,19 @@ type
     function ParseBreak: boolean; override;
   end;
 
+  { Синоним }
+  TSynonym = class(TStatement)
+  strict private
+    _Synonym, _Editionable, _Sharing, _Metadata, _For: TEpithet;
+    _Eq: TTerminal;
+    _Name, _Object: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function Grouping: TStatementClass; override;
+  end;
+
   { Команда grant }
   TGrant = class(TSemicolonStatement)
   strict private
@@ -295,7 +310,7 @@ type
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    function Grouping: boolean; override;
+    function Grouping: TStatementClass; override;
   end;
 
   { Грантуемая привилегия }
@@ -341,6 +356,7 @@ begin
             TType.Parse(Self, Source, _What) or
             TSequence.Parse(Self, Source, _What) or
             TTrigger.Parse(Self, Source, _What) or
+            TSynonym.Parse(Self, Source, _What) or
             TUnexpectedToken.Parse(Self, Source, _What);
   inherited;
   { Завершающий слеш }
@@ -357,6 +373,13 @@ end;
 function TCreate.StatementName: string;
 begin
   Result := Concat([_Create, _Or, _Replace, _Force, _What]);
+end;
+
+function TCreate.Grouping: TStatementClass;
+begin
+  if Assigned(_What)
+    then Result := _What.Grouping
+    else Result := nil;
 end;
 
 { TView }
@@ -765,9 +788,9 @@ begin
   inherited;
 end;
 
-function TComment.Grouping: boolean;
+function TComment.Grouping: TStatementClass;
 begin
-  Result := true;
+  Result := TComment;
 end;
 
 { TDrop }
@@ -776,7 +799,7 @@ function TDrop.InternalParse: boolean;
 begin
   _Drop := Keyword('drop');
   if not Assigned(_Drop) then exit(false);
-  _ObjectType := Keyword(['table', 'procedure', 'function', 'package', 'view', 'index', 'type', 'sequence', 'trigger']);
+  _ObjectType := Keyword(['table', 'procedure', 'function', 'package', 'view', 'index', 'type', 'sequence', 'trigger', 'synonym', 'public synonym']);
   if not Assigned(_ObjectType) then TUnexpectedToken.Parse(Self, Source, _Unexpected);
   if Assigned(_ObjectType) and ((_ObjectType.Value = 'package') or (_ObjectType.Value = 'type')) then _Body := Keyword('body');
   TQualifiedIdent.Parse(Self, Source, _ObjectName);
@@ -800,6 +823,11 @@ end;
 function TDrop.StatementName: string;
 begin
   Result := Concat([_Drop, _ObjectType, _Body, _ObjectName]);
+end;
+
+function TDrop.Grouping: TStatementClass;
+begin
+  Result := TDrop;
 end;
 
 function TDrop.IsTable: boolean;
@@ -889,9 +917,9 @@ begin
   inherited;
 end;
 
-function TGrant.Grouping: boolean;
+function TGrant.Grouping: TStatementClass;
 begin
-  Result := true;
+  Result := TGrant;
 end;
 
 { TPrivileges }
@@ -948,6 +976,38 @@ procedure TPrivilege.InternalPrintSelf(APrinter: TPrinter);
 var i: integer;
 begin
   for i := Low(Tokens) to High(Tokens) do APrinter.PrintItem(Tokens[i]);
+end;
+
+{ TSynonym }
+
+function TSynonym.InternalParse: boolean;
+begin
+  _Editionable := Keyword(['editionable', 'noneditionable']);
+  _Synonym := Keyword(['synonym', 'public synonym']);
+  if not Assigned(_Synonym) then exit(false);
+  TQualifiedIdent.Parse(Self, Source, _Name);
+  _Sharing := Keyword('sharing');
+  if Assigned(_Sharing) then
+  begin
+    _Eq := Terminal('=');
+    _Metadata := Keyword(['metadata', 'none']);
+  end;
+  _For := Keyword('for');
+  if Assigned(_For) then TQualifiedIdent.Parse(Self, Source, _Object);
+  Result := true;
+end;
+
+procedure TSynonym.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.StartRuler(Settings.AlignSQLPLUS);
+  APrinter.PrintRulerItems('Start', [_Editionable, _Synonym]);
+  APrinter.PrintRulerItems('Name',  [_Name, _Sharing, _Eq, _Metadata]);
+  APrinter.PrintRulerItems('For',   [ _For, _Object]);
+end;
+
+function TSynonym.Grouping: TStatementClass;
+begin
+  Result := TSynonym;
 end;
 
 end.

@@ -1,0 +1,11 @@
+null;
+
+create synonym scott for tiger;
+create or replace public synonym dual for sys.dual@other.world;
+create editionable synonym sys.dual sharing = metadata for user_objects;
+
+drop synonym scott;
+drop public synonym dual;
+drop synonym sys.dual;
+
+null;

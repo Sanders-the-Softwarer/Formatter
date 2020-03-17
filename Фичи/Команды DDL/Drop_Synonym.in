@@ -1,0 +1,2 @@
+drop synonym public;
+drop public synonym sys.dual;

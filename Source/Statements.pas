@@ -103,7 +103,7 @@ type
     function StatementType: string; virtual;
     function StatementName: string; virtual;
     function Transparent: boolean; virtual;
-    function Grouping: boolean; virtual;
+    function Grouping: TStatementClass; virtual;
   end;
   {$TypeInfo Off}
 
@@ -319,9 +319,9 @@ begin
 end;
 
 { Выражение по умолчанию не группируется с однотипными }
-function TStatement.Grouping: boolean;
+function TStatement.Grouping: TStatementClass;
 begin
-  Result := false;
+  Result := nil;
 end;
 
 { Обработчик печати по умолчанию }

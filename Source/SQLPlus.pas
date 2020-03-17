@@ -40,7 +40,7 @@ type
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    function Grouping: boolean; override;
+    function Grouping: TStatementClass; override;
   end;
 
   { Команда set }
@@ -52,7 +52,7 @@ type
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    function Grouping: boolean; override;
+    function Grouping: TStatementClass; override;
   end;
 
   { Команда define }
@@ -65,7 +65,7 @@ type
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    function Grouping: boolean; override;
+    function Grouping: TStatementClass; override;
   end;
 
   { Команда @ }
@@ -77,7 +77,7 @@ type
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    function Grouping: boolean; override;
+    function Grouping: TStatementClass; override;
   end;
 
   { Команда spool }
@@ -99,7 +99,7 @@ type
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    function Grouping: boolean; override;
+    function Grouping: TStatementClass; override;
   end;
 
   { Имя файла }
@@ -186,9 +186,9 @@ begin
   APrinter.PrintRulerItems('Action', [_Action, _Param1, _Expr, _Param2]);
 end;
 
-function TWhenever.Grouping: boolean;
+function TWhenever.Grouping: TStatementClass;
 begin
-  Result := true;
+  Result := TWhenever;
 end;
 
 { TSet }
@@ -209,9 +209,9 @@ begin
   APrinter.PrintRulerItem('Value', _Value);
 end;
 
-function TSet.Grouping: boolean;
+function TSet.Grouping: TStatementClass;
 begin
-  Result := true;
+  Result := TSet;
 end;
 
 { TAt }
@@ -230,9 +230,9 @@ begin
   APrinter.SupressSpaces(false);
 end;
 
-function TAt.Grouping: boolean;
+function TAt.Grouping: TStatementClass;
 begin
-  Result := true;
+  Result := TAt;
 end;
 
 { TSpool }
@@ -251,9 +251,9 @@ end;
 
 { TCall }
 
-function TCall.Grouping: boolean;
+function TCall.Grouping: TStatementClass;
 begin
-  Result := true;
+  Result := TCall;
 end;
 
 function TCall.InternalParse: boolean;
@@ -282,14 +282,13 @@ begin
   Tokens := TList<TToken>.Create;
   T := NextToken;
   Line := T.Line;
-  while T.Line = Line do
-  begin
+  repeat
     Tokens.Add(T);
     P := Source.Mark;
     if Source.Eof
       then break
       else T := NextToken;
-  end;
+  until T.Line <> Line;
   Source.Restore(P);
   Result := true;
   _Tokens := Tokens.ToArray;
@@ -362,9 +361,9 @@ begin
   APrinter.PrintRulerItems('value', [_Eq, _Value]);
 end;
 
-function TDefine.Grouping: boolean;
+function TDefine.Grouping: TStatementClass;
 begin
-  Result := true;
+  Result := TDefine;
 end;
 
 initialization
