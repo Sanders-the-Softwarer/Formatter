@@ -1,0 +1,13 @@
+-- Комментарий перед union all не должен пропадать невесть куда
+
+select --+ index(s, t_sinvspec_changeid) index(h, t_sinvoice_docid) use_nl(s,h)
+    h.pactcurrency
+from
+    aist_msfo_api.t_sinvoice h
+-- !!! вот этот вот комментарий не должен пропадать !!!
+union all
+--
+select --+ index(s, t_winvspec_changeid) index(h, t_winvoice_docid) use_nl(s,h)
+    s.docid
+from
+    aist_msfo_api.t_winvspec s

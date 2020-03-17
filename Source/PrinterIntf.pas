@@ -63,6 +63,7 @@ type
     AlignExpressions: boolean;
     AlignTableColumnComments: boolean;
     AlignSpecialComments: boolean;
+    AlignSQLPLUS: boolean;
     ReplaceDefault: boolean;
     ReplaceAsIs: boolean;
     AddInAccessSpecificator: boolean;
@@ -322,6 +323,7 @@ begin
   AlignExpressions                := false;
   AlignTableColumnComments        := true;
   AlignSpecialComments            := true;
+  AlignSQLPLUS                    := true;
   ReplaceDefault                  := true;
   ReplaceAsIs                     := true;
   AddInAccessSpecificator         := true;

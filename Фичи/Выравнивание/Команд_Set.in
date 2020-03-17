@@ -1,0 +1,3 @@
+set echo         on
+set serveroutput on
+set sqlbl        on

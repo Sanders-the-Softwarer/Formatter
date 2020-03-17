@@ -45,6 +45,11 @@ type
     procedure _22;
     procedure _23;
     procedure _24;
+    procedure _25;
+    procedure _26;
+    procedure _27;
+    procedure _28;
+    procedure _29;
   end;
 
 implementation
@@ -89,6 +94,27 @@ begin
 end;
 
 procedure _Bugs._24;
+begin
+end;
+
+procedure _Bugs._25;
+begin
+  Settings.AlignSQLPLUS := true;
+end;
+
+procedure _Bugs._26;
+begin
+end;
+
+procedure _Bugs._27;
+begin
+end;
+
+procedure _Bugs._28;
+begin
+end;
+
+procedure _Bugs._29;
 begin
 end;
 

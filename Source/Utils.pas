@@ -20,6 +20,7 @@ type
   public
     constructor Create(AKeywords: array of string); overload;
     constructor Create(AParent: TKeywords; AKeywords: array of string); overload;
+    constructor Create(AParent, AKeywords: TKeywords); overload;
   end;
 
 { Вывод в отладочную консоль }
@@ -59,6 +60,12 @@ begin
   CaseSensitive := false;
   if Assigned(AParent) then AddStrings(AParent);
   for i := Low(AKeywords) to High(AKeywords) do Add(AKeywords[i]);
+end;
+
+constructor TKeywords.Create(AParent, AKeywords: TKeywords);
+begin
+  Create(AParent, []);
+  if Assigned(AKeywords) then AddStrings(AKeywords);
 end;
 
 end.

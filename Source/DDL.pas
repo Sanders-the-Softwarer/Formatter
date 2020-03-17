@@ -48,7 +48,7 @@ type
   TView = class(TStatement)
   strict private
     _View, _As: TEpithet;
-    _ViewName, _Select: TStatement;
+    _ViewName, _Columns, _Select: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -254,14 +254,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Группа комментариев }
-  TComments = class(TStatementList<TComment>)
-  strict protected
-    function ParseBreak: boolean; override;
   public
-    function Aligned: boolean; override;
+    function Grouping: boolean; override;
   end;
 
   { Объект sequence }
@@ -300,12 +294,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Список грантов }
-  TGrants = class(TStatementList<TGrant>)
-  strict protected
-    function AllowUnexpected: boolean; override;
+  public
+    function Grouping: boolean; override;
   end;
 
   { Грантуемая привилегия }
@@ -376,6 +366,7 @@ begin
   _View := Keyword('view');
   if not Assigned(_View) then exit(false);
   TQualifiedIdent.Parse(Self, Source, _ViewName);
+  TBracketedStatement<TIdentFields>.Parse(Self, Source, _Columns);
   _As := Keyword('as');
   TSelect.Parse(Self, Source, _Select);
   Result := true;
@@ -383,7 +374,9 @@ end;
 
 procedure TView.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_View, _ViewName, _As]);
+  APrinter.PrintItems([_View, _ViewName]);
+  APrinter.NextLineIf([_IndentNextLine, _Columns, _UndentNextLine]);
+  APrinter.PrintItem(_As);
   APrinter.PrintIndented(_Select);
 end;
 
@@ -772,16 +765,9 @@ begin
   inherited;
 end;
 
-{ TComments }
-
-function TComments.Aligned: boolean;
+function TComment.Grouping: boolean;
 begin
   Result := true;
-end;
-
-function TComments.ParseBreak: boolean;
-begin
-  Result := not Assigned(Keyword('comment'));
 end;
 
 { TDrop }
@@ -894,9 +880,18 @@ end;
 
 procedure TGrant.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Grant, _Privileges, _On, _Object, _To, _Grantee,
-    _IdentifiedBy, _Password, _WithAdminOption, _WithHierarchyOption, _WithGrantOption]);
+  APrinter.StartRuler(Settings.AlignSQLPLUS);
+  APrinter.PrintRulerItems('Grant', [_Grant, _Privileges]);
+  APrinter.PrintRulerItems('On', [_On, _Object]);
+  APrinter.PrintRulerItems('To', [_To, _Grantee]);
+  APrinter.PrintRulerItems('Identified', [_IdentifiedBy, _Password]);
+  APrinter.PrintRulerItems('With', [_WithAdminOption, _WithHierarchyOption, _WithGrantOption]);
   inherited;
+end;
+
+function TGrant.Grouping: boolean;
+begin
+  Result := true;
 end;
 
 { TPrivileges }
@@ -953,13 +948,6 @@ procedure TPrivilege.InternalPrintSelf(APrinter: TPrinter);
 var i: integer;
 begin
   for i := Low(Tokens) to High(Tokens) do APrinter.PrintItem(Tokens[i]);
-end;
-
-{ TGrants }
-
-function TGrants.AllowUnexpected: boolean;
-begin
-  Result := false;
 end;
 
 end.

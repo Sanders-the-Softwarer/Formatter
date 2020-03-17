@@ -76,6 +76,7 @@ type
     edPositionalArgumentSingleLineParamLimit: TSpinEdit;
     GroupBox4: TGroupBox;
     checkIndentBrackets: TCheckBox;
+    checkAlignSQLPLUS: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -139,6 +140,7 @@ begin
     Settings.AlignExpressions                := checkAlignExpressions.Checked;
     Settings.AlignSpecialComments            := checkAlignSpecialComments.Checked;
     Settings.AlignTableColumnComments        := checkAlignTableColumnComments.Checked;
+    Settings.AlignSQLPLUS                    := checkAlignSQLPLUS.Checked;
     Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
     Settings.ReplaceAsIs                     := checkReplaceAsIs.Checked;
     Settings.AddInAccessSpecificator         := checkAddInAccessSpecificator.Checked;
@@ -210,6 +212,7 @@ begin
     checkAlignVariables.Checked             := Settings.AlignVariables;
     checkAlignSpecialComments.Checked       := Settings.AlignSpecialComments;
     checkAlignTableColumnComments.Checked   := Settings.AlignTableColumnComments;
+    checkAlignSQLPLUS.Checked               := Settings.AlignSQLPLUS;
     checkAlignExpressions.Checked           := Settings.AlignExpressions;
     checkReplaceDefault.Checked             := Settings.ReplaceDefault;
     checkReplaceAsIs.Checked                := Settings.ReplaceAsIs;

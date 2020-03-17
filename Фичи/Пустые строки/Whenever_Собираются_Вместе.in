@@ -1,0 +1,8 @@
+-- Команда whenever группируется
+
+set a b
+
+whenever sqlerror continue
+whenever oserror exit 666
+
+set c d

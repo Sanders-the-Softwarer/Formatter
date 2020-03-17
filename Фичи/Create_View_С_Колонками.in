@@ -1,0 +1,14 @@
+-- оператор create view
+create or replace force view v$dual
+    (
+        d1,
+        d2,
+        d3
+    )
+as
+    select
+        dummy d1,
+        123 d2,
+        sysdate d3
+    from
+        dual

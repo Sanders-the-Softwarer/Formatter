@@ -1,0 +1,7 @@
+define a = 1
+define b = 'Str'
+define c = &c
+define d = some_var
+define e = 'One-
+two-
+three'

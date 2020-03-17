@@ -1,0 +1,59 @@
+-- AIST
+
+grant execute on aist_msfo_api.get_rate_nat     to msfo_cc_out with grant option;
+grant execute on aist_msfo_api.p_const          to msfo_cc_out with grant option;
+grant execute on aist_msfo_api.p_geocode        to msfo_cc_out with grant option;
+grant execute on aist_msfo_api.p_vat            to msfo_cc_out with grant option;
+grant execute on aist_msfo_api.get_changeid     to msfo_cc_out with grant option;
+
+grant select on aist_msfo_api.r_client          to msfo_cc_out with grant option;
+grant select on aist_msfo_api.r_database        to msfo_cc_out with grant option;
+grant select on aist_msfo_api.r_final_dest      to msfo_cc_out with grant option;
+grant select on aist_msfo_api.r_ul_business     to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_bind            to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_client          to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_extrasum        to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_gtd             to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_gtd_invoice     to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_pact            to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_pacter          to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_paydoc          to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_payspec         to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_receips         to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_rinvoice        to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_sinvoice        to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_sinvspec        to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_sumkind         to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_winvoice        to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_winvspec        to msfo_cc_out with grant option;
+grant select on aist_msfo_api.v_currency        to msfo_cc_out with grant option;
+grant select on aist_msfo_api.v_pact            to msfo_cc_out with grant option;
+grant select on aist_msfo_api.v_subjects        to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_contract        to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_ficdoc          to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_ficspec         to msfo_cc_out with grant option;
+grant select on aist_msfo_api.t_outdoc          to msfo_cc_out with grant option;
+grant select on aist_msfo_api.v_fifo_diffrate   to msfo_cc_out with grant option;
+grant select on aist_msfo_api.v_zumakind        to msfo_cc_out with grant option;
+
+--grant select on aist_msfo_api.s_changeid      to msfo_cc_out with grant option;
+--grant select on aist_msfo_api.t_diff          to msfo_cc_out with grant option;
+--grant select on aist_msfo_api.v_cc_contract   to msfo_cc_out with grant option;
+--grant select on aist_msfo_api.v_cc_docsbind   to msfo_cc_out with grant option;
+--grant select on aist_msfo_api.v_cc_docszuma   to msfo_cc_out with grant option;
+--grant select on aist_msfo_api.v_cc_fikhead    to msfo_cc_out with grant option;
+--grant select on aist_msfo_api.v_cc_fikspec    to msfo_cc_out with grant option;
+--grant select on aist_msfo_api.v_cc_outdoc     to msfo_cc_out with grant option;
+--grant select on aist_msfo_api.v_cc_receips    to msfo_cc_out with grant option;
+--grant select on aist_msfo_api.v_cc_rinvoice   to msfo_cc_out with grant option;
+--grant select on aist_msfo_api.v_cc_specif     to msfo_cc_out with grant option;
+
+grant select on aist_msfo_api.t_gtd_duty        to msfo_cc_out with grant option;
+grant select on aist_msfo_api.r_currency        to msfo_cc_out with grant option;
+
+
+
+-- KLARA
+grant select on klara_view.v_exp_ih_doc_detail   to msfo_cc_out; 
+grant select on klara_view.v_exp_ih_doc_registry to msfo_cc_out; 
+grant select on klara_view.v_exp_ih_firms        to msfo_cc_out; 

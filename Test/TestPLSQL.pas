@@ -74,6 +74,10 @@ type
     procedure Условий_В_Where;
     procedure Параметров_В_Open_For;
     procedure Параметров_В_Execute_Immediate;
+    procedure Команд_Set;
+    procedure Команд_Whenever;
+    procedure Команд_Define;
+    procedure Грантов;
   end;
 
   { Тесты на расстановку комментариев }
@@ -139,7 +143,9 @@ type
     procedure В_Пакете_С_Блоком_Инициализации;
     procedure at_Собираются_Вместе;
     procedure Exec_Собираются_Вместе;
+    procedure Define_Собираются_Вместе;
     procedure Set_Собираются_Вместе;
+    procedure Whenever_Собираются_Вместе;
   end;
 
   { Тесты на SQL типы }
@@ -159,6 +165,17 @@ type
     procedure Ref_Cursor;
     procedure Ref_Cursor_Returning;
     procedure Табличные_Типы;
+  end;
+
+  { Тесты на команды SQL*Plus }
+  _Команды_SQLPLUS = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure Chcp;
+    procedure Define;
+    procedure Set_;
+    procedure Whenever;
   end;
 
 implementation
@@ -366,9 +383,29 @@ begin
   Settings.AlignTableColumnComments := true;
 end;
 
+procedure _Выравнивание.Грантов;
+begin
+  Settings.AlignSQLPLUS := true;
+end;
+
 procedure _Выравнивание.Колонок_В_Таблице;
 begin
   Settings.AlignColumns := true;
+end;
+
+procedure _Выравнивание.Команд_Define;
+begin
+  Settings.AlignSQLPLUS := true;
+end;
+
+procedure _Выравнивание.Команд_Set;
+begin
+  Settings.AlignSQLPLUS := true;
+end;
+
+procedure _Выравнивание.Команд_Whenever;
+begin
+  Settings.AlignSQLPLUS := true;
 end;
 
 procedure _Выравнивание.Комментариев_Справа_От_Деклараций;
@@ -419,11 +456,19 @@ procedure _Пустые_Строки.at_Собираются_Вместе;
 begin
 end;
 
+procedure _Пустые_Строки.Define_Собираются_Вместе;
+begin
+end;
+
 procedure _Пустые_Строки.Exec_Собираются_Вместе;
 begin
 end;
 
 procedure _Пустые_Строки.Set_Собираются_Вместе;
+begin
+end;
+
+procedure _Пустые_Строки.Whenever_Собираются_Вместе;
 begin
 end;
 
@@ -570,6 +615,29 @@ procedure _Запросы.For_Update;
 begin
 end;
 
+{ _Команды_SQLPLUS }
+
+function _Команды_SQLPLUS.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды SQLPLUS';
+end;
+
+procedure _Команды_SQLPLUS.Define;
+begin
+end;
+
+procedure _Команды_SQLPLUS.Set_;
+begin
+end;
+
+procedure _Команды_SQLPLUS.Whenever;
+begin
+end;
+
+procedure _Команды_SQLPLUS.Chcp;
+begin
+end;
+
 initialization
   RegisterTest(_PLSQL.Suite);
   RegisterTest(_Выравнивание.Suite);
@@ -580,6 +648,7 @@ initialization
   RegisterTest(_Пустые_Строки.Suite);
   RegisterTest(_SQL_Типы.Suite);
   RegisterTest(_PLSQL_Типы.Suite);
+  RegisterTest(_Команды_SQLPLUS.Suite);
 
 end.
 

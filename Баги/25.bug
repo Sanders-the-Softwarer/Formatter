@@ -1,0 +1,21 @@
+-- Завершающий комментарий не должен съезжать в середину строки из-за выравнивания
+
+chcp 65001
+
+set echo         on
+set serveroutput on
+set sqlbl        on
+
+-- Включаем вывод в файл дампа
+spool sql\!&1._&2..log
+
+-- Выход из скрипта при первой же ошибке
+whenever oserror  exit failure rollback
+whenever sqlerror exit failure rollback
+
+-- БД
+define dbname     = &2
+-- Новая схема
+define user_name  = &1
+define user_passw = "cc_out_tst"
+--

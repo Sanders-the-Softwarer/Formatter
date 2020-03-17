@@ -1,0 +1,15 @@
+-- Варианты команды whenever
+
+whenever sqlerror continue
+whenever oserror  continue commit
+whenever sqlerror continue rollback
+whenever sqlerror exit                -- Комментарий в середине
+whenever sqlerror exit success
+whenever sqlerror exit failure
+whenever sqlerror exit warning
+whenever oserror  exit 666
+whenever sqlerror exit p_exit_code
+whenever sqlerror exit :p_exit_code
+whenever sqlerror exit commit
+whenever sqlerror exit rollback
+whenever sqlerror exit failure commit -- Последний комментарий

@@ -1,5 +1,3 @@
--- Команды exec должны собираться вместе
-
 null;
 
 exec top_ddl_utils.drop_object('top_v_dev_style_fc_init_auto', 'view');

@@ -12,11 +12,18 @@ unit SQLPlus;
 
 interface
 
-uses SysUtils, Statements, Tokens, PrinterIntf, System.Generics.Collections;
+uses SysUtils, Statements, Tokens, PrinterIntf, Utils, System.Generics.Collections;
 
 type
+
+  { Базовый класс команд SQL*Plus }
+  TSQLPlusStatement = class(TStatement)
+  strict protected
+    function GetKeywords: TKeywords; override;
+  end;
+
   { Команда clear }
-  TClear = class(TStatement)
+  TClear = class(TSQLPlusStatement)
   strict private
     _Clear: TEpithet;
   strict protected
@@ -25,16 +32,19 @@ type
   end;
 
   { Команда whenever }
-  TWhenever = class(TStatement)
+  TWhenever = class(TSQLPlusStatement)
   strict private
-    _Whenever, _SQLError, _Action: TEpithet;
+    _Whenever, _Condition, _Action, _Param1, _Param2: TEpithet;
+    _Expr: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function Grouping: boolean; override;
   end;
 
   { Команда set }
-  TSet = class(TStatement)
+  TSet = class(TSQLPlusStatement)
   strict private
     _Set, _Target: TEpithet;
     _Value: TStatement;
@@ -45,8 +55,21 @@ type
     function Grouping: boolean; override;
   end;
 
+  { Команда define }
+  TDefine = class(TSQLPlusStatement)
+  strict private
+    _Define, _Target: TEpithet;
+    _Eq: TTerminal;
+    _Value: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function Grouping: boolean; override;
+  end;
+
   { Команда @ }
-  TAt = class(TStatement)
+  TAt = class(TSQLPlusStatement)
   strict private
     _At: TTerminal;
     _FileName: TStatement;
@@ -58,7 +81,7 @@ type
   end;
 
   { Команда spool }
-  TSpool = class(TStatement)
+  TSpool = class(TSQLPlusStatement)
   strict private
     _Spool: TEpithet;
     _FileName: TStatement;
@@ -98,9 +121,29 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Команда CHCP }
+  TChcp = class(TSQLPlusStatement)
+  strict private
+    _Chcp: TEpithet;
+    _CodePage: TNumber;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
 implementation
 
 uses Parser, Streams, Commons, PLSQL;
+
+{ TSQLPlusStatement }
+
+var
+  SQLPlusKeywords: TKeywords;
+
+function TSQLPlusStatement.GetKeywords: TKeywords;
+begin
+  Result := SQLPlusKeywords;
+end;
 
 { TClear }
 
@@ -121,14 +164,31 @@ function TWhenever.InternalParse: boolean;
 begin
   _Whenever := Keyword('whenever');
   if not Assigned(_Whenever) then exit(false);
-  _SQLError := Keyword('sqlerror');
-  _Action   := Keyword(['exit', 'continue']);
+  _Condition := Keyword(['sqlerror', 'oserror']);
+  { В случае continue }
+  _Action := Keyword('continue');
+  if Assigned(_Action) then _Param1 := Keyword(['commit', 'rollback', 'none']);
+  { В случае exit }
+  if not Assigned(_Action) then
+  begin
+    _Action := Keyword('exit');
+    _Param1 := Keyword(['success', 'failure', 'warning']);
+    if not Assigned(_Param1) then TParser.ParseExpression(Self, Source, _Expr);
+    _Param2 := Keyword(['commit', 'rollback']);
+  end;
   Result := true;
 end;
 
 procedure TWhenever.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Whenever, _SQLError, _Action]);
+  APrinter.StartRuler(Settings.AlignSQLPLUS);
+  APrinter.PrintRulerItems('Cmd', [_Whenever, _Condition]);
+  APrinter.PrintRulerItems('Action', [_Action, _Param1, _Expr, _Param2]);
+end;
+
+function TWhenever.Grouping: boolean;
+begin
+  Result := true;
 end;
 
 { TSet }
@@ -144,7 +204,9 @@ end;
 
 procedure TSet.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Set, _Target, _Value]);
+  APrinter.StartRuler(Settings.AlignSQLPLUS);
+  APrinter.PrintRulerItems('Target', [_Set, _Target]);
+  APrinter.PrintRulerItem('Value', _Value);
 end;
 
 function TSet.Grouping: boolean;
@@ -265,6 +327,55 @@ begin
   APrinter.PrintItem(_Block);
   APrinter.NextLineIf(_Slash);
 end;
+
+{ TChcp }
+
+function TChcp.InternalParse: boolean;
+begin
+  _Chcp := Keyword('chcp');
+  if not Assigned(_Chcp) then exit(false);
+  _CodePage := Number;
+  Result := true;
+end;
+
+procedure TChcp.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Chcp, _CodePage]);
+end;
+
+{ TDefine }
+
+function TDefine.InternalParse: boolean;
+begin
+  _Define := Keyword('define');
+  if not Assigned(_Define) then exit(false);
+  _Target := Identifier;
+  _Eq := Terminal('=');
+  TParser.ParseExpression(Self, Source, _Value);
+  Result := true;
+end;
+
+procedure TDefine.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.StartRuler(Settings.AlignSQLPLUS);
+  APrinter.PrintRulerItems('target', [_Define, _Target]);
+  APrinter.PrintRulerItems('value', [_Eq, _Value]);
+end;
+
+function TDefine.Grouping: boolean;
+begin
+  Result := true;
+end;
+
+initialization
+  { Команды SQL*Plus не разделяются точками с запятой, поэтому нужно явно
+    назвать их ключевыми словами, в противном случае легко случится так,
+    что начало следующей команды будет распознано как аргумент предыдущей
+    whenever или подобной}
+  SQLPlusKeywords := TKeywords.Create(['chcp', 'clear', 'set', 'define', 'whenever']);
+
+finalization
+  FreeAndNil(SQLPlusKeywords);
 
 end.
 

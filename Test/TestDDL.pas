@@ -24,6 +24,7 @@ type
     procedure Create_Or_Replace;
     procedure Create_View;
     procedure Create_View_With;
+    procedure Create_View_С_Колонками;
     procedure Create_Index;
     procedure Create_Unique_Index;
     procedure Create_Functional_Index;
@@ -113,6 +114,10 @@ begin
 end;
 
 procedure _Create.Create_View_With;
+begin
+end;
+
+procedure _Create.Create_View_С_Колонками;
 begin
 end;
 

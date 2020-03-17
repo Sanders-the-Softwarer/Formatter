@@ -173,7 +173,7 @@ begin
   { Собаку прижимаем с обеих сторон ко всему }
   if (ALeft.Value = '@') or (ARight.Value = '@') then exit;
   { Двоеточие/амперсанд прижимаем к следующему за ним идентификатору }
-  if ((ALeft.Value = ':') or (ALeft.Value = '&')) and (ARight is TEpithet) then exit;
+  if ((ALeft.Value = ':') or (ALeft.Value = '&')) and ((ARight is TEpithet) or (ARight is TNumber)) then exit;
   { Запятую прижимаем справа ко всему }
   if ARight.Value = ',' then exit;
   { В конструкции number(5,2) запятую прижимаем и слева тоже }

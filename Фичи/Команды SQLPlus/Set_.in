@@ -1,0 +1,4 @@
+-- Команда set проста и незатейлива
+
+set blanks on
+set pagesize 120

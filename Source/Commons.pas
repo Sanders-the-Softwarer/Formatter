@@ -19,8 +19,8 @@ type
   { Квалифицированный идентификатор }
   TQualifiedIdent = class(TStatement)
   strict private
-    _SemicolonOrAmpersand, _Dot: TTerminal;
-    _Name: TEpithet;
+    _ColonOrAmpersand, _Dot: TTerminal;
+    _Name: TToken;
     _Next: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -101,20 +101,21 @@ uses Parser;
 
 function TQualifiedIdent.InternalParse: boolean;
 begin
-  if Parent is TQualifiedIdent then _Dot := Terminal(['.', '@']) else _SemicolonOrAmpersand := Terminal([':', '&']);
+  if Parent is TQualifiedIdent then _Dot := Terminal(['.', '@']) else _ColonOrAmpersand := Terminal([':', '&']);
   _Name := Identifier;
+  if not Assigned(_Name) and Assigned(_ColonOrAmpersand) then _Name := Number;
   Result := Assigned(_Name) and (Assigned(_Dot) = (Parent is TQualifiedIdent));
   if Result then TQualifiedIdent.Parse(Self, Source, _Next);
 end;
 
 procedure TQualifiedIdent.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_SemicolonOrAmpersand, _Dot, _Name, _Next]);
+  APrinter.PrintItems([_ColonOrAmpersand, _Dot, _Name, _Next]);
 end;
 
 function TQualifiedIdent.StatementName: string;
 begin
-  Result := StringReplace(Concat([_SemicolonOrAmpersand, _Dot, _Name, _Next]), ' ', '', [rfReplaceAll]);
+  Result := StringReplace(Concat([_ColonOrAmpersand, _Dot, _Name, _Next]), ' ', '', [rfReplaceAll]);
 end;
 
 function TQualifiedIdent.IsSimpleIdent: boolean;

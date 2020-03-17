@@ -160,7 +160,7 @@ object FormMain: TFormMain
       Margins.Top = 0
       Margins.Right = 0
       Margins.Bottom = 5
-      ActivePage = tabSettings
+      ActivePage = tabSrc
       Align = alClient
       TabOrder = 0
       object tabSrc: TTabSheet
@@ -260,7 +260,7 @@ object FormMain: TFormMain
           Left = 3
           Top = 147
           Width = 153
-          Height = 175
+          Height = 194
           Caption = '  '#1042#1099#1088#1072#1074#1085#1080#1074#1072#1090#1100'  '
           TabOrder = 2
           object checkAlignFields: TCheckBox
@@ -329,6 +329,17 @@ object FormMain: TFormMain
             TabOrder = 5
             OnClick = UpdateRequired
           end
+          object checkAlignSQLPLUS: TCheckBox
+            Left = 13
+            Top = 166
+            Width = 128
+            Height = 17
+            Caption = #1050#1086#1084#1072#1085#1076#1099' SQL*Plus'
+            Checked = True
+            State = cbChecked
+            TabOrder = 6
+            OnClick = UpdateRequired
+          end
         end
         object GroupBox3: TGroupBox
           Left = 162
@@ -391,7 +402,7 @@ object FormMain: TFormMain
           TabOrder = 6
           object checkAddInAccessSpecificator: TCheckBox
             Left = 13
-            Top = 26
+            Top = 22
             Width = 128
             Height = 17
             Caption = 'in '#1074' '#1087#1072#1088#1072#1084#1077#1090#1088#1099
@@ -421,7 +432,7 @@ object FormMain: TFormMain
           TabOrder = 8
           object checkIndentBrackets: TCheckBox
             Left = 13
-            Top = 26
+            Top = 22
             Width = 128
             Height = 17
             Caption = #1057#1082#1086#1073#1082#1080

@@ -75,6 +75,7 @@ type
   TExpression = class(TStatementList<TTerm>)
   strict private
     class var FlagCreatedRight: boolean;
+    CompleteKeywords: TKeywords;
   strict protected
     TermInfo: array of TTermInfo;
     function InternalParse: boolean; override;
@@ -87,6 +88,7 @@ type
   public
     class procedure CreatedRight;
     procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
     function Aligned: boolean; override;
   end;
 
@@ -442,7 +444,9 @@ end;
 
 function TExpression.GetKeywords: TKeywords;
 begin
-  Result := ExpressionKeywords;
+  if not Assigned(CompleteKeywords) then
+    CompleteKeywords := TKeywords.Create(ExpressionKeywords, inherited);
+  Result := CompleteKeywords;
 end;
 
 function TExpression.OnePerLine: boolean;
@@ -466,6 +470,12 @@ begin
   if FlagCreatedRight
     then FlagCreatedRight := false
     else raise Exception.Create('Expression must be created using TParser.ParseExpression, do it!');
+end;
+
+procedure TExpression.BeforeDestruction;
+begin
+  FreeAndNil(CompleteKeywords);
+  inherited;
 end;
 
 function TExpression.Aligned: boolean;

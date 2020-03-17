@@ -69,6 +69,7 @@ type
     procedure Add(S: TStatement);
     function ItemType: TStatementClass;
     function Transparent: boolean; override;
+    function Aligned: boolean; override;
   end;
 
   { Поток, объединяющий однотипные выражения в блоки }
@@ -114,8 +115,8 @@ class function TParser.ParseDDL(AParent: TStatement; ASource: TBufferedStream<TT
 begin
   Result := TCreate.Parse(AParent, ASource, AResult) or
             TDrop.Parse(AParent, ASource, AResult) or
-            TComments.Parse(AParent, ASource, AResult) or
-            TGrants.Parse(AParent, ASource, AResult);
+            TComment.Parse(AParent, ASource, AResult) or
+            TGrant.Parse(AParent, ASource, AResult);
 end;
 
 { Разбор операторов PL/SQL }
@@ -151,7 +152,9 @@ begin
             TSet.Parse(AParent, ASource, AResult) or
             TAt.Parse(AParent, ASource, AResult) or
             TSpool.Parse(AParent, ASource, AResult) or
-            TCall.Parse(AParent, ASource, AResult);
+            TCall.Parse(AParent, ASource, AResult) or
+            TChcp.Parse(AParent, ASource, AResult) or
+            TDefine.Parse(AParent, ASource, AResult);
 end;
 
 { Разбор деклараций (переменных, процедур, типов, курсоров, прагм и т. п. }
@@ -292,7 +295,12 @@ end;
 
 function TSameTypeList.Transparent: boolean;
 begin
-  Result := false;
+  Result := true;
+end;
+
+function TSameTypeList.Aligned: boolean;
+begin
+  Result := true;
 end;
 
 end.

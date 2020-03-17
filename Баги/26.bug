@@ -1,0 +1,15 @@
+-- Макроподстановка не должна уезжать на следующую строку
+
+create table ddl_log
+    (
+        operation varchar2(2000 char),
+        obj_type varchar2(2000 char),
+        obj_owner varchar2(2000 char),
+        object_name varchar2(2000 char),
+        host varchar2(2000 char),
+        os_user varchar2(2000 char),
+        attempt_by varchar2(2000 char),
+        attempt_dt date,
+        sql_text clob
+    )
+    tablespace &tblsp_data;
