@@ -1,0 +1,2 @@
+drop function y;
+drop function y.x;

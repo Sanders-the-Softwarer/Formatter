@@ -1,0 +1,2 @@
+drop trigger trg;
+drop trigger my.trg;

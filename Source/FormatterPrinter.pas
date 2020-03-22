@@ -44,7 +44,7 @@ type
     Shift:   integer;
     EOLCount: integer;
     ForceNextLine: boolean;
-    NextLineComment: TToken;
+    NextLineComments: TList<TToken>;
     EmptyLine: boolean;
     WasComment: boolean;
     Line:    integer;
@@ -57,6 +57,8 @@ type
     IsDraft: boolean;
     Text:    string;
     RulerEnabled: boolean;
+    Indents: TStack<integer>;
+    FixShift: boolean;
   strict protected
     TokenPos, TokenLen: TDictionary<TToken, integer>;
     function SpaceRequired(ALeft, ARight: TToken): boolean;
@@ -72,6 +74,8 @@ type
     procedure PrintRulerItems(const ARuler: string; AItems: array of TObject); override;
     procedure Indent; override;
     procedure Undent; override;
+    procedure PushIndent; override;
+    procedure PopIndent; override;
     procedure NextLine; override;
     procedure CancelNextLine; override;
     procedure SupressNextLine(ASupress: boolean); override;
@@ -102,6 +106,8 @@ begin
   TokenPos := TDictionary<TToken, integer>.Create;
   TokenLen := TDictionary<TToken, integer>.Create;
   SpecialComments := TObjectList<TToken>.Create(true);
+  Indents := TStack<integer>.Create;
+  NextLineComments := TList<TToken>.Create;
 end;
 
 destructor TFormatterPrinter.Destroy;
@@ -109,6 +115,8 @@ begin
   FreeAndNil(TokenPos);
   FreeAndNil(TokenLen);
   FreeAndNil(SpecialComments);
+  FreeAndNil(Indents);
+  FreeAndNil(NextLineComments);
   inherited;
 end;
 
@@ -127,20 +135,20 @@ begin
   TokenPos.Clear;
   TokenLen.Clear;
   SpecialComments.Clear;
-  NextLineComment := nil;
+  NextLineComments.Clear;
+  Indents.Clear;
 end;
 
 { Вывод готового результата }
 procedure TFormatterPrinter.EndPrint;
 var T: TToken;
 begin
-  if Assigned(NextLineComment) then
+  EmptyLine := false;
+  ForceNextLine := false;
+  while NextLineComments.Count > 0 do
   begin
-    EmptyLine := false;
-    ForceNextLine := false;
-    T := NextLineComment;
-    NextLineComment := nil;
-    PrintToken(T);
+    PrintToken(NextLineComments[0]);
+    NextLineComments.Delete(0);
   end;
   if Assigned(Builder) then Text := Builder.ToString else Text := '';
   FreeAndNil(Builder);
@@ -178,7 +186,7 @@ begin
   if ARight.Value = ',' then exit;
   { В конструкции number(5,2) запятую прижимаем и слева тоже }
   if (ALeft.Value = ',') and TTerminal(ALeft).IntoNumber then exit;
-  { Открывающую скобку прижимаем справа к идентификаторам и ключевым словам char, table, row, lob, key, unique }
+  { Открывающую скобку прижимаем справа к идентификаторам и ключевым словам char, table, row, lob, key, unique, listagg }
   if (ARight.Value = '(') and
      (ALeft is TEpithet) and
      (SameText(ALeft.Value, 'char') or
@@ -187,6 +195,7 @@ begin
       SameText(ALeft.Value, 'lob') or
       SameText(ALeft.Value, 'key') or
       SameText(ALeft.Value, 'unique') or
+      SameText(ALeft.Value, 'listagg') or
       not TEpithet(ALeft).IsKeyword) then exit;
   { К открывающей скобке прижимаем справа всё }
   if ALeft.Value = '(' then exit;
@@ -208,6 +217,7 @@ var
   Value: string;
   HasToken, HasBuilder, AllowLF: boolean;
   EOLLimit: integer;
+  C: TToken;
 begin
   HasToken := Assigned(AToken);
   HasBuilder := Assigned(Builder);
@@ -228,11 +238,15 @@ begin
     EOLLimit := 0;
   while (EOLCount < EOLLimit) and AllowLF do
   begin
-    if Assigned(NextLineComment) then
+    if NextLineComments.Count > 0 then
     begin
       Ruler('right-comment');
-      PrintToken(NextLineComment);
-      NextLineComment := nil;
+      while NextLineComments.Count > 0 do
+      begin
+        PrintToken(NextLineComments[0]);
+        NextLineComments.Delete(0);
+      end;
+      PaddingCol := 0;
     end;
     if HasBuilder then Builder.AppendLine;
     Inc(EOLCount);
@@ -263,12 +277,11 @@ begin
   { Если задано выравнивание, вставим соответствующее количество пробелов }
   if (PaddingCol > Col) and HasToken then
   begin
-    _Debug('Padding, col = %d, padding col = %d', [Col, PaddingCol]);
     if EOLCount = 0 then Dec(PaddingCol, Shift);
     if HasBuilder then Builder.Append(StringOfChar(' ', PaddingCol - Col));
     Col := PaddingCol;
-    PaddingCol := 0;
     EOLCount := 0;
+    PaddingCol := 0;
   end;
   { Если нужно, внедрим пробел между предыдущей и новой лексемами }
   if Assigned(PrevToken) and HasToken and SpaceRequired(PrevToken, AToken) then
@@ -278,63 +291,68 @@ begin
     EOLCount := 0;
   end;
   { И, наконец, если задана лексема - напечатаем её }
-  if HasToken then
-  begin
-    if AToken is TComment then
-      if EOLCount > 0 then
-        Value := TComment(AToken).ShiftedValue(Shift + 1)
-      else
-        Value := TComment(AToken).ShiftedValue(Col)
+  if not HasToken then exit;
+  { Определим окончательное значение }
+  if AToken is TComment then
+    if EOLCount > 0 then
+      Value := TComment(AToken).ShiftedValue(Shift + 1)
     else
-      Value := AToken.Value;
-    Value := StringReplace(Value, #13, #13#10, [rfReplaceAll]);
-    { Учтём настройки замены лексем на синонимы и вывод в нижнем регистре }
-    if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and
-       SameText(AToken.Value, 'default') and Settings.ReplaceDefault and AToken.CanReplace
-      then Value := ':=';
-    if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and
-       SameText(AToken.Value, 'as') and Settings.ReplaceAsIs and AToken.CanReplace
-      then Value := 'is';
-    { В режиме реальной печати - напечатаем лексему, иначе только учтём сдвиг позиции }
-    if HasBuilder then
-    begin
-      if EOLCount > 0 then Builder.Append(StringOfChar(' ', Shift));
-      if not IsDraft and not (AToken is TSpecialComment) then
-      begin
-        TokenPos.Add(AToken, Builder.Length);
-        TokenLen.Add(AToken, Value.Length);
-      end;
-      Builder.Append(Value);
-      AToken.Printed := true;
-    end;
-    if EOLCount > 0 then Inc(Col, Shift);
-    Inc(Col, Value.Length);
-    PrevToken := AToken;
-    EOLCount := 0;
-  end;
-  { Если это был комментарий, взведём флажок }
-  if HasToken then WasComment := AToken is TComment;
-  { Если после лексемы есть комментарии, напечатаем их }
-  if HasToken then
+      Value := TComment(AToken).ShiftedValue(Col)
+  else
+    Value := AToken.Value;
+  Value := StringReplace(Value, #13, #13#10, [rfReplaceAll]);
+  Value := Trim(Value);
+  { Учтём настройки замены лексем на синонимы и вывод в нижнем регистре }
+  if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and
+     SameText(AToken.Value, 'default') and Settings.ReplaceDefault and AToken.CanReplace
+    then Value := ':=';
+  if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and
+     SameText(AToken.Value, 'as') and Settings.ReplaceAsIs and AToken.CanReplace
+    then Value := 'is';
+  { Выполним отступ }
+  if EOLCount > 0 then
   begin
-    if Assigned(AToken.CommentAfter) then
-      if AToken.CommentAfter.LineComment
-        then NextLineComment := AToken.CommentAfter
-        else PrintToken(AToken.CommentAfter);
-    if Assigned(AToken.CommentBelow) and HasBuilder then
-    begin
-      WasComment := true;
-      NextLine;
-      PrintToken(AToken.CommentBelow);
-      NextLine;
-    end;
-    if Assigned(AToken.CommentFarBelow) and HasBuilder then
-    begin
-      WasComment := true;
-      EmptyLine := true;
-      PrintToken(AToken.CommentFarBelow);
-      EmptyLine := true;
-    end;
+    if HasBuilder then Builder.Append(StringOfChar(' ', Shift));
+    Inc(Col, Shift);
+  end;
+  if FixShift then Shift := Col - 1;
+  FixShift := false;
+  { Запомним позицию лексемы }
+  if HasBuilder and not IsDraft and not (AToken is TSpecialComment) then
+  begin
+    TokenPos.Add(AToken, Builder.Length);
+    TokenLen.Add(AToken, Value.Length);
+  end;
+  { Напечатаем лексему }
+  if HasBuilder then
+  begin
+    Builder.Append(Value);
+    AToken.Printed := true;
+  end;
+  Inc(Col, Value.Length);
+  { Запомним её }
+  PrevToken := AToken;
+  EOLCount := 0;
+  { Если это был комментарий, взведём флажок }
+  WasComment := AToken is TComment;
+  { Если после лексемы есть комментарии, напечатаем их }
+  if Assigned(AToken.CommentAfter) then
+    if AToken.CommentAfter.LineComment
+      then NextLineComments.Add(AToken.CommentAfter)
+      else PrintToken(AToken.CommentAfter);
+  if Assigned(AToken.CommentBelow) and HasBuilder then
+  begin
+    WasComment := true;
+    NextLine;
+    PrintToken(AToken.CommentBelow);
+    NextLine;
+  end;
+  if Assigned(AToken.CommentFarBelow) and HasBuilder then
+  begin
+    WasComment := true;
+    EmptyLine := true;
+    PrintToken(AToken.CommentFarBelow);
+    EmptyLine := true;
   end;
 end;
 
@@ -347,7 +365,8 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     _ForceNextLine, _EmptyLine, _WasComment: boolean;
     _Builder: TStringBuilder;
     _Rulers: TRulers;
-    _PrevToken, _NextLineComment: TToken;
+    _PrevToken: TToken;
+    _NextLineComments: TList<TToken>;
 
   { Печать выражения без наворотов, связанных с выравниваниями }
   procedure SimplePrintStatement(AStatement: TStatement);
@@ -364,7 +383,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     { Печать и проверка отступа }
     _Shift := Shift;
     inherited PrintStatement(AStatement);
-    if Shift <> _Shift then
+    if (Shift <> _Shift) and (Indents.Count = 0) then
       raise Exception.CreateFmt('Invalid indents into %s - was %d but %d now', [AStatement.ClassName, _Shift, Shift]);
     { Пустая строка после конструкции }
     EmptyLine := EmptyLine or _EmptyInside or _EmptyAfter;
@@ -385,7 +404,8 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     _Rulers  := Rulers;
     _PrevToken := PrevToken;
     _Mode    := Mode;
-    _NextLineComment := NextLineComment;
+    _NextLineComments := TList<TToken>.Create;
+    _NextLineComments.AddRange(NextLineComments);
   end;
 
   { Восстановление той части конфигурации, которая нужна для печати с выравниваниями }
@@ -401,7 +421,9 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     WasComment := _WasComment;
     Builder := _Builder;
     PrevToken := _PrevToken;
-    NextLineComment := _NextLineComment;
+    NextLineComments.Clear;
+    NextLineComments.AddRange(_NextLineComments);
+    FreeAndNil(_NextLineComments);
   end;
 
   { Окончательное восстановление конфигурации после печати с выравниваниями }
@@ -467,6 +489,17 @@ end;
 procedure TFormatterPrinter.Undent;
 begin
   if Shift >= 4 then Dec(Shift, 4);
+end;
+
+procedure TFormatterPrinter.PushIndent;
+begin
+  Indents.Push(Shift);
+  FixShift := true;
+end;
+
+procedure TFormatterPrinter.PopIndent;
+begin
+  Shift := Indents.Pop;
 end;
 
 { Переход на следующую строку }
@@ -577,7 +610,6 @@ end;
 
 procedure TRulers.NewLine(ALine: integer);
 begin
-  _Debug('Rulers.NewLine prev = %d, line = %d', [PrevLine, ALine]);
   if PrevLine < ALine
     then PrevLine := ALine
     else DisablePadding := true;
@@ -587,7 +619,6 @@ end;
 procedure TRulers.Take(const ARuler: string; ALine, ACol: integer);
 var Width: integer;
 begin
-  _Debug('Rulers.Take ruler = "%s", line = %d, col = %d, prev col = %d', [ARuler, ALine, ACol, PrevCol]);
   if ALine <> PrevLine then DisablePadding := true;
   if DisablePadding then exit;
   if PrevLine <= 0 then raise Exception.Create('TRuler.NewLine required');
@@ -596,24 +627,16 @@ begin
   if MaxWidth.ContainsKey(ARuler)
     then MaxWidth[ARuler] := Math.Max(MaxWidth[ARuler], Width)
     else MaxWidth.Add(ARuler, Width);
-  _Debug(' => width = %d, max width = %d', [Width, MaxWidth[ARuler]]);
   PrevCol := ACol;
 end;
 
 function TRulers.Fix(const ARuler: string): integer;
-var i: integer; S: string;
+var i: integer;
 begin
   Result := 0;
   if DisablePadding then exit;
-  S := '1';
-  for i := 0 to Names.IndexOf(ARuler) do
-  begin
-    Inc(Result, MaxWidth[Names[i]]);
-    S := S + ' + ' + IntToStr(MaxWidth[Names[i]]) + ' {' + Names[i] + '}';
-  end;
+  for i := 0 to Names.IndexOf(ARuler) do Inc(Result, MaxWidth[Names[i]]);
   Inc(Result);
-  _Debug('Rulers.Fix, ruler = "%s", fix = %d', [ARuler, Result]);
-  _Debug('Sum = %s', [S]);
 end;
 
 end.

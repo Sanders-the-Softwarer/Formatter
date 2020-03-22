@@ -100,18 +100,8 @@ type
   { Оператор merge }
   TMerge = class(TDML)
   strict private
-    _Merge: TEpithet;
-    _Into: TEpithet;
-    _DestSelect: TStatement;
-    _DestTable: TEpithet;
-    _DestAlias: TEpithet;
-    _Using: TEpithet;
-    _SourceSelect: TStatement;
-    _SourceTable: TEpithet;
-    _SourceAlias: TEpithet;
-    _On: TEpithet;
-    _Condition: TStatement;
-    _Sections: TStatement;
+    _Merge, _Into, _SourceAlias, _DestAlias, _Using, _On: TEpithet;
+    _SourceSelect, _SourceTable, _DestSelect, _DestTable, _Condition, _Sections: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -472,12 +462,15 @@ end;
 
 procedure TOver.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Over, _IndentNextLine,
-                              _OpenBracket,    _IndentNextLine,
-                                               _PartitionBy,    _IndentNextLine,
-                                                                _PartitionFields, _UndentNextLine,
-                                               _OrderBy, _UndentNextLine,
-                              _CloseBracket,   _Undent]);
+  if Assigned(_PartitionBy) or Assigned(_OrderBy) then
+    APrinter.PrintItems([_Over, _IndentNextLine,
+                                _OpenBracket,    _IndentNextLine,
+                                                 _PartitionBy,    _IndentNextLine,
+                                                                  _PartitionFields, _UndentNextLine,
+                                                 _OrderBy, _UndentNextLine,
+                                _CloseBracket,   _Undent])
+  else
+    APrinter.PrintItems([_Over, _OpenBracket, _CloseBracket]);
 end;
 
 { TKeep }
@@ -487,7 +480,7 @@ begin
   _Keep := Keyword('keep');
   if not Assigned(_Keep) then exit(false);
   _OpenBracket := Terminal('(');
-  _Rank := Identifier;
+  _Rank := Keyword(['rank', 'dense_rank']);
   _FirstOrLast := Keyword(['first', 'last']);
   TOrderBy.Parse(Self, Source, _OrderBy);
   _CloseBracket := Terminal(')');
@@ -519,19 +512,15 @@ end;
 
 procedure TSelectFunctionCall.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_FunctionCall);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItems([_WithinGroup, _NextLine, _Keep, _NextLine, _Over]);
-  APrinter.Undent;
+  APrinter.PrintItems([_FunctionCall, _IndentNextLine, _WithinGroup, _NextLine, _Keep, _NextLine, _Over, _Undent]);
 end;
 
 { TListagg }
 
 function TListagg.InternalParse: boolean;
 begin
-  _ListAgg := Identifier;
-  if not Assigned(_ListAgg) or not SameText(_ListAgg.Value, 'listagg') then exit(false);
+  _ListAgg := Keyword('listagg');
+  if not Assigned(_ListAgg) then exit(false);
   _OpenBracket := Terminal('(');
   TParser.ParseExpression(Self, Source, _Expression);
   _Comma := Terminal(',');
@@ -541,7 +530,7 @@ begin
   _Truncate := Keyword('truncate');
   _OverflowTag := Literal;
   _Without := Keyword('without');
-  _Count := Identifier; { должен быть count, но нет смысла это проверять }
+  _Count := Keyword('count');
   _CloseBracket := Terminal(')');
   Result := true;
 end;
@@ -1339,10 +1328,10 @@ begin
   _Merge := Keyword('merge');
   _Into  := Keyword('into');
   if not Assigned(_Merge) or not Assigned(_Into) then exit(false);
-  if not TInnerSelect.Parse(Self, Source, _DestSelect) then _DestTable := Identifier;
+  if not TInnerSelect.Parse(Self, Source, _DestSelect) then TQualifiedIdent.Parse(Self, Source, _DestTable);
   _DestAlias := Identifier;
   _Using := Keyword('using');
-  if not TInnerSelect.Parse(Self, Source, _SourceSelect) then _SourceTable := Identifier;
+  if not TInnerSelect.Parse(Self, Source, _SourceSelect) then TQualifiedIdent.Parse(Self, Source, _SourceTable);
   _SourceAlias := Identifier;
   _On    := Keyword('on');
   TParser.ParseExpression(Self, Source, _Condition);

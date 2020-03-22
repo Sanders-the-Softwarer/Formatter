@@ -75,7 +75,9 @@ type
   TExpression = class(TStatementList<TTerm>)
   strict private
     class var FlagCreatedRight: boolean;
+  strict private
     CompleteKeywords: TKeywords;
+    MultiLineExpression: boolean;
   strict protected
     TermInfo: array of TTermInfo;
     function InternalParse: boolean; override;
@@ -89,7 +91,7 @@ type
     class procedure CreatedRight;
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
-    function Aligned: boolean; override;
+    property IsMultiLineExpression: boolean read MultiLineExpression;
   end;
 
 implementation
@@ -287,7 +289,8 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
           else if i < Count - 1 then
             TermInfo[i + 1].PrevDelimiterLen := DraftPrinter.CurrentCol;
         end;
-        if TermInfo[i].SingleLineLen = TermInfo[i].MultiLineLen then TermInfo[i].SingleLine := true;
+        with TermInfo[i] do
+          SingleLine := (SingleLineLen = MultiLineLen) or (SingleLineLen <= Settings.PreferredExpressionLength);
       end;
     finally
       DraftPrinter.EndPrint;
@@ -300,33 +303,26 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   { Примерка ширины печати в различных вариантах и разбиение на строки }
   procedure CheckForBreaks(Start: integer = 0; Finish: integer = -1);
   var
-    SLLen, MLLen, i: integer;
+    Len, i: integer;
   begin
     if Finish < 0 then Finish := Count - 1;
     { Прикинем ширину, если печатать в одну строку }
-    SLLen := 0;
-    MLLen := 0;
+    Len := 0;
     for i := Start to Finish do
     begin
-      Inc(SLLen, TermInfo[i].SingleLineLen + TermInfo[i].PrevDelimiterLen + TermInfo[i].PostDelimiterLen);
-      Inc(MLLen, TermInfo[i].MultiLineLen + TermInfo[i].PrevDelimiterLen + TermInfo[i].PostDelimiterLen);
+      if TermInfo[i].SingleLine
+        then Inc(Len, TermInfo[i].SingleLineLen)
+        else Inc(Len, TermInfo[i].MultiLineLen);
+      Inc(Len, TermInfo[i].PrevDelimiterLen + TermInfo[i].PostDelimiterLen);
       { Если сказано насильно разбивать по and/or, выполним это }
       if ForcedLineBreaks and
          (Start = 0) and
          (Finish = Count - 1) and
          (i > Start) and
-         (TermInfo[i - 1].Priority < 0) then
-      begin
-        SLLen := MaxInt div 4;
-        MLLen := MaxInt div 4;
-      end;
+         (TermInfo[i - 1].Priority < 0) then Len := MaxInt div 4;
     end;
-    { Если выражение влезает по ширине даже при печати в одну строку - так и поступим }
-    if SLLen <= Settings.PreferredExpressionLength then
-      for i := Start to Finish do
-        TermInfo[i].SingleLine := true
-    { Если же не влезает - придётся разбивать на части }
-    else if (MLLen > Settings.PreferredExpressionLength) and (Start < Finish) then
+    { Если не влезает - придётся разбивать на части }
+    if (Len > Settings.PreferredExpressionLength) and (Start < Finish) then
       PutLineBreaks(Start, Finish);
   end;
 
@@ -389,31 +385,31 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     i: integer;
     SameLine: boolean;
   begin
-    APrinter.StartRuler(Settings.AlignExpressions);
+    MultiLineExpression := false;
+    for i := 0 to Count - 1 do
+      if TermInfo[i].LineBreak then MultiLineExpression := true;
+    APrinter.PushIndent;
     for i := 0 to Count - 1 do
     begin
       SameLine := false;
       if TermInfo[i].SingleLine then
         APrinter.SupressNextLine(true)
       else if i > 0 then
-        APrinter.PrintItem(_IndentNextLine);
+        APrinter.NextLine;
       if Item(i) is TTerm then
         TTerm(Item(i)).MultiLine := not TermInfo[i].SingleLine;
-      APrinter.PrintRulerItem(Format('%p-term-%d-%s', [pointer(Self), TermInfo[i].RulerNumber, TermInfo[i].RulerChar]), Item(i));
+      APrinter.PrintItem(Item(i));
       if TermInfo[i].SingleLine then
         APrinter.SupressNextLine(false)
-      else if i > 0 then
+      else
         APrinter.Undent;
       if TermInfo[i].LineBreak and TermInfo[i].BreakBeforeDelimiter
-        then APrinter.NextLine
-        else SameLine := true;
+        then APrinter.NextLine;
       if not Assigned(Delimiter(i)) then continue;
-      if not SameLine
-        then APrinter.PrintRulerItem(Format('%p-delimiter-%d-before', [pointer(Self), TermInfo[i].RulerNumber]), Delimiter(i))
-        else APrinter.PrintItem(Delimiter(i));
-      if SameLine then APrinter.PrintRulerItem(Format('%p-delimiter-%d-after', [pointer(Self), TermInfo[i].RulerNumber]), nil);
+      APrinter.PrintItem(Delimiter(i));
       if TermInfo[i].LineBreak and not TermInfo[i].BreakBeforeDelimiter then APrinter.NextLine;
     end;
+    APrinter.PopIndent;
   end;
 
 begin
@@ -478,11 +474,6 @@ begin
   inherited;
 end;
 
-function TExpression.Aligned: boolean;
-begin
-  Result := not (Self.Parent is TExpression);
-end;
-
 { TCase }
 
 function TCase.InternalParse: boolean;
@@ -527,9 +518,13 @@ begin
 end;
 
 procedure TCaseSection.InternalPrintSelf(APrinter: TPrinter);
+var _NextIfMultiLine: TObject;
 begin
+  if (_Condition is TExpression) and TExpression(_Condition).IsMultiLineExpression
+    then _NextIfMultiLine := _NextLine
+    else _NextIfMultiLine := nil;
   if Assigned(_When)
-    then APrinter.PrintItems([_When, _Condition, _Then, _IndentNextLine, _Value, _Undent])
+    then APrinter.PrintItems([_When, _Condition, _NextIfMultiLine, _Then, _IndentNextLine, _Value, _Undent])
     else APrinter.PrintItems([_Else, _IndentNextLine, _Value, _Undent]);
 end;
 

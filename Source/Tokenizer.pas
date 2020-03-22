@@ -526,7 +526,54 @@ function TMerger.InternalNext: TToken;
     P2, P3, P4: TMark;
 
   function Check(var AResult: TToken; const S1, S2: string; const S3: string = ''; const S4: string = ''): boolean;
-  var S: string;
+
+    procedure Exclude(var T: TToken);
+    var C: TToken;
+    begin
+      T.Printed := true;
+      TEpithet(T).IsKeyword := true;
+      { Коммантарии из той же строки сгруппируем справа от результата }
+      if Assigned(T.CommentAfter) then
+      begin
+        C := AResult;
+        while Assigned(C.CommentAfter) do C := C.CommentAfter;
+        C.CommentAfter := T.CommentAfter;
+        T.CommentAfter := nil;
+      end;
+      { Верхние комментарии сгруппируем сверху от результата }
+      if Assigned(T.CommentAbove) then
+      begin
+        T.CommentAbove.CommentAbove := AResult.CommentAbove;
+        AResult.CommentAbove := nil; { иначе сработает защита на присваивании ниже }
+        AResult.CommentAbove := T.CommentAbove;
+      end;
+      { Нижние комментарии сгруппируем снизу от результата }
+      if Assigned(T.CommentBelow) then
+      begin
+        C := AResult;
+        while Assigned(C.CommentBelow) do C := C.CommentBelow;
+        C.CommentBelow := T.CommentBelow;
+        T.CommentBelow := nil;
+      end;
+      { С сильно верхними и сильно нижними ... }
+      if Assigned(T.CommentFarAbove) then
+      begin
+        T.CommentFarAbove.CommentFarAbove := AResult.CommentFarAbove;
+        AResult.CommentFarAbove := nil;
+        AResult.CommentFarAbove := T.CommentFarAbove;
+      end;
+      { ... поступим аналогично }
+      if Assigned(T.CommentFarBelow) then
+      begin
+        C := AResult;
+        while Assigned(C.CommentFarBelow) do C := C.CommentFarBelow;
+        C.CommentFarBelow := T.CommentFarBelow;
+        T.CommentFarBelow := nil;
+      end;
+    end;
+
+    var S: string;
+
   begin
     if not (T1 is TEpithet) or not SameStr(S1, T1.Value) then exit(false);
     if not (T2 is TEpithet) or not SameStr(S2, T2.Value) then exit(false);
@@ -542,12 +589,10 @@ function TMerger.InternalNext: TToken;
         if S3 <> '' then Source.Restore(P4);
     AResult := TEpithet.Create(S, T1.Line, T1.Col);
     Result := true;
-    T1.Printed := true;
-    T2.Printed := true;
-    TEpithet(T1).IsKeyword := true;
-    TEpithet(T2).IsKeyword := true;
-    if S3 <> '' then begin T3.Printed := true; TEpithet(T3).IsKeyword := true; end;
-    if S4 <> '' then begin T4.Printed := true; TEpithet(T4).IsKeyword := true; end;
+    Exclude(T1);
+    Exclude(T2);
+    if S3 <> '' then Exclude(T3);
+    if S4 <> '' then Exclude(T4);
   end;
 
 begin
@@ -563,6 +608,7 @@ begin
   if Check(Result, 'authid', 'current_user') then exit;
   if Check(Result, 'authid', 'definer') then exit;
   if Check(Result, 'bulk', 'collect', 'into') then exit;
+  if Check(Result, 'cascade', 'constraints') then exit;
   if Check(Result, 'cross', 'apply') then exit;
   if Check(Result, 'full', 'join') then exit;
   if Check(Result, 'full', 'natural', 'join') then exit;
@@ -592,6 +638,7 @@ begin
   if Check(Result, 'not', 'in') then exit;
   if Check(Result, 'not', 'like') then exit;
   if Check(Result, 'outer', 'apply') then exit;
+  if Check(Result, 'package', 'body') then exit;
   if Check(Result, 'partition', 'by') then exit;
   if Check(Result, 'public', 'synonym') then exit;
   if Check(Result, 'right', 'join') then exit;

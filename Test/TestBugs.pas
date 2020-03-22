@@ -51,6 +51,11 @@ type
     procedure _28;
     procedure _29;
     procedure _30;
+    procedure _31;
+    procedure _32;
+    procedure _33;
+    procedure _34;
+    procedure _35;
   end;
 
 implementation
@@ -78,7 +83,7 @@ end;
 
 procedure _Bugs._20;
 begin
-  Settings.PreferredExpressionLength := 120;
+  Settings.PreferredExpressionLength := 82;
 end;
 
 procedure _Bugs._21;
@@ -125,6 +130,31 @@ end;
 
 procedure _Bugs._30;
 begin
+end;
+
+procedure _Bugs._31;
+begin
+  Settings.AlignSQLPLUS := true;
+end;
+
+procedure _Bugs._32;
+begin
+  Settings.PreferredExpressionLength := 120;
+  Settings.NamedArgumentSingleLineParamLimit := 1;
+end;
+
+procedure _Bugs._33;
+begin
+  Settings.PreferredExpressionLength := 120;
+end;
+
+procedure _Bugs._34;
+begin
+end;
+
+procedure _Bugs._35;
+begin
+  Settings.PreferredExpressionLength := 120;
 end;
 
 procedure _Bugs._4;
@@ -192,6 +222,7 @@ end;
 procedure _Bugs._17;
 begin
   Settings.PreferredExpressionLength := 120;
+  Settings.NamedArgumentSingleLineParamLimit := 1;
 end;
 
 procedure _Bugs._18;
@@ -200,6 +231,7 @@ end;
 
 procedure _Bugs._19;
 begin
+  Settings.PreferredExpressionLength := 120;
 end;
 
 initialization

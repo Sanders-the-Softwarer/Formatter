@@ -69,10 +69,10 @@ end;
 procedure RegisterCallback(Index: Integer; Addr: Pointer); cdecl;
 begin
   case Index of
-    20 : @IDE_CreateWindow    := Addr;
-    30 : @IDE_GetText         := Addr;
-    31 : @IDE_GetSelectedText := Addr;
-    34 : @IDE_SetText         := Addr;
+    20: @IDE_CreateWindow    := Addr;
+    30: @IDE_GetText         := Addr;
+    31: @IDE_GetSelectedText := Addr;
+    34: @IDE_SetText         := Addr;
   end;
 end;
 

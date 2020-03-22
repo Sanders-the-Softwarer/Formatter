@@ -1,0 +1,2 @@
+drop index i$dual
+drop index sys.i$dual

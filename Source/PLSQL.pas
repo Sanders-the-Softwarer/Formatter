@@ -19,6 +19,9 @@ unit PLSQL;
   парсинга может оказаться unexpected token или другой подобный объект.
   Кроме того, такой подход значительно уменьшает связность модулей.
 
+  Мы рассматриваем метку как специфический вид оператора. Это неверно с
+  семантической точки зрения, но удобно с практической.
+
 ------------------------------------------------------------------------------ }
 
 interface
@@ -27,6 +30,15 @@ uses Classes, Windows, SysUtils, Math, Streams, Tokens, Statements, Commons,
   PrinterIntf, Utils;
 
 type
+
+  { Метка }
+  TLabel = class(TStatement)
+  strict private
+    _Name: TToken;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
 
   { Базовый класс для операторов PL/SQL }
   TPLSQLStatement = class(TSemicolonStatement)
@@ -55,7 +67,8 @@ type
   { Завершение программного блока }
   TEnd = class(TStatement)
   strict private
-    _End, _EndName: TEpithet;
+    _End: TEpithet;
+    _EndName: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -79,8 +92,8 @@ type
   { Заголовок пакета }
   TPackageHeader = class(TStatement)
   strict private
-    _Package, _Body, _AuthId, _AsIs: TEpithet;
-    _PackageName: TStatement;
+    _Package, _AuthId, _AsIs: TEpithet;
+    _Name: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -102,7 +115,7 @@ type
     _Map: TEpithet;
     _FunctionType: TEpithet;
     _ProcedureOrFunction: TEpithet;
-    _Name: TEpithet;
+    _Name: TStatement;
     _Params: TStatement;
     _Return: TEpithet;
     _SelfAsResult: TEpithet;
@@ -276,7 +289,6 @@ type
   TStatements = class(TStatementList<TStatement>)
   strict protected
     function ParseStatement(out AResult: TStatement): boolean; override;
-    function ParseDelimiter(out AResult: TObject): boolean; override;
     function ParseBreak: boolean; override;
     function AllowWhen: boolean; virtual;
   end;
@@ -323,7 +335,8 @@ type
   { Оператор raise }
   TRaise = class(TPLSQLStatement)
   strict private
-    _Raise, _ExceptionName: TEpithet;
+    _Raise: TEpithet;
+    _ExceptionName: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -517,6 +530,15 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Оператор goto }
+  TGoto = class(TPLSQLStatement)
+  strict private
+    _Goto, _Address: TEpithet;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
   { Оператор execute immediate }
   TExecuteImmediate = class(TPLSQLStatement)
   strict private
@@ -693,7 +715,7 @@ function TEnd.InternalParse: boolean;
 begin
   _End := Keyword('end');
   Result := Assigned(_End);
-  if Result then _EndName := Identifier;
+  if Result then TQualifiedIdent.Parse(Self, Source, _EndName);
 end;
 
 procedure TEnd.InternalPrintSelf(APrinter: TPrinter);
@@ -706,13 +728,11 @@ end;
 function TPackageHeader.InternalParse: boolean;
 begin
   { Если распознали слово package, то распознали конструкцию }
-  _Package := Keyword('package');
+  _Package := Keyword(['package', 'package body']);
   if not Assigned(_Package) then exit(false);
   Result := true;
-  { Проверим наличие body }
-  _Body := Keyword('body');
   { Проверим название пакета }
-  TQualifiedIdent.Parse(Self, Source, _PackageName);
+  TQualifiedIdent.Parse(Self, Source, _Name);
   { Проверим наличие authid }
   _AuthId := Keyword(['authid definer', 'authid current_user']);
   { Проверим наличие is }
@@ -722,13 +742,13 @@ end;
 
 procedure TPackageHeader.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Package, _Body, _PackageName, _AuthId, _AsIs]);
+  APrinter.PrintItems([_Package, _Name, _AuthId, _AsIs]);
   APrinter.NextLine;
 end;
 
 function TPackageHeader.StatementName: string;
 begin
-  Result := Concat([_Package, _Body, _PackageName]);
+  Result := Concat([_Package, _Name]);
 end;
 
 { TPackage }
@@ -754,7 +774,7 @@ begin
   if not Assigned(_ProcedureOrFunction) then exit(false);
   Result := true;
   { Название процедуры и параметры }
-  _Name := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _Name);
   if not Assigned(_Name) then exit;
   TParamsDeclaration.Parse(Self, Source, _Params);
   { Возвращаемое значение }
@@ -769,14 +789,14 @@ end;
 procedure TSubroutineHeaderBase.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Map, _FunctionType, _ProcedureOrFunction, _Name]);
-  if Settings.IndentBrackets then APrinter.Indent;
+  APrinter.Indent;
   {$B+}
   FIndentedBeforeIs := APrinter.NextLineIf([_Params]) or
                        APrinter.NextLineIf([_Return, _SelfAsResult, _ReturnType]) or
                        APrinter.NextLineIf([_Deterministic]) or
                        APrinter.NextLineIf([_Pipelined]);
   {$B-}
-  if Settings.IndentBrackets then APrinter.Undent;
+  APrinter.Undent;
 end;
 
 function TSubroutineHeaderBase.StatementName: string;
@@ -1112,13 +1132,6 @@ begin
             TParser.ParsePLSQL(Self, Source, AResult);
 end;
 
-function TStatements.ParseDelimiter(out AResult: TObject): boolean;
-begin
-  AResult := NextToken;
-  Result  := AResult is TLabel;
-  if not Result then AResult := nil;
-end;
-
 function TStatements.ParseBreak: boolean;
 begin
   Result := Any([Keyword(['end', 'end if', 'end loop', 'end case', 'exception', 'else', 'elsif'])]);
@@ -1223,7 +1236,7 @@ end;
 function TRaise.InternalParse: boolean;
 begin
   _Raise := Keyword('raise');
-  _ExceptionName := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _ExceptionName);
   Result := Assigned(_Raise);
   inherited;
 end;
@@ -1582,7 +1595,7 @@ begin
     end;
   _Save := Keyword('save');
   _Exceptions := Keyword('exceptions');
-  TParser.ParseDML(Self, Source, _DML);
+  if not TParser.ParseDML(Self, Source, _DML) then TParser.ParsePLSQL(Self, Source, _DML);
   inherited;
   Result := true;
 end;
@@ -1789,9 +1802,40 @@ begin
   APrinter.PrintItems([_NextLine, _NextLine, _Comment, _NextLine, _NextLine]);
 end;
 
+{ TLabel }
+
+function TLabel.InternalParse: boolean;
+begin
+  Source.Mark;
+  _Name := NextToken;
+  Result := _Name is Tokens.TLabel;
+  if not Result then Source.Restore;
+end;
+
+procedure TLabel.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Name);
+end;
+
+{ TGoto }
+
+function TGoto.InternalParse: boolean;
+begin
+  _Goto := Keyword('goto');
+  Result := Assigned(_Goto);
+  if Result then _Address := Identifier;
+  inherited;
+end;
+
+procedure TGoto.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Goto, _Address]);
+  inherited;
+end;
+
 initialization
-  PLSQLKeywords := TKeywords.Create(['as', 'begin', 'end', 'exception', 'function',
-    'is', 'procedure', 'using']);
+  PLSQLKeywords := TKeywords.Create(['as', 'begin', 'end', 'exception',
+    'function', 'is', 'procedure', 'using']);
   FetchKeywords := TKeywords.Create(PLSQLKeywords, ['limit']);
 
 finalization

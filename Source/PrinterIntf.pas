@@ -67,7 +67,6 @@ type
     ReplaceDefault: boolean;
     ReplaceAsIs: boolean;
     AddInAccessSpecificator: boolean;
-    IndentBrackets: boolean;
     PreferredExpressionLength: integer;
   public
     constructor Default;
@@ -85,6 +84,8 @@ type
     procedure EndPrint; virtual; abstract;
     procedure Indent; virtual; abstract;
     procedure Undent; virtual; abstract;
+    procedure PushIndent; virtual; abstract;
+    procedure PopIndent; virtual; abstract;
     procedure NextLine; virtual; abstract;
     procedure CancelNextLine; virtual; abstract;
     procedure SupressNextLine(ASupress: boolean); virtual; abstract;
@@ -327,7 +328,6 @@ begin
   ReplaceDefault                  := true;
   ReplaceAsIs                     := true;
   AddInAccessSpecificator         := true;
-  IndentBrackets                  := true;
   PreferredExpressionLength       := 120;
 end;
 
@@ -338,7 +338,6 @@ begin
   PositionalArgumentSingleLineParamLimit := 999;
   PreferredExpressionLength       := 9999;
   MatchParamLimit                 := 99;
-  IndentBrackets := true;
 end;
 
 end.

@@ -1,0 +1,2 @@
+drop package body x;
+drop package body x.y;

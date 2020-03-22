@@ -215,7 +215,7 @@ end;
 
 procedure TToken.SetComment(Index: integer; AComment: TComment);
 begin
-  if Assigned(FComments[Index])
+  if Assigned(AComment) and Assigned(FComments[Index])
     then raise Exception.CreateFmt('Trying to link comment [%s] while comment [%s] is already linked', [AComment.Value, FComments[Index].Value])
     else FComments[Index] := AComment;
 end;

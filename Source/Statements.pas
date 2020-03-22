@@ -92,9 +92,9 @@ type
   public
     constructor Create(AParent: TStatement; ASource: TBufferedStream<TToken>); virtual;
     procedure PrintSelf(APrinter: TPrinter);
-    function Aligned: boolean; virtual;
     procedure Match(AStatement: TStatement);
     procedure MatchChildren;
+    function HasCommentsAbove: boolean;
     property Parent: TStatement read FParent write FParent;
     property Settings: TFormatSettings read GetSettings write FSettings;
     property FirstToken: TToken read FFirstToken;
@@ -102,6 +102,7 @@ type
     function Name: string; virtual;
     function StatementType: string; virtual;
     function StatementName: string; virtual;
+    function Aligned: boolean; virtual;
     function Transparent: boolean; virtual;
     function Grouping: TStatementClass; virtual;
   end;
@@ -344,6 +345,12 @@ procedure TStatement.Match(AStatement: TStatement);
 begin
   if not Assigned(Self) or not Assigned(AStatement) then exit;
   InternalMatch(AStatement);
+end;
+
+function TStatement.HasCommentsAbove: boolean;
+begin
+  Result := Assigned(FirstToken) and
+            (Assigned(FirstToken.CommentFarAbove) or Assigned(FirstToken.CommentAbove));
 end;
 
 function TStatement.InternalParse: boolean;

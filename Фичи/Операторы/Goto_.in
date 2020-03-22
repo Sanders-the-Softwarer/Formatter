@@ -1,9 +1,9 @@
 begin
-    <<begin>>
+    <<begin_>>
     begin
         <<null>>
         null;
     end label;
     <<goto>>
-    goto begin;
+    goto begin_;
 end;

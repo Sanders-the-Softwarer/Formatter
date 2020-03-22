@@ -1,0 +1,17 @@
+-- Список значений в p_param_values нелепо форматируется, выражение с конкатенацией разносится на несколько строк,
+-- а все прочие параметры записываются в последней строчке. Нужно наоборот, конкатенацию в строку, а последующие
+-- параметры ниже
+
+begin
+    top_log_calc.add_log
+        (
+            p_param_names => t_varchar_table('key', 'current sum retail', 'current sum wholesale', 'current priority count'),
+            p_param_values => t_varchar_table
+                                  (
+                                      v_rec.sup_sku_code || chr(1) || v_rec.sup_style_color_code || chr(1) || v_rec.po_code || chr(1) || v_rec.specification_code, 
+                                      v_sum_retail, 
+                                      v_sum_wholesale, 
+                                      v_priority_count
+                                  )
+        );
+end;

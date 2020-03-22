@@ -1,0 +1,7 @@
+-- execute immediate должен располагаться с отступом относительно forall
+
+forall i in indices of gv_rowid_tbl
+    execute immediate
+        'update ' || p_imp_table_name || ' set is_processed = 1 where rowid = :1'
+    using
+        in gv_rowid_tbl(i);

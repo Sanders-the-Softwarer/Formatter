@@ -1,0 +1,4 @@
+-- Комментарий не должен сдвигать следующую команду чёрт знает куда
+
+whenever sqlerror exit -- 
+whenever sqlerror exit success

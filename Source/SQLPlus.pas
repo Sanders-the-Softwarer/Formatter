@@ -46,8 +46,8 @@ type
   { Команда set }
   TSet = class(TSQLPlusStatement)
   strict private
-    _Set, _Target: TEpithet;
-    _Value: TStatement;
+    _Set: TEpithet;
+    _Target, _Value: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -197,7 +197,7 @@ function TSet.InternalParse: boolean;
 begin
   _Set := Keyword('set');
   if not Assigned(_Set) then exit(false);
-  _Target := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _Target);
   TParser.ParseExpression(Self, Source, _Value);
   Result := true;
 end;

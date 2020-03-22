@@ -4,7 +4,7 @@ select
     *
 from
     a
-        full /* полное */ outer /* внешнее */ join /* соединение */
+        full outer join /* полное */ /* внешнее */ /* соединение */
     b
         on
             (1 = 1)
@@ -20,9 +20,7 @@ select
     *
 from
     a
-        full  -- полное 
-        outer -- внешнее 
-        join  -- соединение 
+        full outer join -- полное -- внешнее -- соединение
     b
         on
             (1 = 1)
@@ -33,11 +31,9 @@ select
 from
     a
         /* полное */
-        full 
         /* внешнее */
-        outer 
         /* соединение */
-        join   
+        full outer join
     b
         on
             (1 = 1)
@@ -47,18 +43,14 @@ select
     *
 from
     a
-        
-        /* полное */
 
-        full 
+        /* полное */
 
         /* внешнее */
 
-        outer 
-
         /* соединение */
 
-        join   
+        full outer join
     b
         on
             (1 = 1)
@@ -68,12 +60,10 @@ select
     *
 from
     a
-        full 
-            /* полное */
-        outer 
-            /* внешнее */
-        join   
-            /* соединение */
+        full outer join
+        /* полное */
+        /* внешнее */
+        /* соединение */
     b
         on
             (1 = 1)
@@ -83,17 +73,13 @@ select
     *
 from
     a
-        full 
+        full outer join
 
         /* полное */
 
-            outer 
+        /* внешнее */
 
-            /* внешнее */
-
-                join   
-
-                /* соединение */
+        /* соединение */
 
     b
         on

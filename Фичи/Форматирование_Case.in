@@ -1,4 +1,12 @@
-    select 
-        sum(case when t.mnemocode = top_const.presentation_type_initial then o.otb else null end) otb_initial
-    from 
-        top_v_otb o
+select 
+    sum
+        (
+            case 
+                when t.mnemocode = top_const.presentation_type_initial then 
+                    o.otb 
+                else 
+                    null 
+            end
+        ) otb_initial
+from 
+    top_v_otb o

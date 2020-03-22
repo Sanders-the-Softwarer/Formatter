@@ -1,0 +1,2 @@
+drop procedure x;
+drop procedure x.y;

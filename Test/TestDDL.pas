@@ -41,12 +41,19 @@ type
 
   { Тесты на drop }
   _Drop = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
   published
+    procedure Drop_Function;
+    procedure Drop_Package;
+    procedure Drop_Package_Body;
+    procedure Drop_Procedure;
+    procedure Drop_Synonym;
     procedure Drop_Table;
-    procedure Drop_Procedure_Function_Package;
     procedure Drop_View;
     procedure Drop_Index;
     procedure Drop_Type;
+    procedure Drop_Type_Body;
     procedure Drop_Sequence;
     procedure Drop_Trigger;
   end;
@@ -63,7 +70,6 @@ type
     function GetDir: string; override;
   published
     procedure Create_Synonym;
-    procedure Drop_Synonym;
     procedure Grant;
   end;
 
@@ -142,15 +148,36 @@ end;
 
 { _Drop }
 
+function _Drop.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды DDL\Drop';
+end;
+
+procedure _Drop.Drop_Function;
+begin
+end;
+
 procedure _Drop.Drop_Index;
 begin
 end;
 
-procedure _Drop.Drop_Procedure_Function_Package;
+procedure _Drop.Drop_Package;
+begin
+end;
+
+procedure _Drop.Drop_Package_Body;
+begin
+end;
+
+procedure _Drop.Drop_Procedure;
 begin
 end;
 
 procedure _Drop.Drop_Sequence;
+begin
+end;
+
+procedure _Drop.Drop_Synonym;
 begin
 end;
 
@@ -163,6 +190,10 @@ begin
 end;
 
 procedure _Drop.Drop_Type;
+begin
+end;
+
+procedure _Drop.Drop_Type_Body;
 begin
 end;
 
@@ -184,10 +215,6 @@ begin
 end;
 
 procedure _Команды_DDL.Create_Synonym;
-begin
-end;
-
-procedure _Команды_DDL.Drop_Synonym;
 begin
 end;
 

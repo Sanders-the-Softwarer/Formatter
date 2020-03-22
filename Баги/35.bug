@@ -1,0 +1,11 @@
+-- case должен размещаться под xyz
+
+begin
+    abc := xyz +
+           case
+               when v_data_source_mnemo in (top_const.data_source_1fs, top_const.data_source_2fs) then
+                   nvl(v_rec.quantity_on_hold, 0)
+               else
+                   0
+           end;
+end; 

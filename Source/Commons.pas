@@ -148,11 +148,12 @@ var MultiLineIndexes: boolean;
 begin
   MultiLineIndexes := (_Indexes is TBracketedArguments) and TBracketedArguments(_Indexes).MultiLine;
   APrinter.PrintItems([_Dot, _Ident]);
-  if Settings.IndentBrackets then APrinter.Indent;
-  if MultiLineIndexes then APrinter.PrintItem(_NextLine);
-  APrinter.PrintItem(_Indexes);
-  if Settings.IndentBrackets then APrinter.Undent;
-  if MultiLineIndexes then APrinter.PrintItem(_NextLine);
+  if Assigned(_Indexes) then
+  begin
+    if MultiLineIndexes then APrinter.PrintItem(_IndentNextLine);
+    APrinter.PrintItem(_Indexes);
+    if MultiLineIndexes then APrinter.PrintItem(_UndentNextLine);
+  end;
   APrinter.PrintItem(_Next);
 end;
 
@@ -194,7 +195,9 @@ begin
       APrinter.StartRuler(Settings.AlignVariables);
       APrinter.PrintRulerItem('ident', _Ident);
       APrinter.PrintRulerItem('argument', _Assignment);
+      APrinter.PushIndent;
       APrinter.PrintRulerItem('expression', _Expression);
+      APrinter.PopIndent;
     end
   else
     APrinter.PrintItem(_Expression);

@@ -32,6 +32,8 @@ type
     procedure EndPrint; override;
     procedure Indent; override;
     procedure Undent; override;
+    procedure PushIndent; override;
+    procedure PopIndent; override;
     procedure NextLine; override;
     procedure CancelNextLine; override;
     procedure SupressNextLine(ASupress: boolean); override;
@@ -126,6 +128,16 @@ begin
 end;
 
 procedure TBasePrinter.Undent;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.PushIndent;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.PopIndent;
 begin
   { ничего не делаем }
 end;

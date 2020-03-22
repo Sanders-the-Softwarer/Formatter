@@ -1,0 +1,2 @@
+drop package x;
+drop package x.y;

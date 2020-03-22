@@ -1,0 +1,10 @@
+-- Первое поле не должно уезжать направо из-за комментария
+
+select --+ cardinality(t, 1)
+    t.sup_sku_code,
+    t.sup_style_color_code,
+    sd.po_code,
+    sd.specification_code,
+    nvl(sum(sd.quantity), 0) quantity,
+    nvl(sum(case when ch.is_retail = 1 then sd.quantity end), 0) quantity_retail,
+    0 quantity_retail_manual,

@@ -141,6 +141,8 @@ begin
             TAnonymousBlock.Parse(AParent, ASource, AResult) or
             TAssignment.Parse(AParent, ASource, AResult) or
             TProcedureCall.Parse(AParent, ASource, AResult) or
+            TLabel.Parse(AParent, ASource, AResult) or
+            TGoto.Parse(AParent, ASource, AResult) or
             TStandaloneComment.Parse(AParent, ASource, AResult);
 end;
 
@@ -247,18 +249,17 @@ begin
   if S.Grouping = nil then exit(Transit(S));
   { В противном случае начнём новую группу }
   List := TSameTypeList.Create(S);
-  { Прочитаем следующие элементы того же класса и добавим их в группу }
+  { Добавим следующие элементы того же класса, не разбитые комментариями }
   while not Source.Eof do
   begin
     Source.SaveMark;
     S := Source.Next;
-    if List.ItemType = S.Grouping then
-      List.Add(S)
-    else
-      begin
-        Source.Restore;
-        break;
-      end;
+    if (List.ItemType <> S.Grouping) or S.HasCommentsAbove then
+    begin
+      Source.Restore;
+      break;
+    end;
+    List.Add(S);
   end;
   { Всё, группа идёт на выход }
   Result := List;

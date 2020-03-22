@@ -1,0 +1,12 @@
+-- Неправильный сдвиг - when должен быть с отступом относительно case и end под case
+
+begin
+    i := case -- При Quantity Retail (manual) (T.И) = Null добавляем Quantity (on hold) (T.И)
+             when v_manual_retail /*v_rec.quantity_retail_manual*/ is null
+                  and v_data_source_mnemo in (top_const.data_source_1fs, top_const.data_source_2fs)
+             then
+                 nvl(v_rec.quantity_on_hold, 0)
+             else
+                 0
+         end;
+end;

@@ -33,8 +33,8 @@ type
   { Команда drop }
   TDrop = class(TSemicolonStatement)
   strict private
-    _Drop, _ObjectType, _Body, _Force, _Cascade, _Constraints: TEpithet;
-    _ObjectName, _Unexpected: TStatement;
+    _Drop, _Type, _Force, _CascadeConstraints: TEpithet;
+    _Name: TStatement;
     _Slash: TTerminal;
     function IsTable: boolean;
     function IsType: boolean;
@@ -174,7 +174,8 @@ type
   { Выражение tablespace }
   TTablespace = class(TStatement)
   strict private
-    _Tablespace, _TablespaceName: TEpithet;
+    _Tablespace: TEpithet;
+    _Name: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -304,8 +305,8 @@ type
   { Команда grant }
   TGrant = class(TSemicolonStatement)
   strict private
-    _Grant, _On, _To, _Grantee, _IdentifiedBy, _Password, _WithAdminOption, _WithGrantOption, _WithHierarchyOption: TEpithet;
-    _Privileges, _Object: TStatement;
+    _Grant, _On, _To, _IdentifiedBy, _WithAdminOption, _WithGrantOption, _WithHierarchyOption: TEpithet;
+    _Privileges, _Object, _Grantee, _Password: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -507,12 +508,12 @@ function TTablespace.InternalParse: boolean;
 begin
   _Tablespace := Keyword('tablespace');
   Result := Assigned(_Tablespace);
-  if Result then _TablespaceName := Identifier;
+  if Result then TQualifiedIdent.Parse(Self, Source, _Name);
 end;
 
 procedure TTablespace.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Tablespace, _TablespaceName]);
+  APrinter.PrintItems([_Tablespace, _Name]);
 end;
 
 { TTableItem }
@@ -799,30 +800,26 @@ function TDrop.InternalParse: boolean;
 begin
   _Drop := Keyword('drop');
   if not Assigned(_Drop) then exit(false);
-  _ObjectType := Keyword(['table', 'procedure', 'function', 'package', 'view', 'index', 'type', 'sequence', 'trigger', 'synonym', 'public synonym']);
-  if not Assigned(_ObjectType) then TUnexpectedToken.Parse(Self, Source, _Unexpected);
-  if Assigned(_ObjectType) and ((_ObjectType.Value = 'package') or (_ObjectType.Value = 'type')) then _Body := Keyword('body');
-  TQualifiedIdent.Parse(Self, Source, _ObjectName);
-  if IsTable then
-  begin
-    _Cascade := Keyword('cascade');
-    _Constraints := Keyword('constraints');
-  end;
-  if IsType then _Cascade := Keyword('force');
-  Result := inherited or Assigned(_ObjectType);
+  _Type := Keyword(['table', 'procedure', 'function', 'package', 'package body',
+                    'view', 'index', 'type', 'type body', 'sequence', 'trigger',
+                    'synonym', 'public synonym']);
+  TQualifiedIdent.Parse(Self, Source, _Name);
+  if IsTable then _CascadeConstraints := Keyword('cascade constraints');
+  if IsType then _Force := Keyword('force');
+  Result := inherited or Assigned(_Type);
   if Result then _Slash := Terminal('/');
 end;
 
 procedure TDrop.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Drop, _ObjectType, _Unexpected, _Body, _ObjectName, _Force, _Cascade, _Constraints]);
+  APrinter.PrintItems([_Drop, _Type, _Name, _Force, _CascadeConstraints]);
   inherited;
   APrinter.NextLineIf([_Slash]);
 end;
 
 function TDrop.StatementName: string;
 begin
-  Result := Concat([_Drop, _ObjectType, _Body, _ObjectName]);
+  Result := Concat([_Drop, _Type, _Name]);
 end;
 
 function TDrop.Grouping: TStatementClass;
@@ -832,12 +829,12 @@ end;
 
 function TDrop.IsTable: boolean;
 begin
-  Result := Assigned(_ObjectType) and (_ObjectType.Value = 'table');
+  Result := Assigned(_Type) and (_Type.Value = 'table');
 end;
 
 function TDrop.IsType: boolean;
 begin
-  Result := Assigned(_ObjectType) and (_ObjectType.Value = 'type');
+  Result := Assigned(_Type) and (_Type.Value = 'type');
 end;
 
 { TSequence }
@@ -896,9 +893,9 @@ begin
   _On := Keyword('on');
   if Assigned(_On) then TQualifiedIdent.Parse(Self, Source, _Object);
   _To := Keyword('to');
-  _Grantee := Identifier;
+  TQualifiedIdent.Parse(Self, Source, _Grantee);
   _IdentifiedBy := Keyword('identified by');
-  if Assigned(_IdentifiedBy) then _Password := Identifier;
+  if Assigned(_IdentifiedBy) then TQualifiedIdent.Parse(Self, Source, _Password);
   _WithAdminOption := Keyword('with admin option');
   _WithHierarchyOption := Keyword('with hierarchy option');
   _WithGrantOption := Keyword('with grant option');
