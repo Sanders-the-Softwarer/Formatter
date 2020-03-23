@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                        Печать форматированного текста                      //
+//                        РџРµС‡Р°С‚СЊ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРЅРѕРіРѕ С‚РµРєСЃС‚Р°                      //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -18,7 +18,7 @@ uses
 
 type
 
-  { Информация о выравниваниях }
+  { РРЅС„РѕСЂРјР°С†РёСЏ Рѕ РІС‹СЂР°РІРЅРёРІР°РЅРёСЏС… }
   TRulers = class
   private
     Names: TStringList;
@@ -33,10 +33,10 @@ type
     function Fix(const ARuler: string): integer;
   end;
 
-  { Режим принтера }
+  { Р РµР¶РёРј РїСЂРёРЅС‚РµСЂР° }
   TFormatterPrinterMode = (fpmNormal, fpmGetRulers, fpmSetRulers);
 
-  { Принтер для вывода форматированного текста }
+  { РџСЂРёРЅС‚РµСЂ РґР»СЏ РІС‹РІРѕРґР° С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРЅРѕРіРѕ С‚РµРєСЃС‚Р° }
   TFormatterPrinter = class(TBasePrinter)
   strict private
     Builder: TStringBuilder;
@@ -44,14 +44,13 @@ type
     Shift:   integer;
     EOLCount: integer;
     ForceNextLine: boolean;
-    NextLineComments: TList<TToken>;
     EmptyLine: boolean;
     WasComment: boolean;
     Line:    integer;
     Col:     integer;
     Rulers:  TRulers;
     PaddingCol: integer;
-    PrevToken: TToken;
+    PrevToken, FarPrevToken: TToken;
     SpecialComments: TObjectList<TToken>;
     SupSpace, SupNextLine: integer;
     IsDraft: boolean;
@@ -59,9 +58,13 @@ type
     RulerEnabled: boolean;
     Indents: TStack<integer>;
     FixShift: boolean;
+    OriginalFormatCount, OriginalFormatStartLine: integer;
+    OriginalFormatToken: TToken;
+    PrevRealLine: integer;
   strict protected
     TokenPos, TokenLen: TDictionary<TToken, integer>;
     function SpaceRequired(ALeft, ARight: TToken): boolean;
+    procedure PrintEmptyToken;
   public
     constructor Create;
     destructor Destroy; override;
@@ -84,11 +87,17 @@ type
     procedure StartRuler(Enabled: boolean); override;
   protected
     procedure Ruler(const ARuler: string); override;
+    procedure __Debug(const S: string; Args: array of const);
   public
     function MakeDraftPrinter: TPrinter; override;
     function CurrentCol: integer; override;
     function  GetText: string; override;
   end;
+
+const
+  { РћР±СЂР°РјР»РµРЅРёРµ С„СЂР°РіРјРµРЅС‚Р°, РІ РєРѕС‚РѕСЂРѕРј РѕС‚РєР»СЋС‡Р°РµС‚СЃСЏ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёРµ }
+  C_UNFORMAT_START = '/* -- vvv --';
+  C_UNFORMAT_STOP  = '/* -- ^^^ --';
 
 implementation
 
@@ -96,7 +105,7 @@ uses Utils, SQLPlus, PLSQL;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                  Принтер для печати форматированного текста                //
+//                  РџСЂРёРЅС‚РµСЂ РґР»СЏ РїРµС‡Р°С‚Рё С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРЅРѕРіРѕ С‚РµРєСЃС‚Р°                //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -107,7 +116,6 @@ begin
   TokenLen := TDictionary<TToken, integer>.Create;
   SpecialComments := TObjectList<TToken>.Create(true);
   Indents := TStack<integer>.Create;
-  NextLineComments := TList<TToken>.Create;
 end;
 
 destructor TFormatterPrinter.Destroy;
@@ -116,11 +124,10 @@ begin
   FreeAndNil(TokenLen);
   FreeAndNil(SpecialComments);
   FreeAndNil(Indents);
-  FreeAndNil(NextLineComments);
   inherited;
 end;
 
-{ Инициализация перед началом печати }
+{ РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїРµСЂРµРґ РЅР°С‡Р°Р»РѕРј РїРµС‡Р°С‚Рё }
 procedure TFormatterPrinter.BeginPrint;
 begin
   inherited;
@@ -130,33 +137,35 @@ begin
   Line    := 1;
   Col     := 1;
   ForceNextLine := false;
-  EOLCount := 666; { начало текста съедает стартовые пустые строки }
+  EOLCount := 666; { РЅР°С‡Р°Р»Рѕ С‚РµРєСЃС‚Р° СЃСЉРµРґР°РµС‚ СЃС‚Р°СЂС‚РѕРІС‹Рµ РїСѓСЃС‚С‹Рµ СЃС‚СЂРѕРєРё }
   PaddingCol := 0;
+  OriginalFormatCount := 0;
+  OriginalFormatToken := nil;
   TokenPos.Clear;
   TokenLen.Clear;
   SpecialComments.Clear;
-  NextLineComments.Clear;
   Indents.Clear;
 end;
 
-{ Вывод готового результата }
+{ Р’С‹РІРѕРґ РіРѕС‚РѕРІРѕРіРѕ СЂРµР·СѓР»СЊС‚Р°С‚Р° }
 procedure TFormatterPrinter.EndPrint;
-var T: TToken;
 begin
-  EmptyLine := false;
-  ForceNextLine := false;
-  while NextLineComments.Count > 0 do
+  { РџСЂРµРґСѓРїСЂРµРґРёРј Рѕ РґРёСЃР±Р°Р»Р°РЅСЃРµ РєРѕРјР°РЅРґ Р·Р°РїСЂРµС‚Р°/РІРѕР·РѕР±РЅРѕРІР»РµРЅРёСЏ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ, РµСЃР»Рё РѕРЅ РµСЃС‚СЊ }
+  if OriginalFormatCount > 0 then
   begin
-    PrintToken(NextLineComments[0]);
-    NextLineComments.Delete(0);
+    OriginalFormatCount := 0;
+    EmptyLine := true;
+    PrintSpecialComment('!!! Р’РќРРњРђРќРР• !!! Рљ РєРѕРЅС†Сѓ РїРµС‡Р°С‚Рё РѕСЃС‚Р°Р»Р°СЃСЊ РЅРµР·Р°РєСЂС‹С‚Р°СЏ РєРѕРјР°РЅРґР° РѕС‚РјРµРЅС‹ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ !!!');
   end;
+  { Р—Р°РєСЂРѕРµРј С‚РµРєСѓС‰СѓСЋ РїРµС‡Р°С‚СЊ }
   if Assigned(Builder) then Text := Builder.ToString else Text := '';
   FreeAndNil(Builder);
   PrevToken := nil;
+  FarPrevToken := nil;
   inherited;
 end;
 
-{ Универсальный метод вывода на принтер поддерживаемых объектов }
+{ РЈРЅРёРІРµСЂСЃР°Р»СЊРЅС‹Р№ РјРµС‚РѕРґ РІС‹РІРѕРґР° РЅР° РїСЂРёРЅС‚РµСЂ РїРѕРґРґРµСЂР¶РёРІР°РµРјС‹С… РѕР±СЉРµРєС‚РѕРІ }
 procedure TFormatterPrinter.PrintItem(AItem: TObject);
 begin
   if AItem is TFormatterCmd then
@@ -168,25 +177,25 @@ begin
     inherited;
 end;
 
-{ Проверка, нужен ли пробел между двумя лексемами }
+{ РџСЂРѕРІРµСЂРєР°, РЅСѓР¶РµРЅ Р»Рё РїСЂРѕР±РµР» РјРµР¶РґСѓ РґРІСѓРјСЏ Р»РµРєСЃРµРјР°РјРё }
 function TFormatterPrinter.SpaceRequired(ALeft, ARight: TToken): boolean;
 begin
   Result := false;
-  { Если пробелы запрещены - не ставим их }
+  { Р•СЃР»Рё РїСЂРѕР±РµР»С‹ Р·Р°РїСЂРµС‰РµРЅС‹ - РЅРµ СЃС‚Р°РІРёРј РёС… }
   if SupSpace > 0 then exit;
-  { Точку с запятой прижимаем справа ко всему }
+  { РўРѕС‡РєСѓ СЃ Р·Р°РїСЏС‚РѕР№ РїСЂРёР¶РёРјР°РµРј СЃРїСЂР°РІР° РєРѕ РІСЃРµРјСѓ }
   if ARight.Value = ';' then exit;
-  { Точку прижимаем с обеих сторон ко всему }
+  { РўРѕС‡РєСѓ РїСЂРёР¶РёРјР°РµРј СЃ РѕР±РµРёС… СЃС‚РѕСЂРѕРЅ РєРѕ РІСЃРµРјСѓ }
   if (ALeft.Value = '.') or (ARight.Value = '.') then exit;
-  { Собаку прижимаем с обеих сторон ко всему }
+  { РЎРѕР±Р°РєСѓ РїСЂРёР¶РёРјР°РµРј СЃ РѕР±РµРёС… СЃС‚РѕСЂРѕРЅ РєРѕ РІСЃРµРјСѓ }
   if (ALeft.Value = '@') or (ARight.Value = '@') then exit;
-  { Двоеточие/амперсанд прижимаем к следующему за ним идентификатору }
+  { Р”РІРѕРµС‚РѕС‡РёРµ/Р°РјРїРµСЂСЃР°РЅРґ РїСЂРёР¶РёРјР°РµРј Рє СЃР»РµРґСѓСЋС‰РµРјСѓ Р·Р° РЅРёРј РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂСѓ }
   if ((ALeft.Value = ':') or (ALeft.Value = '&')) and ((ARight is TEpithet) or (ARight is TNumber)) then exit;
-  { Запятую прижимаем справа ко всему }
+  { Р—Р°РїСЏС‚СѓСЋ РїСЂРёР¶РёРјР°РµРј СЃРїСЂР°РІР° РєРѕ РІСЃРµРјСѓ }
   if ARight.Value = ',' then exit;
-  { В конструкции number(5,2) запятую прижимаем и слева тоже }
+  { Р’ РєРѕРЅСЃС‚СЂСѓРєС†РёРё number(5,2) Р·Р°РїСЏС‚СѓСЋ РїСЂРёР¶РёРјР°РµРј Рё СЃР»РµРІР° С‚РѕР¶Рµ }
   if (ALeft.Value = ',') and TTerminal(ALeft).IntoNumber then exit;
-  { Открывающую скобку прижимаем справа к идентификаторам и ключевым словам char, table, row, lob, key, unique, listagg }
+  { РћС‚РєСЂС‹РІР°СЋС‰СѓСЋ СЃРєРѕР±РєСѓ РїСЂРёР¶РёРјР°РµРј СЃРїСЂР°РІР° Рє РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂР°Рј Рё РєР»СЋС‡РµРІС‹Рј СЃР»РѕРІР°Рј char, table, row, lob, key, unique, listagg }
   if (ARight.Value = '(') and
      (ALeft is TEpithet) and
      (SameText(ALeft.Value, 'char') or
@@ -197,199 +206,260 @@ begin
       SameText(ALeft.Value, 'unique') or
       SameText(ALeft.Value, 'listagg') or
       not TEpithet(ALeft).IsKeyword) then exit;
-  { К открывающей скобке прижимаем справа всё }
+  { Рљ РѕС‚РєСЂС‹РІР°СЋС‰РµР№ СЃРєРѕР±РєРµ РїСЂРёР¶РёРјР°РµРј СЃРїСЂР°РІР° РІСЃС‘ }
   if ALeft.Value = '(' then exit;
-  { Открывающие/закрывающие скобки всегда прижимаем друг к другу }
+  { РћС‚РєСЂС‹РІР°СЋС‰РёРµ/Р·Р°РєСЂС‹РІР°СЋС‰РёРµ СЃРєРѕР±РєРё РІСЃРµРіРґР° РїСЂРёР¶РёРјР°РµРј РґСЂСѓРі Рє РґСЂСѓРіСѓ }
   if ((ALeft.Value = '(') or (ALeft.Value = ')')) and ((ARight.Value = '(') or (ARight.Value = ')')) then exit;
-  { Закрывающую скобку прижимаем справа ко всему }
+  { Р—Р°РєСЂС‹РІР°СЋС‰СѓСЋ СЃРєРѕР±РєСѓ РїСЂРёР¶РёРјР°РµРј СЃРїСЂР°РІР° РєРѕ РІСЃРµРјСѓ }
   if ARight.Value = ')' then exit;
-  { Суффиксы %type и подобные прижимаем справа ко всему }
+  { РЎСѓС„С„РёРєСЃС‹ %type Рё РїРѕРґРѕР±РЅС‹Рµ РїСЂРёР¶РёРјР°РµРј СЃРїСЂР°РІР° РєРѕ РІСЃРµРјСѓ }
   if ARight.Value.StartsWith('%') then exit;
-  { Унарные операции прижимаем слева к следующему за ними }
+  { РЈРЅР°СЂРЅС‹Рµ РѕРїРµСЂР°С†РёРё РїСЂРёР¶РёРјР°РµРј СЃР»РµРІР° Рє СЃР»РµРґСѓСЋС‰РµРјСѓ Р·Р° РЅРёРјРё }
   if (ALeft is TTerminal) and (TTerminal(ALeft).OpType = otUnary) then exit;
-  { Если правила не сработали, ставим  пробел }
+  { Р•СЃР»Рё РїСЂР°РІРёР»Р° РЅРµ СЃСЂР°Р±РѕС‚Р°Р»Рё, СЃС‚Р°РІРёРј  РїСЂРѕР±РµР» }
   Result := true;
 end;
 
-{ Вывод очередной лексемы с навешиванием всех наворотов по форматированию }
-procedure TFormatterPrinter.PrintToken(AToken: TToken);
-var
-  Value: string;
-  HasToken, HasBuilder, AllowLF: boolean;
-  EOLLimit: integer;
-  C: TToken;
+{ РџРµС‡Р°С‚СЊ РїСѓСЃС‚РѕР№ Р»РµРєСЃРµРјС‹ - РїСЂРёРјРµРЅСЏРµС‚СЃСЏ РІ С‚РµС… СЃР»СѓС‡Р°СЏС…, РіРґРµ РЅСѓР¶РЅРѕ РІС‹РІРµСЃС‚Рё РїРµСЂРµРІРѕРґС‹
+  СЃС‚СЂРѕРє Рё С‚. Рї. РїСЂРµР¶РґРµ С‡РµРј РјРµРЅСЏС‚СЊ СЂРµР¶РёРјС‹, РєРѕС‚РѕСЂС‹Рµ РёР·РјРµРЅСЏС‚ РёР»Рё Р·Р°РїСЂРµС‚СЏС‚ РёС… РІС‹РІРѕРґ }
+procedure TFormatterPrinter.PrintEmptyToken;
+var T: TToken;
 begin
-  HasToken := Assigned(AToken);
-  HasBuilder := Assigned(Builder);
-  AllowLF := (SupNextLine = 0) or WasComment;
-  { Обработаем переход на новую строку и вставку пустой строки }
-  if EmptyLine then
-    begin
-      EOLLimit := 2;
-      EmptyLine := false;
-      ForceNextLine := false;
-    end
-  else if ForceNextLine then
-    begin
-      EOLLimit := 1;
-      ForceNextLine := false;
-    end
-  else
-    EOLLimit := 0;
-  while (EOLCount < EOLLimit) and AllowLF do
-  begin
-    if NextLineComments.Count > 0 then
-    begin
-      Ruler('right-comment');
-      while NextLineComments.Count > 0 do
-      begin
-        PrintToken(NextLineComments[0]);
-        NextLineComments.Delete(0);
-      end;
-      PaddingCol := 0;
-    end;
-    if HasBuilder then Builder.AppendLine;
-    Inc(EOLCount);
-    Inc(Line);
-    Col := 1;
-    PrevToken := nil;
-    EmptyLine := false;
-    ForceNextLine := false;
-  end;
-  { Если до лексемы есть комментарии, напечатаем их }
-  if HasToken and HasBuilder and not IsDraft then
-  begin
-    if Assigned(AToken.CommentFarAbove) then
-    begin
-      EmptyLine := true;
-      PrintToken(AToken.CommentFarAbove);
-      EmptyLine := true;
-      PrintToken(nil);
-    end;
-    if Assigned(AToken.CommentAbove) then
-    begin
-      NextLine;
-      PrintToken(AToken.CommentAbove);
-      NextLine;
-      PrintToken(nil);
-    end;
-  end;
-  { Если задано выравнивание, вставим соответствующее количество пробелов }
-  if (PaddingCol > Col) and HasToken then
-  begin
-    if EOLCount = 0 then Dec(PaddingCol, Shift);
-    if HasBuilder then Builder.Append(StringOfChar(' ', PaddingCol - Col));
-    Col := PaddingCol;
-    EOLCount := 0;
-    PaddingCol := 0;
-  end;
-  { Если нужно, внедрим пробел между предыдущей и новой лексемами }
-  if Assigned(PrevToken) and HasToken and SpaceRequired(PrevToken, AToken) then
-  begin
-    if HasBuilder then Builder.Append(' ');
-    Inc(Col);
-    EOLCount := 0;
-  end;
-  { И, наконец, если задана лексема - напечатаем её }
-  if not HasToken then exit;
-  { Определим окончательное значение }
-  if AToken is TComment then
-    if EOLCount > 0 then
-      Value := TComment(AToken).ShiftedValue(Shift + 1)
-    else
-      Value := TComment(AToken).ShiftedValue(Col)
-  else
-    Value := AToken.Value;
-  Value := StringReplace(Value, #13, #13#10, [rfReplaceAll]);
-  Value := Trim(Value);
-  { Учтём настройки замены лексем на синонимы и вывод в нижнем регистре }
-  if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and
-     SameText(AToken.Value, 'default') and Settings.ReplaceDefault and AToken.CanReplace
-    then Value := ':=';
-  if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and
-     SameText(AToken.Value, 'as') and Settings.ReplaceAsIs and AToken.CanReplace
-    then Value := 'is';
-  { Выполним отступ }
-  if EOLCount > 0 then
-  begin
-    if HasBuilder then Builder.Append(StringOfChar(' ', Shift));
-    Inc(Col, Shift);
-  end;
-  if FixShift then Shift := Col - 1;
-  FixShift := false;
-  { Запомним позицию лексемы }
-  if HasBuilder and not IsDraft and not (AToken is TSpecialComment) then
-  begin
-    TokenPos.Add(AToken, Builder.Length);
-    TokenLen.Add(AToken, Value.Length);
-  end;
-  { Напечатаем лексему }
-  if HasBuilder then
-  begin
-    Builder.Append(Value);
-    AToken.Printed := true;
-  end;
-  Inc(Col, Value.Length);
-  { Запомним её }
-  PrevToken := AToken;
-  EOLCount := 0;
-  { Если это был комментарий, взведём флажок }
-  WasComment := AToken is TComment;
-  { Если после лексемы есть комментарии, напечатаем их }
-  if Assigned(AToken.CommentAfter) then
-    if AToken.CommentAfter.LineComment
-      then NextLineComments.Add(AToken.CommentAfter)
-      else PrintToken(AToken.CommentAfter);
-  if Assigned(AToken.CommentBelow) and HasBuilder then
-  begin
-    WasComment := true;
-    NextLine;
-    PrintToken(AToken.CommentBelow);
-    NextLine;
-  end;
-  if Assigned(AToken.CommentFarBelow) and HasBuilder then
-  begin
-    WasComment := true;
-    EmptyLine := true;
-    PrintToken(AToken.CommentFarBelow);
-    EmptyLine := true;
+  T := TToken.Create('', -1, -1);
+  try
+    PrintToken(T);
+  finally
+    FreeAndNil(T);
   end;
 end;
 
-{ Вывод синтаксической конструкции с расстановкой выравниваний }
+{ Р’С‹РІРѕРґ РѕС‡РµСЂРµРґРЅРѕР№ Р»РµРєСЃРµРјС‹ СЃ РЅР°РІРµС€РёРІР°РЅРёРµРј РІСЃРµС… РЅР°РІРѕСЂРѕС‚РѕРІ РїРѕ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЋ }
+procedure TFormatterPrinter.PrintToken(AToken: TToken);
+
+  var
+    Tokens: TQueue<TToken>;
+
+  { Р”РѕР±Р°РІР»РµРЅРёРµ Р»РµРєСЃРµРјС‹ РІ РѕС‡РµСЂРµРґСЊ СЃ СЂР°Р·РІРѕСЂР°С‡РёРІР°РЅРёРµРј РєРѕРјРјРµРЅС‚Р°СЂРёРµРІ }
+  procedure AddToken(AToken: TToken);
+  begin
+    if not Assigned(AToken) then exit;
+    AddToken(AToken.CommentFarAbove);
+    AddToken(AToken.CommentAbove);
+    Tokens.Enqueue(AToken);
+    AddToken(AToken.CommentAfter);
+    AddToken(AToken.CommentBelow);
+    AddToken(AToken.CommentFarBelow);
+  end;
+
+  { Р’С‹РІРѕРґ Р»РµРєСЃРµРјС‹ РІ РІС‹С…РѕРґРЅРѕР№ РїРѕС‚РѕРє }
+  procedure InternalPrint(AToken: TToken);
+  var
+    Value: string;
+    IsComment, LineComment, SpecComment, FakeToken, EmptyToken, HasBuilder, OriginalFormat: boolean;
+    EOLLimit: integer;
+  begin
+     IsComment := AToken is TComment;
+     LineComment := IsComment and TComment(AToken).LineComment;
+     SpecComment := AToken is TSpecialComment;
+    { Р•СЃР»Рё СЌС‚Рѕ РєРѕРјР°РЅРґР° РЅР°С‡Р°Р»Р° РёСЃС…РѕРґРЅРѕРіРѕ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ, СЃРєРѕСЂСЂРµРєС‚РёСЂСѓРµРј СЂРµР¶РёРј РґРѕ РїРµС‡Р°С‚Рё Р»РµРєСЃРµРјС‹ }
+    if IsComment and AToken.Value.StartsWith(C_UNFORMAT_START)
+       and Assigned(Builder) and not IsDraft then
+    begin
+      Inc(OriginalFormatCount);
+      if OriginalFormatCount = 1 then
+      begin
+        OriginalFormatToken := AToken;
+        OriginalFormatStartLine := Line;
+        if Assigned(FarPrevToken) then
+          Inc(OriginalFormatStartLine, AToken.Line - FarPrevToken.Line);
+      end;
+    end;
+    { Р’С‹СЃС‚Р°РІРёРј С„Р»Р°РіРё }
+    FakeToken := (AToken.Col <= 0);
+    EmptyToken := FakeToken and (AToken.Value = '');
+    OriginalFormat := (OriginalFormatCount > 0);
+    HasBuilder := Assigned(Builder);
+    EmptyLine := EmptyLine and not OriginalFormat;
+    ForceNextLine := ForceNextLine and not OriginalFormat;
+    { Р’ СЂРµР¶РёРјРµ РёСЃС…РѕРґРЅРѕРіРѕ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ РЅРµ РїРµС‡Р°С‚Р°РµРј "РґРѕР±Р°РІР»РµРЅРЅС‹С…" Р»РµРєСЃРµРј }
+    if OriginalFormat and FakeToken then exit;
+    { Р’ СЂРµР¶РёРјРµ РїСЂРёРјРµСЂРєРё РЅР°Рј РЅРµ РЅСѓР¶РЅС‹ РєРѕРјРјРµРЅС‚Р°СЂРёРё, РєСЂРѕРјРµ СЂР°СЃРїРѕР»РѕР¶РµРЅРЅС‹С… СЃРїСЂР°РІР° }
+    if IsComment and (Mode = fpmGetRulers) and not SpecComment and (TComment(AToken).Position <> POSITION_AFTER) then exit;
+    { Р•СЃР»Рё СЌС‚Рѕ РєРѕРјРјРµРЅС‚Р°СЂРёР№ РїРѕРґ РїСЂРµРґС‹РґСѓС‰РµР№ Р»РµРєСЃРµРјРѕР№, РІС‹СЃС‚Р°РІРёРј РїРµСЂРµРІРѕРґС‹ СЃС‚СЂРѕРє }
+    if IsComment and not OriginalFormat then
+      case TComment(AToken).Position of
+        POSITION_BELOW,
+        POSITION_ABOVE,
+        POSITION_FAR_ABOVE: ForceNextLine := true;
+        POSITION_FAR_BELOW: EmptyLine := true;
+        POSITION_AFTER    : Ruler('right-comment');
+      end;
+    { РћР±СЂР°Р±РѕС‚Р°РµРј РїРµСЂРµС…РѕРґ РЅР° РЅРѕРІСѓСЋ СЃС‚СЂРѕРєСѓ Рё РІСЃС‚Р°РІРєСѓ РїСѓСЃС‚РѕР№ СЃС‚СЂРѕРєРё }
+    if EmptyLine then
+      begin
+        EOLLimit := 2;
+        EmptyLine := false;
+        ForceNextLine := false;
+      end
+    else if ForceNextLine then
+      begin
+        EOLLimit := 1;
+        ForceNextLine := false;
+      end
+    else
+      EOLLimit := 0;
+    while EOLCount < EOLLimit do
+    begin
+      if HasBuilder then Builder.AppendLine;
+      Inc(EOLCount);
+      Inc(Line);
+      Col := 1;
+      PrevToken := nil;
+      EmptyLine := false;
+      ForceNextLine := false;
+    end;
+    { Р•СЃР»Рё Р·Р°РґР°РЅРѕ РІС‹СЂР°РІРЅРёРІР°РЅРёРµ, РІСЃС‚Р°РІРёРј СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµРµ РєРѕР»РёС‡РµСЃС‚РІРѕ РїСЂРѕР±РµР»РѕРІ }
+    if (PaddingCol > Col) and not OriginalFormat then
+    begin
+      if HasBuilder then Builder.Append(StringOfChar(' ', PaddingCol - Col));
+      Col := PaddingCol;
+      EOLCount := 0;
+      PaddingCol := 0;
+    end;
+    { Р•СЃР»Рё РЅСѓР¶РЅРѕ, РІРЅРµРґСЂРёРј РїСЂРѕР±РµР» РјРµР¶РґСѓ РїСЂРµРґС‹РґСѓС‰РµР№ Рё РЅРѕРІРѕР№ Р»РµРєСЃРµРјР°РјРё }
+    if Assigned(PrevToken) and not EmptyToken and SpaceRequired(PrevToken, AToken) and not OriginalFormat then
+    begin
+      if HasBuilder then Builder.Append(' ');
+      Inc(Col);
+      EOLCount := 0;
+    end;
+    { РћРїСЂРµРґРµР»РёРј РѕРєРѕРЅС‡Р°С‚РµР»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РїРµС‡Р°С‚Р°РµРјРѕРіРѕ С‚РµРєСЃС‚Р° }
+    if IsComment and not LineComment and (EOLCount > 0) then
+      Value := TComment(AToken).ShiftedValue(Shift + 1)
+    else if IsComment and not LineComment and (EOLCount = 0) then
+      Value := TComment(AToken).ShiftedValue(Col)
+    else if IsComment and LineComment and (SupNextLine > 0) and (TComment(AToken).Position = POSITION_AFTER) then
+      begin
+        Value := '/* ' + Trim(AToken.Value.Substring(2)) + ' */';
+        LineComment := false;
+      end
+    else
+      Value := AToken.Value;
+    Value := StringReplace(Value, #13, #13#10, [rfReplaceAll]);
+    Value := Trim(Value);
+    { РЈС‡С‚С‘Рј РЅР°СЃС‚СЂРѕР№РєРё Р·Р°РјРµРЅС‹ Р»РµРєСЃРµРј РЅР° СЃРёРЅРѕРЅРёРјС‹ Рё РІС‹РІРѕРґ РІ РЅРёР¶РЅРµРј СЂРµРіРёСЃС‚СЂРµ }
+    if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and not OriginalFormat and
+       SameText(AToken.Value, 'default') and Settings.ReplaceDefault and AToken.CanReplace
+      then Value := ':=';
+    if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and not OriginalFormat and
+       SameText(AToken.Value, 'as') and Settings.ReplaceAsIs and AToken.CanReplace
+      then Value := 'is';
+    { Р’С‹РїРѕР»РЅРёРј РѕС‚СЃС‚СѓРї }
+    if (EOLCount > 0) and not OriginalFormat then
+    begin
+      if HasBuilder then Builder.Append(StringOfChar(' ', Shift));
+      Inc(Col, Shift);
+    end;
+    { Р•СЃР»Рё РЅСѓР¶РЅРѕ СЃРѕС…СЂР°РЅРёС‚СЊ С‚РµРєСѓС‰РёР№ РѕС‚СЃС‚СѓРї - СЃРґРµР»Р°РµРј СЌС‚Рѕ }
+    if FixShift and not IsComment then
+    begin
+      if not OriginalFormat then Shift := Col - 1;
+      FixShift := false;
+    end;
+    { Р’ СЂРµР¶РёРјРµ РёСЃС…РѕРґРЅРѕРіРѕ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ РїРѕРґРіРѕРЅРёРј РїРѕР·РёС†РёСЋ Рє РЅСѓР¶РЅРѕР№ СЃС‚СЂРѕРєРµ Рё РєРѕР»РѕРЅРєРµ }
+    if OriginalFormat then
+    begin
+      while Line < AToken.Line - OriginalFormatToken.Line + OriginalFormatStartLine do
+      begin
+        if HasBuilder then Builder.AppendLine;
+        Inc(Line);
+        Col := 1;
+      end;
+      if Col < AToken.Col then
+      begin
+        if HasBuilder then Builder.Append(StringOfChar(' ', AToken.Col - Col));
+        Col := AToken.Col;
+      end;
+    end;
+    { Р—Р°РїРѕРјРЅРёРј РїРѕР·РёС†РёСЋ Р»РµРєСЃРµРјС‹ }
+    if HasBuilder and not IsDraft and not FakeToken then
+    begin
+      TokenPos.Add(AToken, Builder.Length);
+      TokenLen.Add(AToken, Value.Length);
+    end;
+    { РќР°РїРµС‡Р°С‚Р°РµРј Р»РµРєСЃРµРјСѓ }
+    if HasBuilder and not IsDraft then
+    begin
+      Builder.Append(Value);
+      AToken.Printed := true;
+    end;
+    Inc(Col, Value.Length);
+    { Р—Р°РїРѕРјРЅРёРј РµС‘ }
+    if not EmptyToken then
+    begin
+      PrevToken := AToken;
+      FarPrevToken := PrevToken;
+    end;
+    EOLCount := 0;
+    { Р•СЃР»Рё СЌС‚Рѕ Р±С‹Р» РєРѕРјРјРµРЅС‚Р°СЂРёР№, РІР·РІРµРґС‘Рј С„Р»Р°Р¶РѕРє Рё РІС‹СЃС‚Р°РІРёРј РїРµСЂРµРІРѕРґС‹ СЃС‚СЂРѕРє РїРµСЂРµРґ СЃР»РµРґСѓСЋС‰РµР№ Р»РµРєСЃРµРјРѕР№ }
+    WasComment := IsComment;
+    if WasComment then
+      case TComment(AToken).Position of
+        POSITION_FAR_ABOVE: EmptyLine := true;
+        POSITION_ABOVE    : ForceNextLine := true;
+        POSITION_AFTER    : ForceNextLine := LineComment;
+      end;
+    { Р•СЃР»Рё СЌС‚Рѕ РєРѕРјР°РЅРґР° Р·Р°РІРµСЂС€РµРЅРёСЏ РёСЃС…РѕРґРЅРѕРіРѕ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ, СЃРјРµРЅРёРј СЂРµР¶РёРј РїРѕСЃР»Рµ РїРµС‡Р°С‚Рё }
+    if HasBuilder and not IsDraft and IsComment and Value.StartsWith(C_UNFORMAT_STOP) then
+      Dec(OriginalFormatCount);
+  end;
+
+begin
+  { РЎРѕР·РґР°РґРёРј РѕС‡РµСЂРµРґСЊ РїРµС‡Р°С‚Рё Р»РµРєСЃРµРј }
+  Tokens := TQueue<TToken>.Create;
+  try
+    { Р”РѕР±Р°РІРёРј С‚СѓРґР° Р»РµРєСЃРµРјСѓ Рё СЂРµРєСѓСЂСЃРёРІРЅРѕ СЂР°Р·РІРµСЂРЅС‘Рј РІСЃРµ СЃРІСЏР·Р°РЅРЅС‹Рµ СЃ РЅРµР№ РєРѕРјРјРµРЅС‚Р°СЂРёРё }
+    AddToken(AToken);
+    { РќСѓ Р° С‚РµРїРµСЂСЊ РЅР°РїРµС‡Р°С‚Р°РµРј РѕС‡РµСЂРµРґСЊ }
+    while Tokens.Count > 0 do InternalPrint(Tokens.Dequeue);
+  finally
+    FreeAndNil(Tokens);
+  end;
+end;
+
+{ Р’С‹РІРѕРґ СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєРѕР№ РєРѕРЅСЃС‚СЂСѓРєС†РёРё СЃ СЂР°СЃСЃС‚Р°РЅРѕРІРєРѕР№ РІС‹СЂР°РІРЅРёРІР°РЅРёР№ }
 procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
 
   var
     _Mode: TFormatterPrinterMode;
-    _Shift, _Col, _Line, _PaddingCol, _EOLCount: integer;
+    _Shift, _Col, _Line, _PaddingCol, _EOLCount, _OriginalFormatCount, _OriginalFormatStartLine: integer;
     _ForceNextLine, _EmptyLine, _WasComment: boolean;
     _Builder: TStringBuilder;
     _Rulers: TRulers;
-    _PrevToken: TToken;
-    _NextLineComments: TList<TToken>;
+    _PrevToken, _FarPrevToken, _OriginalFormatToken: TToken;
 
-  { Печать выражения без наворотов, связанных с выравниваниями }
+  { РџРµС‡Р°С‚СЊ РІС‹СЂР°Р¶РµРЅРёСЏ Р±РµР· РЅР°РІРѕСЂРѕС‚РѕРІ, СЃРІСЏР·Р°РЅРЅС‹С… СЃ РІС‹СЂР°РІРЅРёРІР°РЅРёСЏРјРё }
   procedure SimplePrintStatement(AStatement: TStatement);
   var
     _Shift: integer;
     _EmptyBefore, _EmptyInside, _EmptyAfter: boolean;
   begin
-    { Соберём указания по расстановке пустых строк }
+    { РЎРѕР±РµСЂС‘Рј СѓРєР°Р·Р°РЅРёСЏ РїРѕ СЂР°СЃСЃС‚Р°РЅРѕРІРєРµ РїСѓСЃС‚С‹С… СЃС‚СЂРѕРє }
     _EmptyBefore := AStatement.EmptyLineBefore;
     _EmptyInside := not Assigned(AStatement.Parent) or AStatement.Parent.EmptyLineInside;
     _EmptyAfter  := AStatement.EmptyLineAfter;
-    { Пустая строка перед конструкцией }
+    { РџСѓСЃС‚Р°СЏ СЃС‚СЂРѕРєР° РїРµСЂРµРґ РєРѕРЅСЃС‚СЂСѓРєС†РёРµР№ }
     EmptyLine := EmptyLine or _EmptyBefore or _EmptyInside;
-    { Печать и проверка отступа }
+    { РџРµС‡Р°С‚СЊ Рё РїСЂРѕРІРµСЂРєР° РѕС‚СЃС‚СѓРїР° }
     _Shift := Shift;
     inherited PrintStatement(AStatement);
     if (Shift <> _Shift) and (Indents.Count = 0) then
       raise Exception.CreateFmt('Invalid indents into %s - was %d but %d now', [AStatement.ClassName, _Shift, Shift]);
-    { Пустая строка после конструкции }
+    { РџСѓСЃС‚Р°СЏ СЃС‚СЂРѕРєР° РїРѕСЃР»Рµ РєРѕРЅСЃС‚СЂСѓРєС†РёРё }
     EmptyLine := EmptyLine or _EmptyInside or _EmptyAfter;
   end;
 
-  { Сохранение конфигурации для возврата к ней после примерки выравнивания }
+  { РЎРѕС…СЂР°РЅРµРЅРёРµ РєРѕРЅС„РёРіСѓСЂР°С†РёРё РґР»СЏ РІРѕР·РІСЂР°С‚Р° Рє РЅРµР№ РїРѕСЃР»Рµ РїСЂРёРјРµСЂРєРё РІС‹СЂР°РІРЅРёРІР°РЅРёСЏ }
   procedure SaveCfg;
   begin
     _Shift   := Shift;
@@ -397,18 +467,20 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     _Line    := Line;
     _PaddingCol := PaddingCol;
     _EOLCount   := EOLCount;
+    _OriginalFormatCount := OriginalFormatCount;
+    _OriginalFormatStartLine := OriginalFormatStartLine;
+    _OriginalFormatToken := OriginalFormatToken;
     _ForceNextLine := ForceNextLine;
     _EmptyLine := EmptyLine;
     _WasComment := WasComment;
     _Builder := Builder;
     _Rulers  := Rulers;
     _PrevToken := PrevToken;
+    _FarPrevToken := FarPrevToken;
     _Mode    := Mode;
-    _NextLineComments := TList<TToken>.Create;
-    _NextLineComments.AddRange(NextLineComments);
   end;
 
-  { Восстановление той части конфигурации, которая нужна для печати с выравниваниями }
+  { Р’РѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ С‚РѕР№ С‡Р°СЃС‚Рё РєРѕРЅС„РёРіСѓСЂР°С†РёРё, РєРѕС‚РѕСЂР°СЏ РЅСѓР¶РЅР° РґР»СЏ РїРµС‡Р°С‚Рё СЃ РІС‹СЂР°РІРЅРёРІР°РЅРёСЏРјРё }
   procedure RestoreCfgBeforePrint;
   begin
     Shift := _Shift;
@@ -416,17 +488,18 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     Line  := _Line;
     PaddingCol := _PaddingCol;
     EOLCount   := _EOLCount;
+    OriginalFormatCount := _OriginalFormatCount;
+    OriginalFormatStartLine := _OriginalFormatStartLine;
+    OriginalFormatToken := _OriginalFormatToken;
     ForceNextLine := _ForceNextLine;
     EmptyLine := _EmptyLine;
     WasComment := _WasComment;
     Builder := _Builder;
     PrevToken := _PrevToken;
-    NextLineComments.Clear;
-    NextLineComments.AddRange(_NextLineComments);
-    FreeAndNil(_NextLineComments);
+    FarPrevToken := _FarPrevToken;
   end;
 
-  { Окончательное восстановление конфигурации после печати с выравниваниями }
+  { РћРєРѕРЅС‡Р°С‚РµР»СЊРЅРѕРµ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ РєРѕРЅС„РёРіСѓСЂР°С†РёРё РїРѕСЃР»Рµ РїРµС‡Р°С‚Рё СЃ РІС‹СЂР°РІРЅРёРІР°РЅРёСЏРјРё }
   procedure RestoreCfgAfterPrint;
   begin
     FreeAndNil(Rulers);
@@ -434,7 +507,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     Mode := _Mode;
   end;
 
-  { Пробная печать - сбор информации о выравниваниях }
+  { РџСЂРѕР±РЅР°СЏ РїРµС‡Р°С‚СЊ - СЃР±РѕСЂ РёРЅС„РѕСЂРјР°С†РёРё Рѕ РІС‹СЂР°РІРЅРёРІР°РЅРёСЏС… }
   procedure PrintGetRulersMode;
   begin
     Builder := nil;
@@ -443,11 +516,11 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     try
       SimplePrintStatement(AStatement);
     except
-      { проглотим ошибку и дадим аналогично упасть на SetRulers, чтобы выдать проблемный текст на принтер }
+      { РїСЂРѕРіР»РѕС‚РёРј РѕС€РёР±РєСѓ Рё РґР°РґРёРј Р°РЅР°Р»РѕРіРёС‡РЅРѕ СѓРїР°СЃС‚СЊ РЅР° SetRulers, С‡С‚РѕР±С‹ РІС‹РґР°С‚СЊ РїСЂРѕР±Р»РµРјРЅС‹Р№ С‚РµРєСЃС‚ РЅР° РїСЂРёРЅС‚РµСЂ }
     end;
   end;
 
-  { Печать с расстановкой выравниваний }
+  { РџРµС‡Р°С‚СЊ СЃ СЂР°СЃСЃС‚Р°РЅРѕРІРєРѕР№ РІС‹СЂР°РІРЅРёРІР°РЅРёР№ }
   procedure PrintSetRulersMode;
   begin
     Mode  := fpmSetRulers;
@@ -479,7 +552,7 @@ begin
   PaddingCol := 0;
 end;
 
-{ Управление отступами }
+{ РЈРїСЂР°РІР»РµРЅРёРµ РѕС‚СЃС‚СѓРїР°РјРё }
 
 procedure TFormatterPrinter.Indent;
 begin
@@ -502,29 +575,29 @@ begin
   Shift := Indents.Pop;
 end;
 
-{ Переход на следующую строку }
+{ РџРµСЂРµС…РѕРґ РЅР° СЃР»РµРґСѓСЋС‰СѓСЋ СЃС‚СЂРѕРєСѓ }
 procedure TFormatterPrinter.NextLine;
 begin
-  ForceNextLine := true;
+  if SupNextLine = 0 then ForceNextLine := true;
 end;
 
-{ Отмена перехода на следующую строку }
+{ РћС‚РјРµРЅР° РїРµСЂРµС…РѕРґР° РЅР° СЃР»РµРґСѓСЋС‰СѓСЋ СЃС‚СЂРѕРєСѓ }
 procedure TFormatterPrinter.CancelNextLine;
 begin
-  ForceNextLine := false;
+  if (PrevToken is TComment) and TComment(PrevToken).LineComment
+    then { РѕС‚РјРµРЅСЏС‚СЊ РЅРµР»СЊР·СЏ, РїРѕСЌС‚РѕРјСѓ РѕСЃС‚Р°РІРёРј РєР°Рє РµСЃС‚СЊ }
+    else ForceNextLine := false;
 end;
 
-{ Установка режима подавления переводов строки }
+{ РЈСЃС‚Р°РЅРѕРІРєР° СЂРµР¶РёРјР° РїРѕРґР°РІР»РµРЅРёСЏ РїРµСЂРµРІРѕРґРѕРІ СЃС‚СЂРѕРєРё }
 procedure TFormatterPrinter.SupressNextLine(ASupress: boolean);
 begin
-  PrintToken(nil);
   if ASupress
     then Inc(SupNextLine)
     else Dec(SupNextLine);
-  PrintToken(nil);
 end;
 
-{ Установка режима подавления пробелов }
+{ РЈСЃС‚Р°РЅРѕРІРєР° СЂРµР¶РёРјР° РїРѕРґР°РІР»РµРЅРёСЏ РїСЂРѕР±РµР»РѕРІ }
 procedure TFormatterPrinter.SupressSpaces(ASupress: boolean);
 begin
   if ASupress
@@ -532,7 +605,7 @@ begin
     else Dec(SupSpace);
 end;
 
-{ Вывод на принтер специального комментария (отсутствующего в исходном тексте)}
+{ Р’С‹РІРѕРґ РЅР° РїСЂРёРЅС‚РµСЂ СЃРїРµС†РёР°Р»СЊРЅРѕРіРѕ РєРѕРјРјРµРЅС‚Р°СЂРёСЏ (РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‰РµРіРѕ РІ РёСЃС…РѕРґРЅРѕРј С‚РµРєСЃС‚Рµ)}
 procedure TFormatterPrinter.PrintSpecialComment(AValue: string);
 
   function SpecialToken(const Text: string): TToken;
@@ -548,27 +621,33 @@ begin
   Self.PrintRulerItem('special-comment-finish', SpecialToken('/*/'));
 end;
 
-{ Начало выравнивания в очередной строке }
+{ РќР°С‡Р°Р»Рѕ РІС‹СЂР°РІРЅРёРІР°РЅРёСЏ РІ РѕС‡РµСЂРµРґРЅРѕР№ СЃС‚СЂРѕРєРµ }
 procedure TFormatterPrinter.StartRuler(Enabled: boolean);
 begin
   RulerEnabled := Enabled;
   if (Mode <> fpmGetRulers) or not Enabled then exit;
-  PrintToken(nil);
+  PrintEmptyToken;
   Rulers.NewLine(Line);
 end;
 
-{ Установка "линейки" для выравнивания }
+{ РЈСЃС‚Р°РЅРѕРІРєР° "Р»РёРЅРµР№РєРё" РґР»СЏ РІС‹СЂР°РІРЅРёРІР°РЅРёСЏ }
 procedure TFormatterPrinter.Ruler(const ARuler: string);
 begin
   if not RulerEnabled then exit;
   PrintItem(nil);
   case Mode of
-    fpmGetRulers: Rulers.Take(ARuler, Line, Col); { В режиме примерки запомним ширину фрагмента }
-    fpmSetRulers: PaddingCol := Rulers.Fix(ARuler) + Shift; { В режиме разметки рассчитаем необходимое количество пробелов }
+    fpmGetRulers: Rulers.Take(ARuler, Line, Col); { Р’ СЂРµР¶РёРјРµ РїСЂРёРјРµСЂРєРё Р·Р°РїРѕРјРЅРёРј С€РёСЂРёРЅСѓ С„СЂР°РіРјРµРЅС‚Р° }
+    fpmSetRulers: PaddingCol := Rulers.Fix(ARuler); { Р’ СЂРµР¶РёРјРµ СЂР°Р·РјРµС‚РєРё СЂР°СЃСЃС‡РёС‚Р°РµРј РЅРµРѕР±С…РѕРґРёРјРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ РїСЂРѕР±РµР»РѕРІ }
   end;
 end;
 
-{ Создание принтера для пробной печати }
+procedure TFormatterPrinter.__Debug(const S: string; Args: array of const);
+begin
+  if Assigned(Builder) and not IsDraft and (Mode <> fpmGetRulers) then
+    _Debug(S, Args);
+end;
+
+{ РЎРѕР·РґР°РЅРёРµ РїСЂРёРЅС‚РµСЂР° РґР»СЏ РїСЂРѕР±РЅРѕР№ РїРµС‡Р°С‚Рё }
 function TFormatterPrinter.MakeDraftPrinter: TPrinter;
 begin
   Result := TFormatterPrinter.Create;
@@ -576,7 +655,7 @@ begin
   TFormatterPrinter(Result).IsDraft := true;
 end;
 
-{ Возврат текущего положения каретки }
+{ Р’РѕР·РІСЂР°С‚ С‚РµРєСѓС‰РµРіРѕ РїРѕР»РѕР¶РµРЅРёСЏ РєР°СЂРµС‚РєРё }
 function TFormatterPrinter.CurrentCol: integer;
 begin
   Result := Col;
@@ -591,7 +670,7 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                Сбор и применение информации о выравниваниях                //
+//                РЎР±РѕСЂ Рё РїСЂРёРјРµРЅРµРЅРёРµ РёРЅС„РѕСЂРјР°С†РёРё Рѕ РІС‹СЂР°РІРЅРёРІР°РЅРёСЏС…                //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -610,23 +689,30 @@ end;
 
 procedure TRulers.NewLine(ALine: integer);
 begin
+  { Р•СЃР»Рё РѕСЃС‚Р°Р»РёСЃСЊ РЅР° С‚РѕР№ Р¶Рµ СЃС‚СЂРѕРєРµ, РєРѕРіРґР° РґРѕР»Р¶РЅС‹ Р±С‹Р»Рё РїРµСЂРµР№С‚Рё РЅР° РЅРѕРІСѓСЋ -
+    РѕС‚РєР»СЋС‡Р°РµРј РІС‹СЂР°РІРЅРёРІР°РЅРёРµ, РёРЅР°С‡Рµ РЅР°Р»РѕРјР°РµРј РґСЂРѕРІ }
   if PrevLine < ALine
     then PrevLine := ALine
     else DisablePadding := true;
   PrevCol := 1;
+  PrevLine := -1;
 end;
 
 procedure TRulers.Take(const ARuler: string; ALine, ACol: integer);
 var Width: integer;
 begin
+  { Р•СЃР»Рё РІ РїРµСЂРІС‹Р№ СЂР°Р· РЅР° РЅРѕРІРѕР№ СЃС‚СЂРѕРєРµ, С„РёРєСЃРёСЂСѓРµРј РµС‘ РЅРѕРјРµСЂ }
+  if PrevLine <= 0 then PrevLine := ALine;
+  { Рђ РµСЃР»Рё РЅРµ РІ РїРµСЂРІС‹Р№, Рё СЃС‚СЂРѕРєР° РЅРµРѕР¶РёРґР°РЅРЅРѕ СЃРјРµРЅРёР»Р°СЃСЊ - РѕС‚РєР»СЋС‡Р°РµРј РІС‹СЂР°РІРЅРёРІР°РЅРёРµ }
   if ALine <> PrevLine then DisablePadding := true;
   if DisablePadding then exit;
-  if PrevLine <= 0 then raise Exception.Create('TRuler.NewLine required');
+  { Р’С‹СЃС‡РёС‚Р°РµРј Рё СЃРѕС…СЂР°РЅРёРј РјР°РєСЃРёРјР°Р»СЊРЅСѓСЋ С€РёСЂРёРЅСѓ СЏС‡РµР№РєРё }
   if Names.IndexOf(ARuler) < 0 then Names.Add(ARuler);
   Width := ACol - PrevCol;
   if MaxWidth.ContainsKey(ARuler)
     then MaxWidth[ARuler] := Math.Max(MaxWidth[ARuler], Width)
     else MaxWidth.Add(ARuler, Width);
+  { Р СЃРѕС…СЂР°РЅРёРј РїРѕР·РёС†РёСЋ РґР»СЏ СЃР»РµРґСѓСЋС‰РµРіРѕ СЂР°СЃС‡С‘С‚Р° }
   PrevCol := ACol;
 end;
 

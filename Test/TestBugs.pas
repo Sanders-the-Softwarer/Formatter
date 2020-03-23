@@ -56,6 +56,12 @@ type
     procedure _33;
     procedure _34;
     procedure _35;
+    procedure _36;
+    procedure _37;
+    procedure _38;
+    procedure _39;
+    procedure _40;
+    procedure _41;
   end;
 
 implementation
@@ -157,9 +163,36 @@ begin
   Settings.PreferredExpressionLength := 120;
 end;
 
+procedure _Bugs._36;
+begin
+end;
+
+procedure _Bugs._37;
+begin
+  Settings.PreferredExpressionLength := 120;
+end;
+
+procedure _Bugs._38;
+begin
+  Settings.PreferredExpressionLength := 120;
+end;
+
+procedure _Bugs._39;
+begin
+  Settings.PreferredExpressionLength := 120;
+end;
+
 procedure _Bugs._4;
 begin
   Settings.PreferredExpressionLength := 60;
+end;
+
+procedure _Bugs._40;
+begin
+end;
+
+procedure _Bugs._41;
+begin
 end;
 
 procedure _Bugs._5;

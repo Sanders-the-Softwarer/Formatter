@@ -1,0 +1,14 @@
+-- Как-то криво комментарий про спецификации привязывается и форматируется
+
+select
+            coalesce
+            (
+                -- по спецификациям, если есть
+                (
+                    sum(pd.quantity * sd.price_without_vat) / nullif(sum(pd.quantity), 0)
+                ),
+                -- по PO, если нет спецификаций
+                (
+                    sum(pd.quantity * pd.purchase_price) / nullif(sum(pd.quantity), 0)
+                )
+            ) purchase_price

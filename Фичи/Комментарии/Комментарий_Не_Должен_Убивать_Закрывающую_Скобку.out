@@ -1,4 +1,4 @@
 select
-    ((2 = 2)) -- d
+    ((2 = 2) /* d */) 
 from
     dual

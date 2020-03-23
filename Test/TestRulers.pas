@@ -139,7 +139,7 @@ end;
 
 function TCheckStatement.Token(const S: string): TToken;
 begin
-  Result := TToken.Create(S, -1, -1);
+  Result := TToken.Create(S, 1, 1);
   Tokens.Add(Result);
 end;
 

@@ -1,0 +1,6 @@
+type t_something_cur is ref cursor returning t_something_rec;
+
+type t_otherthing_cur is ref cursor returning otherthing%rowtype;
+
+type t_nextthing_cur is ref cursor returning t_next_rec%type;
+

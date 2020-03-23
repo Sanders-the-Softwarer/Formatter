@@ -13,7 +13,7 @@ unit TestPLSQL;
 interface
 
 uses
-  SysUtils, TestFramework, FileBasedTest;
+  SysUtils, TestFramework, FileBasedTest, PrinterIntf;
 
 type
 
@@ -52,7 +52,6 @@ type
     procedure Оператор_ForAll;
     procedure Анонимный_Блок_С_Bind_Переменными;
     procedure Анонимный_Блок_С_Подстановками;
-    procedure Комментарии_В_Пакете;
     procedure Пустота_Не_Должна_Сдвигать_Выравнивание;
     procedure Добавление_In;
   end;
@@ -90,8 +89,20 @@ type
     procedure Комментарий_Справа_От_Переменной;
     procedure Комментарий_Не_Должен_Убивать_Закрывающую_Скобку;
     procedure Заголовочный_Комментарий;
+    procedure Комментарии_В_Пакете;
     procedure Многострочный_Комментарий_Сдвигается_Целиком;
     procedure Комментарий_Не_Должен_Приводить_К_Переносу_Значения_На_Следующую_Строку;
+  end;
+
+  { Тесты на локальную отмену форматирования }
+  _Отмена_Форматирования = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure Отмена_Форматирования;
+    procedure Вложенная_Отмена_Форматирования;
+    procedure Предупреждение_О_Дисбалансе_Отмены_Форматирования;
+    procedure Вставки_Лексем_И_Замены_Текста_При_Отмене_Форматирования;
   end;
 
   { Тесты на операторы PL/SQL }
@@ -180,6 +191,26 @@ type
     procedure Whenever;
   end;
 
+  { Тесты на форматирование выражений }
+  _Форматирование_Выражений = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure Перенос_При_Присвоении_Многострочного_Выражения;
+    procedure Конкатенация_Должна_Делать_Перенос_По_Одинаковым_Символам;
+  end;
+
+  { Контрольные примеры - большие файлы, на которых проверяется глобально
+    удовлетворительный результат }
+  _Контрольные_Примеры = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+    function GetExtIn: string; override;
+    procedure SetUp; override;
+  published
+    procedure top_lc_calc_utils;
+  end;
+
 implementation
 
 { _PLSQL }
@@ -226,10 +257,6 @@ begin
 end;
 
 procedure _PLSQL.Записи;
-begin
-end;
-
-procedure _PLSQL.Комментарии_В_Пакете;
 begin
 end;
 
@@ -425,6 +452,10 @@ end;
 function _Комментарии.GetDir: string;
 begin
   Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Комментарии';
+end;
+
+procedure _Комментарии.Комментарии_В_Пакете;
+begin
 end;
 
 procedure _Комментарии.Комментарий_Не_Должен_Приводить_К_Переносу_Значения_На_Следующую_Строку;
@@ -649,10 +680,74 @@ procedure _Команды_SQLPLUS.Chcp;
 begin
 end;
 
+{ _Отмена_Форматирования }
+
+function _Отмена_Форматирования.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Отмена форматирования';
+end;
+
+procedure _Отмена_Форматирования.Вложенная_Отмена_Форматирования;
+begin
+end;
+
+procedure _Отмена_Форматирования.Отмена_Форматирования;
+begin
+end;
+
+procedure _Отмена_Форматирования.Предупреждение_О_Дисбалансе_Отмены_Форматирования;
+begin
+end;
+
+procedure _Отмена_Форматирования.Вставки_Лексем_И_Замены_Текста_При_Отмене_Форматирования;
+begin
+  Settings.ReplaceDefault := true;
+  Settings.ReplaceAsIs := true;
+  Settings.AddInAccessSpecificator := true;
+end;
+
+{ _Разное }
+
+function _Форматирование_Выражений.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Форматирование выражений';
+end;
+
+procedure _Форматирование_Выражений.Конкатенация_Должна_Делать_Перенос_По_Одинаковым_Символам;
+begin
+end;
+
+procedure _Форматирование_Выражений.Перенос_При_Присвоении_Многострочного_Выражения;
+begin
+  Settings.PreferredExpressionLength := 120;
+end;
+
+{ _Контрольные_Примеры }
+
+function _Контрольные_Примеры.GetDir: string;
+begin
+  Result := ExtractFilePath(ExcludeTrailingPathDelimiter(inherited GetDir)) + '\Контрольные примеры';
+end;
+
+function _Контрольные_Примеры.GetExtIn: string;
+begin
+  Result := '.sql';
+end;
+
+procedure _Контрольные_Примеры.SetUp;
+begin
+  Settings := TFormatSettings.Default;
+end;
+
+procedure _Контрольные_Примеры.top_lc_calc_utils;
+begin
+end;
+
 initialization
   RegisterTest(_PLSQL.Suite);
   RegisterTest(_Выравнивание.Suite);
   RegisterTest(_Комментарии.Suite);
+  RegisterTest(_Отмена_Форматирования.Suite);
   RegisterTest(_Запросы.Suite);
   RegisterTest(_Операторы.Suite);
   RegisterTest(_Пакеты.Suite);
@@ -660,6 +755,8 @@ initialization
   RegisterTest(_SQL_Типы.Suite);
   RegisterTest(_PLSQL_Типы.Suite);
   RegisterTest(_Команды_SQLPLUS.Suite);
+  RegisterTest(_Форматирование_Выражений.Suite);
+  RegisterTest(_Контрольные_Примеры.Suite);
 
 end.
 

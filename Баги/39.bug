@@ -1,0 +1,13 @@
+-- ¬ыражение форматируетс€ на редкость неудачным образом, нужно
+-- пересмотреть приоритеты
+
+    p_dev_sc_rec.error_text :=
+        top_kernel_utils.string_concatenate
+        (
+            set
+            (
+                v_agg_dev_sc_text_attr_tbl(get_cache_key(p_dev_sc_rec.dev_style_color_coll_code)).error_text_tbl
+                multiset union
+                g_dev_sc_error_tbl
+            )
+        );

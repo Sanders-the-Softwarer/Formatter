@@ -67,6 +67,7 @@ type
     ReplaceDefault: boolean;
     ReplaceAsIs: boolean;
     AddInAccessSpecificator: boolean;
+    AddFromToDelete: boolean;
     PreferredExpressionLength: integer;
   public
     constructor Default;
@@ -321,14 +322,15 @@ begin
   AlignVariables                  := true;
   AlignFields                     := true;
   AlignColumns                    := true;
-  AlignExpressions                := false;
+  AlignExpressions                := true;
   AlignTableColumnComments        := true;
   AlignSpecialComments            := true;
   AlignSQLPLUS                    := true;
   ReplaceDefault                  := true;
   ReplaceAsIs                     := true;
   AddInAccessSpecificator         := true;
-  PreferredExpressionLength       := 120;
+  AddFromToDelete                 := true;
+  PreferredExpressionLength       := 100;
 end;
 
 constructor TFormatSettings.ForTest;

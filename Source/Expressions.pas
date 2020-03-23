@@ -381,6 +381,60 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
 
   { Печать получившегося выражения }
   procedure PrintExpression;
+
+    var
+      i, Cnt: integer;
+      SameLine: boolean;
+      RulerName: string;
+
+    procedure NewLineCombo;
+    begin
+      APrinter.NextLine;
+      APrinter.StartRuler(Settings.AlignExpressions and Self.Aligned);
+      Cnt := 0;
+      RulerName := 'expr-0';
+    end;
+
+  begin
+    MultiLineExpression := false;
+    for i := 0 to Count - 1 do
+      if TermInfo[i].LineBreak then MultiLineExpression := true;
+    APrinter.PushIndent;
+    APrinter.StartRuler(Settings.AlignExpressions and Self.Aligned);
+    Cnt := 0;
+    RulerName := 'expr-0';
+    for i := 0 to Count - 1 do
+    begin
+      SameLine := false;
+      if TermInfo[i].SingleLine then
+        APrinter.SupressNextLine(true)
+      else if i > 0 then
+        NewLineCombo;
+      if Item(i) is TTerm then
+        TTerm(Item(i)).MultiLine := not TermInfo[i].SingleLine;
+      if Cnt <> 1 then
+        begin
+          APrinter.PrintRulerItem(RulerName, Item(i));
+          Inc(Cnt);
+          RulerName := Format('expr-%d', [Cnt]);
+        end
+      else
+        APrinter.PrintItem(Item(i));
+      if TermInfo[i].SingleLine then
+        APrinter.SupressNextLine(false)
+      else
+        APrinter.Undent;
+      if TermInfo[i].LineBreak and TermInfo[i].BreakBeforeDelimiter then NewLineCombo;
+      APrinter.PrintRulerItem(RulerName, Delimiter(i));
+      Inc(Cnt);
+      RulerName := Format('expr-%d', [Cnt]);
+      if TermInfo[i].LineBreak and not TermInfo[i].BreakBeforeDelimiter then NewLineCombo;
+    end;
+    APrinter.PopIndent;
+  end;
+
+  { Печать получившегося выражения }
+{  procedure PrintExpression;
   var
     i: integer;
     SameLine: boolean;
@@ -410,7 +464,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
       if TermInfo[i].LineBreak and not TermInfo[i].BreakBeforeDelimiter then APrinter.NextLine;
     end;
     APrinter.PopIndent;
-  end;
+  end;}
 
 begin
   if not Assigned(TermInfo) then

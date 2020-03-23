@@ -28,6 +28,14 @@ interface
 
 uses System.SysUtils, System.Generics.Collections;
 
+const
+  POSITION_SPECIAL   = 0;
+  POSITION_FAR_ABOVE = 1;
+  POSITION_ABOVE     = 2;
+  POSITION_AFTER     = 3;
+  POSITION_BELOW     = 4;
+  POSITION_FAR_BELOW = 5;
+
 type
 
   { Предварительное объявление типов }
@@ -62,7 +70,7 @@ type
     FValue: string;
     FLine, FCol: integer;
     FPrinted, FCanReplace: boolean;
-    FComments: array[0..4] of TComment;
+    FComments: array[POSITION_FAR_ABOVE..POSITION_FAR_BELOW] of TComment;
   strict protected
     function ModifyValue(const AValue: string): string; virtual;
     function GetComment(Index: integer): TComment;
@@ -78,11 +86,11 @@ type
     property Col: integer read FCol;
     property Printed: boolean read FPrinted write FPrinted;
     property CanReplace: boolean read FCanReplace write FCanReplace;
-    property CommentFarAbove: TComment index 0 read GetComment write SetComment;
-    property CommentAbove: TComment index 1 read GetComment write SetComment;
-    property CommentAfter: TComment index 2 read GetComment write SetComment;
-    property CommentBelow: TComment index 3 read GetComment write SetComment;
-    property CommentFarBelow: TComment index 4 read GetComment write SetComment;
+    property CommentFarAbove: TComment index POSITION_FAR_ABOVE read GetComment write SetComment;
+    property CommentAbove: TComment    index POSITION_ABOVE read GetComment write SetComment;
+    property CommentAfter: TComment    index POSITION_AFTER read GetComment write SetComment;
+    property CommentBelow: TComment    index POSITION_BELOW read GetComment write SetComment;
+    property CommentFarBelow: TComment index POSITION_FAR_BELOW read GetComment write SetComment;
   end;
 
   { Неожиданная или неизвестная лексема - встретился символ, с которого не может начинаться лексема }
@@ -136,6 +144,7 @@ type
   { Комментарий }
   TComment = class(TToken)
   public
+    Position: integer;
     function TokenType: string; override;
     function LineComment: boolean;
     function Height: integer;
@@ -218,6 +227,7 @@ begin
   if Assigned(AComment) and Assigned(FComments[Index])
     then raise Exception.CreateFmt('Trying to link comment [%s] while comment [%s] is already linked', [AComment.Value, FComments[Index].Value])
     else FComments[Index] := AComment;
+  if Assigned(AComment) then AComment.Position := Index;
 end;
 
 { TUnknownToken }

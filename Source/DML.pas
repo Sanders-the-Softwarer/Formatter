@@ -35,6 +35,8 @@ type
     function ParseStatement(out AResult: TStatement): boolean; override;
     function GetKeywords: TKeywords; override;
     function ForcedLineBreaks: boolean; override;
+  public
+    function Aligned: boolean; override;
   end;
 
   { Оператор select }
@@ -392,6 +394,11 @@ begin
 end;
 
 function TSQLExpression.ForcedLineBreaks: boolean;
+begin
+  Result := true;
+end;
+
+function TSQLExpression.Aligned: boolean;
 begin
   Result := true;
 end;
@@ -1285,6 +1292,8 @@ end;
 
 procedure TDelete.InternalPrintSelf(APrinter: TPrinter);
 begin
+  if Settings.AddFromToDelete and not Assigned(_From) then
+    _From := TEpithet.Create('from', -1, -1);
   APrinter.PrintItems([_Delete, _NextLine,
                        _From,   _IndentNextLine,
                                 _Table, _UndentNextLine,
