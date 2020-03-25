@@ -92,12 +92,10 @@ type
     procedure SupressNextLine(ASupress: boolean); virtual; abstract;
     procedure SupressSpaces(ASupress: boolean); virtual; abstract;
     procedure PrintSpecialComment(AValue: string); virtual; abstract;
-    procedure StartRuler(Enabled: boolean); virtual; abstract;
+    procedure StartRuler(Enabled: boolean; Continued: boolean = false); virtual; abstract;
   protected
     procedure Ruler(const ARuler: string); virtual; abstract;
   public
-    function  MakeDraftPrinter: TPrinter; virtual; abstract;
-    function  CurrentCol: integer; virtual; abstract;
     procedure ControlChanged; virtual; abstract;
     procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); virtual; abstract;
     function  GetText: string; virtual; abstract;
@@ -125,9 +123,6 @@ type
   { Тип извещения о необходимости синхронизации интерфейса }
   TSyncNotification = procedure (AToken: TToken; ALine, ACol, ALen: integer) of object;
 
-{ Создание принтера для вывода форматированного текста }
-function CreateFormatterPrinter: TPrinter;
-
 var
   { Извещение о необходимости синхронизации интерфейса }
   SyncNotification: TSyncNotification;
@@ -145,12 +140,6 @@ function _UndentNextLine: TObject;
 implementation
 
 uses SQLPlus, FormatterPrinter;
-
-{ Создание принтера для вывода форматированного текста }
-function CreateFormatterPrinter: TPrinter;
-begin
-  Result := TFormatterPrinter.Create;
-end;
 
 { Отправка извещения о необходимости синхронизации интерфейса }
 procedure SendSyncNotification(AToken: TToken; ALine, ACol, ALen: integer);

@@ -19,7 +19,8 @@ uses
   GUIPrinters in 'Source\GUIPrinters.pas',
   FormatterPrinter in 'Source\FormatterPrinter.pas',
   Commons in 'Source\Commons.pas',
-  BasePrinter in 'Source\BasePrinter.pas';
+  BasePrinter in 'Source\BasePrinter.pas',
+  TextBuilder in 'Source\TextBuilder.pas';
 
 {$R *.res}
 

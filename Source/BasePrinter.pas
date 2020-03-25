@@ -39,12 +39,10 @@ type
     procedure SupressNextLine(ASupress: boolean); override;
     procedure SupressSpaces(ASupress: boolean); override;
     procedure PrintSpecialComment(AValue: string); override;
-    procedure StartRuler(Enabled: boolean); override;
+    procedure StartRuler(Enabled: boolean; Continued: boolean = false); override;
   protected
     procedure Ruler(const ARuler: string); override;
   public
-    function  MakeDraftPrinter: TPrinter; override;
-    function  CurrentCol: integer; override;
     procedure ControlChanged; override;
     procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
     function  GetText: string; override;
@@ -95,16 +93,6 @@ end;
 procedure TBasePrinter.Ruler(const ARuler: string);
 begin
   { ничего не делаем }
-end;
-
-function TBasePrinter.MakeDraftPrinter: TPrinter;
-begin
-  raise Exception.Create('This printer has not a draft one');
-end;
-
-function TBasePrinter.CurrentCol: integer;
-begin
-  Result := -1;
 end;
 
 procedure TBasePrinter.ControlChanged;

@@ -173,8 +173,9 @@ type
     _Match: TIdentField;
   strict protected
     function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override; final;
   public
+    procedure PrintSelfBefore(APrinter: TPrinter); virtual;
     procedure PrintSelfAfter(APrinter: TPrinter); virtual;
     property MatchedTo: TIdentField read _Match write _Match;
   end;
@@ -617,10 +618,16 @@ end;
 
 procedure TExpressionField.InternalPrintSelf(APrinter: TPrinter);
 begin
+  PrintSelfBefore(APrinter);
   APrinter.PrintItem(_Expression);
   PrintSelfAfter(APrinter);
   if Assigned(_Match) then
     (Parent as TExpressionFields).PrintSpecialCommentAfterDelimiter('=> ' + TIdentField(_Match).Name);
+end;
+
+procedure TExpressionField.PrintSelfBefore(APrinter: TPrinter);
+begin
+  { ничего не делаем }
 end;
 
 procedure TExpressionField.PrintSelfAfter(APrinter: TPrinter);
@@ -780,6 +787,7 @@ type
   strict protected
     function InternalParse: boolean; override;
   public
+    procedure PrintSelfBefore(APrinter: TPrinter); override;
     procedure PrintSelfAfter(APrinter: TPrinter); override;
     function StatementName: string; override;
   end;
@@ -985,9 +993,13 @@ begin
   Result := Concat([_Alias]);
 end;
 
-procedure TSelectField.PrintSelfAfter(APrinter: TPrinter);
+procedure TSelectField.PrintSelfBefore(APrinter: TPrinter);
 begin
   APrinter.StartRuler(Settings.AlignFields);
+end;
+
+procedure TSelectField.PrintSelfAfter(APrinter: TPrinter);
+begin
   APrinter.PrintRulerItem('as', _As);
   APrinter.PrintRulerItem('alias', _Alias);
 end;

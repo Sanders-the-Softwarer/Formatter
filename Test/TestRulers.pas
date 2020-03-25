@@ -6,7 +6,7 @@ uses SysUtils, TestFramework, System.Generics.Collections;
 
 implementation
 
-uses PrinterIntf, Tokens, Statements;
+uses PrinterIntf, FormatterPrinter, Tokens, Statements;
 
 type
   _Rulers = class(TTestCase)

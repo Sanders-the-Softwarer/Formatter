@@ -77,7 +77,7 @@ type
     class var FlagCreatedRight: boolean;
   strict private
     CompleteKeywords: TKeywords;
-    MultiLineExpression: boolean;
+    FMultiLine: boolean;
   strict protected
     TermInfo: array of TTermInfo;
     function InternalParse: boolean; override;
@@ -91,12 +91,12 @@ type
     class procedure CreatedRight;
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
-    property IsMultiLineExpression: boolean read MultiLineExpression;
+    property IsMultiLine: boolean read FMultiLine;
   end;
 
 implementation
 
-uses Parser, Commons, DML, PLSQL;
+uses Parser, Commons, DML, PLSQL, FormatterPrinter;
 
 var
   ExpressionKeywords: TKeywords;
@@ -256,11 +256,11 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   { Сбор информации о размерах }
   procedure CollectInfo;
   var
-    DraftPrinter: TPrinter;
+    DraftPrinter: TFormatterPrinter;
     i: integer;
   begin
     SetLength(TermInfo, Count);
-    DraftPrinter := APrinter.MakeDraftPrinter;
+    DraftPrinter := TFormatterPrinter.CreateDraft(APrinter.Settings);
     try
       DraftPrinter.BeginPrint;
       for i := 0 to Count - 1 do
@@ -396,9 +396,9 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     end;
 
   begin
-    MultiLineExpression := false;
+    FMultiLine := false;
     for i := 0 to Count - 1 do
-      if TermInfo[i].LineBreak then MultiLineExpression := true;
+      if TermInfo[i].LineBreak or not TermInfo[i].SingleLine then FMultiLine := true;
     APrinter.PushIndent;
     APrinter.StartRuler(Settings.AlignExpressions and Self.Aligned);
     Cnt := 0;
@@ -574,7 +574,7 @@ end;
 procedure TCaseSection.InternalPrintSelf(APrinter: TPrinter);
 var _NextIfMultiLine: TObject;
 begin
-  if (_Condition is TExpression) and TExpression(_Condition).IsMultiLineExpression
+  if (_Condition is TExpression) and TExpression(_Condition).IsMultiLine
     then _NextIfMultiLine := _NextLine
     else _NextIfMultiLine := nil;
   if Assigned(_When)

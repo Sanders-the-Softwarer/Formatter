@@ -57,12 +57,14 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function IsNamedNotation: boolean;
+    function IsMultiLine: boolean;
   end;
 
   { Аргументы вызова подпрограммы }
   TArguments = class(TCommaList<TArgument>)
   strict protected
     function ParseBreak: boolean; override;
+    function HasMultiLineArgument: boolean;
   public
     function OnePerLine: boolean; override;
     function IsNamedNotation: boolean;
@@ -91,7 +93,7 @@ type
 
 implementation
 
-uses Parser;
+uses Parser, Expressions;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -152,7 +154,7 @@ begin
   begin
     if MultiLineIndexes then APrinter.PrintItem(_IndentNextLine);
     APrinter.PrintItem(_Indexes);
-    if MultiLineIndexes then APrinter.PrintItem(_UndentNextLine);
+    if MultiLineIndexes then APrinter.PrintItem(_Undent);
   end;
   APrinter.PrintItem(_Next);
 end;
@@ -208,6 +210,11 @@ begin
   Result := Assigned(_Assignment);
 end;
 
+function TArgument.IsMultiLine: boolean;
+begin
+  Result := (_Expression is TExpression) and TExpression(_Expression).IsMultiLine;
+end;
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //                       Аргументы в вызове подпрограммы                      //
@@ -221,8 +228,9 @@ end;
 
 function TArguments.OnePerLine: boolean;
 begin
-  Result := IsNamedNotation and (Self.Count > Settings.NamedArgumentSingleLineParamLimit)
-            or (Self.Count > Settings.PositionalArgumentSingleLineParamLimit);
+  Result := HasMultiLineArgument or
+            IsNamedNotation and (Self.Count > Settings.NamedArgumentSingleLineParamLimit) or
+            (Self.Count > Settings.PositionalArgumentSingleLineParamLimit);
 end;
 
 function TArguments.Aligned: boolean;
@@ -236,6 +244,15 @@ begin
   Result := false;
   for i := 0 to Count - 1 do
     if (Item(i) is TArgument) and (TArgument(Item(i)).IsNamedNotation) then
+      exit(true);
+end;
+
+function TArguments.HasMultiLineArgument: boolean;
+var i: integer;
+begin
+  Result := false;
+  for i := 0 to Count - 1 do
+    if (Item(i) is TArgument) and (TArgument(Item(i)).IsMultiLine) then
       exit(true);
 end;
 

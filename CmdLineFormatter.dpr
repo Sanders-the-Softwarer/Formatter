@@ -21,7 +21,8 @@ uses
   Tokens in 'Source\Tokens.pas',
   Utils in 'Source\Utils.pas',
   FormatterPrinter in 'Source\FormatterPrinter.pas',
-  BasePrinter in 'Source\BasePrinter.pas';
+  BasePrinter in 'Source\BasePrinter.pas',
+  TextBuilder in 'Source\TextBuilder.pas';
 
 var
   InFileName, OutFileName, InText, OutText: string;

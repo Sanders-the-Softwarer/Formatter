@@ -543,7 +543,7 @@ begin
   APrinter.PrintRulerItem('name', _Name);
   APrinter.PrintRulerItem('type', _Type);
   APrinter.PrintRulerItems('default', [_Default, _Value]);
-  APrinter.PrintRulerItems('notnull', [_Not, _Null]);
+  APrinter.PrintRulerItems('not null', [_Not, _Null]);
 end;
 
 { TConstraint }

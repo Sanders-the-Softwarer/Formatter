@@ -25,7 +25,7 @@ unit Controller;
 
 interface
 
-uses SysUtils, PrinterIntf, Streams, Tokens, Statements, Parser;
+uses SysUtils, PrinterIntf, FormatterPrinter, Streams, Tokens, Statements, Parser;
 
 { Форматирование текста, полученного в виде строки, с возвратом результата в строку }
 procedure MakeFormatted(const AText: string; ASettings: TFormatSettings; out AResult: string);
