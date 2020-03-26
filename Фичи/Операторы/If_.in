@@ -1,0 +1,9 @@
+-- ѕри многострочном условии then должно выводитьс€ под if
+if p_manual_data_source_code
+   not in
+   (v_data_source_fs1_code, v_data_source_fs2_code, v_data_source_order_code) 
+then
+    return v_result;
+else
+    return null;
+end if;

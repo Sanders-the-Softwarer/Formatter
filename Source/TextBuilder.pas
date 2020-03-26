@@ -103,8 +103,7 @@ end;
 { Добавление пробела (Count штук)}
 procedure TTextBuilder.AppendSpace(Count: integer);
 begin
-  Assert(Count >= 0);
-  if Count = 0 then exit;
+  if Count <= 0 then exit;
   Inc(FCol, Count);
   Inc(FLength, Count);
   if Assigned(Builder) then Builder.Append(' ', Count);

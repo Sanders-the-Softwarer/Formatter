@@ -1157,8 +1157,14 @@ begin
 end;
 
 procedure TIf.InternalPrintSelf(APrinter: TPrinter);
+var _NL: TObject;
 begin
-  APrinter.PrintItems([_If, _Condition, _Sections, _NextLine, _EndIf]);
+  { При многострочном условии переносим then на следующую строку }
+  if (_Condition is TExpression) and TExpression(_Condition).IsMultiLine
+    then _NL := _NextLine
+    else _NL := nil;
+  { Собственно печать }
+  APrinter.PrintItems([_If, _Condition, _NL, _Sections, _NextLine, _EndIf]);
   inherited;
 end;
 
@@ -1285,12 +1291,8 @@ end;
 
 procedure TIfSection.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_ThenOrElsifOrElse, _Condition, _Then]);
-  APrinter.NextLine;
-  APrinter.Indent;
-  APrinter.PrintItem(_Statements);
-  APrinter.NextLine;
-  APrinter.Undent;
+  APrinter.PrintItems([_ThenOrElsifOrElse, _Condition, _Then, _IndentNextLine,
+                                           _Statements, _UndentNextLine]);
 end;
 
 { TIfSections }

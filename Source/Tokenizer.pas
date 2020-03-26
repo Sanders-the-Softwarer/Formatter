@@ -151,7 +151,7 @@ function TTokenizer.InternalNext: TToken;
   begin
     Restore;
     Result := false;
-    while NextChar in [#9, #13, ' '] do Result := true;
+    while CharInSet(NextChar, [#9, #13, ' ']) do Result := true;
     RefuseLastChar;
   end;
 
@@ -160,7 +160,7 @@ function TTokenizer.InternalNext: TToken;
   begin
     Restore;
     Result := true;
-    repeat until NextChar in [#13, #0];
+    repeat until CharInSet(NextChar, [#13, #0]);
     RefuseLastChar;
   end;
 
@@ -174,11 +174,11 @@ function TTokenizer.InternalNext: TToken;
     if F = '"' then
       repeat
         C := NextChar
-      until C in ['"', #0]
+      until CharInSet(C, ['"', #0])
     else if TCharacter.IsLetter(F) then
       repeat
         C := NextChar;
-      until not TCharacter.IsLetter(C) and not TCharacter.IsDigit(C) and not (C in ['$', '#', '_'])
+      until not TCharacter.IsLetter(C) and not TCharacter.IsDigit(C) and not CharInSet(C, ['$', '#', '_'])
     else
       begin
         RefuseLastChar;
@@ -194,7 +194,7 @@ function TTokenizer.InternalNext: TToken;
     Restore;
     Result := (NextChar = '-') and (NextChar = '-');
     if not Result then exit;
-    repeat until NextChar in [#13, #0];
+    repeat until CharInSet(NextChar, [#13, #0]);
     RefuseLastChar;
   end;
 
@@ -239,8 +239,8 @@ function TTokenizer.InternalNext: TToken;
   begin
     Restore;
     C := NextChar;
-    if C in ['N', 'n'] then C := NextChar;
-    if not (C in ['Q', 'q']) then exit(false);
+    if CharInSet(C, ['N', 'n']) then C := NextChar;
+    if not CharInSet(C, ['Q', 'q']) then exit(false);
     if NextChar <> '''' then exit(false);
     L := NextChar;
     case L of
@@ -251,7 +251,7 @@ function TTokenizer.InternalNext: TToken;
     end;
     repeat
       C := NextChar;
-    until C in [L, #0];
+    until CharInSet(C, [L, #0]);
     NextChar;
     ApplyLastChar;
     Result := true;

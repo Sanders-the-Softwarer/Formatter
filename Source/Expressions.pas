@@ -78,6 +78,7 @@ type
   strict private
     CompleteKeywords: TKeywords;
     FMultiLine: boolean;
+    function GetMultiLine: boolean;
   strict protected
     TermInfo: array of TTermInfo;
     function InternalParse: boolean; override;
@@ -91,7 +92,7 @@ type
     class procedure CreatedRight;
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
-    property IsMultiLine: boolean read FMultiLine;
+    property IsMultiLine: boolean read GetMultiLine;
   end;
 
 implementation
@@ -356,6 +357,72 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     end;
   end;
 
+  { Специальный алгоритм расстановки переносов в случае конкатенации }
+  function DoConcatenationBreaks(Start, Finish: integer): boolean;
+  var
+    Texts: TDictionary<string, TList<integer>>;
+    DraftPrinter: TFormatterPrinter;
+    Text, Found: string;
+    D, T: TObject;
+    i, Prev: integer;
+    CurPriority, MaxPriority: double;
+  begin
+    Result := true;
+    Texts := nil;
+    DraftPrinter := nil;
+    try
+      { Пробежим по элементам выражения }
+      for i := Start to Finish - 1 do
+      begin
+        D := Delimiter(i);
+        { Если это не конкатенация, просто выйдем }
+        if not (D is TToken) or (TToken(D).Value <> '||') then exit(false);
+        { В противном случае возьмём текст выражения }
+        if not Assigned(DraftPrinter) then DraftPrinter := TFormatterPrinter.Create(APrinter.Settings);
+        DraftPrinter.BeginPrint;
+        DraftPrinter.PrintItem(Item(i));
+        Text := DraftPrinter.GetText;
+        DraftPrinter.EndPrint;
+        { И запомним его в списке }
+        if not Assigned(Texts) then Texts := TObjectDictionary<string, TList<integer>>.Create([doOwnsValues]);
+        if not Texts.ContainsKey(Text) then Texts.Add(Text, TList<integer>.Create());
+        Texts[Text].Add(i);
+      end;
+      { Теперь попробуем найти самый повторяющийся текст. При одинаковой повторяемости
+        (может быть, например, при || chr(13) || chr(10)) возмём тот, что больше
+        тяготеет к концу выражения (чтобы не влепить разбиение между элементами
+        из примера выше)}
+      Found := '';
+      MaxPriority := -1;
+      for Text in Texts.Keys do
+        if Texts[Text].Count > 1 then
+        begin
+          CurPriority := 0.0;
+          for i in Texts[Text] do CurPriority := CurPriority + i / 1000 + 1;
+          if CurPriority > MaxPriority then
+          begin
+            MaxPriority := CurPriority;
+            Found := Text;
+          end;
+        end;
+      if Found = '' then exit(false);
+      { Расставим переносы по найденным элементам }
+      Prev := Start;
+      for i in Texts[Found] do
+      begin
+        TermInfo[i].LineBreak := true;
+        if (Prev > Start) or (i < Finish) then CheckForBreaks(Prev, i);
+        Prev := i + 1;
+      end;
+      if Prev > Start then CheckForBreaks(Prev, Finish);
+      { Расставим выравнивания }
+      PutRulers(Start, Finish);
+    finally
+      FreeAndNil(Texts);
+      FreeAndNil(DraftPrinter);
+    end;
+  end;
+
   { Расстановка переносов по самым низкоприоритетным операциям }
   procedure PutLineBreaks(Start, Finish: integer);
   var i, MinPriority, Prev: integer;
@@ -364,6 +431,8 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     MinPriority := MaxInt;
     for i := Start to Finish - 1 do
       if TermInfo[i].Priority < MinPriority then MinPriority := TermInfo[i].Priority;
+    { Если это операция конкатенации, используем специальный алгоритм }
+    if DoConcatenationBreaks(Start, Finish) then exit;
     { И расставим переносы по таким операциям }
     Prev := Start;
     for i := Start to Finish do
@@ -384,13 +453,12 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
 
     var
       i, Cnt: integer;
-      SameLine: boolean;
       RulerName: string;
 
     procedure NewLineCombo;
     begin
       APrinter.NextLine;
-      APrinter.StartRuler(Settings.AlignExpressions and Self.Aligned);
+//      APrinter.StartRuler(Settings.AlignExpressions and Self.Aligned);
       Cnt := 0;
       RulerName := 'expr-0';
     end;
@@ -400,12 +468,11 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     for i := 0 to Count - 1 do
       if TermInfo[i].LineBreak or not TermInfo[i].SingleLine then FMultiLine := true;
     APrinter.PushIndent;
-    APrinter.StartRuler(Settings.AlignExpressions and Self.Aligned);
+//    APrinter.StartRuler(Settings.AlignExpressions and Self.Aligned);
     Cnt := 0;
     RulerName := 'expr-0';
     for i := 0 to Count - 1 do
     begin
-      SameLine := false;
       if TermInfo[i].SingleLine then
         APrinter.SupressNextLine(true)
       else if i > 0 then
@@ -414,7 +481,8 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         TTerm(Item(i)).MultiLine := not TermInfo[i].SingleLine;
       if Cnt <> 1 then
         begin
-          APrinter.PrintRulerItem(RulerName, Item(i));
+//          APrinter.PrintRulerItem(RulerName, Item(i));
+          APrinter.PrintItem(Item(i));
           Inc(Cnt);
           RulerName := Format('expr-%d', [Cnt]);
         end
@@ -424,47 +492,18 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         APrinter.SupressNextLine(false)
       else
         APrinter.Undent;
-      if TermInfo[i].LineBreak and TermInfo[i].BreakBeforeDelimiter then NewLineCombo;
-      APrinter.PrintRulerItem(RulerName, Delimiter(i));
+      if TermInfo[i].LineBreak and TermInfo[i].BreakBeforeDelimiter then NewLineCombo
+      else if TermInfo[i].LineBreak and ((i = 0) or (TermInfo[i - 1].LineBreak) and
+              (not TermInfo[i].SingleLine or TermInfo[i].SingleLine and (TermInfo[i].SingleLineLen > Settings.PreferredExpressionLength div 3)))
+        then NewLineCombo;
+//      APrinter.PrintRulerItem(RulerName, Delimiter(i));
+      APrinter.PrintItem(Delimiter(i));
       Inc(Cnt);
       RulerName := Format('expr-%d', [Cnt]);
       if TermInfo[i].LineBreak and not TermInfo[i].BreakBeforeDelimiter then NewLineCombo;
     end;
     APrinter.PopIndent;
   end;
-
-  { Печать получившегося выражения }
-{  procedure PrintExpression;
-  var
-    i: integer;
-    SameLine: boolean;
-  begin
-    MultiLineExpression := false;
-    for i := 0 to Count - 1 do
-      if TermInfo[i].LineBreak then MultiLineExpression := true;
-    APrinter.PushIndent;
-    for i := 0 to Count - 1 do
-    begin
-      SameLine := false;
-      if TermInfo[i].SingleLine then
-        APrinter.SupressNextLine(true)
-      else if i > 0 then
-        APrinter.NextLine;
-      if Item(i) is TTerm then
-        TTerm(Item(i)).MultiLine := not TermInfo[i].SingleLine;
-      APrinter.PrintItem(Item(i));
-      if TermInfo[i].SingleLine then
-        APrinter.SupressNextLine(false)
-      else
-        APrinter.Undent;
-      if TermInfo[i].LineBreak and TermInfo[i].BreakBeforeDelimiter
-        then APrinter.NextLine;
-      if not Assigned(Delimiter(i)) then continue;
-      APrinter.PrintItem(Delimiter(i));
-      if TermInfo[i].LineBreak and not TermInfo[i].BreakBeforeDelimiter then APrinter.NextLine;
-    end;
-    APrinter.PopIndent;
-  end;}
 
 begin
   if not Assigned(TermInfo) then
@@ -526,6 +565,21 @@ procedure TExpression.BeforeDestruction;
 begin
   FreeAndNil(CompleteKeywords);
   inherited;
+end;
+
+function TExpression.GetMultiLine: boolean;
+var Printer: TPrinter;
+begin
+  if Assigned(TermInfo) then exit(FMultiLine);
+  Printer := TFormatterPrinter.Create(Settings); { не draft, тот не будет учитывать комментарии }
+  try
+    Printer.BeginPrint;
+    PrintSelf(Printer);
+    Printer.EndPrint;
+  finally
+    FreeAndNil(Printer);
+  end;
+  Result := FMultiLine;
 end;
 
 { TCase }

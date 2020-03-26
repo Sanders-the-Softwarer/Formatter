@@ -117,9 +117,6 @@ type
     procedure PrintSelf(APrinter: TPrinter); virtual; abstract;
   end;
 
-  { Тип лексемы для вывода специальных комментариев }
-  TSpecialComment = class(TComment);
-
   { Тип извещения о необходимости синхронизации интерфейса }
   TSyncNotification = procedure (AToken: TToken; ALine, ACol, ALen: integer) of object;
 
@@ -311,7 +308,7 @@ begin
   AlignVariables                  := true;
   AlignFields                     := true;
   AlignColumns                    := true;
-  AlignExpressions                := true;
+  AlignExpressions                := false;
   AlignTableColumnComments        := true;
   AlignSpecialComments            := true;
   AlignSQLPLUS                    := true;

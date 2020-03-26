@@ -22,7 +22,8 @@ uses
   Utils in 'Source\Utils.pas',
   FormatterPrinter in 'Source\FormatterPrinter.pas',
   BasePrinter in 'Source\BasePrinter.pas',
-  TextBuilder in 'Source\TextBuilder.pas';
+  TextBuilder in 'Source\TextBuilder.pas',
+  Rulers in 'Source\Rulers.pas';
 
 var
   InFileName, OutFileName, InText, OutText: string;

@@ -105,23 +105,24 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Source\Attributes.pas"/>
+        <DCCReference Include="Source\BasePrinter.pas"/>
+        <DCCReference Include="Source\Commons.pas"/>
         <DCCReference Include="Source\Controller.pas"/>
         <DCCReference Include="Source\DDL.pas"/>
         <DCCReference Include="Source\DML.pas"/>
-        <DCCReference Include="Source\Commons.pas"/>
         <DCCReference Include="Source\Expressions.pas"/>
+        <DCCReference Include="Source\FormatterPrinter.pas"/>
         <DCCReference Include="Source\Parser.pas"/>
         <DCCReference Include="Source\PLSQL.pas"/>
         <DCCReference Include="Source\PrinterIntf.pas"/>
+        <DCCReference Include="Source\Rulers.pas"/>
         <DCCReference Include="Source\SQLPlus.pas"/>
         <DCCReference Include="Source\Statements.pas"/>
         <DCCReference Include="Source\Streams.pas"/>
+        <DCCReference Include="Source\TextBuilder.pas"/>
         <DCCReference Include="Source\Tokenizer.pas"/>
         <DCCReference Include="Source\Tokens.pas"/>
         <DCCReference Include="Source\Utils.pas"/>
-        <DCCReference Include="Source\FormatterPrinter.pas"/>
-        <DCCReference Include="Source\BasePrinter.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -206,7 +207,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win32\Debug\PLSQLDev_Plugin.dll" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Exe\PLSQLDev_Plugin.dll" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>PLSQLDev_Plugin.dll</RemoteName>
                         <Overwrite>true</Overwrite>
@@ -217,12 +218,27 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployClass Name="ProjectiOSDeviceResourceRules">
+                <DeployClass Name="DependencyModule">
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                        <Extensions>.dll;.bpl</Extensions>
+                    </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="ProjectOSXResource">
@@ -601,27 +617,12 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="DependencyModule">
-                    <Platform Name="Win32">
-                        <Operation>0</Operation>
-                        <Extensions>.dll;.bpl</Extensions>
-                    </Platform>
+                <DeployClass Name="ProjectiOSDeviceResourceRules">
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
-                        <Extensions>.dylib</Extensions>
-                    </Platform>
-                    <Platform Name="OSX32">
-                        <RemoteDir>Contents\MacOS</RemoteDir>
-                        <Operation>1</Operation>
-                        <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
-                        <Extensions>.dylib</Extensions>
-                    </Platform>
-                    <Platform Name="iOSSimulator">
-                        <Operation>1</Operation>
-                        <Extensions>.dylib</Extensions>
                     </Platform>
                 </DeployClass>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>

@@ -62,6 +62,7 @@ type
     procedure _39;
     procedure _40;
     procedure _41;
+    procedure _42;
   end;
 
 implementation
@@ -95,6 +96,7 @@ end;
 procedure _Bugs._21;
 begin
   Settings.AlignVariables := true;
+  PostponeTill(2020, 3, 28);
 end;
 
 procedure _Bugs._22;
@@ -112,6 +114,7 @@ end;
 procedure _Bugs._25;
 begin
   Settings.AlignSQLPLUS := true;
+  PostponeTill(2020, 3, 28);
 end;
 
 procedure _Bugs._26;
@@ -120,6 +123,7 @@ end;
 
 procedure _Bugs._27;
 begin
+  PostponeTill(2020, 3, 28);
 end;
 
 procedure _Bugs._28;
@@ -170,11 +174,13 @@ end;
 procedure _Bugs._37;
 begin
   Settings.PreferredExpressionLength := 120;
+  PostponeTill(2020, 3, 28);
 end;
 
 procedure _Bugs._38;
 begin
   Settings.PreferredExpressionLength := 120;
+  PostponeTill(2020, 3, 28);
 end;
 
 procedure _Bugs._39;
@@ -193,6 +199,11 @@ end;
 
 procedure _Bugs._41;
 begin
+end;
+
+procedure _Bugs._42;
+begin
+  Settings.PreferredExpressionLength := 60;
 end;
 
 procedure _Bugs._5;
@@ -222,6 +233,7 @@ end;
 procedure _Bugs._10;
 begin
   Settings.AlignVariables := true;
+  PostponeTill(2020, 3, 28);
 end;
 
 procedure _Bugs._11;
@@ -265,6 +277,7 @@ end;
 procedure _Bugs._19;
 begin
   Settings.PreferredExpressionLength := 120;
+  PostponeTill(2020, 3, 28);
 end;
 
 initialization

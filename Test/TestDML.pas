@@ -135,6 +135,7 @@ procedure _Select.Сопоставление_Полей_В_Into_С_Выравниванием;
 begin
   Settings.MatchParamLimit := 3;
   Settings.AlignSpecialComments := true;
+  PostponeTill(2020, 3, 28);
 end;
 
 procedure _Select.Указание_Направления_Сортировки_И_Расположения_Null_В_Order_By;

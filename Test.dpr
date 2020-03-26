@@ -34,7 +34,6 @@ uses
   TestExpressions in 'Test\TestExpressions.pas',
   TestDDL in 'Test\TestDDL.pas',
   TestPLSQL in 'Test\TestPLSQL.pas',
-  TestRulers in 'Test\TestRulers.pas',
   Utils in 'Source\Utils.pas',
   Controller in 'Source\Controller.pas',
   TestBugs in 'Test\TestBugs.pas',
@@ -42,7 +41,8 @@ uses
   FormatterPrinter in 'Source\FormatterPrinter.pas',
   Commons in 'Source\Commons.pas',
   BasePrinter in 'Source\BasePrinter.pas',
-  TextBuilder in 'Source\TextBuilder.pas';
+  TextBuilder in 'Source\TextBuilder.pas',
+  Rulers in 'Source\Rulers.pas';
 
 {$R *.RES}
 

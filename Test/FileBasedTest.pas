@@ -35,6 +35,7 @@ type
   TFileBasedTest = class(TTestCase)
   protected
     Settings: TFormatSettings;
+    Skip: boolean;
   protected
     { Настройки каталога размещения и расширений входного-выходного файлов }
     function GetDir: string; virtual;
@@ -51,7 +52,9 @@ type
     function Beautify(const S: string): string;
     { Сравнение форматированного текста с ожидаемым }
     procedure Check(AText, AExpected: string);
-  public
+    { Отложить тест до указанной даты }
+    procedure PostponeTill(AYear, AMonth, ADay: integer);
+  protected
     { Подготовка к выполнению теста }
     procedure SetUp; override;
     { Уборка после выполненного теста }
@@ -107,8 +110,9 @@ end;
 { Запуск тестового метода }
 procedure TFileBasedTest.Invoke(AMethod: TTestMethod);
 begin
+  Skip := false;
   AMethod; { само тело теста нужно только для настройки опций, если требуется }
-  CheckFile(GetName); { а теперь по имени теста сравним файлы }
+  if not Skip then CheckFile(GetName); { а теперь по имени теста сравним файлы }
 end;
 
 { Чтение файла в строку }
@@ -144,6 +148,12 @@ begin
     else AText := TrimRight(AText);
   Controller.MakeFormatted(AText, Settings, Actual);
   CheckEquals(Beautify(AExpected), Beautify(Actual));
+end;
+
+{ Отложить тест до указанной даты }
+procedure TFileBasedTest.PostponeTill(AYear, AMonth, ADay: integer);
+begin
+  Skip := (Date < EncodeDate(AYear, AMonth, ADay));
 end;
 
 end.

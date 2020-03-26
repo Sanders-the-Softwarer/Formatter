@@ -8,9 +8,12 @@ begin
             p_param_names => t_varchar_table('key', 'current sum retail', 'current sum wholesale', 'current priority count'),
             p_param_values => t_varchar_table
                                   (
-                                      v_rec.sup_sku_code || chr(1) || v_rec.sup_style_color_code || chr(1) || v_rec.po_code || chr(1) || v_rec.specification_code, 
-                                      v_sum_retail, 
-                                      v_sum_wholesale, 
+                                      v_rec.sup_sku_code || chr(1) ||
+                                      v_rec.sup_style_color_code || chr(1) ||
+                                      v_rec.po_code || chr(1) ||
+                                      v_rec.specification_code,
+                                      v_sum_retail,
+                                      v_sum_wholesale,
                                       v_priority_count
                                   )
         );

@@ -4,36 +4,26 @@ begin
     top_log_calc.add_log
         (
             p_param_names => t_varchar_table('key'),
-            p_param_values => t_varchar_table(v_rec.sup_sku_code ||
-                                              chr(1) ||
-                                              v_rec.sup_style_color_code ||
-                                              chr(1) ||
-                                              v_rec.po_code ||
-                                              chr(1) ||
-                                              v_rec.specification_code)
+            p_param_values => t_varchar_table
+                                  (
+                                      v_rec.sup_sku_code || chr(1) ||
+                                      v_rec.sup_style_color_code || chr(1) ||
+                                      v_rec.po_code || chr(1) ||
+                                      v_rec.specification_code
+                                  )
         );
-    v_key_sup_sku := g_agg_text_tbl(i).sup_sku_code ||
-                     chr(1) ||
-                     g_agg_text_tbl(i).delivery_country_code ||
-                     chr(1) ||
-                     g_agg_text_tbl(i).po_code ||
-                     chr(1) ||
-                     g_agg_text_tbl(i).specification_code ||
-                     chr(1) ||
-                     g_agg_text_tbl(i).shipment_point_code ||
-                     chr(1) ||
+    v_key_sup_sku := g_agg_text_tbl(i).sup_sku_code || chr(1) ||
+                     g_agg_text_tbl(i).delivery_country_code || chr(1) ||
+                     g_agg_text_tbl(i).po_code || chr(1) ||
+                     g_agg_text_tbl(i).specification_code || chr(1) ||
+                     g_agg_text_tbl(i).shipment_point_code || chr(1) ||
                      g_agg_text_tbl(i).transport_type_code;
     for i in 1 .. p_sup_sku_calc_tbl.count loop
-        v_key := p_sup_sku_calc_tbl(i).sup_sku_code ||
-                 chr(1) ||
-                 p_sup_sku_calc_tbl(i).delivery_country_code ||
-                 chr(1) ||
-                 p_sup_sku_calc_tbl(i).po_code ||
-                 chr(1) ||
-                 p_sup_sku_calc_tbl(i).specification_code ||
-                 chr(1) ||
-                 p_sup_sku_calc_tbl(i).shipment_point_code ||
-                 chr(1) ||
+        v_key := p_sup_sku_calc_tbl(i).sup_sku_code || chr(1) ||
+                 p_sup_sku_calc_tbl(i).delivery_country_code || chr(1) ||
+                 p_sup_sku_calc_tbl(i).po_code || chr(1) ||
+                 p_sup_sku_calc_tbl(i).specification_code || chr(1) ||
+                 p_sup_sku_calc_tbl(i).shipment_point_code || chr(1) ||
                  p_sup_sku_calc_tbl(i).transport_type_code;
         p_sup_sku_calc_tbl(i).error_text := top_kernel_utils.string_concatenate(set(v_agg_sup_sku_text_attr_tbl(v_key).error_text_tbl));
         p_calc_row_tbl(i).error_text := p_sup_sku_calc_tbl(i).error_text;

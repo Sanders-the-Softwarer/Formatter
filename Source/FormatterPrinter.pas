@@ -14,24 +14,9 @@ interface
 
 uses
   Classes, SysUtils, Math, System.Generics.Collections, PrinterIntf, BasePrinter,
-  Tokens, Statements, TextBuilder;
+  Tokens, Statements, TextBuilder, Rulers;
 
 type
-
-  { Информация о выравниваниях }
-  TRulers = class
-  private
-    Names: TStringList;
-    MaxWidth: TDictionary<String, integer>;
-    PrevLine, PrevCol: integer;
-    DisablePadding: boolean;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    procedure NewLine(ALine: integer; AContinued: boolean);
-    procedure Take(const ARuler: string; ALine, ACol: integer);
-    function Fix(const ARuler: string): integer;
-  end;
 
   { Режим принтера }
   TFormatterPrinterMode = (fpmNormal, fpmGetRulers, fpmSetRulers);
@@ -45,8 +30,7 @@ type
     ForceNextLine: boolean;
     EmptyLine: boolean;
     WasComment: boolean;
-    Rulers:  TRulers;
-    PaddingCol: integer;
+    Rulers: TRulers;
     PrevToken, FarPrevToken: TToken;
     SpecialComments: TObjectList<TToken>;
     SupSpace, SupNextLine: integer;
@@ -56,13 +40,14 @@ type
     FixShift: boolean;
     OriginalFormatCount, OriginalFormatStartLine: integer;
     OriginalFormatToken: TToken;
-    PrevRealLine: integer;
+    { Название линейки, которую нужно установить на следующей печатаемой лексеме }
+    RulerName: string;
   strict protected
     TokenPos, TokenLen: TDictionary<TToken, integer>;
     function SpaceRequired(ALeft, ARight: TToken): boolean;
     procedure PrintEmptyToken;
   public
-    constructor Create;
+    constructor Create(ASettings: TFormatSettings);
     constructor CreateDraft(ASettings: TFormatSettings);
     destructor Destroy; override;
     procedure BeginPrint; override;
@@ -70,8 +55,6 @@ type
     procedure PrintItem(AItem: TObject); override;
     procedure PrintToken(AToken: TToken); override;
     procedure PrintStatement(AStatement: TStatement); override;
-    procedure PrintRulerItem(const ARuler: string; AItem: TObject); override;
-    procedure PrintRulerItems(const ARuler: string; AItems: array of TObject); override;
     procedure Indent; override;
     procedure Undent; override;
     procedure PushIndent; override;
@@ -95,18 +78,9 @@ const
   C_UNFORMAT_START = '/* -- vvv --';
   C_UNFORMAT_STOP  = '/* -- ^^^ --';
 
-{ Создание принтера для вывода форматированного текста }
-function CreateFormatterPrinter: TPrinter;
-
 implementation
 
 uses Utils, SQLPlus, PLSQL;
-
-{ Создание принтера для вывода форматированного текста }
-function CreateFormatterPrinter: TPrinter;
-begin
-  Result := TFormatterPrinter.Create;
-end;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -117,18 +91,19 @@ end;
 constructor TFormatterPrinter.CreateDraft(ASettings: TFormatSettings);
 begin
   IsDraft := true;
-  Create;
-  Settings := ASettings;
+  Create(ASettings);
 end;
 
-constructor TFormatterPrinter.Create;
+constructor TFormatterPrinter.Create(ASettings: TFormatSettings);
 begin
+  Assert(ASettings <> nil);
   inherited Create;
   TokenPos := TDictionary<TToken, integer>.Create;
   TokenLen := TDictionary<TToken, integer>.Create;
   SpecialComments := TObjectList<TToken>.Create(true);
   Indents := TStack<integer>.Create;
   TextBuilder := TTextBuilder.Create(IsDraft);
+  Settings := ASettings;
 end;
 
 destructor TFormatterPrinter.Destroy;
@@ -148,7 +123,6 @@ begin
   TextBuilder.Clear;
   Shift   := 0;
   ForceNextLine := false;
-  PaddingCol := 0;
   OriginalFormatCount := 0;
   OriginalFormatToken := nil;
   TokenPos.Clear;
@@ -233,7 +207,7 @@ end;
 procedure TFormatterPrinter.PrintEmptyToken;
 var T: TToken;
 begin
-  T := TToken.Create('', -1, -1);
+  T := TEmptyToken.Create;
   try
     PrintToken(T);
   finally
@@ -262,15 +236,17 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
   { Вывод лексемы в выходной поток }
   procedure InternalPrint(AToken: TToken);
   var
+    AComment: TComment absolute AToken;
+    LeadComment: TComment;
     Value: string;
     IsComment, LineComment, SpecComment, FakeToken, EmptyToken, OriginalFormat: boolean;
     EOLLimit: integer;
   begin
     IsComment := AToken is TComment;
-    LineComment := IsComment and TComment(AToken).LineComment;
+    LineComment := IsComment and AComment.LineComment;
     SpecComment := AToken is TSpecialComment;
     { Если это команда начала исходного форматирования, скорректируем режим до печати лексемы }
-    if IsComment and AToken.Value.StartsWith(C_UNFORMAT_START) and not IsDraft then
+    if IsComment and AComment.Value.StartsWith(C_UNFORMAT_START) and not IsDraft then
     begin
       Inc(OriginalFormatCount);
       if OriginalFormatCount = 1 then
@@ -288,17 +264,33 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     ForceNextLine := ForceNextLine and not OriginalFormat;
     { В режиме исходного форматирования не печатаем "добавленных" лексем }
     if OriginalFormat and FakeToken then exit;
-    { В режиме примерки нам не нужны комментарии, кроме расположенных справа }
-    if IsComment and (Mode = fpmGetRulers) and not SpecComment and (TComment(AToken).Position <> POSITION_AFTER) then exit;
-    { Если это комментарий под предыдущей лексемой, выставим переводы строк }
-    if IsComment and not OriginalFormat then
-      case TComment(AToken).Position of
-        POSITION_BELOW,
-        POSITION_ABOVE    : ForceNextLine := true;
-        POSITION_FAR_ABOVE,
-        POSITION_FAR_BELOW: EmptyLine := true;
-        POSITION_AFTER    : Ruler('right-comment');
-      end;
+    { В режиме примерки нам не нужны комментарии, кроме расположенных между лексемами }
+    if IsComment and IsDraft and
+       (SpecComment or LineComment or (AComment.Position <> POSITION_AFTER)) then exit;
+    { Если это комментарий под предыдущей лексемой, надо урегулировать переводы строк }
+    if IsComment and not OriginalFormat and not (FarPrevToken is TComment) then
+    begin
+      { Если комментарий далеко внизу, точно нужна пустая строка }
+      if AComment.Position = POSITION_FAR_BELOW then
+        EmptyLine := true
+      { Если комментарий прижат снизу, точно достаточно перевода строки }
+      else if AComment.Position = POSITION_BELOW then
+        ForceNextLine := true
+      { Если комментарий далеко вверху от чего-то ниже себя, значит к текущей лексеме он прижат не был }
+      else if AComment.Position = POSITION_FAR_ABOVE then
+        EmptyLine := true
+      { Если комментарий прижат сверху, нужно определить правильную дистанцию до ведущего комментария }
+      else if AComment.Position = POSITION_ABOVE then
+        begin
+          LeadComment := AComment.LeadComment;
+          if LeadComment.Position in [POSITION_FAR_ABOVE, POSITION_FAR_BELOW]
+            then EmptyLine := true
+            else ForceNextLine := true;
+        end
+      { Ну и заодно для комментариев справа от текста залепим линейку }
+      else if (AComment.Position = POSITION_AFTER) and LineComment then
+        Ruler('right-comment');
+    end;
     { Определим необходимое количество переводов строки }
     if EmptyLine then
       EOLLimit := 2
@@ -314,21 +306,30 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
       EmptyLine := false;
       ForceNextLine := false;
     end;
-    { Если задано выравнивание, вставим соответствующее количество пробелов }
-    if (PaddingCol > TextBuilder.Col) and not OriginalFormat then
-    begin
-      TextBuilder.AppendSpace(PaddingCol - TextBuilder.Col);
-      PaddingCol := 0;
-    end;
     { Если нужно, внедрим пробел между предыдущей и новой лексемами }
     if Assigned(PrevToken) and not EmptyToken and SpaceRequired(PrevToken, AToken) and not OriginalFormat then
       TextBuilder.AppendSpace(1);
+    { Если установлена линейка, прореагируем на неё в соответствии с режимом принтера }
+    if RulerName <> '' then
+    begin
+      if Assigned(Rulers) and RulerEnabled then
+        case Mode of
+          { В режиме примерки запомним ширину фрагмента }
+          fpmGetRulers:
+            Rulers.Take(RulerName, TextBuilder.Line, TextBuilder.Col - Shift);
+          { В режиме вставим необходимое количество пробелов }
+          fpmSetRulers:
+            if not OriginalFormat then
+              TextBuilder.AppendSpace(Shift + Rulers.Fix(RulerName) - TextBuilder.Col);
+        end;
+      RulerName := '';
+    end;
     { Определим окончательное значение печатаемого текста }
     if IsComment and not LineComment then
       if (EOLLimit > 0) and (TextBuilder.Col = 1)
-        then Value := TComment(AToken).ShiftedValue(Shift + 1)
-        else Value := TComment(AToken).ShiftedValue(TextBuilder.Col)
-    else if IsComment and LineComment and (SupNextLine > 0) and (TComment(AToken).Position = POSITION_AFTER) then
+        then Value := AComment.ShiftedValue(Shift + 1)
+        else Value := AComment.ShiftedValue(TextBuilder.Col)
+    else if IsComment and LineComment and (SupNextLine > 0) and (AComment.Position = POSITION_AFTER) then
       begin
         Value := '/* ' + Trim(AToken.Value.Substring(2)) + ' */';
         LineComment := false;
@@ -373,7 +374,7 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     { Если это был комментарий, взведём флажок и выставим переводы строк перед следующей лексемой }
     WasComment := IsComment;
     if WasComment then
-      case TComment(AToken).Position of
+      case AComment.Position of
         POSITION_FAR_ABOVE: EmptyLine := true;
         POSITION_ABOVE    : ForceNextLine := true;
         POSITION_AFTER    : ForceNextLine := LineComment;
@@ -420,48 +421,50 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     EmptyLine := EmptyLine or _EmptyInside or _EmptyAfter;
   end;
 
-  { Сбор информации о выравниваниях и применение её для печати }
-  procedure PrintRuledStatement;
-  var
-    DraftPrinter: TFormatterPrinter;
-    _Rulers: TRulers;
-    _Mode: TFormatterPrinterMode;
+  { Сбор информации о выравниваниях }
+  procedure CollectRulers;
+  var DraftPrinter: TFormatterPrinter;
   begin
+    if Assigned(AStatement.Rulers) then exit;
     DraftPrinter := TFormatterPrinter.CreateDraft(Self.Settings);
-    _Rulers := Self.Rulers;
-    _Mode   := Self.Mode;
     try
       DraftPrinter.Rulers := TRulers.Create;
       DraftPrinter.Mode   := fpmGetRulers;
       DraftPrinter.BeginPrint;
       DraftPrinter.PrintItem(AStatement);
       DraftPrinter.EndPrint;
-      Self.Rulers := DraftPrinter.Rulers;
+      AStatement.Rulers   := DraftPrinter.Rulers;
+    finally
+      FreeAndNil(DraftPrinter);
+    end;
+  end;
+
+  { Печать по выравниваниям }
+  procedure PrintRuledStatement;
+  var
+    _Rulers: TRulers;
+    _Mode: TFormatterPrinterMode;
+  begin
+    _Rulers := Self.Rulers;
+    _Mode   := Self.Mode;
+    try
+      Self.Rulers := AStatement.Rulers;
       Self.Mode   := fpmSetRulers;
       SimplePrintStatement;
     finally
       Self.Rulers := _Rulers;
       Self.Mode   := _Mode;
-      FreeAndNil(DraftPrinter);
     end;
   end;
 
 begin
-  if AStatement.Aligned and (Mode = fpmNormal)
-    then PrintRuledStatement
-    else SimplePrintStatement;
-end;
-
-procedure TFormatterPrinter.PrintRulerItem(const ARuler: string; AItem: TObject);
-begin
-  inherited;
-  PaddingCol := 0;
-end;
-
-procedure TFormatterPrinter.PrintRulerItems(const ARuler: string; AItems: array of TObject);
-begin
-  inherited;
-  PaddingCol := 0;
+  if AStatement.Aligned and (Mode <> fpmGetRulers) then
+    begin
+      CollectRulers;
+      PrintRuledStatement;
+    end
+  else
+    SimplePrintStatement;
 end;
 
 { Управление отступами }
@@ -499,6 +502,8 @@ begin
   if (PrevToken is TComment) and TComment(PrevToken).LineComment
     then { отменять нельзя, поэтому оставим как есть }
     else ForceNextLine := false;
+  { Сбросим флажок, чтобы замыкающие запятые не отрывались от предыдущей лексемы }
+  RulerName := '';
 end;
 
 { Установка режима подавления переводов строки }
@@ -522,7 +527,7 @@ procedure TFormatterPrinter.PrintSpecialComment(AValue: string);
 
   function SpecialToken(const Text: string): TToken;
   begin
-    Result := TSpecialComment.Create(Text, -1, -1);
+    Result := TSpecialComment.Create(Text);
     SpecialComments.Add(Result);
   end;
 
@@ -538,6 +543,7 @@ procedure TFormatterPrinter.StartRuler(Enabled: boolean; Continued: boolean = fa
 begin
   RulerEnabled := Enabled;
   if (Mode <> fpmGetRulers) or not Enabled then exit;
+  if not Rulers.Empty and not Continued then Ruler('right-comment'); { внедряем линейку для комментариев справа, причём так, чтобы они не попали слева }
   PrintEmptyToken;
   Rulers.NewLine(TextBuilder.Line, Continued);
 end;
@@ -545,12 +551,12 @@ end;
 { Установка "линейки" для выравнивания }
 procedure TFormatterPrinter.Ruler(const ARuler: string);
 begin
-  if not RulerEnabled then exit;
-  PrintItem(nil);
-  case Mode of
-    fpmGetRulers: Rulers.Take(ARuler, TextBuilder.Line, TextBuilder.Col - Shift); { В режиме примерки запомним ширину фрагмента }
-    fpmSetRulers: PaddingCol := Shift + Rulers.Fix(ARuler); { В режиме разметки рассчитаем необходимое количество пробелов }
-  end;
+  if not Assigned(Rulers) or not RulerEnabled then exit;
+  { Сразу запомним линейку, чтобы всегда сохранить их правильный порядок }
+  Rulers.AddRuler(ARuler);
+  { А остальную работу отложим до PrintToken, иначе возникают проблемы с
+    пробелами, вставляемыми по SpaceRequired }
+  RulerName := ARuler;
 end;
 
 procedure TFormatterPrinter.__Debug(const S: string; Args: array of const);
@@ -567,61 +573,6 @@ end;
 function TFormatterPrinter.CurrentCol: integer;
 begin
   Result := TextBuilder.Col;
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-//                Сбор и применение информации о выравниваниях                //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-
-constructor TRulers.Create;
-begin
-  Names := TStringList.Create;
-  MaxWidth := TDictionary<String, integer>.Create;
-end;
-
-destructor TRulers.Destroy;
-begin
-  FreeAndNil(MaxWidth);
-  FreeAndNil(Names);
-  inherited;
-end;
-
-procedure TRulers.NewLine(ALine: integer; AContinued: boolean);
-begin
-  { Если остались на той же строке, когда должны были перейти на новую -
-    отключаем выравнивание, иначе наломаем дров }
-  if (PrevLine > ALine) or not AContinued and (PrevLine = ALine) then DisablePadding := true;
-  PrevCol := 1;
-  PrevLine := -1;
-end;
-
-procedure TRulers.Take(const ARuler: string; ALine, ACol: integer);
-var Width: integer;
-begin
-  { Если в первый раз на новой строке, фиксируем её номер }
-  if PrevLine <= 0 then PrevLine := ALine;
-  { А если не в первый, и строка неожиданно сменилась - отключаем выравнивание }
-  if ALine <> PrevLine then DisablePadding := true;
-  if DisablePadding then exit;
-  { Высчитаем и сохраним максимальную ширину ячейки }
-  if Names.IndexOf(ARuler) < 0 then Names.Add(ARuler);
-  Width := ACol - PrevCol;
-  if MaxWidth.ContainsKey(ARuler)
-    then MaxWidth[ARuler] := Math.Max(MaxWidth[ARuler], Width)
-    else MaxWidth.Add(ARuler, Width);
-  { И сохраним позицию для следующего расчёта }
-  PrevCol := ACol;
-end;
-
-function TRulers.Fix(const ARuler: string): integer;
-var i: integer;
-begin
-  Result := 0;
-  if DisablePadding then exit;
-  for i := 0 to Names.IndexOf(ARuler) do Inc(Result, MaxWidth[Names[i]]);
-  Inc(Result);
 end;
 
 end.

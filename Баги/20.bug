@@ -3,7 +3,8 @@
 select
     t.*,
     case 
-        when sum(case when t.quantity_total > 0 then 1 end) over () =
+        when sum(case when t.quantity_total > 0 then 1 end) over () 
+             =
              sum(case when t.quantity_total > 0 and t.hs_code is not null then 1 end) over () 
         then 
             1 

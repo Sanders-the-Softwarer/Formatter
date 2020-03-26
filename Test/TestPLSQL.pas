@@ -116,6 +116,7 @@ type
     procedure Fetch_Into;
     procedure Fetch_Bulk_Collect_Limit;
     procedure Goto_;
+    procedure If_;
     procedure Loop;
     procedure Null;
     procedure Open_For;
@@ -264,6 +265,7 @@ procedure _PLSQL.Пустота_Не_Должна_Сдвигать_Выравн�
 begin
   Settings.AlignFields := true;
   Settings.AlignVariables := true;
+  PostponeTill(2020, 3, 28);
 end;
 
 procedure _PLSQL.Константы_И_Значения_По_Умолчанию;
@@ -394,11 +396,13 @@ end;
 procedure _Выравнивание.Полей_В_Запросе;
 begin
   Settings.AlignFields := true;
+  PostponeTill(2020, 3, 27);
 end;
 
 procedure _Выравнивание.Условий_В_Where;
 begin
   Settings.AlignExpressions := true;
+  PostponeTill(2020, 3, 28);
 end;
 
 procedure _Выравнивание.Аргументов_В_Вызовах_Подпрограмм;
@@ -425,6 +429,7 @@ end;
 procedure _Выравнивание.Колонок_В_Таблице;
 begin
   Settings.AlignColumns := true;
+  PostponeTill(2020, 3, 28);
 end;
 
 procedure _Выравнивание.Команд_Define;
@@ -445,6 +450,7 @@ end;
 procedure _Выравнивание.Комментариев_Справа_От_Деклараций;
 begin
   Settings.AlignVariables := true;
+  PostponeTill(2020, 3, 28);
 end;
 
 { _Комментарии }
@@ -550,6 +556,11 @@ end;
 
 procedure _Операторы.Goto_;
 begin
+end;
+
+procedure _Операторы.If_;
+begin
+  Settings.PreferredExpressionLength := 100;
 end;
 
 procedure _Операторы.Loop;
@@ -715,11 +726,13 @@ end;
 
 procedure _Форматирование_Выражений.Конкатенация_Должна_Делать_Перенос_По_Одинаковым_Символам;
 begin
+  Settings.PreferredExpressionLength := 60;
 end;
 
 procedure _Форматирование_Выражений.Перенос_При_Присвоении_Многострочного_Выражения;
 begin
   Settings.PreferredExpressionLength := 120;
+  PostponeTill(2020, 3, 28);
 end;
 
 { _Контрольные_Примеры }

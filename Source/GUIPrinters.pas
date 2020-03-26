@@ -19,7 +19,7 @@ uses
 { Функции создания принтеров различных типов }
 function CreateTokenizerPrinter(AListBox: TListBox): TPrinter;
 function CreateSyntaxTreePrinter(ATreeView: TTreeView): TPrinter;
-function CreateFormatterPrinter(AMemo: TMemo = nil): TPrinter;
+function CreateFormatterPrinter(ASettings: TFormatSettings; AMemo: TMemo): TPrinter;
 function CreateAlarmTokenPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
 function CreateAlarmStatementPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
 
@@ -35,7 +35,7 @@ type
     Memo: TMemo;
     IntoSync: boolean;
   public
-    constructor Create(AMemo: TMemo);
+    constructor Create(ASettings: TFormatSettings; AMemo: TMemo);
     procedure EndPrint; override;
     procedure ControlChanged; override;
     procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
@@ -96,9 +96,9 @@ type
     function CheckPrintToken(AToken: TToken): boolean; override;
   end;
 
-function CreateFormatterPrinter(AMemo: TMemo): TPrinter;
+function CreateFormatterPrinter(ASettings: TFormatSettings; AMemo: TMemo): TPrinter;
 begin
-  Result := TGUIFormatterPrinter.Create(AMemo);
+  Result := TGUIFormatterPrinter.Create(ASettings, AMemo);
 end;
 
 function CreateSyntaxTreePrinter(ATreeView: TTreeView): TPrinter;
@@ -127,11 +127,11 @@ end;
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-constructor TGUIFormatterPrinter.Create(AMemo: TMemo);
+constructor TGUIFormatterPrinter.Create(ASettings: TFormatSettings; AMemo: TMemo);
 begin
   Assert(AMemo <> nil);
+  inherited Create(ASettings);
   Memo := AMemo;
-  inherited Create;
 end;
 
 { При завершении печати выведем сформированный текст в Memo }

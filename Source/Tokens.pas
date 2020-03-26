@@ -145,10 +145,12 @@ type
   TComment = class(TToken)
   public
     Position: integer;
+    Lead: TToken;
     function TokenType: string; override;
     function LineComment: boolean;
     function Height: integer;
     function ShiftedValue(ACol: integer): string;
+    function LeadComment: TComment;
   end;
 
   { Число }
@@ -167,6 +169,20 @@ type
   TUnexpectedEOF = class(TToken)
   public
     function TokenType: string; override;
+  end;
+
+  { Пустая лексема - технический объект, который иногда нужен }
+  TEmptyToken = class(TToken)
+  public
+    function TokenType: string; override;
+    constructor Create;
+  end;
+
+  { Тип лексемы для вывода специальных комментариев }
+  TSpecialComment = class(TComment)
+  public
+    function TokenType: string; override;
+    constructor Create(AText: string);
   end;
 
 var
@@ -227,7 +243,11 @@ begin
   if Assigned(AComment) and Assigned(FComments[Index])
     then raise Exception.CreateFmt('Trying to link comment [%s] while comment [%s] is already linked', [AComment.Value, FComments[Index].Value])
     else FComments[Index] := AComment;
-  if Assigned(AComment) then AComment.Position := Index;
+  if Assigned(AComment) then
+  begin
+    AComment.Position := Index;
+    AComment.Lead     := Self;
+  end;
 end;
 
 { TUnknownToken }
@@ -311,6 +331,12 @@ begin
       end;
 end;
 
+function TComment.LeadComment: TComment;
+begin
+  Result := Self;
+  while Result.Lead is TComment do Result := TComment(Result.Lead);
+end;
+
 { TNumber }
 
 function TNumber.TokenType: string;
@@ -356,6 +382,29 @@ begin
   Result := AValue.ToLower;
 end;
 
+{ TEmptyToken }
+
+constructor TEmptyToken.Create;
+begin
+  inherited Create('', -1, -1);
+end;
+
+function TEmptyToken.TokenType: string;
+begin
+  Result := 'Пустая лексема';
+end;
+
+{ TSpecialComment }
+
+constructor TSpecialComment.Create(AText: string);
+begin
+  inherited Create(AText, -1, -1);
+end;
+
+function TSpecialComment.TokenType: string;
+begin
+  Result := 'Комментарий форматизатора';
+end;
 
 initialization
   UnexpectedEOF := TUnexpectedEOF.Create;

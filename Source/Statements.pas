@@ -50,7 +50,7 @@ unit Statements;
 interface
 
 uses Classes, SysUtils, System.Generics.Collections, Utils, Streams, Tokens,
-  PrinterIntf;
+  PrinterIntf, Rulers;
 
 type
 
@@ -64,6 +64,7 @@ type
     FParent: TStatement;
     FSettings: TFormatSettings;
     FFirstToken: TToken;
+    FRulers: TRulers;
     function GetSettings: TFormatSettings;
   strict protected
     function GetKeywords: TKeywords; virtual;
@@ -91,6 +92,7 @@ type
     function EmptyLineInside: boolean; virtual;
   public
     constructor Create(AParent: TStatement; ASource: TBufferedStream<TToken>); virtual;
+    destructor Destroy; override;
     procedure PrintSelf(APrinter: TPrinter);
     procedure Match(AStatement: TStatement);
     procedure MatchChildren;
@@ -98,6 +100,7 @@ type
     property Parent: TStatement read FParent write FParent;
     property Settings: TFormatSettings read GetSettings write FSettings;
     property FirstToken: TToken read FFirstToken;
+    property Rulers: TRulers read FRulers write FRulers;
   public
     function Name: string; virtual;
     function StatementType: string; virtual;
@@ -219,6 +222,12 @@ begin
   Source := ASource;
 end;
 
+destructor TStatement.Destroy;
+begin
+  inherited;
+  FreeAndNil(FRulers);
+end;
+
 { Ключевое место продукта - попытка разбора указанного выражения и восстановление при неудаче }
 class function TStatement.Parse(AParent: TStatement; Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 var
@@ -295,7 +304,7 @@ begin
   S := Self.ClassName;
   if S[1] = 'T' then S := S.Substring(1);
   if S.StartsWith('ML') or S.StartsWith('SL') then S := S.Substring(2);
-  S := S.TrimEnd(['_']);
+  S := S.TrimRight(['_']);
   P := Pos('<', S);
   if P > 0 then S := S.Substring(0, P - 1);
   U := S.ToUpper;

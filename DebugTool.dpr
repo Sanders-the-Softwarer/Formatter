@@ -20,7 +20,8 @@ uses
   FormatterPrinter in 'Source\FormatterPrinter.pas',
   Commons in 'Source\Commons.pas',
   BasePrinter in 'Source\BasePrinter.pas',
-  TextBuilder in 'Source\TextBuilder.pas';
+  TextBuilder in 'Source\TextBuilder.pas',
+  Rulers in 'Source\Rulers.pas';
 
 {$R *.res}
 

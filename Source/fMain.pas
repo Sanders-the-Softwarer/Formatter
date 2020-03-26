@@ -188,14 +188,13 @@ end;
 { При создании формы создаются принтеры и настройки, а также настраиваются оповещения }
 procedure TFormMain.FormShow(Sender: TObject);
 begin
+  Self.WindowState  := wsMaximized;
+  Settings          := TFormatSettings.Default;
   TokenizerPrinter  := GUIPrinters.CreateTokenizerPrinter(edTokenizer);
   SyntaxTreePrinter := GUIPrinters.CreateSyntaxTreePrinter(treeParser);
-  ResultPrinter     := GUIPrinters.CreateFormatterPrinter(edResult);
+  ResultPrinter     := GUIPrinters.CreateFormatterPrinter(Settings, edResult);
   AlarmTokenPrinter := GUIPrinters.CreateAlarmTokenPrinter(edAlarmToken, tabAlarmToken);
   AlarmStatementPrinter := GUIPrinters.CreateAlarmStatementPrinter(edAlarmStatement, tabAlarmStatement);
-  Self.WindowState  := wsMaximized;
-  Settings := TFormatSettings.Default;
-  ResultPrinter.Settings := Settings;
   PrinterIntf.SyncNotification := Self.SyncNotification;
   try
     IntoUpdateSettings := true;
