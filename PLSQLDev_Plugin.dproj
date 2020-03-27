@@ -5,8 +5,8 @@
         <FrameworkType>None</FrameworkType>
         <MainSource>PLSQLDev_Plugin.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Library</AppType>
     </PropertyGroup>
@@ -30,6 +30,12 @@
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
         <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win64)'!=''">
+        <Cfg_1_Win64>true</Cfg_1_Win64>
         <CfgParent>Cfg_1</CfgParent>
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
@@ -63,14 +69,15 @@
         <DCC_K>false</DCC_K>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
+        <OutputExt>32.dll</OutputExt>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <DCC_UsePackage>DBXSqliteDriver;dxFlowChartAdvancedCustomizeFormRS24;dxRichEditInplaceRS24;dxSkinBlueprintRS24;dxSpreadSheetConditionalFormattingDialogsRS24;dxPSdxGaugeControlLnkRS24;vclactnband;dxSpreadSheetRS24;vclFireDAC;dxDockingRS24;tethering;dxSkinVisualStudio2013BlueRS24;dxPScxTLLnkRS24;dxBarExtItemsRS24;FireDACADSDriver;dxFireDACServerModeRS24;dxSkinOffice2007BlackRS24;vcltouch;vcldb;dxSkinXmas2008BlueRS24;svn;odac240;dxSkinOffice2010BlackRS24;dacfmx240;dxADOServerModeRS24;dxGDIPlusRS24;dxPSdxDBTVLnkRS24;frx24;dclSMEdit;dxSkinLilianRS24;crcontrols240;dxNavBarRS24;vclx;cxTreeListRS24;dxSkinDevExpressDarkStyleRS24;dxtrmdRS24;dxRichEditControlCoreRS24;RESTBackendComponents;dxRibbonRS24;VCLRESTComponents;cxExportRS24;cxTreeListdxBarPopupMenuRS24;dxSkinOffice2013LightGrayRS24;cxPivotGridChartRS24;dxTabbedMDIRS24;vclie;dxSkinVisualStudio2013LightRS24;bindengine;CloudService;FireDACMySQLDriver;cxPivotGridOLAPRS24;dxSkinSharpRS24;dxSkinBlackRS24;dxPSLnksRS24;bindcompdbx;dxSkinCoffeeRS24;IndyIPServer;dxCoreRS24;IndySystem;dxSkinOffice2013DarkGrayRS24;dsnapcon;FireDACMSAccDriver;fmxFireDAC;vclimg;dxBarDBNavRS24;dxSkinDarkSideRS24;dxSkinOffice2013WhiteRS24;dxPSdxLCLnkRS24;dxPScxExtCommonRS24;dxPScxPivotGridLnkRS24;soaprtl;DbxCommonDriver;xmlrtl;dxSkinMcSkinRS24;rtl;dxLayoutControlRS24;DbxClientDriver;odacvcl240;cxGridRS24;dxSkinBlueRS24;dxSpellCheckerRS24;cxLibraryRS24;dxSkinStardustRS24;dxSkinCaramelRS24;appanalytics;dxSkinsCoreRS24;dxDBXServerModeRS24;dxSkinHighContrastRS24;IndyIPClient;dxMapControlRS24;bindcompvcl;dxPSdxMapControlLnkRS24;dxSkinTheAsphaltWorldRS24;cxPageControlRS24;frxe24;dxPsPrVwAdvRS24;cxEditorsRS24;dxSkinSevenClassicRS24;oraprov240;VclSmp;cxSchedulerRibbonStyleEventEditorRS24;dxSkinPumpkinRS24;dxPSPrVwRibbonRS24;dxSpreadSheetReportDesignerRS24;dxSkinSevenRS24;dclSMShared;dxdborRS24;dxmdsRS24;cxSchedulerGridRS24;RESTComponents;dxHttpIndyRequestRS24;cxPivotGridRS24;DBXInterBaseDriver;svnui;dxdbtrRS24;dxSkinMetropolisRS24;dxSkinMoneyTwinsRS24;dxPScxPCProdRS24;dxWizardControlRS24;bindcompfmx;dxPSdxOCLnkRS24;dxBarExtDBItemsRS24;dxPSdxFCLnkRS24;dxSkinOffice2016ColorfulRS24;inetdb;cxSchedulerTreeBrowserRS24;FireDACIBDriver;fmx;dxSkinSpringTimeRS24;dxSkinValentineRS24;dxSkinLondonLiquidSkyRS24;dxSpreadSheetInplaceRichEditRS24;dxSkinWhiteprintRS24;dbexpress;IndyCore;dxSpreadSheetCoreRS24;dxSkiniMaginaryRS24;dxTileControlRS24;dxSkinOffice2016DarkRS24;dsnap;dxSkinOffice2007PinkRS24;dxPSdxSpreadSheetLnkRS24;cxDataRS24;FireDACCommon;dxSkinDevExpressStyleRS24;dac240;dxOfficeCoreRS24;dxBarRS24;dxSkinMetropolisDarkRS24;DBXMySQLDriver;SMShared;dxPSRichEditControlLnkRS24;dxPScxCommonRS24;FireDACCommonODBC;FireDACCommonDriver;dxPSdxPDFViewerLnkRS24;inet;IndyIPCommon;dxSkinVS2010RS24;vcl;odacfmx240;dxSkinSharpPlusRS24;dcf;dxThemeRS24;dxSkinOffice2007GreenRS24;dxPScxGridLnkRS24;FireDAC;dxPScxVGridLnkRS24;dxSpreadSheetCoreConditionalFormattingDialogsRS24;dxSkinOffice2010BlueRS24;FireDACPgDriver;FireDACSqliteDriver;dxServerModeRS24;dxSpreadSheetCoreDialogsRS24;dacvcl240;cxSchedulerRS24;vclwinx;dxSkinOffice2007BlueRS24;dxPSCoreRS24;CustomIPTransport;vcldsnap;dxSkinGlassOceansRS24;dxRibbonCustomizationFormRS24;SMEdit;dxPScxSchedulerLnkRS24;dxSkinSummer2008RS24;dxSkinDarkRoomRS24;bindcomp;dxSkinFoggyRS24;dxorgcRS24;dxPDFViewerRS24;dxSkinOffice2010SilverRS24;EurekaLogCore;dxRichEditControlRS24;dbxcds;adortl;dxSkinSilverRS24;dxSkinVisualStudio2013DarkRS24;dxComnRS24;dxFlowChartRS24;cxVerticalGridRS24;frxDB24;dsnapxml;dbrtl;IndyProtocols;inetdbxpress;dxSkinOffice2007SilverRS24;dxGaugeControlRS24;dxSkinLiquidSkyRS24;$(DCC_UsePackage)</DCC_UsePackage>
         <BT_BuildType>Debug</BT_BuildType>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
+        <OutputExt>64.dll</OutputExt>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
@@ -86,10 +93,16 @@
         <DCC_RemoteDebug>true</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>(None)</Manifest_File>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
+        <OutputExt>64.dll</OutputExt>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -144,10 +157,8 @@
                     <Source Name="MainSource">PLSQLDev_Plugin.dpr</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="w:\Exe\Softwarer.bpl">File w:\Exe\Softwarer.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k170.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp170.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\RAD Studio\10.0\Bpl\xyz.bpl">File C:\Users\Public\Documents\RAD Studio\10.0\Bpl\xyz.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k240.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp240.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
                 <VersionInfo>
                     <VersionInfo Name="IncludeVerInfo">False</VersionInfo>
@@ -218,12 +229,27 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployClass Name="ProjectiOSDeviceResourceRules">
+                <DeployClass Name="DependencyModule">
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                        <Extensions>.dll;.bpl</Extensions>
+                    </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="ProjectOSXResource">
@@ -602,27 +628,12 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="DependencyModule">
-                    <Platform Name="Win32">
-                        <Operation>0</Operation>
-                        <Extensions>.dll;.bpl</Extensions>
-                    </Platform>
+                <DeployClass Name="ProjectiOSDeviceResourceRules">
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
-                        <Extensions>.dylib</Extensions>
-                    </Platform>
-                    <Platform Name="OSX32">
-                        <RemoteDir>Contents\MacOS</RemoteDir>
-                        <Operation>1</Operation>
-                        <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
-                        <Extensions>.dylib</Extensions>
-                    </Platform>
-                    <Platform Name="iOSSimulator">
-                        <Operation>1</Operation>
-                        <Extensions>.dylib</Extensions>
                     </Platform>
                 </DeployClass>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>

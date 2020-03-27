@@ -44,7 +44,6 @@ type
     procedure Указание_Направления_Сортировки_И_Расположения_Null_В_Order_By;
     procedure Связывание_Запросов_Через_Операции_Над_Множествами;
     procedure Сопоставление_Полей_В_Into;
-    procedure Сопоставление_Полей_В_Into_С_Выравниванием;
     procedure Запрос_С_Оракловым_Синтаксисом_Внешних_Соединений;
     procedure Запрос_С_Outer_Cross_Apply;
     procedure Запрос_С_Distinct_Unique_All;
@@ -129,13 +128,6 @@ end;
 procedure _Select.Сопоставление_Полей_В_Into;
 begin
   Settings.MatchParamLimit := 5;
-end;
-
-procedure _Select.Сопоставление_Полей_В_Into_С_Выравниванием;
-begin
-  Settings.MatchParamLimit := 3;
-  Settings.AlignSpecialComments := true;
-  PostponeTill(2020, 3, 28);
 end;
 
 procedure _Select.Указание_Направления_Сортировки_И_Расположения_Null_В_Order_By;

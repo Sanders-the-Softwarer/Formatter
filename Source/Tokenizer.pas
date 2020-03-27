@@ -175,10 +175,10 @@ function TTokenizer.InternalNext: TToken;
       repeat
         C := NextChar
       until CharInSet(C, ['"', #0])
-    else if TCharacter.IsLetter(F) then
+    else if F.IsLetter then
       repeat
         C := NextChar;
-      until not TCharacter.IsLetter(C) and not TCharacter.IsDigit(C) and not CharInSet(C, ['$', '#', '_'])
+      until not C.IsLetterOrDigit and not CharInSet(C, ['$', '#', '_'])
     else
       begin
         RefuseLastChar;
@@ -219,15 +219,15 @@ function TTokenizer.InternalNext: TToken;
   begin
     Restore;
     { Число должно начинаться с цифры }
-    Result := TCharacter.IsDigit(NextChar);
+    Result := NextChar.IsDigit;
     if not Result then exit;
     { Прочитаем целую часть числа }
-    repeat until not TCharacter.IsDigit(NextChar);
+    repeat until not NextChar.IsDigit;
     { Если за ней следует точка, нужно тщательно отделить вещественное число от конструкции for i in 1..10 }
     if LastChar = '.' then
     begin
-      if not TCharacter.IsDigit(NextChar) then Restore;
-      repeat until not TCharacter.IsDigit(NextChar);
+      if not NextChar.IsDigit then Restore;
+      repeat until not NextChar.IsDigit;
     end;
     RefuseLastChar;
   end;

@@ -8,5 +8,5 @@ begin
         y  a,
         zz b
     from
-      dual;
+        dual;
 end;

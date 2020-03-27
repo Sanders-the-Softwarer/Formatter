@@ -63,6 +63,7 @@ type
     procedure _40;
     procedure _41;
     procedure _42;
+    procedure _43;
   end;
 
 implementation
@@ -169,6 +170,7 @@ end;
 
 procedure _Bugs._36;
 begin
+  Settings.PreferredExpressionLength := 120;
 end;
 
 procedure _Bugs._37;
@@ -206,6 +208,10 @@ begin
   Settings.PreferredExpressionLength := 60;
 end;
 
+procedure _Bugs._43;
+begin
+end;
+
 procedure _Bugs._5;
 begin
   Settings.AlignVariables := true;
@@ -233,7 +239,6 @@ end;
 procedure _Bugs._10;
 begin
   Settings.AlignVariables := true;
-  PostponeTill(2020, 3, 28);
 end;
 
 procedure _Bugs._11;

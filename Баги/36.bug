@@ -2,14 +2,10 @@
 -- А теперь не соображает, что аргументы по факту многострочные
 
 select
-            coalesce
-            (
-                -- по спецификациям, если есть
-                (
-                    sum(pd.quantity * sd.price_without_vat) / nullif(sum(pd.quantity), 0)
-                ),
-                -- по PO, если нет спецификаций
-                (
-                    sum(pd.quantity * pd.purchase_price) / nullif(sum(pd.quantity), 0)
-                )
-            ) purchase_price
+    coalesce
+        (
+            -- по спецификациям, если есть
+            (sum(pd.quantity * sd.price_without_vat) / nullif(sum(pd.quantity), 0)),
+            -- по PO, если нет спецификаций
+            (sum(pd.quantity * pd.purchase_price) / nullif(sum(pd.quantity), 0))
+        ) purchase_price

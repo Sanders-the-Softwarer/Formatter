@@ -130,8 +130,9 @@ end;
 constructor TGUIFormatterPrinter.Create(ASettings: TFormatSettings; AMemo: TMemo);
 begin
   Assert(AMemo <> nil);
-  inherited Create(ASettings);
+  inherited Create(ASettings, false, [], true);
   Memo := AMemo;
+  Assert(Assigned(TokenPos) and Assigned(TokenLen));
 end;
 
 { При завершении печати выведем сформированный текст в Memo }

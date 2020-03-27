@@ -52,7 +52,6 @@ type
     procedure Оператор_ForAll;
     procedure Анонимный_Блок_С_Bind_Переменными;
     procedure Анонимный_Блок_С_Подстановками;
-    procedure Пустота_Не_Должна_Сдвигать_Выравнивание;
     procedure Добавление_In;
   end;
 
@@ -78,6 +77,8 @@ type
     procedure Команд_Define;
     procedure Грантов;
     procedure Синонимов;
+    procedure Спецкомментариев_В_Select_Into;
+    procedure Пустота_Не_Должна_Сдвигать_Выравнивание_Вправо;
   end;
 
   { Тесты на расстановку комментариев }
@@ -209,6 +210,7 @@ type
     function GetExtIn: string; override;
     procedure SetUp; override;
   published
+    procedure fm_cc_user;
     procedure top_lc_calc_utils;
   end;
 
@@ -259,13 +261,6 @@ end;
 
 procedure _PLSQL.Записи;
 begin
-end;
-
-procedure _PLSQL.Пустота_Не_Должна_Сдвигать_Выравнивание;
-begin
-  Settings.AlignFields := true;
-  Settings.AlignVariables := true;
-  PostponeTill(2020, 3, 28);
 end;
 
 procedure _PLSQL.Константы_И_Значения_По_Умолчанию;
@@ -399,6 +394,12 @@ begin
   PostponeTill(2020, 3, 27);
 end;
 
+procedure _Выравнивание.Пустота_Не_Должна_Сдвигать_Выравнивание_Вправо;
+begin
+  Settings.AlignVariables := true;
+  Settings.AlignFields    := true;
+end;
+
 procedure _Выравнивание.Условий_В_Where;
 begin
   Settings.AlignExpressions := true;
@@ -426,6 +427,12 @@ begin
   Settings.AlignSQLPLUS := true;
 end;
 
+procedure _Выравнивание.Спецкомментариев_В_Select_Into;
+begin
+  Settings.MatchParamLimit := 1;
+  Settings.AlignSpecialComments := true;
+end;
+
 procedure _Выравнивание.Колонок_В_Таблице;
 begin
   Settings.AlignColumns := true;
@@ -450,7 +457,6 @@ end;
 procedure _Выравнивание.Комментариев_Справа_От_Деклараций;
 begin
   Settings.AlignVariables := true;
-  PostponeTill(2020, 3, 28);
 end;
 
 { _Комментарии }
@@ -750,6 +756,10 @@ end;
 procedure _Контрольные_Примеры.SetUp;
 begin
   Settings := TFormatSettings.Default;
+end;
+
+procedure _Контрольные_Примеры.fm_cc_user;
+begin
 end;
 
 procedure _Контрольные_Примеры.top_lc_calc_utils;

@@ -14,16 +14,16 @@ type t_calc_data_rec is record
         calculation_date             date,
         currency_type_code           number(30),
         currency_code                number(30),
-        currency_alt_code            number(30),          -- альтернативна€ валюта, еще известна€ как default
-        production_region_code       number(30),          -- ¬ыбранный регион производства
-        purchase_price               number,              -- «начени€ «÷, валюты и VAT Type с приоритетного региона берутс€
+        currency_alt_code            number(30),  -- альтернативна€ валюта, еще известна€ как default
+        production_region_code       number(30),  -- ¬ыбранный регион производства
+        purchase_price               number,      -- «начени€ «÷, валюты и VAT Type с приоритетного региона берутс€
         purchase_price_currency_code number(30),
         purchase_price_vat_type      number(1),
         calculation_method           number(1),
-        calculate_delivery           number(1),           -- надо ли рассчитывать доствку (0/1)
-        avia_delivery                number(1),           -- надо ли считать доставку авиа
-        avia_ratio                   number(9,2),         -- ƒол€ ассортимента, доставл€емого avia
-        transport_type_code          number(30),          --  од транспорта
+        calculate_delivery           number(1),   -- надо ли рассчитывать доствку (0/1)
+        avia_delivery                number(1),   -- надо ли считать доставку авиа
+        avia_ratio                   number(9,2), -- ƒол€ ассортимента, доставл€емого avia
+        transport_type_code          number(30),  --  од транспорта
         weight                       number,
         volume                       number,
         licensor_code                number(30),
@@ -35,11 +35,11 @@ type t_calc_data_rec is record
         hs_code                      number(30),
         rrp_gross                    number(30,4),
         vat_rate                     number,
-        calculate_customs            number(1),           -- надо ли рассчитывать таможенную стоимость (0/1)
+        calculate_customs            number(1),   -- надо ли рассчитывать таможенную стоимость (0/1)
         lc_net_default_currency      number,
         rrp_net                      number(30,4),
-        planned_mup                  number,              -- отношение RRP net / LC net
-        target_mup                   number,              -- плановый маркап из справочника
+        planned_mup                  number,      -- отношение RRP net / LC net
+        target_mup                   number,      -- плановый маркап из справочника
         err_text                     varchar2(4000 char),
         rrp_usd                      number(30,4),
         vat_cost_main_currency       number,

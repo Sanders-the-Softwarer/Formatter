@@ -35,7 +35,7 @@ type
     { Счётчики текущей позиции }
     FLine, FCol, FMaxWidth, FLength: integer;
   public
-    constructor Create(AMeasureOnly: boolean);
+    constructor Create(AWithoutText: boolean);
     destructor Destroy; override;
     procedure Clear;
   public
@@ -52,15 +52,16 @@ type
     property Col: integer read FCol;
     property Length: integer read FLength;
     function MaxWidth: integer;
+    function WithoutText: boolean;
   end;
 
 implementation
 
 { TTextBuilder }
 
-constructor TTextBuilder.Create(AMeasureOnly: boolean);
+constructor TTextBuilder.Create(AWithoutText: boolean);
 begin
-  if not AMeasureOnly then Builder := TStringBuilder.Create;
+  if not AWithoutText then Builder := TStringBuilder.Create;
   Clear;
 end;
 
@@ -137,6 +138,12 @@ begin
   if FCol > FMaxWidth
     then Result := FCol - 1
     else Result := FMaxWidth;
+end;
+
+{ Возврат признака работы без текста }
+function TTextBuilder.WithoutText: boolean;
+begin
+  Result := not Assigned(Builder);
 end;
 
 end.

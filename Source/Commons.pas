@@ -19,8 +19,8 @@ type
   { Квалифицированный идентификатор }
   TQualifiedIdent = class(TStatement)
   strict private
-    _ColonOrAmpersand, _Dot: TTerminal;
-    _Name: TToken;
+    _ColonOrAmpersand, _Dot, _LastDot: TTerminal;
+    _Name: TToken; { может содержать identifier или number }
     _Next: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -103,16 +103,30 @@ uses Parser, Expressions;
 
 function TQualifiedIdent.InternalParse: boolean;
 begin
-  if Parent is TQualifiedIdent then _Dot := Terminal(['.', '@']) else _ColonOrAmpersand := Terminal([':', '&']);
+  { Переменная может начинаться с двоеточия (bind) или амперсанда (macro) и
+    разбивается на части точками (квалифицированные имена) либо собаками (дблинки)}
+  if Parent is TQualifiedIdent
+    then _Dot := Terminal(['.', '@'])
+    else _ColonOrAmpersand := Terminal([':', '&']);
+  if Assigned(_Dot) <> (Parent is TQualifiedIdent) then exit(false);
+  { Главная часть переменной - имя (в случае bind может быть номер)}
   _Name := Identifier;
   if not Assigned(_Name) and Assigned(_ColonOrAmpersand) then _Name := Number;
-  Result := Assigned(_Name) and (Assigned(_Dot) = (Parent is TQualifiedIdent));
-  if Result then TQualifiedIdent.Parse(Self, Source, _Next);
+  if not Assigned(_Name) then exit(false);
+  { Теперь разберём возможное продолжение составного идентификатора }
+  TQualifiedIdent.Parse(Self, Source, _Next);
+  { Макроподстановки могут заканчиваться точкой, тогда предыдущая строка даст false }
+  if not Assigned(_Next) and
+     Assigned(_ColonOrAmpersand)
+     and (_ColonOrAmpersand.Value = '&')
+  then
+    _LastDot := Terminal('.');
+  Result := true;
 end;
 
 procedure TQualifiedIdent.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_ColonOrAmpersand, _Dot, _Name, _Next]);
+  APrinter.PrintItems([_ColonOrAmpersand, _Dot, _Name, _LastDot, _Next]);
 end;
 
 function TQualifiedIdent.StatementName: string;

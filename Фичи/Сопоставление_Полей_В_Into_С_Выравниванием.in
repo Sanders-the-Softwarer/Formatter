@@ -1,1 +1,0 @@
-select a, bb, c, ddd, e into x, y, z, ttttt, w from dual;

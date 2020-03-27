@@ -28,15 +28,11 @@ interface
 
 uses System.SysUtils, System.Generics.Collections;
 
-const
-  POSITION_SPECIAL   = 0;
-  POSITION_FAR_ABOVE = 1;
-  POSITION_ABOVE     = 2;
-  POSITION_AFTER     = 3;
-  POSITION_BELOW     = 4;
-  POSITION_FAR_BELOW = 5;
-
 type
+
+  { Возможные расположения комментария }
+  TCommentPosition = (poSpecial, poAfter, poFarAbove, poAbove, poBelow, poFarBelow);
+  TCommentPositions = set of TCommentPosition;
 
   { Предварительное объявление типов }
   TComment = class;
@@ -70,11 +66,11 @@ type
     FValue: string;
     FLine, FCol: integer;
     FPrinted, FCanReplace: boolean;
-    FComments: array[POSITION_FAR_ABOVE..POSITION_FAR_BELOW] of TComment;
+    FComments: array[TCommentPosition] of TComment;
   strict protected
     function ModifyValue(const AValue: string): string; virtual;
-    function GetComment(Index: integer): TComment;
-    procedure SetComment(Index: integer; AComment: TComment);
+    function GetComment(Index: TCommentPosition): TComment;
+    procedure SetComment(Index: TCommentPosition; AComment: TComment);
   public
     function TokenType: string; virtual; abstract;
   public
@@ -86,11 +82,11 @@ type
     property Col: integer read FCol;
     property Printed: boolean read FPrinted write FPrinted;
     property CanReplace: boolean read FCanReplace write FCanReplace;
-    property CommentFarAbove: TComment index POSITION_FAR_ABOVE read GetComment write SetComment;
-    property CommentAbove: TComment    index POSITION_ABOVE read GetComment write SetComment;
-    property CommentAfter: TComment    index POSITION_AFTER read GetComment write SetComment;
-    property CommentBelow: TComment    index POSITION_BELOW read GetComment write SetComment;
-    property CommentFarBelow: TComment index POSITION_FAR_BELOW read GetComment write SetComment;
+    property CommentFarAbove: TComment index poFarAbove read GetComment write SetComment;
+    property CommentAbove: TComment    index poAbove    read GetComment write SetComment;
+    property CommentAfter: TComment    index poAfter    read GetComment write SetComment;
+    property CommentBelow: TComment    index poBelow    read GetComment write SetComment;
+    property CommentFarBelow: TComment index poFarBelow read GetComment write SetComment;
   end;
 
   { Неожиданная или неизвестная лексема - встретился символ, с которого не может начинаться лексема }
@@ -144,7 +140,7 @@ type
   { Комментарий }
   TComment = class(TToken)
   public
-    Position: integer;
+    Position: TCommentPosition;
     Lead: TToken;
     function TokenType: string; override;
     function LineComment: boolean;
@@ -233,12 +229,12 @@ begin
   Result := AValue;
 end;
 
-function TToken.GetComment(Index: integer): TComment;
+function TToken.GetComment(Index: TCommentPosition): TComment;
 begin
   Result := FComments[Index];
 end;
 
-procedure TToken.SetComment(Index: integer; AComment: TComment);
+procedure TToken.SetComment(Index: TCommentPosition; AComment: TComment);
 begin
   if Assigned(AComment) and Assigned(FComments[Index])
     then raise Exception.CreateFmt('Trying to link comment [%s] while comment [%s] is already linked', [AComment.Value, FComments[Index].Value])

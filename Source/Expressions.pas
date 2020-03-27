@@ -77,7 +77,7 @@ type
     class var FlagCreatedRight: boolean;
   strict private
     CompleteKeywords: TKeywords;
-    FMultiLine: boolean;
+    LineCount: integer;
     function GetMultiLine: boolean;
   strict protected
     TermInfo: array of TTermInfo;
@@ -261,7 +261,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     i: integer;
   begin
     SetLength(TermInfo, Count);
-    DraftPrinter := TFormatterPrinter.CreateDraft(APrinter.Settings);
+    DraftPrinter := TFormatterPrinter.Create(APrinter.Settings, true, [poAbove, poBelow, poFarAbove, poFarBelow], false);
     try
       DraftPrinter.BeginPrint;
       for i := 0 to Count - 1 do
@@ -363,7 +363,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     Texts: TDictionary<string, TList<integer>>;
     DraftPrinter: TFormatterPrinter;
     Text, Found: string;
-    D, T: TObject;
+    D: TObject;
     i, Prev: integer;
     CurPriority, MaxPriority: double;
   begin
@@ -464,9 +464,6 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     end;
 
   begin
-    FMultiLine := false;
-    for i := 0 to Count - 1 do
-      if TermInfo[i].LineBreak or not TermInfo[i].SingleLine then FMultiLine := true;
     APrinter.PushIndent;
 //    APrinter.StartRuler(Settings.AlignExpressions and Self.Aligned);
     Cnt := 0;
@@ -570,18 +567,19 @@ begin
 end;
 
 function TExpression.GetMultiLine: boolean;
-var Printer: TPrinter;
+var Printer: TFormatterPrinter;
 begin
-  if Assigned(TermInfo) then exit(FMultiLine);
-  Printer := TFormatterPrinter.Create(Settings); { не draft, тот не будет учитывать комментарии }
+  if LineCount > 0 then exit(LineCount > 1);
+  Printer := TFormatterPrinter.Create(Settings, true, [], false);
   try
     Printer.BeginPrint;
     PrintSelf(Printer);
     Printer.EndPrint;
+    LineCount := Printer.CurrentLine;
   finally
     FreeAndNil(Printer);
   end;
-  Result := FMultiLine;
+  Result := (LineCount > 1);
 end;
 
 { TCase }

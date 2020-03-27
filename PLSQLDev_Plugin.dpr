@@ -55,12 +55,12 @@ end;
 procedure OnMenuClick(Index: integer); cdecl;
 var Text, Result: string;
 begin
-  Text := IDE_GetSelectedText;
-  if Text = '' then Text := IDE_GetText;
+  Text := String(IDE_GetSelectedText);
+  if Text = '' then Text := String(IDE_GetText);
   if Text = '' then exit;
   Controller.MakeFormatted(Text, nil, Result);
   if Result = '' then exit;
-  TextForOutput := Result;
+  TextForOutput := AnsiString(Result);
   case Index of
     1: IDE_SetText(PAnsiChar(TextForOutput));
     2: IDE_CreateWindow(wtSQL, PAnsiChar(TextForOutput), false);
