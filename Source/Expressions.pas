@@ -494,7 +494,9 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         APrinter.Undent;
       if TermInfo[i].LineBreak and TermInfo[i].BreakBeforeDelimiter then NewLineCombo
       else if TermInfo[i].LineBreak and ((i = 0) or (TermInfo[i - 1].LineBreak) and
-              (not TermInfo[i].SingleLine or TermInfo[i].SingleLine and (TermInfo[i].SingleLineLen > Settings.PreferredExpressionLength div 3)))
+              (not TermInfo[i].SingleLine or TermInfo[i].SingleLine and (TermInfo[i].SingleLineLen > Settings.PreferredExpressionLength div 2)))
+              and (Delimiter(i) is TToken)
+              and (TToken(Delimiter(i)).Value <> ',')
         then NewLineCombo;
 //      APrinter.PrintRulerItem(RulerName, Delimiter(i));
       APrinter.PrintItem(Delimiter(i));
