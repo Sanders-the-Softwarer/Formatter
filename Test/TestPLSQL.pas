@@ -208,9 +208,13 @@ type
   protected
     function GetDir: string; override;
     function GetExtIn: string; override;
+    function GetExtOut: string; override;
     procedure SetUp; override;
   published
     procedure fm_cc_user;
+    procedure fm_pc_sequences;
+    procedure fm_pc_triggers;
+    procedure fm_pc_user;
     procedure top_lc_calc_utils;
   end;
 
@@ -750,12 +754,35 @@ end;
 
 function _Контрольные_Примеры.GetExtIn: string;
 begin
-  Result := '.sql';
+  { НЕ НАДО !! менять это расширение. Его суть в том, чтобы файлы не попали
+    под маску команды git add и не уехали в репозиторий. Поскольку это файлы
+    исходников Спортмастера, будет очень плохо опубликовать их таким образом }
+  Result := '.original';
+end;
+
+function _Контрольные_Примеры.GetExtOut: string;
+begin
+  { НЕ НАДО !! менять это расширение. Его суть в том, чтобы файлы не попали
+    под маску команды git add и не уехали в репозиторий. Поскольку это файлы
+    исходников Спортмастера, будет очень плохо опубликовать их таким образом }
+  Result := '.formatted';
 end;
 
 procedure _Контрольные_Примеры.SetUp;
 begin
   Settings := TFormatSettings.Default;
+end;
+
+procedure _Контрольные_Примеры.fm_pc_sequences;
+begin
+end;
+
+procedure _Контрольные_Примеры.fm_pc_triggers;
+begin
+end;
+
+procedure _Контрольные_Примеры.fm_pc_user;
+begin
 end;
 
 procedure _Контрольные_Примеры.fm_cc_user;

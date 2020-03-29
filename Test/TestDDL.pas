@@ -52,9 +52,10 @@ type
     procedure Drop_Table;
     procedure Drop_View;
     procedure Drop_Index;
+    procedure Drop_Role;
+    procedure Drop_Sequence;
     procedure Drop_Type;
     procedure Drop_Type_Body;
-    procedure Drop_Sequence;
     procedure Drop_Trigger;
   end;
 
@@ -70,7 +71,10 @@ type
     function GetDir: string; override;
   published
     procedure Create_Synonym;
+    procedure Create_Role;
     procedure Grant;
+    procedure Alter_Role;
+    procedure Alter_Sequence;
   end;
 
 implementation
@@ -173,6 +177,10 @@ procedure _Drop.Drop_Procedure;
 begin
 end;
 
+procedure _Drop.Drop_Role;
+begin
+end;
+
 procedure _Drop.Drop_Sequence;
 begin
 end;
@@ -212,6 +220,18 @@ end;
 function _Команды_DDL.GetDir: string;
 begin
   Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды DDL';
+end;
+
+procedure _Команды_DDL.Alter_Role;
+begin
+end;
+
+procedure _Команды_DDL.Alter_Sequence;
+begin
+end;
+
+procedure _Команды_DDL.Create_Role;
+begin
 end;
 
 procedure _Команды_DDL.Create_Synonym;

@@ -175,7 +175,7 @@ function TTokenizer.InternalNext: TToken;
       repeat
         C := NextChar
       until CharInSet(C, ['"', #0])
-    else if F.IsLetter then
+    else if F.IsLetter or CharInSet(C, ['$', '#', '_']) then
       repeat
         C := NextChar;
       until not C.IsLetterOrDigit and not CharInSet(C, ['$', '#', '_'])
@@ -294,13 +294,13 @@ function TTokenizer.InternalNext: TToken;
   { Считывание многосимвольных лексем }
   function ParseTerminal: boolean;
   const
-    N = 33;
+    N = 35;
     Tokens: array [1..N] of string = (':=', '||', '>=', '<=', '<>', '^=', '!=',
                                       '=>', '..', '.', ',', ';', '(', ')', '+',
                                       '-', '*', '/', '%', '@@', '@', '=', '<',
-                                      '>', '(+)', ':', '&', '%type', '%rowtype',
-                                      '%rowcount', '%found', '%notfound',
-                                      '%isopen');
+                                      '>', '(+)', ':', '&&', '&', '%type',
+                                      '%rowtype', '%rowcount', '%found',
+                                      '%notfound', '%isopen', '%bulk_rowcount');
   var
     Value: string;
     Starts, Exact, Found, PrevExact: boolean;
@@ -588,6 +588,7 @@ function TMerger.InternalNext: TToken;
       else
         if S3 <> '' then Source.Restore(P4);
     AResult := TEpithet.Create(S, T1.Line, T1.Col);
+    TEpithet(AResult).IsKeyword := true;
     Result := true;
     Exclude(T1);
     Exclude(T2);
@@ -605,11 +606,31 @@ begin
   P4 := Source.Mark;
   if not Source.Eof then T4 := Source.Next else T4 := nil;
   { И попробуем их скомбинировать }
+  if Check(Result, 'after', 'each', 'row') then exit;
+  if Check(Result, 'after', 'clone') then exit;
+  if Check(Result, 'after', 'db_role_change') then exit;
+  if Check(Result, 'after', 'logon') then exit;
+  if Check(Result, 'after', 'servererror') then exit;
+  if Check(Result, 'after', 'set', 'container') then exit;
+  if Check(Result, 'after', 'startup') then exit;
+  if Check(Result, 'after', 'statement') then exit;
+  if Check(Result, 'after', 'suspend') then exit;
+  if Check(Result, 'associate', 'statistics') then exit;
   if Check(Result, 'authid', 'current_user') then exit;
   if Check(Result, 'authid', 'definer') then exit;
+  if Check(Result, 'before', 'each', 'row') then exit;
+  if Check(Result, 'before', 'logoff') then exit;
+  if Check(Result, 'before', 'set', 'container') then exit;
+  if Check(Result, 'before', 'shutdown') then exit;
+  if Check(Result, 'before', 'statement') then exit;
+  if Check(Result, 'before', 'unplug') then exit;
   if Check(Result, 'bulk', 'collect', 'into') then exit;
   if Check(Result, 'cascade', 'constraints') then exit;
+  if Check(Result, 'compound', 'trigger') then exit;
   if Check(Result, 'cross', 'apply') then exit;
+  if Check(Result, 'default', 'tablespace') then exit;
+  if Check(Result, 'disassociate', 'statistics') then exit;
+  if Check(Result, 'for', 'each', 'row') then exit;
   if Check(Result, 'full', 'join') then exit;
   if Check(Result, 'full', 'natural', 'join') then exit;
   if Check(Result, 'full', 'outer', 'join') then exit;
@@ -617,8 +638,12 @@ begin
   if Check(Result, 'end', 'if') then exit;
   if Check(Result, 'end', 'loop') then exit;
   if Check(Result, 'identified', 'by') then exit;
+  if Check(Result, 'identified', 'externally') then exit;
+  if Check(Result, 'identified', 'globally') then exit;
+  if Check(Result, 'identified', 'using') then exit;
   if Check(Result, 'in', 'out') then exit;
   if Check(Result, 'inner', 'join') then exit;
+  if Check(Result, 'instead', 'of', 'each', 'row') then exit;
   if Check(Result, 'instead', 'of') then exit;
   if Check(Result, 'is', 'not', 'null') then exit;
   if Check(Result, 'is', 'null') then exit;
@@ -635,17 +660,20 @@ begin
   if Check(Result, 'multiset', 'union', 'all') then exit;
   if Check(Result, 'multiset', 'union', 'distinct') then exit;
   if Check(Result, 'not', 'between') then exit;
+  if Check(Result, 'not', 'identified') then exit;
   if Check(Result, 'not', 'in') then exit;
   if Check(Result, 'not', 'like') then exit;
   if Check(Result, 'outer', 'apply') then exit;
   if Check(Result, 'package', 'body') then exit;
   if Check(Result, 'partition', 'by') then exit;
   if Check(Result, 'public', 'synonym') then exit;
+  if Check(Result, 'quota', 'unlimited', 'on') then exit;
   if Check(Result, 'right', 'join') then exit;
   if Check(Result, 'right', 'natural', 'join') then exit;
   if Check(Result, 'right', 'outer', 'join') then exit;
   if Check(Result, 'self', 'as', 'result') then exit;
   if Check(Result, 'subpartition', 'by') then exit;
+  if Check(Result, 'temporary', 'tablespace') then exit;
   if Check(Result, 'type', 'body') then exit;
   if Check(Result, 'union', 'all') then exit;
   if Check(Result, 'when', 'matched', 'then') then exit;

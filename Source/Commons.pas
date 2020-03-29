@@ -19,7 +19,7 @@ type
   { Квалифицированный идентификатор }
   TQualifiedIdent = class(TStatement)
   strict private
-    _ColonOrAmpersand, _Dot, _LastDot: TTerminal;
+    _Prefix, _Infix, _Suffix: TTerminal;
     _Name: TToken; { может содержать identifier или number }
     _Next: TStatement;
   strict protected
@@ -103,35 +103,35 @@ uses Parser, Expressions;
 
 function TQualifiedIdent.InternalParse: boolean;
 begin
+  Result := true;
   { Переменная может начинаться с двоеточия (bind) или амперсанда (macro) и
     разбивается на части точками (квалифицированные имена) либо собаками (дблинки)}
   if Parent is TQualifiedIdent
-    then _Dot := Terminal(['.', '@'])
-    else _ColonOrAmpersand := Terminal([':', '&']);
-  if Assigned(_Dot) <> (Parent is TQualifiedIdent) then exit(false);
+    then _Infix := Terminal(['.', '@', '..'])
+    else _Prefix := Terminal([':', '&', '&&']);
+  if Assigned(_Infix) <> (Parent is TQualifiedIdent) then exit(false);
+  if Assigned(_Infix) then TTerminal(_Infix).WithoutSpace := true; { иначе .. лезет отдельно }
   { Главная часть переменной - имя (в случае bind может быть номер)}
   _Name := Identifier;
-  if not Assigned(_Name) and Assigned(_ColonOrAmpersand) then _Name := Number;
+  if not Assigned(_Name) and Assigned(_Prefix) then _Name := Number;
   if not Assigned(_Name) then exit(false);
   { Теперь разберём возможное продолжение составного идентификатора }
+  if TQualifiedIdent.Parse(Self, Source, _Next) then exit;
+  { Макроподстановки могут заканчиваться точкой }
+  if not Assigned(_Prefix) then exit;
+  if (_Prefix.Value = '&') or (_Prefix.Value = '&&') then _Suffix := Terminal('.');
+  { И самое смешное, что после точки может идти продолжение }
   TQualifiedIdent.Parse(Self, Source, _Next);
-  { Макроподстановки могут заканчиваться точкой, тогда предыдущая строка даст false }
-  if not Assigned(_Next) and
-     Assigned(_ColonOrAmpersand)
-     and (_ColonOrAmpersand.Value = '&')
-  then
-    _LastDot := Terminal('.');
-  Result := true;
 end;
 
 procedure TQualifiedIdent.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_ColonOrAmpersand, _Dot, _Name, _LastDot, _Next]);
+  APrinter.PrintItems([_Prefix, _Infix, _Name, _Suffix, _Next]);
 end;
 
 function TQualifiedIdent.StatementName: string;
 begin
-  Result := StringReplace(Concat([_ColonOrAmpersand, _Dot, _Name, _Next]), ' ', '', [rfReplaceAll]);
+  Result := StringReplace(Concat([_Prefix, _Infix, _Name, _Suffix, _Next]), ' ', '', [rfReplaceAll]);
 end;
 
 function TQualifiedIdent.IsSimpleIdent: boolean;
@@ -303,7 +303,7 @@ begin
     if not Assigned(_Unit) then _Comma := Terminal(',');
     if Assigned(_Comma) then
     begin
-      _Comma.IntoNumber := true;
+      _Comma.WithoutSpace := true;
       _Precision := Number;
     end;
     _CloseBracket := Terminal(')');

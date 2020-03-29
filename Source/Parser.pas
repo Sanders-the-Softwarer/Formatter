@@ -115,6 +115,7 @@ class function TParser.ParseDDL(AParent: TStatement; ASource: TBufferedStream<TT
 begin
   Result := TCreate.Parse(AParent, ASource, AResult) or
             TDrop.Parse(AParent, ASource, AResult) or
+            TAlter.Parse(AParent, ASource, AResult) or
             TComment.Parse(AParent, ASource, AResult) or
             TGrant.Parse(AParent, ASource, AResult);
 end;

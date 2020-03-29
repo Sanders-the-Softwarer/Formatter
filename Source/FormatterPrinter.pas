@@ -179,18 +179,20 @@ begin
   Result := false;
   { Если пробелы запрещены - не ставим их }
   if SupSpace > 0 then exit;
+  { Терминалы, которым явно указали не отделяться - не отделяем }
+  if (ALeft is TTerminal) and TTerminal(ALeft).WithoutSpace then exit;
+  if (ARight is TTerminal) and TTerminal(ARight).WithoutSpace then exit;
   { Точку с запятой прижимаем справа ко всему }
   if ARight.Value = ';' then exit;
-  { Точку прижимаем с обеих сторон ко всему }
-  if (ALeft.Value = '.') or (ARight.Value = '.') then exit;
+  { Точку прижимаем с обеих сторон ко всему, кроме ключевых слов }
+  if (ALeft.Value = '.') and not ((ARight is TEpithet) and TEpithet(ARight).IsKeyword) then exit;
+  if (ARight.Value = '.') and not ((ALeft is TEpithet) and TEpithet(ALeft).IsKeyword) then exit;
   { Собаку прижимаем с обеих сторон ко всему }
   if (ALeft.Value = '@') or (ARight.Value = '@') then exit;
   { Двоеточие/амперсанд прижимаем к следующему за ним идентификатору }
-  if ((ALeft.Value = ':') or (ALeft.Value = '&')) and ((ARight is TEpithet) or (ARight is TNumber)) then exit;
+  if ((ALeft.Value = ':') or (ALeft.Value = '&') or (ALeft.Value = '&&')) and ((ARight is TEpithet) or (ARight is TNumber)) then exit;
   { Запятую прижимаем справа ко всему }
   if ARight.Value = ',' then exit;
-  { В конструкции number(5,2) запятую прижимаем и слева тоже }
-  if (ALeft.Value = ',') and TTerminal(ALeft).IntoNumber then exit;
   { Открывающую скобку прижимаем справа к идентификаторам и ключевым словам char, table, row, lob, key, unique, listagg }
   if (ARight.Value = '(') and
      (ALeft is TEpithet) and
@@ -426,8 +428,8 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     { Печать и проверка отступа }
     _Shift := Shift;
     inherited PrintStatement(AStatement);
-{    if (Shift <> _Shift) and (Indents.Count = 0) then
-      raise Exception.CreateFmt('Invalid indents into %s - was %d but %d now', [AStatement.ClassName, _Shift, Shift]);}
+    if (Shift <> _Shift) and (Indents.Count = 0) then
+      raise Exception.CreateFmt('Invalid indents into %s - was %d but %d now', [AStatement.ClassName, _Shift, Shift]);
     { Пустая строка после конструкции }
     EmptyLine := EmptyLine or _EmptyInside or _EmptyAfter;
   end;

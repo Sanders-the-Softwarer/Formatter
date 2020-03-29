@@ -108,13 +108,13 @@ type
   TTerminal = class(TToken)
   strict private
     FOpType: TOpType;
-    FIntoNumber: boolean;
+    FWithoutSpace: boolean;
   strict protected
     function ModifyValue(const AValue: string): string; override;
   public
     function TokenType: string; override;
     property OpType: TOpType read FOpType write FOpType; { позволяет отличить унарные плюсы-минусы от бинарных }
-    property IntoNumber: boolean read FIntoNumber write FIntoNumber; { позволяет отличить запятую в number(5,2) }
+    property WithoutSpace: boolean read FWithoutSpace write FWithoutSpace; { позволяет отличить запятую в number(5,2) и подобные ситуации }
   end;
 
   { Идентификатор либо ключевое слово }

@@ -64,6 +64,7 @@ type
     procedure _41;
     procedure _42;
     procedure _43;
+    procedure _44;
   end;
 
 implementation
@@ -209,6 +210,10 @@ begin
 end;
 
 procedure _Bugs._43;
+begin
+end;
+
+procedure _Bugs._44;
 begin
 end;
 

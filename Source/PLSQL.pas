@@ -41,37 +41,21 @@ type
   end;
 
   { Базовый класс для операторов PL/SQL }
-  TPLSQLStatement = class(TSemicolonStatement)
-  strict protected
-    function GetKeywords: TKeywords; override;
-  end;
+  TPLSQLStatement = class(TSemicolonStatement);
 
   { Программный блок - та или иная конструкция на основе begin .. end }
   TProgramBlock = class(TPLSQLStatement)
   strict private
-    _Header: TStatement;
-    _Declarations: TStatement;
-    _Begin: TEpithet;
-    _Operators: TStatement;
-    _Exception: TEpithet;
-    _ExceptionHandlers: TStatement;
-    _End: TStatement;
+    _Header, _Declarations, _Operators, _Handlers: TStatement;
+    _Begin, _Exception, _End: TEpithet;
+    _AfterEnd: TObject;
   strict protected
     property Header: TStatement read _Header;
     function GetHeaderClass: TStatementClass; virtual; abstract;
-    function InternalParse: boolean; override;
-    function GetKeywords: TKeywords; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Завершение программного блока }
-  TEnd = class(TStatement)
-  strict private
-    _End: TEpithet;
-    _EndName: TStatement;
-  strict protected
+    function ParseAfterEnd: TObject; virtual;
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+    function IndentBody: boolean; virtual;
   end;
 
   { Заголовок анонимного блока }
@@ -154,37 +138,6 @@ type
 
   { Подпрограмма }
   TSubroutine = class(TProgramBlock)
-  strict protected
-    function GetHeaderClass: TStatementClass; override;
-  public
-    function StatementName: string; override;
-  end;
-
-  { Заголовок триггера }
-  TTriggerHeader = class(TStatement)
-  strict private
-    _Trigger: TEpithet;
-    _TriggerName: TStatement;
-    _BeforeAfterInstead: TEpithet;
-    _Events: TStatement;
-    _When: TEpithet;
-    _Condition: TStatement;
-    _Declare: TEpithet;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function StatementName: string; override;
-  end;
-
-  { События запуска триггера }
-  TTriggerEvents = class(TCommaList<TQualifiedIdent>)
-  strict protected
-    function ParseBreak: boolean; override;
-  end;
-
-  { Триггер }
-  TTrigger = class(TProgramBlock)
   strict protected
     function GetHeaderClass: TStatementClass; override;
   public
@@ -507,7 +460,6 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-    function GetKeywords: TKeywords; override;
   end;
 
   { Оператор close }
@@ -658,19 +610,14 @@ type
 
 implementation
 
-uses Parser, Expressions, DML;
-
-var
-  PLSQLKeywords, FetchKeywords: TKeywords;
-
-{ TPLSQLStatement }
-
-function TPLSQLStatement.GetKeywords: TKeywords;
-begin
-  Result := PLSQLKeywords;
-end;
+uses Parser, Expressions, DML, DDL, Keywords;
 
 { TProgramBlock }
+
+function TProgramBlock.ParseAfterEnd: TObject;
+begin
+  TQualifiedIdent.Parse(Self, Source, TStatement(Result));
+end;
 
 function TProgramBlock.InternalParse: boolean;
 begin
@@ -684,43 +631,35 @@ begin
   if Assigned(_Begin) then TStatements.Parse(Self, Source, _Operators);
   { Если нашли exception, распознаём обработчики исключений }
   _Exception := Keyword('exception');
-  if Assigned(_Exception) then TExceptionStatements.Parse(Self, Source, _ExceptionHandlers);
+  if Assigned(_Exception) then TExceptionStatements.Parse(Self, Source, _Handlers);
   { end }
-  TEnd.Parse(Self, Source, _End);
+  _End := Keyword('end');
+  _AfterEnd := ParseAfterEnd;
   inherited;
 end;
 
 procedure TProgramBlock.InternalPrintSelf(APrinter: TPrinter);
+var _AdditionalIndent, _AdditionalUndent: TObject;
 begin
+  if IndentBody
+    then begin _AdditionalIndent := _Indent; _AdditionalUndent := _Undent; end
+    else begin _AdditionalIndent := nil; _AdditionalUndent := nil; end;
   if _Header is TSubroutineHeaderBase then
     TSubroutineHeaderBase(_Header).IndentedAfterIs := Assigned(_Declarations);
   APrinter.PrintItems([_Header,    _IndentNextLine,
-                                   _Declarations,      _UndentNextLine,
+                                   _AdditionalIndent,
+                                   _Declarations,   _UndentNextLine,
                        _Begin,     _IndentNextLine,
-                                   _Operators,         _UndentNextLine,
+                                   _Operators,      _UndentNextLine,
                        _Exception, _IndentNextLine,
-                                   _ExceptionHandlers, _UndentNextLine,
-                       _End]);
+                                   _Handlers,       _UndentNextLine,
+                       _End,       _AfterEnd,       _AdditionalUndent]);
   inherited;
 end;
 
-function TProgramBlock.GetKeywords: TKeywords;
+function TProgramBlock.IndentBody: boolean;
 begin
-  Result := PLSQLKeywords;
-end;
-
-{ TEnd }
-
-function TEnd.InternalParse: boolean;
-begin
-  _End := Keyword('end');
-  Result := Assigned(_End);
-  if Result then TQualifiedIdent.Parse(Self, Source, _EndName);
-end;
-
-procedure TEnd.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_End, _EndName]);
+  Result := false;
 end;
 
 { TPackageHeader }
@@ -804,50 +743,6 @@ begin
   Result := Concat([_FunctionType, _ProcedureOrFunction, _Name]);
 end;
 
-{ TTriggerHeader }
-
-function TTriggerHeader.InternalParse: boolean;
-begin
-  Result := true;
-  _Trigger := Keyword('trigger');
-  if not Assigned(_Trigger) then exit(false);
-  TQualifiedIdent.Parse(Self, Source, _TriggerName);
-  _BeforeAfterInstead := Keyword(['before', 'after', 'instead of']);
-  TSingleLine<TTriggerEvents>.Parse(Self, Source, _Events);
-  _When := Keyword('when');
-  if Assigned(_When) then TBracketedStatement<TExpression>.Parse(Self, Source, _Condition);
-  _Declare := Keyword('declare');
-end;
-
-procedure TTriggerHeader.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Trigger, _TriggerName, _BeforeAfterInstead, _Events, _When, _Condition, _NextLine, _Declare]);
-end;
-
-function TTriggerHeader.StatementName: string;
-begin
-  Result := Concat([_Trigger, _TriggerName]);
-end;
-
-{ TTriggerEvents }
-
-function TTriggerEvents.ParseBreak: boolean;
-begin
-  Result := Assigned(Keyword(['when', 'declare', 'begin']));
-end;
-
-{ TTrigger }
-
-function TTrigger.GetHeaderClass: TStatementClass;
-begin
-  Result := TTriggerHeader;
-end;
-
-function TTrigger.StatementName: string;
-begin
-  Result := Header.StatementName;
-end;
-
 { TParamDeclaration }
 
 function TParamDeclaration.InternalParse: boolean;
@@ -926,7 +821,10 @@ end;
 
 function TDeclarations.ParseBreak: boolean;
 begin
-  Result := Any([Keyword(['begin', 'end', 'create']), Terminal('/')]);
+  Result := Any([Keyword(['begin', 'end', 'create', 'after each row',
+                          'after statement', 'before each row',
+                          'before statement', 'instead of each row']),
+                 Terminal('/')]);
 end;
 
 function TDeclarations.EmptyLineBefore: boolean;
@@ -1724,11 +1622,6 @@ begin
   inherited;
 end;
 
-function TFetch.GetKeywords: TKeywords;
-begin
-  Result := FetchKeywords;
-end;
-
 { TClose }
 
 function TClose.InternalParse: boolean;
@@ -1795,7 +1688,7 @@ function TStandaloneComment.InternalParse: boolean;
 var T: TToken;
 begin
   T := NextToken;
-  Result := T is TComment;
+  Result := T is Tokens.TComment;
   if Result then _Comment := T;
 end;
 
@@ -1836,12 +1729,9 @@ begin
 end;
 
 initialization
-  PLSQLKeywords := TKeywords.Create(['as', 'begin', 'end', 'exception',
+  Keywords.RegisterOrphan(TPLSQLStatement);
+  Keywords.RegisterKeywords(TPLSQLStatement, ['as', 'begin', 'end', 'exception',
     'function', 'is', 'procedure', 'using']);
-  FetchKeywords := TKeywords.Create(PLSQLKeywords, ['limit']);
-
-finalization
-  FreeAndNil(PLSQLKeywords);
-  FreeAndNil(FetchKeywords);
+  Keywords.RegisterKeywords(TFetch, ['limit']);
 
 end.

@@ -67,7 +67,6 @@ type
     FRulers: TRulers;
     function GetSettings: TFormatSettings;
   strict protected
-    function GetKeywords: TKeywords; virtual;
     function InternalParse: boolean; virtual;
     procedure InternalMatch(AStatement: TStatement); virtual;
     procedure InternalMatchChildren; virtual;
@@ -102,8 +101,8 @@ type
     property FirstToken: TToken read FFirstToken;
     property Rulers: TRulers read FRulers write FRulers;
   public
+    class function StatementType: string;
     function Name: string; virtual;
-    function StatementType: string; virtual;
     function StatementName: string; virtual;
     function Aligned: boolean; virtual;
     function Transparent: boolean; virtual;
@@ -130,6 +129,7 @@ type
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
+    function StatementName: string; override;
     function Count: integer;
     function Item(Index: integer): TStatement;
     function Delimiter(Index: integer): TObject;
@@ -142,6 +142,12 @@ type
   strict protected
     function ParseDelimiter(out AResult: TObject): boolean; override;
     function ParseBreak: boolean; override;
+  end;
+
+  { Ѕазовый класс дл€ списка однотипных конструкций без разделител€ }
+  TStrictStatementList<S: TStatement> = class(TStatementList<S>)
+  strict protected
+    function AllowUnexpected: boolean; override;
   end;
 
   { Ќеожиданна€ лексема - класс дл€ конструкций, которые не удалось разобрать }
@@ -213,6 +219,8 @@ type
   end;
 
 implementation
+
+uses Keywords;
 
 { TStatement }
 
@@ -296,7 +304,7 @@ begin
 end;
 
 { ¬ычисление "типа выражени€" из имени класса }
-function TStatement.StatementType: string; 
+class function TStatement.StatementType: string;
 var
   S, U, L: string;
   i, P: integer;
@@ -311,9 +319,12 @@ begin
   L := S.ToLower;
   Result := '';
   for i := 1 to Length(S) do
-    if (S[i] = U[i]) and (i > 1) and (S[i - 1] = L[i - 1])
-      then Result := Result + ' ' + L[i]
-      else Result := Result + L[i];
+    if (S[i] = U[i]) and (i > 1) and (S[i - 1] = L[i - 1]) then
+      Result := Result + ' ' + L[i]
+    else if (S[i] = U[i]) and (i > 1) and (S[i - 1] = U[i - 1]) and (i < Length(S)) and (S[i + 1] = L[i + 1]) then
+      Result := Result + ' ' + L[i]
+    else
+      Result := Result + L[i];
 end;
 
 { ¬ыражение по умолчанию не имеет собственного имени }
@@ -367,11 +378,6 @@ begin
   raise Exception.CreateFmt('Cannot parse %s - InternalParse is absent', [ClassName]);
 end;
 
-function TStatement.GetKeywords: TKeywords;
-begin
-  if Assigned(Parent) then Result := Parent.GetKeywords else Result := nil;
-end;
-
 procedure TStatement.InternalMatch(AStatement: TStatement);
 begin
   { ничего не делаем }
@@ -383,11 +389,8 @@ begin
 end;
 
 function TStatement.IsStrongKeyword(const AEpithet: string): boolean;
-var Keywords: TStrings;
 begin
-  if AEpithet.Contains(' ') then exit(true);
-  Keywords := GetKeywords;
-  Result := Assigned(Keywords) and (Keywords.IndexOf(AEpithet) >= 0);
+  Result := AEpithet.Contains(' ') or Keywords.IsKeyword(AEpithet, Self);
 end;
 
 function TStatement.NextToken: TToken;
@@ -530,6 +533,13 @@ begin
   inherited;
   FreeAndNil(Statements);
   FreeAndNil(Delimiters);
+end;
+
+function TStatementList<S>.StatementName: string;
+begin
+  if Self.ClassName.Contains('StatementList')
+    then Result := 'list of ' + S.StatementType
+    else Result := inherited;
 end;
 
 function TStatementList<S>.InternalParse: boolean;
@@ -817,6 +827,13 @@ end;
 function TAligned<T>.Transparent: boolean;
 begin
   Result := true;
+end;
+
+{ TStrictStatementList<S> }
+
+function TStrictStatementList<S>.AllowUnexpected: boolean;
+begin
+  Result := false;
 end;
 
 end.

@@ -21,7 +21,10 @@ uses
   TextBuilder in 'Source\TextBuilder.pas',
   Tokenizer in 'Source\Tokenizer.pas',
   Tokens in 'Source\Tokens.pas',
-  Utils in 'Source\Utils.pas';
+  Utils in 'Source\Utils.pas',
+  Triggers in 'Source\Triggers.pas',
+  Role in 'Source\Role.pas',
+  Keywords in 'Source\Keywords.pas';
 
 const
   Desc  = 'Formatter';

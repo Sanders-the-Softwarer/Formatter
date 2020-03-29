@@ -76,7 +76,6 @@ type
   strict private
     class var FlagCreatedRight: boolean;
   strict private
-    CompleteKeywords: TKeywords;
     LineCount: integer;
     function GetMultiLine: boolean;
   strict protected
@@ -85,22 +84,19 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
     function ParseDelimiter(out AResult: TObject): boolean; override;
     function ParseBreak: boolean; override;
-    function GetKeywords: TKeywords; override;
     function OnePerLine: boolean; override;
     function ForcedLineBreaks: boolean; virtual;
   public
     class procedure CreatedRight;
     procedure AfterConstruction; override;
-    procedure BeforeDestruction; override;
     property IsMultiLine: boolean read GetMultiLine;
   end;
 
 implementation
 
-uses Parser, Commons, DML, PLSQL, FormatterPrinter;
+uses Parser, Commons, DML, PLSQL, Keywords, FormatterPrinter;
 
 var
-  ExpressionKeywords: TKeywords;
   Operations: TDictionary<String, integer>;
 
 function HasOperation(AOperation: TToken; out APriority: integer): boolean;
@@ -530,13 +526,6 @@ begin
   Result := true;
 end;
 
-function TExpression.GetKeywords: TKeywords;
-begin
-  if not Assigned(CompleteKeywords) then
-    CompleteKeywords := TKeywords.Create(ExpressionKeywords, inherited);
-  Result := CompleteKeywords;
-end;
-
 function TExpression.OnePerLine: boolean;
 begin
   Result := false;
@@ -558,12 +547,6 @@ begin
   if FlagCreatedRight
     then FlagCreatedRight := false
     else raise Exception.Create('Expression must be created using TParser.ParseExpression, do it!');
-end;
-
-procedure TExpression.BeforeDestruction;
-begin
-  FreeAndNil(CompleteKeywords);
-  inherited;
 end;
 
 function TExpression.GetMultiLine: boolean;
@@ -669,7 +652,7 @@ end;
 
 initialization
   { Заполняем список ключевых слов для выражений }
-  ExpressionKeywords := TKeywords.Create(['case', 'when']);
+  Keywords.RegisterKeywords(TExpression, ['case', 'when']);
   { Заполняем список операций с их приоритетами (Внимание! приоритеты имеются в
     виду с точки зрения расстановки переносов и не обязаны соответствовать
     чему-то другому)}
@@ -708,7 +691,6 @@ initialization
   Operations.Add('multiset union distinct', 6);
 
 finalization
-  FreeAndNil(ExpressionKeywords);
   FreeAndNil(Operations);
 
 end.

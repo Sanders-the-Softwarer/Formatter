@@ -21,7 +21,10 @@ uses
   Commons in 'Source\Commons.pas',
   BasePrinter in 'Source\BasePrinter.pas',
   TextBuilder in 'Source\TextBuilder.pas',
-  Rulers in 'Source\Rulers.pas';
+  Rulers in 'Source\Rulers.pas',
+  Triggers in 'Source\Triggers.pas',
+  Keywords in 'Source\Keywords.pas',
+  Role in 'Source\Role.pas';
 
 {$R *.res}
 

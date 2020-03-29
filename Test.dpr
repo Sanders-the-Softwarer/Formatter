@@ -31,6 +31,7 @@ uses
   Streams in 'Source\Streams.pas',
   Tokenizer in 'Source\Tokenizer.pas',
   Tokens in 'Source\Tokens.pas',
+  Triggers in 'Source\Triggers.pas',
   TestExpressions in 'Test\TestExpressions.pas',
   TestDDL in 'Test\TestDDL.pas',
   TestPLSQL in 'Test\TestPLSQL.pas',
@@ -48,8 +49,9 @@ uses
 
 type
   _UnderConstruction = class(TTestCase)
-  public
-    { отложим }
+  protected
+    procedure PostponeTill(AYear, AMonth, ADay: integer);
+  published
     procedure Нужно_Написать_Тесты_На_Команды_SQLPLUS;
     procedure Нужно_Написать_Тесты_На_Объектные_Типы;
     procedure Нужно_Написать_Тесты_На_Create_Trigger;
@@ -67,57 +69,62 @@ type
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_ArgumentSingleLineParamLimit;
 begin
-  Fail('Пока что не сделано');
+  PostponeTill(2020, 4, 20);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_Create_Trigger;
 begin
-  Fail('Пока что не сделано');
+  PostponeTill(2020, 4, 20);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_DeclarationSingleLineParamLimit;
 begin
-  Fail('Пока что не сделано');
+  PostponeTill(2020, 4, 20);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_MatchParamLimit;
 begin
-  Fail('Пока что не сделано');
+  PostponeTill(2020, 4, 20);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_PreferredExpressionLength;
 begin
-  Fail('Пока что не сделано');
+  PostponeTill(2020, 4, 20);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_ReplaceAsIs;
 begin
-  Fail('Пока что не сделано');
+  PostponeTill(2020, 4, 20);
 end;
 
 procedure _UnderConstruction.Нужно_Добавить_Group_By_Rollup_Cube_Grouping_Sets;
 begin
-  Fail('Пока что не сделано');
+  PostponeTill(2020, 4, 20);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_ReplaceDefault;
 begin
-  Fail('Пока что не сделано');
+  PostponeTill(2020, 4, 20);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_Команды_SQLPLUS;
 begin
-  Fail('Пока что не сделано');
+  PostponeTill(2020, 4, 20);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_Невыравнивание_Везде_Где_Есть_На_Выравнивание;
 begin
-  Fail('Пока что не сделано');
+  PostponeTill(2020, 4, 20);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_Объектные_Типы;
 begin
-  Fail('Пока что не сделано');
+  PostponeTill(2020, 4, 20);
+end;
+
+procedure _UnderConstruction.PostponeTill(AYear, AMonth, ADay: integer);
+begin
+  Check(Now < EncodeDate(AYear, AMonth, ADay), 'Пока не сделано!');
 end;
 
 begin

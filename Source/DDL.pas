@@ -19,7 +19,7 @@ type
   { Команда create [or replace] }
   TCreate = class(TSemicolonStatement)
   strict private
-    _Create, _Or, _Replace, _Force: TEpithet;
+    _Create, _Or, _Replace, _Editionable, _Force: TEpithet;
     _What: TStatement;
     _Slash: TTerminal;
   strict protected
@@ -44,6 +44,16 @@ type
   public
     function StatementName: string; override;
     function Grouping: TStatementClass; override;
+  end;
+
+  { Команда alter }
+  TAlter = class(TSemicolonStatement)
+  strict private
+    _Alter: TEpithet;
+    _What: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Объект view }
@@ -261,6 +271,15 @@ type
     function Grouping: TStatementClass; override;
   end;
 
+  { Конструкция sharing }
+  TSharing = class(TStatement)
+    _Sharing, _What: TEpithet;
+    _Eq: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
   { Объект sequence }
   TSequence = class(TStatement)
   strict private
@@ -292,14 +311,33 @@ type
   { Синоним }
   TSynonym = class(TStatement)
   strict private
-    _Synonym, _Editionable, _Sharing, _Metadata, _For: TEpithet;
-    _Eq: TTerminal;
-    _Name, _Object: TStatement;
+    _Synonym, _For: TEpithet;
+    _Name, _Sharing, _Object: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function Grouping: TStatementClass; override;
+  end;
+
+  { Пользователь }
+  TUser = class(TStatement)
+  strict private
+    _User: TEpithet;
+    _UserName, _Params: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Параметры пользователя }
+  TUserParam = class(TStatement)
+  strict private
+    _Name: TEpithet;
+    _Value: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Команда grant }
@@ -332,7 +370,7 @@ type
 
 implementation
 
-uses Parser, DML, Expressions;
+uses Parser, DML, Expressions, Triggers, Role;
 
 { TCreateStatement }
 
@@ -345,6 +383,8 @@ begin
   _Or := Keyword('or');
   if Assigned(_Or) then _Replace := Keyword('replace');
   if Assigned(_Or) and not Assigned(_Replace) then exit(true);
+  { Проверим наличие editionable }
+  _Editionable := Keyword(['editionable', 'noneditionable']);
   { Проверим наличие force }
   _Force := Keyword('force');
   { И, наконец, распознаем, что же мы создаём }
@@ -358,6 +398,8 @@ begin
             TSequence.Parse(Self, Source, _What) or
             TTrigger.Parse(Self, Source, _What) or
             TSynonym.Parse(Self, Source, _What) or
+            TUser.Parse(Self, Source, _What) or
+            TRole.Parse(Self, Source, _What) or
             TUnexpectedToken.Parse(Self, Source, _What);
   inherited;
   { Завершающий слеш }
@@ -366,14 +408,14 @@ end;
 
 procedure TCreate.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Create, _Or, _Replace, _Force, _What]);
+  APrinter.PrintItems([_Create, _Or, _Replace, _Editionable, _Force, _What]);
   inherited;
   APrinter.NextLineIf([_Slash]);
 end;
 
 function TCreate.StatementName: string;
 begin
-  Result := Concat([_Create, _Or, _Replace, _Force, _What]);
+  Result := Concat([_Create, _Or, _Replace, _What]);
 end;
 
 function TCreate.Grouping: TStatementClass;
@@ -802,7 +844,7 @@ begin
   if not Assigned(_Drop) then exit(false);
   _Type := Keyword(['table', 'procedure', 'function', 'package', 'package body',
                     'view', 'index', 'type', 'type body', 'sequence', 'trigger',
-                    'synonym', 'public synonym']);
+                    'synonym', 'public synonym', 'role']);
   TQualifiedIdent.Parse(Self, Source, _Name);
   if IsTable then _CascadeConstraints := Keyword('cascade constraints');
   if IsType then _Force := Keyword('force');
@@ -979,16 +1021,10 @@ end;
 
 function TSynonym.InternalParse: boolean;
 begin
-  _Editionable := Keyword(['editionable', 'noneditionable']);
   _Synonym := Keyword(['synonym', 'public synonym']);
   if not Assigned(_Synonym) then exit(false);
   TQualifiedIdent.Parse(Self, Source, _Name);
-  _Sharing := Keyword('sharing');
-  if Assigned(_Sharing) then
-  begin
-    _Eq := Terminal('=');
-    _Metadata := Keyword(['metadata', 'none']);
-  end;
+  TSharing.Parse(Self, Source, _Sharing);
   _For := Keyword('for');
   if Assigned(_For) then TQualifiedIdent.Parse(Self, Source, _Object);
   Result := true;
@@ -997,14 +1033,79 @@ end;
 procedure TSynonym.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.StartRuler(Settings.AlignSQLPLUS);
-  APrinter.PrintRulerItems('Start', [_Editionable, _Synonym]);
-  APrinter.PrintRulerItems('Name',  [_Name, _Sharing, _Eq, _Metadata]);
-  APrinter.PrintRulerItems('For',   [ _For, _Object]);
+  APrinter.PrintRulerItems('start', [_Synonym]);
+  APrinter.PrintRulerItems('name',  [_Name, _Sharing]);
+  APrinter.PrintRulerItems('for',   [ _For, _Object]);
 end;
 
 function TSynonym.Grouping: TStatementClass;
 begin
   Result := TSynonym;
+end;
+
+{ TUser }
+
+function TUser.InternalParse: boolean;
+begin
+  Result := true;
+  _User := Keyword('user');
+  if not Assigned(_User) then exit(false);
+  TQualifiedIdent.Parse(Self, Source, _UserName);
+  TStrictStatementList<TUserParam>.Parse(Self, Source, _Params);
+end;
+
+procedure TUser.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_User, _UserName, _IndentNextLine, _Params, _Undent]);
+end;
+
+{ TUserParam }
+
+function TUserParam.InternalParse: boolean;
+begin
+  _Name := Keyword(['identified by', 'default tablespace', 'temporary tablespace', 'quota unlimited on', 'profile']);
+  Result := Assigned(_Name);
+  if Result then TQualifiedIdent.Parse(Self, Source, _Value);
+end;
+
+procedure TUserParam.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Name, _Value]);
+end;
+
+{ TSharing }
+
+function TSharing.InternalParse: boolean;
+begin
+  Result := true;
+  _Sharing := Keyword('sharing');
+  if not Assigned(_Sharing) then exit(false);
+  _Eq := Terminal('=');
+  _What := Keyword(['metadata', 'none']);
+end;
+
+procedure TSharing.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Sharing, _Eq, _What]);
+end;
+
+{ TAlter }
+
+function TAlter.InternalParse: boolean;
+begin
+  Result := true;
+  _Alter := Keyword('alter');
+  if not Assigned(_Alter) then exit(false);
+  if not TSequence.Parse(Self, Source, _What) and
+     not TRole.Parse(Self, Source, _What) then
+    TUnexpectedToken.Parse(Self, Source, _What);
+  inherited;
+end;
+
+procedure TAlter.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Alter, _What]);
+  inherited;
 end;
 
 end.

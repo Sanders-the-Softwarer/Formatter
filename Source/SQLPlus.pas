@@ -17,10 +17,7 @@ uses SysUtils, Statements, Tokens, PrinterIntf, Utils, System.Generics.Collectio
 type
 
   { Ѕазовый класс команд SQL*Plus }
-  TSQLPlusStatement = class(TStatement)
-  strict protected
-    function GetKeywords: TKeywords; override;
-  end;
+  TSQLPlusStatement = class(TStatement);
 
   {  оманда clear }
   TClear = class(TSQLPlusStatement)
@@ -133,17 +130,7 @@ type
 
 implementation
 
-uses Parser, Streams, Commons, PLSQL;
-
-{ TSQLPlusStatement }
-
-var
-  SQLPlusKeywords: TKeywords;
-
-function TSQLPlusStatement.GetKeywords: TKeywords;
-begin
-  Result := SQLPlusKeywords;
-end;
+uses Parser, Streams, Commons, PLSQL, Keywords;
 
 { TClear }
 
@@ -371,10 +358,9 @@ initialization
     назвать их ключевыми словами, в противном случае легко случитс€ так,
     что начало следующей команды будет распознано как аргумент предыдущей
     whenever или подобной}
-  SQLPlusKeywords := TKeywords.Create(['chcp', 'clear', 'set', 'define', 'whenever']);
-
-finalization
-  FreeAndNil(SQLPlusKeywords);
+  RegisterOrphan(TSQLPlusStatement);
+  RegisterKeywords(TSQLPlusStatement, ['call', 'chcp', 'clear', 'exec', 'set',
+    'define', 'spool', 'whenever']);
 
 end.
 

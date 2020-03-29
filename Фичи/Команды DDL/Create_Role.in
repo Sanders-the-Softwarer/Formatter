@@ -1,0 +1,14 @@
+-- примеры из документации
+
+create role dw_manager;
+create role dw_manager identified by warehouse; 
+create role warehouse_user identified globally;
+create role warehouse_user identified externally;
+create role role1 container = current;
+create role c##role1 container = all;
+
+-- дополнительные
+
+create role c##role2 not identified;
+create role c##role3 identified using my.package;
+create role c##role4 identified by "WareHouse";

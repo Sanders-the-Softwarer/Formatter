@@ -1,0 +1,17 @@
+-- примеры из документации
+
+alter role warehouse_user not identified;
+alter role dw_manager identified by data; 
+alter role dw_manager identified using hr.admin;
+
+-- синтаксис тот же, что и у create role, так что повторим примеры оттуда
+
+alter role dw_manager;
+alter role dw_manager identified by warehouse; 
+alter role warehouse_user identified globally;
+alter role warehouse_user identified externally;
+alter role role1 container = current;
+alter role c##role1 container = all;
+alter role c##role2 not identified;
+alter role c##role3 identified using my.package;
+alter role c##role4 identified by "WareHouse";

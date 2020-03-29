@@ -18,10 +18,7 @@ uses Classes, SysUtils, Math, Tokens, Statements, PrinterIntf, Commons,
 type
 
   { Общий предок DML-операторов }
-  TDML = class(TSemicolonStatement)
-  strict protected
-    function GetKeywords: TKeywords; override;
-  end;
+  TDML = class(TSemicolonStatement);
 
   { Расширение понятия операнда для SQL-выражений }
   TSqlTerm = class(TTerm)
@@ -33,7 +30,6 @@ type
   TSqlExpression = class(TExpression)
   strict protected
     function ParseStatement(out AResult: TStatement): boolean; override;
-    function GetKeywords: TKeywords; override;
     function ForcedLineBreaks: boolean; override;
   public
     function Aligned: boolean; override;
@@ -189,10 +185,7 @@ type
 
 implementation
 
-uses Parser;
-
-var
-  DMLKeywords, SqlExpressionKeywords: TKeywords;
+uses Parser, Keywords;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -358,13 +351,6 @@ type
     function StatementName: string; override;
   end;
 
-{ TDML }
-
-function TDML.GetKeywords: TKeywords;
-begin
-  Result := DMLKeywords;
-end;
-
 { TSQLTerm }
 
 function TSQLTerm.ParseSQLStatement: TStatement;
@@ -381,17 +367,6 @@ end;
 function TSQLExpression.ParseStatement(out AResult: TStatement): boolean;
 begin
   Result := TSQLTerm.Parse(Self, Source, AResult);
-end;
-
-function TSQLExpression.GetKeywords: TKeywords;
-begin
-  { SQL-выражение объединяет ключевые слова выражения с ключевыми словами DML,
-    поэтому приходится так забавно его заполнить }
-  Result := SqlExpressionKeywords;
-  if Assigned(Result) then exit;
-  Result := TKeywords.Create(inherited, []);
-  Result.AddStrings(DMLKeywords);
-  SqlExpressionKeywords := Result;
 end;
 
 function TSQLExpression.ForcedLineBreaks: boolean;
@@ -1466,14 +1441,10 @@ begin
 end;
 
 initialization
-  DMLKeywords := TKeywords.Create([
-    'comment', 'connect', 'create', 'delete', 'for', 'from', 'group', 'having',
-    'insert', 'intersect', 'into', 'join', 'merge', 'minus', 'on', 'order',
-    'returning', 'select', 'set', 'start', 'union', 'update', 'using',
-    'values', 'where']);
-
-finalization
-  FreeAndNil(DMLKeywords);
-  FreeAndNil(SqlExpressionKeywords);
-
+  Keywords.RegisterOrphan(TDML);
+  Keywords.RegisterKeywords(TDML, ['comment', 'connect', 'create', 'delete',
+    'for', 'from', 'group', 'having', 'insert', 'intersect', 'into', 'join',
+    'merge', 'minus', 'on', 'order', 'returning', 'select', 'set', 'start',
+    'union', 'update', 'using', 'values', 'where']);
+  Keywords.RegisterKeywords(TIdentFields, ['of', 'on', 'or']);
 end.
