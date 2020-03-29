@@ -50,7 +50,7 @@ unit Statements;
 interface
 
 uses Classes, SysUtils, System.Generics.Collections, Utils, Streams, Tokens,
-  PrinterIntf, Rulers;
+  Printer, Rulers;
 
 type
 

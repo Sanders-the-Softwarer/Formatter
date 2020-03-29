@@ -274,7 +274,9 @@ end;
 
 function TEpithet.ModifyValue(const AValue: string): string;
 begin
-  Result := LowerCase(AValue);
+  if AValue.StartsWith('"')
+    then Result := AValue
+    else Result := LowerCase(AValue);
 end;
 
 { TComment }

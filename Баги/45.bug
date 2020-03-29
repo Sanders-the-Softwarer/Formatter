@@ -1,0 +1,3 @@
+-- Идентификатор в кавычках должен сохранить регистр без изменений
+
+create role c##role4 identified by "WareHouse";

@@ -27,7 +27,7 @@ unit PLSQL;
 interface
 
 uses Classes, Windows, SysUtils, Math, Streams, Tokens, Statements, Commons,
-  PrinterIntf, Utils;
+  Printer, Utils;
 
 type
 
@@ -772,11 +772,11 @@ begin
   FreeAccessor := Settings.AddInAccessSpecificator and not Assigned(_InOut);
   if FreeAccessor then _InOut := TEpithet.Create('in', -1, -1);
   APrinter.StartRuler(Settings.AlignVariables);
-  APrinter.PrintRulerItem('name', _ParamName);
+  APrinter.PrintRulerItems('name', [_ParamName]);
   APrinter.PrintRulerItems('modifiers', [_InOut, _Nocopy]);
-  APrinter.PrintRulerItem('type', _ParamType);
-  APrinter.PrintRulerItem('assignment', _Assignment);
-  APrinter.PrintRulerItem('value', _DefaultValue);
+  APrinter.PrintRulerItems('type', [_ParamType]);
+  APrinter.PrintRulerItems('assignment', [_Assignment]);
+  APrinter.PrintRulerItems('value', [_DefaultValue]);
 end;
 
 procedure TParamDeclaration.BeforeDestruction;
@@ -876,11 +876,11 @@ end;
 procedure TVariableDeclaration.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.StartRuler(Settings.AlignVariables);
-  APrinter.PrintRulerItem('name', _Name);
-  APrinter.PrintRulerItem('constant', _Constant);
-  APrinter.PrintRulerItem('type', _Type);
-  APrinter.PrintRulerItem('assignment', _Assignment);
-  APrinter.PrintRulerItem('value', _Value);
+  APrinter.PrintRulerItems('name', [_Name]);
+  APrinter.PrintRulerItems('constant', [_Constant]);
+  APrinter.PrintRulerItems('type', [_Type]);
+  APrinter.PrintRulerItems('assignment', [_Assignment]);
+  APrinter.PrintRulerItems('value', [_Value]);
   inherited;
 end;
 
@@ -1252,8 +1252,8 @@ begin
   FreeAccessor := Settings.AddInAccessSpecificator and not Assigned(_Accessor);
   if FreeAccessor then _Accessor := TEpithet.Create('in', -1, -1);
   APrinter.StartRuler(Settings.AlignVariables);
-  APrinter.PrintRulerItem('accessor', _Accessor);
-  APrinter.PrintRulerItem('value', _Value);
+  APrinter.PrintRulerItems('accessor', [_Accessor]);
+  APrinter.PrintRulerItems('value', [_Value]);
 end;
 
 procedure TUsingParam.BeforeDestruction;

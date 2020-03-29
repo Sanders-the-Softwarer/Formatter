@@ -12,7 +12,7 @@ unit Commons;
 
 interface
 
-uses SysUtils, Tokens, Statements, PrinterIntf;
+uses SysUtils, Tokens, Statements, Printer;
 
 type
 
@@ -209,10 +209,10 @@ begin
   if IsNamedNotation then
     begin
       APrinter.StartRuler(Settings.AlignVariables);
-      APrinter.PrintRulerItem('ident', _Ident);
-      APrinter.PrintRulerItem('argument', _Assignment);
+      APrinter.PrintRulerItems('ident', [_Ident]);
+      APrinter.PrintRulerItems('argument', [_Assignment]);
       APrinter.PushIndent;
-      APrinter.PrintRulerItem('expression', _Expression);
+      APrinter.PrintRulerItems('expression', [_Expression]);
       APrinter.PopIndent;
     end
   else

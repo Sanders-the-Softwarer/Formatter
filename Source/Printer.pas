@@ -8,7 +8,7 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-unit PrinterIntf;
+unit Printer;
 
 { ----- Примечания -------------------------------------------------------------
 
@@ -101,7 +101,6 @@ type
     function  GetText: string; virtual; abstract;
   public
     procedure PrintItems(AItems: array of TObject);
-    procedure PrintRulerItem(const ARuler: string; AItem: TObject); virtual;
     procedure PrintRulerItems(const ARuler: string; AItems: array of TObject); virtual;
     procedure PrintIndented(AItem: TObject); overload;
     procedure PrintIndented(AItems: array of TObject); overload;
@@ -240,12 +239,6 @@ procedure TPrinter.PrintItems(AItems: array of TObject);
 var i: integer;
 begin
   for i := Low(AItems) to High(AItems) do PrintItem(AItems[i]);
-end;
-
-procedure TPrinter.PrintRulerItem(const ARuler: string; AItem: TObject);
-begin
-  Ruler(ARuler);
-  PrintItem(AItem);
 end;
 
 procedure TPrinter.PrintRulerItems(const ARuler: string; AItems: array of TObject);

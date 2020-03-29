@@ -13,7 +13,7 @@ uses
   Expressions in 'Source\Expressions.pas',
   Parser in 'Source\Parser.pas',
   PLSQL in 'Source\PLSQL.pas',
-  PrinterIntf in 'Source\PrinterIntf.pas',
+  Printer in 'Source\Printer.pas',
   SQLPlus in 'Source\SQLPlus.pas',
   Statements in 'Source\Statements.pas',
   Streams in 'Source\Streams.pas',

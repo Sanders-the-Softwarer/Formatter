@@ -36,7 +36,7 @@ unit Parser;
 
 interface
 
-uses Windows, System.SysUtils, Streams, Tokens, Statements, PrinterIntf,
+uses Windows, System.SysUtils, Streams, Tokens, Statements, Printer,
   System.Generics.Collections;
 
 type
@@ -80,7 +80,7 @@ type
 
 implementation
 
-uses DDL, DML, PLSQL, SQLPlus, Expressions;
+uses DDL, DML, PLSQL, SQLPlus, Expressions, Create, Alter;
 
 type
   { "Пустое" выражение }

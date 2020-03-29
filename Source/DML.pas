@@ -12,7 +12,7 @@ unit DML;
 
 interface
 
-uses Classes, SysUtils, Math, Tokens, Statements, PrinterIntf, Commons,
+uses Classes, SysUtils, Math, Tokens, Statements, Printer, Commons,
   Expressions, Utils;
 
 type
@@ -818,7 +818,7 @@ type
   { Выражение start with }
   TStartWith = class(TStatement)
   strict private
-    _Start, _With: TEpithet;
+    _StartWith: TEpithet;
     _Condition: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -828,7 +828,7 @@ type
     { Выражение start with }
   TConnectBy = class(TStatement)
   strict private
-    _Connect, _By: TEpithet;
+    _ConnectBy: TEpithet;
     _Condition: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -975,8 +975,8 @@ end;
 
 procedure TSelectField.PrintSelfAfter(APrinter: TPrinter);
 begin
-  APrinter.PrintRulerItem('as', _As);
-  APrinter.PrintRulerItem('alias', _Alias);
+  APrinter.PrintRulerItems('as', [_As]);
+  APrinter.PrintRulerItems('alias', [_Alias]);
 end;
 
 { TSelectFields }
@@ -1082,32 +1082,30 @@ end;
 
 function TStartWith.InternalParse: boolean;
 begin
-  _Start := Keyword('start');
-  if not Assigned(_Start) then exit(false);
-  _With  := Keyword('with');
-  TParser.ParseExpression(Self, Source, _Condition);
   Result := true;
+  _StartWith := Keyword('start with');
+  if not Assigned(_StartWith) then exit;
+  TParser.ParseExpression(Self, Source, _Condition);
 end;
 
 procedure TStartWith.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Start, _With, _IndentNextLine, _Condition, _Undent]);
+  APrinter.PrintItems([_StartWith, _IndentNextLine, _Condition, _Undent]);
 end;
 
 { TConnectBy }
 
 function TConnectBy.InternalParse: boolean;
 begin
-  _Connect := Keyword('connect');
-  if not Assigned(_Connect) then exit(false);
-  _By := Keyword('by');
-  TParser.ParseExpression(Self, Source, _Condition);
   Result := true;
+  _ConnectBy := Keyword('connect by');
+  if not Assigned(_ConnectBy) then exit(false);
+  TParser.ParseExpression(Self, Source, _Condition);
 end;
 
 procedure TConnectBy.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Connect, _By, _IndentNextLine, _Condition, _Undent]);
+  APrinter.PrintItems([_ConnectBy, _IndentNextLine, _Condition, _Undent]);
 end;
 
 { TAdditionalSelect }
@@ -1133,6 +1131,7 @@ end;
 
 function TInsert.InternalParse: boolean;
 begin
+  Result := true;
   _Insert := Keyword('insert');
   if not Assigned(_Insert) then exit(false);
   _Into := Keyword('into');
@@ -1144,7 +1143,6 @@ begin
   if not Assigned(_ValueList) then TParser.ParseExpression(Self, Source, _ValueList);
   TReturning.Parse(Self, Source, _Returning);
   inherited;
-  Result := true;
 end;
 
 procedure TInsert.InternalMatchChildren;
@@ -1242,9 +1240,9 @@ end;
 procedure TUpdateAssignment.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.StartRuler(Settings.AlignFields);
-  APrinter.PrintRulerItem('target', _Target);
-  APrinter.PrintRulerItem('assignment', _Assignment);
-  APrinter.PrintRulerItem('value', _Value);
+  APrinter.PrintRulerItems('target', [_Target]);
+  APrinter.PrintRulerItems('assignment', [_Assignment]);
+  APrinter.PrintRulerItems('value', [_Value]);
 end;
 
 { TUpdateAssignments }

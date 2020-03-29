@@ -13,7 +13,7 @@ unit FormatterPrinter;
 interface
 
 uses
-  Classes, SysUtils, Math, System.Generics.Collections, PrinterIntf, BasePrinter,
+  Classes, SysUtils, Math, System.Generics.Collections, Printer, BasePrinter,
   Tokens, Statements, TextBuilder, Rulers;
 
 type
@@ -82,10 +82,12 @@ type
     procedure StartRuler(Enabled: boolean; Continued: boolean = false); override;
   protected
     procedure Ruler(const ARuler: string); override;
+    procedure PrintRulerItems(const ARuler: string; AItems: array of TObject); override;
   public
     function GetText: string; override;
     function CurrentLine: integer;
     function CurrentCol: integer;
+    function CurrentMaxWidth: integer;
   end;
 
 const
@@ -330,11 +332,11 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
         case Mode of
           { В режиме примерки запомним ширину фрагмента }
           fpmGetRulers:
-            Rulers.Take(RulerName, TextBuilder.Line, TextBuilder.Col - Shift);
+            Rulers.Take(RulerName, TextBuilder.Line, TextBuilder.Col);
           { В режиме вставим необходимое количество пробелов }
           fpmSetRulers:
             if not OriginalFormat then
-              TextBuilder.AppendSpace(Shift + Rulers.Fix(RulerName) - TextBuilder.Col);
+              TextBuilder.AppendSpace(Rulers.Fix(RulerName) - TextBuilder.Col);
         end;
       RulerName := '';
     end;
@@ -461,8 +463,9 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     _Rulers := Self.Rulers;
     _Mode   := Self.Mode;
     try
-      Self.Rulers := AStatement.Rulers;
-      Self.Mode   := fpmSetRulers;
+      Self.Rulers  := AStatement.Rulers;
+      Self.Mode    := fpmSetRulers;
+      Rulers.Shift := Self.Shift;
       SimplePrintStatement;
     finally
       Self.Rulers := _Rulers;
@@ -543,8 +546,8 @@ begin
   T2 := TSpecialComment.Create('/*/');
   try
     if not RulerEnabled then StartRuler(Settings.AlignSpecialComments, true);
-    Self.PrintRulerItem('special-comment-start', T1);
-    Self.PrintRulerItem('special-comment-finish', T2);
+    Self.PrintRulerItems('special-comment-start', [T1]);
+    Self.PrintRulerItems('special-comment-finish', [T2]);
   finally
     FreeAndNil(T1);
     FreeAndNil(T2);
@@ -556,10 +559,7 @@ procedure TFormatterPrinter.StartRuler(Enabled: boolean; Continued: boolean = fa
 begin
   if not Assigned(Rulers) then exit;
   RulerEnabled := Enabled;
-  if (Mode <> fpmGetRulers) or not Enabled then exit;
-  if not Rulers.Empty and not Continued then Ruler('right-comment'); { внедряем линейку для комментариев справа, причём так, чтобы они не попали слева }
-  PrintEmptyToken;
-  Rulers.NewLine(TextBuilder.Line, Continued);
+  if (Mode = fpmGetRulers) and Enabled then PrintEmptyToken;
 end;
 
 { Установка "линейки" для выравнивания }
@@ -573,6 +573,17 @@ begin
   RulerName := ARuler;
 end;
 
+procedure TFormatterPrinter.PrintRulerItems(const ARuler: string; AItems: array of TObject);
+begin
+  inherited;
+  { В режиме примерки гарантируем вызов Rulers.Take даже при пустой ячейке,
+    это позволит правильно собрать информацию и уберёт баги типа "неожиданно
+    убегающих вправо" строчных комментариев. В режиме печати наоборот, не
+    будем этого делать, тогда завершающие запятые в списках не будут отрываться
+    от текста }
+  if (RulerName <> '') and (Mode = fpmGetRulers) then PrintEmptyToken;
+end;
+
 function TFormatterPrinter.GetText: string;
 begin
   Result := TextBuilder.Text;
@@ -581,6 +592,11 @@ end;
 function TFormatterPrinter.CurrentLine: integer;
 begin
   Result := TextBuilder.Line;
+end;
+
+function TFormatterPrinter.CurrentMaxWidth: integer;
+begin
+  Result := TextBuilder.MaxWidth;
 end;
 
 function TFormatterPrinter.CurrentCol: integer;

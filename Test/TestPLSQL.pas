@@ -13,7 +13,7 @@ unit TestPLSQL;
 interface
 
 uses
-  SysUtils, TestFramework, FileBasedTest, PrinterIntf;
+  SysUtils, TestFramework, FileBasedTest, Printer;
 
 type
 
@@ -78,6 +78,8 @@ type
     procedure Грантов;
     procedure Синонимов;
     procedure Спецкомментариев_В_Select_Into;
+    procedure Спецкомментариев_В_Insert_Values;
+    procedure Спецкомментариев_В_Insert_Select;
     procedure Пустота_Не_Должна_Сдвигать_Выравнивание_Вправо;
   end;
 
@@ -395,19 +397,19 @@ end;
 procedure _Выравнивание.Полей_В_Запросе;
 begin
   Settings.AlignFields := true;
-  PostponeTill(2020, 3, 27);
 end;
 
 procedure _Выравнивание.Пустота_Не_Должна_Сдвигать_Выравнивание_Вправо;
 begin
   Settings.AlignVariables := true;
   Settings.AlignFields    := true;
+  PostponeTill(2020, 4, 10);
 end;
 
 procedure _Выравнивание.Условий_В_Where;
 begin
+  PostponeTill(2020, 4, 4);
   Settings.AlignExpressions := true;
-  PostponeTill(2020, 3, 28);
 end;
 
 procedure _Выравнивание.Аргументов_В_Вызовах_Подпрограмм;
@@ -431,6 +433,18 @@ begin
   Settings.AlignSQLPLUS := true;
 end;
 
+procedure _Выравнивание.Спецкомментариев_В_Insert_Select;
+begin
+  Settings.AlignSpecialComments := true;
+  Settings.MatchParamLimit := 1;
+end;
+
+procedure _Выравнивание.Спецкомментариев_В_Insert_Values;
+begin
+  Settings.AlignSpecialComments := true;
+  Settings.MatchParamLimit := 1;
+end;
+
 procedure _Выравнивание.Спецкомментариев_В_Select_Into;
 begin
   Settings.MatchParamLimit := 1;
@@ -440,7 +454,6 @@ end;
 procedure _Выравнивание.Колонок_В_Таблице;
 begin
   Settings.AlignColumns := true;
-  PostponeTill(2020, 3, 28);
 end;
 
 procedure _Выравнивание.Команд_Define;
@@ -742,7 +755,6 @@ end;
 procedure _Форматирование_Выражений.Перенос_При_Присвоении_Многострочного_Выражения;
 begin
   Settings.PreferredExpressionLength := 120;
-  PostponeTill(2020, 3, 28);
 end;
 
 { _Контрольные_Примеры }

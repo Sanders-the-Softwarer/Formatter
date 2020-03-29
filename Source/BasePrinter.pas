@@ -19,7 +19,7 @@ unit BasePrinter;
 
 interface
 
-uses SysUtils, PrinterIntf, Statements, Tokens, System.Generics.Collections;
+uses SysUtils, Printer, Statements, Tokens, System.Generics.Collections;
 
 type
   { Базовая (пустая) реализация принтера }

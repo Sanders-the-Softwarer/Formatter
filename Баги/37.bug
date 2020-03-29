@@ -1,59 +1,54 @@
 -- ” алиасов полей нет никаких причин уезжать так далеко влево, как они делают
 
 select /*+ leading(t) use_nl(t pd ph)*/
-            t.sup_sku_code,
-            t.sup_style_color_code,
-            ph.code po_code,
-            sd.specification_code,
-            nvl(sum(pd.quantity), 0) quantity,
-            nvl(sum(case when sch.is_retail = 1 then pd.quantity end), 0) quantity_retail,
-            0 quantity_retail_manual,
-            nvl(sum(case when sch.is_retail = 0 then pd.quantity end), 0) quantity_wholesale,
-            0 quantity_wholesale_manual,
-            0 quantity_on_hold,
-            v_data_source_po_code data_source_code,
-            -- приоритет пока оставим как на ассортименте
-            max(t.priority_final) priority_final,
-            max(t.priority_manual) priority_manual,
-            max(t.priority_base) priority_base,
-            coalesce
-            (
-                -- по спецификаци€м, если есть
-                (
-                    sum(pd.quantity * sd.price_without_vat) / nullif(sum(pd.quantity), 0)
-                ),
-                -- по PO, если нет спецификаций
-                (
-                    sum(pd.quantity * pd.purchase_price) / nullif(sum(pd.quantity), 0)
-                )
-            ) purchase_price,
-            max(coalesce(sd.currency_code, pd.currency_code)) purchase_price_currency_code,
-            decode(sd.specification_code, null, max(c.use_vat * (vt.vat_type - 1) + 1), 1) vat_type --(1 - w/o VAT, 2 - incl VAT)
-        bulk collect
-        into
-            v_result
-        from
-            top_lc_calc_goods_gtt  t,
-            top_1c_po              ph,
-            top_1c_po_det          pd,
-            top_specification_det  sd,
-            top_ref_sale_channel   sch,
-            top_ref_contract       c,
-            top_v_ref_vat_type     vt
-        where
-            t.sup_sku_code = pd.sup_sku_code(+)
-            and pd.header_code = ph.code(+)
-            and ph.state(+) = 1
-            and ph.collection_code(+) = g_common_calc_rec.collection_code
-            and ph.sales_country_code(+) = g_common_calc_rec.country_code
-            and ph.sale_channel_code = sch.code(+)
-            and sd.po_code(+) = ph.code
-            and sd.sup_sku_code(+) = t.sup_sku_code
-            and ph.contract_code = c.code(+)
-            and c.state(+) = 1
-            and vt.code(+) = c.vat_type_code
-        group by
-            t.sup_sku_code,
-            t.sup_style_color_code,
-            ph.code,
-            sd.specification_code;
+    t.sup_sku_code,
+    t.sup_style_color_code,
+    ph.code                                                                          po_code,
+    sd.specification_code,
+    nvl(sum(pd.quantity), 0)                                                         quantity,
+    nvl(sum(case when sch.is_retail = 1 then pd.quantity end), 0)                    quantity_retail,
+    0                                                                                quantity_retail_manual,
+    nvl(sum(case when sch.is_retail = 0 then pd.quantity end), 0)                    quantity_wholesale,
+    0                                                                                quantity_wholesale_manual,
+    0                                                                                quantity_on_hold,
+    v_data_source_po_code                                                            data_source_code,
+    -- приоритет пока оставим как на ассортименте
+    max(t.priority_final)                                                            priority_final,
+    max(t.priority_manual)                                                           priority_manual,
+    max(t.priority_base)                                                             priority_base,
+    coalesce
+        (
+            -- по спецификаци€м, если есть
+            (sum(pd.quantity * sd.price_without_vat) / nullif(sum(pd.quantity), 0)),
+            -- по PO, если нет спецификаций
+            (sum(pd.quantity * pd.purchase_price) / nullif(sum(pd.quantity), 0))
+        )                                                                            purchase_price,
+    max(coalesce(sd.currency_code, pd.currency_code))                                purchase_price_currency_code,
+    decode(sd.specification_code, null, max(c.use_vat * (vt.vat_type - 1) + 1), 1)   vat_type --(1 - w/o VAT, 2 - incl VAT)
+bulk collect into
+    v_result
+from
+    top_lc_calc_goods_gtt t,
+    top_1c_po ph,
+    top_1c_po_det pd,
+    top_specification_det sd,
+    top_ref_sale_channel sch,
+    top_ref_contract c,
+    top_v_ref_vat_type vt
+where
+    t.sup_sku_code = pd.sup_sku_code (+)
+    and pd.header_code = ph.code (+)
+    and ph.state (+) = 1
+    and ph.collection_code (+) = g_common_calc_rec.collection_code
+    and ph.sales_country_code (+) = g_common_calc_rec.country_code
+    and ph.sale_channel_code = sch.code (+)
+    and sd.po_code (+) = ph.code
+    and sd.sup_sku_code (+) = t.sup_sku_code
+    and ph.contract_code = c.code (+)
+    and c.state (+) = 1
+    and vt.code (+) = c.vat_type_code
+group by
+    t.sup_sku_code,
+    t.sup_style_color_code,
+    ph.code,
+    sd.specification_code;

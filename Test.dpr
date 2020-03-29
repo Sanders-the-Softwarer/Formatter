@@ -25,13 +25,13 @@ uses
   Expressions in 'Source\Expressions.pas',
   Parser in 'Source\Parser.pas',
   PLSQL in 'Source\PLSQL.pas',
-  PrinterIntf in 'Source\PrinterIntf.pas',
+  Printer in 'Source\Printer.pas',
   SQLPlus in 'Source\SQLPlus.pas',
   Statements in 'Source\Statements.pas',
   Streams in 'Source\Streams.pas',
   Tokenizer in 'Source\Tokenizer.pas',
   Tokens in 'Source\Tokens.pas',
-  Triggers in 'Source\Triggers.pas',
+  Trigger in 'Source\PLSQL\Trigger.pas',
   TestExpressions in 'Test\TestExpressions.pas',
   TestDDL in 'Test\TestDDL.pas',
   TestPLSQL in 'Test\TestPLSQL.pas',
@@ -43,7 +43,8 @@ uses
   Commons in 'Source\Commons.pas',
   BasePrinter in 'Source\BasePrinter.pas',
   TextBuilder in 'Source\TextBuilder.pas',
-  Rulers in 'Source\Rulers.pas';
+  Rulers in 'Source\Rulers.pas',
+  Alter in 'Source\DDL\Alter.pas';
 
 {$R *.RES}
 

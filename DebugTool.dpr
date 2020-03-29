@@ -2,12 +2,12 @@ program DebugTool;
 
 uses
   Vcl.Forms,
-  fMain in 'Source\fMain.pas' {FormMain},
+  fMain in 'Source\GUI\fMain.pas' {FormMain},
   Streams in 'Source\Streams.pas',
   Tokens in 'Source\Tokens.pas',
   Tokenizer in 'Source\Tokenizer.pas',
   Parser in 'Source\Parser.pas',
-  PrinterIntf in 'Source\PrinterIntf.pas',
+  Printer in 'Source\Printer.pas',
   PLSQL in 'Source\PLSQL.pas',
   Expressions in 'Source\Expressions.pas',
   DML in 'Source\DML.pas',
@@ -16,15 +16,19 @@ uses
   SQLPlus in 'Source\SQLPlus.pas',
   Utils in 'Source\Utils.pas',
   Controller in 'Source\Controller.pas',
-  GUIPrinters in 'Source\GUIPrinters.pas',
+  GUIPrinters in 'Source\GUI\GUIPrinters.pas',
   FormatterPrinter in 'Source\FormatterPrinter.pas',
   Commons in 'Source\Commons.pas',
   BasePrinter in 'Source\BasePrinter.pas',
   TextBuilder in 'Source\TextBuilder.pas',
   Rulers in 'Source\Rulers.pas',
-  Triggers in 'Source\Triggers.pas',
+  Trigger in 'Source\PLSQL\Trigger.pas',
   Keywords in 'Source\Keywords.pas',
-  Role in 'Source\Role.pas';
+  Role in 'Source\DDL\Role.pas',
+  Sequence in 'Source\DDL\Sequence.pas',
+  Alter in 'Source\DDL\Alter.pas',
+  Synonym in 'Source\DDL\Synonym.pas',
+  Create in 'Source\DDL\Create.pas';
 
 {$R *.res}
 

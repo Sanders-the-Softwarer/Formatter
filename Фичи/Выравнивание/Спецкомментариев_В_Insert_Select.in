@@ -1,0 +1,19 @@
+insert 
+into
+    sys.user#
+    (
+        user_id,
+        user_name,
+        user_aka,
+        date_of_birth,
+        hobby
+    )
+select
+    666,           /*/ => user_id       /*/
+    'Сатана',      /*/ => user_name     /*/
+    'Светоносный', /*/ => user_aka      /*/
+    'Unknown',     /*/ => date_of_birth /*/
+    'Вышивание'    /*/ => hobby         /*/
+from
+    dual
+        

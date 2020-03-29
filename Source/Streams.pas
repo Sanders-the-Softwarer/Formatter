@@ -36,7 +36,7 @@ unit Streams;
 
 interface
 
-uses SysUtils, System.Generics.Collections, Tokens, Windows, PrinterIntf;
+uses SysUtils, System.Generics.Collections, Tokens, Windows, Printer;
 
 type
 

@@ -30,6 +30,12 @@ unit Rulers;
   отдельных элементов синтаксических конструкций и выдаёт рекомендации в виде
   набора "линеек", под которые они должны подравниваться.
 
+  Технически выравнивание делается следующим образом: принтер сначала выдаёт
+  текст в режиме fmGetRulers, при этом с помощью метода Take собирая информацию
+  о выравниваниях, а затем выдаёт его в режиме fmSetRulers, при этом с помощью
+  метода Fix определяет необходимое в каждый момент число выравнивающих
+  пробелов.
+
 ------------------------------------------------------------------------------ }
 
 interface
@@ -44,16 +50,18 @@ type
     Names: TStringList;
     { Максимальные ширины ячеек }
     MaxWidth: TDictionary<String, integer>;
-    { Позиция, с которой считается ширина очередной ячейки }
-    PrevCol: integer;
+    { Позиция, на которой мы остановились }
+    PrevLine, PrevCol: integer;
+    { Отступ конструкции, относительно которого нормируем Take и Fix }
+    FShift: integer;
   public
     constructor Create;
     destructor Destroy; override;
     procedure AddRuler(const ARuler: string);
-    procedure NewLine(ALine: integer; AContinued: boolean);
     procedure Take(const ARuler: string; ALine, ACol: integer);
     function Fix(const ARuler: string): integer;
     function Empty: boolean;
+    property Shift: integer read FShift write FShift;
   end;
 
 implementation
@@ -78,22 +86,19 @@ begin
   MaxWidth.Add(ARuler, 0);
 end;
 
-procedure TRulers.NewLine(ALine: integer; AContinued: boolean);
-begin
-  PrevCol := 1;
-end;
-
 procedure TRulers.Take(const ARuler: string; ALine, ACol: integer);
 begin
   AddRuler(ARuler);
-  MaxWidth[ARuler] := Math.Max(MaxWidth[ARuler], ACol - PrevCol);
+  if ALine <> PrevLine then PrevCol := 1;
+  PrevLine := ALine;
+  MaxWidth[ARuler] := Math.Max(MaxWidth[ARuler], ACol - PrevCol - Shift);
   PrevCol := ACol;
 end;
 
 function TRulers.Fix(const ARuler: string): integer;
 var i: integer;
 begin
-  Result := 0;
+  Result := Shift;
   for i := 0 to Names.IndexOf(ARuler) do Inc(Result, MaxWidth[Names[i]]);
   Inc(Result);
 end;

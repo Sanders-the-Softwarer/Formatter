@@ -28,7 +28,7 @@ interface
 uses
   Tokens { должен идти до StdCtrls, чтобы TLabel не мешала загрузке формы },
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, PrinterIntf,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, Printer,
   Vcl.ExtCtrls, Vcl.Samples.Spin, Controller, Streams, Statements, Tokenizer;
 
 type
@@ -75,6 +75,8 @@ type
     Label6: TLabel;
     edPositionalArgumentSingleLineParamLimit: TSpinEdit;
     checkAlignSQLPLUS: TCheckBox;
+    tabCompareAutoTestResult: TTabSheet;
+    edCompareAutoTestResult: TMemo;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -85,6 +87,7 @@ type
     procedure treeParserChange(Sender: TObject; Node: TTreeNode);
     procedure tmMemoTimer(Sender: TObject);
     procedure pgDestChange(Sender: TObject);
+    procedure edCompareAutoTestResultChange(Sender: TObject);
   private
     TokenizerPrinter, SyntaxTreePrinter, ResultPrinter, AlarmTokenPrinter, AlarmStatementPrinter: TPrinter;
     MinTokenStream, AdvTokenStream: TBufferedStream<TToken>;
@@ -97,6 +100,7 @@ type
     procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
     procedure CoordsToCaret(Memo: TMemo; const Line, Col: integer; out Pos: integer);
     procedure CaretToCoords(Memo: TMemo; out Line, Col: integer; Pos: integer);
+    procedure CheckReformatAutoTestResult;
   public
   end;
 
@@ -195,7 +199,7 @@ begin
   ResultPrinter     := GUIPrinters.CreateFormatterPrinter(Settings, edResult);
   AlarmTokenPrinter := GUIPrinters.CreateAlarmTokenPrinter(edAlarmToken, tabAlarmToken);
   AlarmStatementPrinter := GUIPrinters.CreateAlarmStatementPrinter(edAlarmStatement, tabAlarmStatement);
-  PrinterIntf.SyncNotification := Self.SyncNotification;
+  Printer.SyncNotification := Self.SyncNotification;
   try
     IntoUpdateSettings := true;
     edDeclarationSingleLineParamLimit.Value := Settings.DeclarationSingleLineParamLimit;
@@ -235,6 +239,11 @@ end;
 procedure TFormMain.edAlarmTokenClick(Sender: TObject);
 begin
   AlarmTokenPrinter.ControlChanged;
+end;
+
+procedure TFormMain.edCompareAutoTestResultChange(Sender: TObject);
+begin
+  CheckReformatAutoTestResult;
 end;
 
 { Оповещение принтера о движении пользователя по списку непропечатанных лексем }
@@ -312,6 +321,40 @@ begin
     Inc(Line);
   end;
   Col := Pos + 1;
+end;
+
+{ Переформатирование результата автотеста, вставленного в поле редактирования }
+procedure TFormMain.CheckReformatAutoTestResult;
+var
+  Expected, Actual, i: integer;
+begin
+  with TStringList.Create do
+  try
+    Text := edCompareAutoTestResult.Text;
+    { Найдём опорные строки вывода (и среди прочего, спасёмся от зацикливания)}
+    Expected := IndexOf('expected: <');
+    Actual := IndexOf('> but was: <');
+    if (Expected < 0) or (Actual < 0) then exit;
+    { Грохнем ненужные строки }
+    for i := Expected downto 0 do Delete(0);
+    Dec(Actual, Expected + 1);
+    repeat
+      i := IndexOf('---------->>----------');
+      if i >= 0 then
+      begin
+        Delete(i);
+        if Actual > i then Dec(Actual);
+      end;
+    until i < 0;
+    Delete(Count - 1);
+    Delete(Actual);
+    { И наконец, перемешаем их }
+    for i := 0 to Actual - 1 do Move(Actual + i, 2 * i + 1);
+    { Результат вернём обратно }
+    edCompareAutoTestResult.Text := Text;
+  finally
+    Free;
+  end;
 end;
 
 end.

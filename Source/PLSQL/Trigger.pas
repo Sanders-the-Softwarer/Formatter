@@ -8,11 +8,11 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-unit Triggers;
+unit Trigger;
 
 interface
 
-uses Tokens, Statements, PrinterIntf, PLSQL;
+uses Tokens, Statements, Printer, PLSQL;
 
 type
   { Триггер }

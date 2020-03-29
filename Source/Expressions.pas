@@ -31,7 +31,7 @@ unit Expressions;
 
 interface
 
-uses Classes, SysUtils, Math, Tokens, Statements, PrinterIntf,
+uses Classes, SysUtils, Math, Tokens, Statements, Printer,
   System.Generics.Collections, Utils;
 
 type
@@ -264,11 +264,11 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
       begin
         DraftPrinter.NextLine;
         DraftPrinter.PrintItem(Item(i));
-        TermInfo[i].MultiLineLen := DraftPrinter.CurrentCol;
+        TermInfo[i].MultiLineLen := DraftPrinter.CurrentMaxWidth;
         DraftPrinter.NextLine;
         DraftPrinter.SupressNextLine(true);
         DraftPrinter.PrintItem(Item(i));
-        TermInfo[i].SingleLineLen := DraftPrinter.CurrentCol;
+        TermInfo[i].SingleLineLen := DraftPrinter.CurrentMaxWidth;
         DraftPrinter.SupressNextLine(false);
         DraftPrinter.NextLine;
         DraftPrinter.PrintItem(Delimiter(i));

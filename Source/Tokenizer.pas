@@ -627,6 +627,7 @@ begin
   if Check(Result, 'bulk', 'collect', 'into') then exit;
   if Check(Result, 'cascade', 'constraints') then exit;
   if Check(Result, 'compound', 'trigger') then exit;
+  if Check(Result, 'connect', 'by') then exit;
   if Check(Result, 'cross', 'apply') then exit;
   if Check(Result, 'default', 'tablespace') then exit;
   if Check(Result, 'disassociate', 'statistics') then exit;
@@ -642,6 +643,7 @@ begin
   if Check(Result, 'identified', 'globally') then exit;
   if Check(Result, 'identified', 'using') then exit;
   if Check(Result, 'in', 'out') then exit;
+  if Check(Result, 'increment', 'by') then exit;
   if Check(Result, 'inner', 'join') then exit;
   if Check(Result, 'instead', 'of', 'each', 'row') then exit;
   if Check(Result, 'instead', 'of') then exit;
@@ -672,6 +674,7 @@ begin
   if Check(Result, 'right', 'natural', 'join') then exit;
   if Check(Result, 'right', 'outer', 'join') then exit;
   if Check(Result, 'self', 'as', 'result') then exit;
+  if Check(Result, 'start', 'with') then exit;
   if Check(Result, 'subpartition', 'by') then exit;
   if Check(Result, 'temporary', 'tablespace') then exit;
   if Check(Result, 'type', 'body') then exit;

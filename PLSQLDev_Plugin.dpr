@@ -13,7 +13,7 @@ uses
   FormatterPrinter in 'Source\FormatterPrinter.pas',
   Parser in 'Source\Parser.pas',
   PLSQL in 'Source\PLSQL.pas',
-  PrinterIntf in 'Source\PrinterIntf.pas',
+  Printer in 'Source\Printer.pas',
   Rulers in 'Source\Rulers.pas',
   SQLPlus in 'Source\SQLPlus.pas',
   Statements in 'Source\Statements.pas',
@@ -22,9 +22,13 @@ uses
   Tokenizer in 'Source\Tokenizer.pas',
   Tokens in 'Source\Tokens.pas',
   Utils in 'Source\Utils.pas',
-  Triggers in 'Source\Triggers.pas',
-  Role in 'Source\Role.pas',
-  Keywords in 'Source\Keywords.pas';
+  Trigger in 'Source\PLSQL\Trigger.pas',
+  Create in 'Source\DDL\Create.pas',
+  Alter in 'Source\DDL\Alter.pas',
+  Role in 'Source\DDL\Role.pas',
+  Keywords in 'Source\Keywords.pas',
+  Sequence in 'Source\DDL\Sequence.pas',
+  Synonym in 'Source\DDL\Synonym.pas';
 
 const
   Desc  = 'Formatter';

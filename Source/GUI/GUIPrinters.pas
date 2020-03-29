@@ -14,7 +14,7 @@ interface
 
 uses
   SysUtils, StdCtrls, ExtCtrls, ComCtrls, System.Generics.Collections,
-  PrinterIntf, Tokens;
+  Printer, Tokens;
 
 { Функции создания принтеров различных типов }
 function CreateTokenizerPrinter(AListBox: TListBox): TPrinter;

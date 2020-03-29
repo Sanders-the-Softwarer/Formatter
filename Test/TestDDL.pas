@@ -75,6 +75,7 @@ type
     procedure Grant;
     procedure Alter_Role;
     procedure Alter_Sequence;
+    procedure Set_Role;
   end;
 
 implementation
@@ -228,6 +229,7 @@ end;
 
 procedure _Команды_DDL.Alter_Sequence;
 begin
+  PostponeTill(2020, 4, 4);
 end;
 
 procedure _Команды_DDL.Create_Role;
@@ -240,6 +242,11 @@ end;
 
 procedure _Команды_DDL.Grant;
 begin
+end;
+
+procedure _Команды_DDL.Set_Role;
+begin
+  PostponeTill(2020, 4, 10);
 end;
 
 initialization

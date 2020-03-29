@@ -12,7 +12,7 @@ unit SQLPlus;
 
 interface
 
-uses SysUtils, Statements, Tokens, PrinterIntf, Utils, System.Generics.Collections;
+uses SysUtils, Statements, Tokens, Printer, Utils, System.Generics.Collections;
 
 type
 
@@ -193,7 +193,7 @@ procedure TSet.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.StartRuler(Settings.AlignSQLPLUS);
   APrinter.PrintRulerItems('Target', [_Set, _Target]);
-  APrinter.PrintRulerItem('Value', _Value);
+  APrinter.PrintRulerItems('Value', [_Value]);
 end;
 
 function TSet.Grouping: TStatementClass;

@@ -12,7 +12,7 @@ unit Role;
 
 interface
 
-uses Tokens, Statements, PrinterIntf;
+uses Tokens, Statements, Printer;
 
 type
   { Роль }

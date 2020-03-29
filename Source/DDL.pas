@@ -12,23 +12,9 @@ unit DDL;
 
 interface
 
-uses SysUtils, Tokens, Statements, PrinterIntf, Streams, Commons, PLSQL;
+uses SysUtils, Tokens, Statements, Printer, Streams, Commons, PLSQL;
 
 type
-
-  { Команда create [or replace] }
-  TCreate = class(TSemicolonStatement)
-  strict private
-    _Create, _Or, _Replace, _Editionable, _Force: TEpithet;
-    _What: TStatement;
-    _Slash: TTerminal;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function StatementName: string; override;
-    function Grouping: TStatementClass; override;
-  end;
 
   { Команда drop }
   TDrop = class(TSemicolonStatement)
@@ -44,16 +30,6 @@ type
   public
     function StatementName: string; override;
     function Grouping: TStatementClass; override;
-  end;
-
-  { Команда alter }
-  TAlter = class(TSemicolonStatement)
-  strict private
-    _Alter: TEpithet;
-    _What: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Объект view }
@@ -280,46 +256,6 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Объект sequence }
-  TSequence = class(TStatement)
-  strict private
-    _Sequence: TEpithet;
-    _Name, _Parts: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Части декларации sequence-а }
-  TSequencePart = class(TStatement)
-  strict private
-    _First, _Second: TEpithet;
-    _Value: TNumber;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function StatementName: string; override;
-  end;
-
-  { Список частей в sequence-е }
-  TSequencePartList = class(TStatementList<TSequencePart>)
-  strict protected
-    function ParseBreak: boolean; override;
-  end;
-
-  { Синоним }
-  TSynonym = class(TStatement)
-  strict private
-    _Synonym, _For: TEpithet;
-    _Name, _Sharing, _Object: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function Grouping: TStatementClass; override;
-  end;
-
   { Пользователь }
   TUser = class(TStatement)
   strict private
@@ -370,60 +306,7 @@ type
 
 implementation
 
-uses Parser, DML, Expressions, Triggers, Role;
-
-{ TCreateStatement }
-
-function TCreate.InternalParse: boolean;
-begin
-  { Если распознали слово create, то распознали конструкцию }
-  _Create := Keyword('create');
-  if not Assigned(_Create) then exit(false);
-  { Проверим наличие or replace }
-  _Or := Keyword('or');
-  if Assigned(_Or) then _Replace := Keyword('replace');
-  if Assigned(_Or) and not Assigned(_Replace) then exit(true);
-  { Проверим наличие editionable }
-  _Editionable := Keyword(['editionable', 'noneditionable']);
-  { Проверим наличие force }
-  _Force := Keyword('force');
-  { И, наконец, распознаем, что же мы создаём }
-  Result := TTable.Parse(Self, Source, _What) or
-            TView.Parse(Self, Source, _What) or
-            TIndex.Parse(Self, Source, _What) or
-            TPackage.Parse(Self, Source, _What) or
-            TSubroutine.Parse(Self, Source, _What) or
-            TTypeBody.Parse(Self, Source, _What) or
-            TType.Parse(Self, Source, _What) or
-            TSequence.Parse(Self, Source, _What) or
-            TTrigger.Parse(Self, Source, _What) or
-            TSynonym.Parse(Self, Source, _What) or
-            TUser.Parse(Self, Source, _What) or
-            TRole.Parse(Self, Source, _What) or
-            TUnexpectedToken.Parse(Self, Source, _What);
-  inherited;
-  { Завершающий слеш }
-  _Slash := Terminal('/');
-end;
-
-procedure TCreate.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Create, _Or, _Replace, _Editionable, _Force, _What]);
-  inherited;
-  APrinter.NextLineIf([_Slash]);
-end;
-
-function TCreate.StatementName: string;
-begin
-  Result := Concat([_Create, _Or, _Replace, _What]);
-end;
-
-function TCreate.Grouping: TStatementClass;
-begin
-  if Assigned(_What)
-    then Result := _What.Grouping
-    else Result := nil;
-end;
+uses Parser, DML, Expressions, Trigger, Role, Sequence, Synonym;
 
 { TView }
 
@@ -582,8 +465,8 @@ end;
 procedure TTableField.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.StartRuler(Settings.AlignColumns);
-  APrinter.PrintRulerItem('name', _Name);
-  APrinter.PrintRulerItem('type', _Type);
+  APrinter.PrintRulerItems('name', [_Name]);
+  APrinter.PrintRulerItems('type', [_Type]);
   APrinter.PrintRulerItems('default', [_Default, _Value]);
   APrinter.PrintRulerItems('not null', [_Not, _Null]);
 end;
@@ -826,7 +709,7 @@ procedure TComment.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.StartRuler(Settings.AlignTableColumnComments);
   APrinter.PrintRulerItems('comment', [_Comment, _On, _TableOrColumn]);
-  APrinter.PrintRulerItem ('name', _Name);
+  APrinter.PrintRulerItems('name', [_Name]);
   APrinter.PrintRulerItems('is', [_Is, _Text]);
   inherited;
 end;
@@ -877,52 +760,6 @@ end;
 function TDrop.IsType: boolean;
 begin
   Result := Assigned(_Type) and (_Type.Value = 'type');
-end;
-
-{ TSequence }
-
-function TSequence.InternalParse: boolean;
-begin
-  Result := true;
-  _Sequence := Keyword('sequence');
-  if not Assigned(_Sequence) then exit(false);
-  TQualifiedIdent.Parse(Self, Source, _Name);
-  TSequencePartList.Parse(Self, Source, _Parts);
-end;
-
-procedure TSequence.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Sequence, _Name, _Indent]);
-  APrinter.NextLineIf([_Parts]);
-  APrinter.Undent;
-end;
-
-{ TSequencePart }
-
-function TSequencePart.InternalParse: boolean;
-begin
-  _First  := Keyword(['increment', 'start', 'maxvalue', 'nomaxvalue', 'minvalue', 'nominvalue', 'cycle', 'nocycle', 'cache', 'nocache', 'order', 'noorder']);
-  _Second := Keyword(['by', 'with']);
-  _Value  := Number;
-  Result  := Assigned(_First);
-end;
-
-procedure TSequencePart.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_First, _Second, _Value]);
-end;
-
-function TSequencePart.StatementName: string;
-begin
-  Result := Concat([_First, _Second, _Value]);
-end;
-
-{ TSequencePartList }
-
-function TSequencePartList.ParseBreak: boolean;
-var _Dummy: TStatement;
-begin
-  Result := not TSequencePart.Parse(Self, Source, _Dummy);
 end;
 
 { TGrant }
@@ -1017,32 +854,6 @@ begin
   for i := Low(Tokens) to High(Tokens) do APrinter.PrintItem(Tokens[i]);
 end;
 
-{ TSynonym }
-
-function TSynonym.InternalParse: boolean;
-begin
-  _Synonym := Keyword(['synonym', 'public synonym']);
-  if not Assigned(_Synonym) then exit(false);
-  TQualifiedIdent.Parse(Self, Source, _Name);
-  TSharing.Parse(Self, Source, _Sharing);
-  _For := Keyword('for');
-  if Assigned(_For) then TQualifiedIdent.Parse(Self, Source, _Object);
-  Result := true;
-end;
-
-procedure TSynonym.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.StartRuler(Settings.AlignSQLPLUS);
-  APrinter.PrintRulerItems('start', [_Synonym]);
-  APrinter.PrintRulerItems('name',  [_Name, _Sharing]);
-  APrinter.PrintRulerItems('for',   [ _For, _Object]);
-end;
-
-function TSynonym.Grouping: TStatementClass;
-begin
-  Result := TSynonym;
-end;
-
 { TUser }
 
 function TUser.InternalParse: boolean;
@@ -1081,31 +892,12 @@ begin
   _Sharing := Keyword('sharing');
   if not Assigned(_Sharing) then exit(false);
   _Eq := Terminal('=');
-  _What := Keyword(['metadata', 'none']);
+  _What := Keyword(['metadata', 'data', 'none']);
 end;
 
 procedure TSharing.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Sharing, _Eq, _What]);
-end;
-
-{ TAlter }
-
-function TAlter.InternalParse: boolean;
-begin
-  Result := true;
-  _Alter := Keyword('alter');
-  if not Assigned(_Alter) then exit(false);
-  if not TSequence.Parse(Self, Source, _What) and
-     not TRole.Parse(Self, Source, _What) then
-    TUnexpectedToken.Parse(Self, Source, _What);
-  inherited;
-end;
-
-procedure TAlter.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Alter, _What]);
-  inherited;
 end;
 
 end.
