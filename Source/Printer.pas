@@ -66,6 +66,7 @@ type
     AlignSQLPLUS: boolean;
     ReplaceDefault: boolean;
     ReplaceAsIs: boolean;
+    ChangeCommentType: boolean;
     AddInAccessSpecificator: boolean;
     AddFromToDelete: boolean;
     PreferredExpressionLength: integer;
@@ -81,6 +82,7 @@ type
     function HasItems(AItems: array of TObject): boolean;
   public
     procedure BeginPrint; virtual; abstract;
+    procedure Clear; virtual; abstract;
     procedure PrintItem(AItem: TObject); virtual; abstract;
     procedure EndPrint; virtual; abstract;
     procedure Indent; virtual; abstract;
@@ -309,6 +311,7 @@ begin
   ReplaceAsIs                     := true;
   AddInAccessSpecificator         := true;
   AddFromToDelete                 := true;
+  ChangeCommentType               := false;
   PreferredExpressionLength       := 100;
 end;
 

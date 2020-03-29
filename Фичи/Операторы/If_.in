@@ -1,5 +1,5 @@
 -- ѕри многострочном условии then должно выводитьс€ под if
-if p_manual_data_source_code
+if p_manual_data_source_code.table_of_something(i).value
    not in
    (v_data_source_fs1_code, v_data_source_fs2_code, v_data_source_order_code) 
 then

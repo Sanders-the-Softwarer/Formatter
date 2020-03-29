@@ -1,0 +1,3 @@
+-- Выражение нелепо разбивается на строки там, где это совершенно не нужно
+
+v_info := sys_context('userenv', 'os_user') || '@' || sys_context('userenv', 'terminal');

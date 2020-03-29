@@ -26,6 +26,7 @@ type
   TBasePrinter = class(TPrinter)
   public
     procedure BeginPrint; override;
+    procedure Clear; override;
     procedure PrintItem(AItem: TObject); override;
     procedure PrintToken(AToken: TToken); virtual;
     procedure PrintStatement(AStatement: TStatement); virtual;
@@ -57,6 +58,12 @@ implementation
 ////////////////////////////////////////////////////////////////////////////////
 
 procedure TBasePrinter.BeginPrint;
+begin
+  { Вызываем Clear и больше ничего не делаем }
+  Clear;
+end;
+
+procedure TBasePrinter.Clear;
 begin
   { ничего не делаем }
 end;

@@ -77,6 +77,8 @@ type
     checkAlignSQLPLUS: TCheckBox;
     tabCompareAutoTestResult: TTabSheet;
     edCompareAutoTestResult: TMemo;
+    GroupBox4: TGroupBox;
+    checkChangeCommentType: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -146,6 +148,7 @@ begin
     Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
     Settings.ReplaceAsIs                     := checkReplaceAsIs.Checked;
     Settings.AddInAccessSpecificator         := checkAddInAccessSpecificator.Checked;
+    Settings.ChangeCommentType               := checkChangeCommentType.Checked;
     Settings.PreferredExpressionLength       := edPreferredExpressionLength.Value;
   end;
   { Создадим потоки }
@@ -217,6 +220,7 @@ begin
     checkReplaceDefault.Checked             := Settings.ReplaceDefault;
     checkReplaceAsIs.Checked                := Settings.ReplaceAsIs;
     checkAddInAccessSpecificator.Checked    := Settings.AddInAccessSpecificator;
+    checkChangeCommentType.Checked          := Settings.ChangeCommentType;
   finally
     IntoUpdateSettings := false;
   end;

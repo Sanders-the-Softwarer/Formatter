@@ -444,6 +444,25 @@ object FormMain: TFormMain
           Value = 3
           OnChange = UpdateRequired
         end
+        object GroupBox4: TGroupBox
+          Left = 162
+          Top = 290
+          Width = 153
+          Height = 51
+          Caption = ' '#1056#1072#1079#1088#1077#1096#1080#1090#1100' '
+          TabOrder = 8
+          object checkChangeCommentType: TCheckBox
+            Left = 13
+            Top = 22
+            Width = 128
+            Height = 17
+            Caption = #1084#1077#1085#1103#1090#1100' '#1082#1086#1084#1084#1077#1085#1090#1072#1088#1080#1080
+            Checked = True
+            State = cbChecked
+            TabOrder = 0
+            OnClick = UpdateRequired
+          end
+        end
       end
     end
   end

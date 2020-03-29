@@ -1,0 +1,13 @@
+-- Ещё один баг на нелепый перенос. Делать знак конкатенации на отдельной
+-- строке совершенно не обязательно
+
+select
+    case
+        when decode(:old.id_def_dt_income_expense_kind, :new.id_def_dt_income_expense_kind, 1, 0) = 0 then
+            'id_def_dt_income_expense_kind: ' || 
+            :old.id_def_dt_income_expense_kind || 
+            ' -> ' || 
+            :new.id_def_dt_income_expense_kind
+    end
+from 
+    dual

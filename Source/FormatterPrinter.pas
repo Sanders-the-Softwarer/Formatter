@@ -24,6 +24,8 @@ type
   { Принтер для вывода форматированного текста }
   TFormatterPrinter = class(TBasePrinter)
   strict private
+    { Очередь печати }
+    TokenQueue: TQueue<TToken>;
     { Компонент выходного текста и его метрик }
     TextBuilder: TTextBuilder;
     { Режим печати }
@@ -55,6 +57,8 @@ type
     { Информация режима сохранения исходного форматирования }
     OriginalFormatCount, OriginalFormatStartLine: integer;
     OriginalFormatToken: TToken;
+    { Флаг перекрытия настройки из Settings }
+    FForceChangeCommentType: boolean;
   strict protected
     TokenPos, TokenLen: TDictionary<TToken, integer>;
     function SpaceRequired(ALeft, ARight: TToken): boolean;
@@ -65,7 +69,7 @@ type
                        ASkipComments: TCommentPositions = [];
                        ASaveTokenPositions: boolean = false);
     destructor Destroy; override;
-    procedure BeginPrint; override;
+    procedure Clear; override;
     procedure EndPrint; override;
     procedure PrintItem(AItem: TObject); override;
     procedure PrintToken(AToken: TToken); override;
@@ -88,6 +92,8 @@ type
     function CurrentLine: integer;
     function CurrentCol: integer;
     function CurrentMaxWidth: integer;
+  public
+    property ForceChangeCommentType: boolean read FForceChangeCommentType write FForceChangeCommentType;
   end;
 
 const
@@ -122,6 +128,7 @@ begin
     TokenLen := TDictionary<TToken, integer>.Create;
   end;
   Indents := TStack<integer>.Create;
+  TokenQueue := TQueue<TToken>.Create;
 end;
 
 destructor TFormatterPrinter.Destroy;
@@ -130,21 +137,25 @@ begin
   FreeAndNil(TokenLen);
   FreeAndNil(Indents);
   FreeAndNil(TextBuilder);
+  FreeAndNil(TokenQueue);
   inherited;
 end;
 
 { Инициализация перед началом печати }
-procedure TFormatterPrinter.BeginPrint;
+procedure TFormatterPrinter.Clear;
 begin
   inherited;
   TextBuilder.Clear;
-  Shift   := 0;
+  Shift := 0;
   ForceNextLine := false;
   OriginalFormatCount := 0;
   OriginalFormatToken := nil;
   if Assigned(TokenPos) then TokenPos.Clear;
   if Assigned(TokenLen) then TokenLen.Clear;
   Indents.Clear;
+  TokenQueue.Clear;
+  PrevToken := nil;
+  FarPrevToken := nil;
 end;
 
 { Вывод готового результата }
@@ -157,9 +168,7 @@ begin
     EmptyLine := true;
     PrintSpecialComment('!!! ВНИМАНИЕ !!! К концу печати осталась незакрытая команда отмены форматирования !!!');
   end;
-  { Закроем текущую печать }
-  PrevToken := nil;
-  FarPrevToken := nil;
+  { Всё, можно закрывать }
   inherited;
 end;
 
@@ -236,9 +245,6 @@ end;
 { Вывод очередной лексемы с навешиванием всех наворотов по форматированию }
 procedure TFormatterPrinter.PrintToken(AToken: TToken);
 
-  var
-    Tokens: TQueue<TToken>;
-
   { Добавление лексемы в очередь с разворачиванием и фильтрацией комментариев }
   procedure AddToken(AToken: TToken);
   begin
@@ -246,7 +252,7 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     if (AToken is TComment) and (TComment(AToken).Position in SkipComments) then exit;
     AddToken(AToken.CommentFarAbove);
     AddToken(AToken.CommentAbove);
-    Tokens.Enqueue(AToken);
+    TokenQueue.Enqueue(AToken);
     AddToken(AToken.CommentAfter);
     AddToken(AToken.CommentBelow);
     AddToken(AToken.CommentFarBelow);
@@ -345,7 +351,9 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
       if (EOLLimit > 0) and (TextBuilder.Col = 1)
         then Value := AComment.ShiftedValue(Shift + 1)
         else Value := AComment.ShiftedValue(TextBuilder.Col)
-    else if IsComment and LineComment and (SupNextLine > 0) and (AComment.Position = poAfter) then
+    else if IsComment and LineComment and (SupNextLine > 0) and
+            (AComment.Position = poAfter) and
+            (ForceChangeCommentType or Settings.ChangeCommentType) then
       begin
         Value := '/* ' + Trim(AToken.Value.Substring(2)) + ' */';
         LineComment := false;
@@ -400,16 +408,10 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
   end;
 
 begin
-  { Создадим очередь печати лексем }
-  Tokens := TQueue<TToken>.Create;
-  try
-    { Добавим туда лексему и рекурсивно развернём все связанные с ней комментарии }
-    AddToken(AToken);
-    { Ну а теперь напечатаем очередь }
-    while Tokens.Count > 0 do InternalPrint(Tokens.Dequeue);
-  finally
-    FreeAndNil(Tokens);
-  end;
+  { Добавим лексему в очередь и рекурсивно развернём все связанные с ней комментарии }
+  AddToken(AToken);
+  { Ну а теперь напечатаем очередь }
+  while TokenQueue.Count > 0 do InternalPrint(TokenQueue.Dequeue);
 end;
 
 { Вывод синтаксической конструкции с расстановкой выравниваний }

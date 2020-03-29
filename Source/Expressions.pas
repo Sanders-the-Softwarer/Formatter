@@ -67,7 +67,7 @@ type
   { Информация о форматировании выражения }
   TTermInfo = record
     Priority, SingleLineLen, MultiLineLen, PrevDelimiterLen, PostDelimiterLen, RulerNumber: integer;
-    HasOp, SingleLine, LineBreak, BreakBeforeDelimiter: boolean;
+    HasOp, SingleLine, LineBreak, BreakBeforeDelimiter, BreakAfterDelimiter: boolean;
     RulerChar: char;
   end;
 
@@ -254,37 +254,50 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   procedure CollectInfo;
   var
     DraftPrinter: TFormatterPrinter;
-    i: integer;
+    i, DelimiterLen: integer;
   begin
     SetLength(TermInfo, Count);
     DraftPrinter := TFormatterPrinter.Create(APrinter.Settings, true, [poAbove, poBelow, poFarAbove, poFarBelow], false);
+    DraftPrinter.ForceChangeCommentType := true;
     try
       DraftPrinter.BeginPrint;
       for i := 0 to Count - 1 do
       begin
-        DraftPrinter.NextLine;
+        { Померяем ширину при печати в обычном режиме }
+        DraftPrinter.Clear;
         DraftPrinter.PrintItem(Item(i));
         TermInfo[i].MultiLineLen := DraftPrinter.CurrentMaxWidth;
-        DraftPrinter.NextLine;
+        { Померяем ширину при печати в однострочном режиме }
+        DraftPrinter.Clear;
         DraftPrinter.SupressNextLine(true);
         DraftPrinter.PrintItem(Item(i));
         TermInfo[i].SingleLineLen := DraftPrinter.CurrentMaxWidth;
         DraftPrinter.SupressNextLine(false);
-        DraftPrinter.NextLine;
+        { Померяем ширину разделителя }
+        DraftPrinter.Clear;
         DraftPrinter.PrintItem(Delimiter(i));
+        DelimiterLen := DraftPrinter.CurrentMaxWidth;
+        { Заполним информацию о терминальном символе }
         TermInfo[i].Priority := 666;
         TermInfo[i].HasOp := HasOperation(TToken(Delimiter(i)), TermInfo[i].Priority);
         if TermInfo[i].HasOp then
         begin
+          { У and, относящегося к between, опустим приоритет так, чтобы по нему не переносилось }
           if (i > 0) and Assigned(Delimiter(i)) and Assigned(Delimiter(i-1))
             and ((Delimiter(i) as TToken).Value = 'and')
             and ((Delimiter(i - 1) as TToken).Value.Contains('between')) then
             TermInfo[i].Priority := 666;
-          TermInfo[i].BreakBeforeDelimiter := (TermInfo[i].Priority < 0);
-          if not TermInfo[i].BreakBeforeDelimiter then
-            TermInfo[i].PostDelimiterLen := DraftPrinter.CurrentCol
-          else if i < Count - 1 then
-            TermInfo[i + 1].PrevDelimiterLen := DraftPrinter.CurrentCol;
+          { В зависимости от операции проставим перенос до или после операции }
+          if TermInfo[i].Priority < 0 then
+            begin
+              TermInfo[i].BreakBeforeDelimiter := true;
+              if i < Count - 1 then TermInfo[i + 1].PostDelimiterLen := DelimiterLen;
+            end
+          else
+            begin
+              TermInfo[i].BreakAfterDelimiter := true;
+              TermInfo[i].PostDelimiterLen := DelimiterLen;
+            end;
         end;
         with TermInfo[i] do
           SingleLine := (SingleLineLen = MultiLineLen) or (SingleLineLen <= Settings.PreferredExpressionLength);
@@ -444,6 +457,23 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     PutRulers(Start, Finish);
   end;
 
+  { Улучшение читаемости выражений с длинными операндами }
+  procedure BeautifyLongTerms;
+  var i: integer;
+  begin
+    for i := 0 to Count - 1 do
+      { Если у нас в строке один длинный операнд, для читаемости
+        перенесём знак операции на следующую строку }
+      if TermInfo[i].LineBreak and
+         ((i = 0) or (TermInfo[i - 1].LineBreak)) and
+         TermInfo[i].BreakAfterDelimiter and
+         (not TermInfo[i].SingleLine or
+          (TermInfo[i].SingleLineLen > Settings.PreferredExpressionLength div 2))
+         and (Delimiter(i) is TToken)
+         and (TToken(Delimiter(i)).Value <> ',')
+        then TermInfo[i].BreakBeforeDelimiter := true;
+  end;
+
   { Печать получившегося выражения }
   procedure PrintExpression;
 
@@ -485,17 +515,12 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         APrinter.SupressNextLine(false)
       else
         APrinter.Undent;
-      if TermInfo[i].LineBreak and TermInfo[i].BreakBeforeDelimiter then NewLineCombo
-      else if TermInfo[i].LineBreak and ((i = 0) or (TermInfo[i - 1].LineBreak) and
-              (not TermInfo[i].SingleLine or TermInfo[i].SingleLine and (TermInfo[i].SingleLineLen > Settings.PreferredExpressionLength div 2)))
-              and (Delimiter(i) is TToken)
-              and (TToken(Delimiter(i)).Value <> ',')
-        then NewLineCombo;
+      if TermInfo[i].LineBreak and TermInfo[i].BreakBeforeDelimiter then NewLineCombo;
 //      APrinter.PrintRulerItem(RulerName, Delimiter(i));
       APrinter.PrintItem(Delimiter(i));
       Inc(Cnt);
       RulerName := Format('expr-%d', [Cnt]);
-      if TermInfo[i].LineBreak and not TermInfo[i].BreakBeforeDelimiter then NewLineCombo;
+      if TermInfo[i].LineBreak and TermInfo[i].BreakAfterDelimiter then NewLineCombo;
     end;
     APrinter.PopIndent;
   end;
@@ -505,6 +530,7 @@ begin
   begin
     CollectInfo;
     CheckForBreaks;
+    BeautifyLongTerms;
   end;
   PrintExpression;
 end;

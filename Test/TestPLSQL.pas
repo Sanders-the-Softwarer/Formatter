@@ -494,6 +494,7 @@ end;
 
 procedure _Комментарии.Комментарий_Не_Должен_Убивать_Закрывающую_Скобку;
 begin
+  Settings.ChangeCommentType := true;
 end;
 
 procedure _Комментарии.Заголовочный_Комментарий;
@@ -749,12 +750,13 @@ end;
 
 procedure _Форматирование_Выражений.Конкатенация_Должна_Делать_Перенос_По_Одинаковым_Символам;
 begin
-  Settings.PreferredExpressionLength := 60;
+  Settings.PreferredExpressionLength := 100;
 end;
 
 procedure _Форматирование_Выражений.Перенос_При_Присвоении_Многострочного_Выражения;
 begin
   Settings.PreferredExpressionLength := 120;
+  PostponeTill(2020, 4, 5);
 end;
 
 { _Контрольные_Примеры }
@@ -803,6 +805,7 @@ end;
 
 procedure _Контрольные_Примеры.top_lc_calc_utils;
 begin
+  PostponeTill(2020, 4, 1);
 end;
 
 initialization

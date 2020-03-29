@@ -51,6 +51,7 @@ type
     constructor Create(AListBox: TListBox);
     destructor Destroy; override;
     procedure BeginPrint; override;
+    procedure Clear; override;
     procedure PrintToken(AToken: TToken); override;
     procedure EndPrint; override;
     procedure ControlChanged; override;
@@ -68,6 +69,7 @@ type
     constructor Create(ATreeView: TTreeView);
     destructor Destroy; override;
     procedure BeginPrint; override;
+    procedure Clear; override;
     procedure PrintToken(AToken: TToken); override;
     procedure PrintStatement(AStatement: TStatement); override;
     procedure EndPrint; override;
@@ -204,11 +206,16 @@ begin
   inherited;
 end;
 
-{ Инициализация и подготовка к печати }
+{ Подготовка к печати }
 procedure TTokenizerPrinter.BeginPrint;
 begin
   inherited;
   ListBox.Items.BeginUpdate;
+end;
+
+{ Инициализация принтера }
+procedure TTokenizerPrinter.Clear;
+begin
   ListBox.Items.Clear;
   Tokens.Clear;
   LineNumbers.Clear;
@@ -270,11 +277,13 @@ begin
   TreeView := ATreeView;
   inherited Create;
   Tokens := TDictionary<TToken, TTreeNode>.Create;
+  Parents := TStack<TTreeNode>.Create;
 end;
 
 destructor TSyntaxTreePrinter.Destroy;
 begin
   FreeAndNil(Tokens);
+  FreeAndNil(Parents);
   inherited;
 end;
 
@@ -283,16 +292,19 @@ procedure TSyntaxTreePrinter.BeginPrint;
 begin
   inherited;
   TreeView.Items.BeginUpdate;
+end;
+
+procedure TSyntaxTreePrinter.Clear;
+begin
   TreeView.Items.Clear;
   Tokens.Clear;
-  Parents := TStack<TTreeNode>.Create;
+  Parents.Clear;
   Parents.Push(nil);
 end;
 
 { Завершение печати и вывод результата }
 procedure TSyntaxTreePrinter.EndPrint;
 begin
-  FreeAndNil(Parents);
   TreeView.Items.EndUpdate;
   inherited;
 end;
