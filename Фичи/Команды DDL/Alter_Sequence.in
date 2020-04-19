@@ -1,4 +1,4 @@
-create sequence seq
+alter sequence seq
     minvalue 1
     maxvalue 999999999999999999999999999
     start with 100000

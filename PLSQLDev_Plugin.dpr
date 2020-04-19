@@ -4,6 +4,13 @@
 
 uses
   Windows,
+  Alter in 'Source\DDL\Alter.pas',
+  Create in 'Source\DDL\Create.pas',
+  DatabaseLink in 'Source\DDL\DatabaseLink.pas',
+  Role in 'Source\DDL\Role.pas',
+  Sequence in 'Source\DDL\Sequence.pas',
+  Synonym in 'Source\DDL\Synonym.pas',
+  Trigger in 'Source\PLSQL\Trigger.pas',
   BasePrinter in 'Source\BasePrinter.pas',
   Commons in 'Source\Commons.pas',
   Controller in 'Source\Controller.pas',
@@ -11,6 +18,7 @@ uses
   DML in 'Source\DML.pas',
   Expressions in 'Source\Expressions.pas',
   FormatterPrinter in 'Source\FormatterPrinter.pas',
+  Keywords in 'Source\Keywords.pas',
   Parser in 'Source\Parser.pas',
   PLSQL in 'Source\PLSQL.pas',
   Printer in 'Source\Printer.pas',
@@ -21,14 +29,7 @@ uses
   TextBuilder in 'Source\TextBuilder.pas',
   Tokenizer in 'Source\Tokenizer.pas',
   Tokens in 'Source\Tokens.pas',
-  Utils in 'Source\Utils.pas',
-  Trigger in 'Source\PLSQL\Trigger.pas',
-  Create in 'Source\DDL\Create.pas',
-  Alter in 'Source\DDL\Alter.pas',
-  Role in 'Source\DDL\Role.pas',
-  Keywords in 'Source\Keywords.pas',
-  Sequence in 'Source\DDL\Sequence.pas',
-  Synonym in 'Source\DDL\Synonym.pas';
+  Utils in 'Source\Utils.pas';
 
 const
   Desc  = 'Formatter';

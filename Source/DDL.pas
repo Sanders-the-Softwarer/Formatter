@@ -727,7 +727,8 @@ begin
   if not Assigned(_Drop) then exit(false);
   _Type := Keyword(['table', 'procedure', 'function', 'package', 'package body',
                     'view', 'index', 'type', 'type body', 'sequence', 'trigger',
-                    'synonym', 'public synonym', 'role']);
+                    'synonym', 'public synonym', 'role', 'database link',
+                    'public database link']);
   TQualifiedIdent.Parse(Self, Source, _Name);
   if IsTable then _CascadeConstraints := Keyword('cascade constraints');
   if IsType then _Force := Keyword('force');

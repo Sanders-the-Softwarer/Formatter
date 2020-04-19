@@ -118,6 +118,13 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="Source\DDL\Alter.pas"/>
+        <DCCReference Include="Source\DDL\Create.pas"/>
+        <DCCReference Include="Source\DDL\DatabaseLink.pas"/>
+        <DCCReference Include="Source\DDL\Role.pas"/>
+        <DCCReference Include="Source\DDL\Sequence.pas"/>
+        <DCCReference Include="Source\DDL\Synonym.pas"/>
+        <DCCReference Include="Source\PLSQL\Trigger.pas"/>
         <DCCReference Include="Source\BasePrinter.pas"/>
         <DCCReference Include="Source\Commons.pas"/>
         <DCCReference Include="Source\Controller.pas"/>
@@ -125,6 +132,7 @@
         <DCCReference Include="Source\DML.pas"/>
         <DCCReference Include="Source\Expressions.pas"/>
         <DCCReference Include="Source\FormatterPrinter.pas"/>
+        <DCCReference Include="Source\Keywords.pas"/>
         <DCCReference Include="Source\Parser.pas"/>
         <DCCReference Include="Source\PLSQL.pas"/>
         <DCCReference Include="Source\Printer.pas"/>
@@ -136,13 +144,6 @@
         <DCCReference Include="Source\Tokenizer.pas"/>
         <DCCReference Include="Source\Tokens.pas"/>
         <DCCReference Include="Source\Utils.pas"/>
-        <DCCReference Include="Source\PLSQL\Trigger.pas"/>
-        <DCCReference Include="Source\DDL\Create.pas"/>
-        <DCCReference Include="Source\DDL\Alter.pas"/>
-        <DCCReference Include="Source\DDL\Role.pas"/>
-        <DCCReference Include="Source\Keywords.pas"/>
-        <DCCReference Include="Source\DDL\Sequence.pas"/>
-        <DCCReference Include="Source\DDL\Synonym.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

@@ -217,6 +217,7 @@ type
     procedure fm_pc_sequences;
     procedure fm_pc_triggers;
     procedure fm_pc_user;
+    procedure fm_pc_v_pcgi_link;
     procedure top_lc_calc_utils;
   end;
 
@@ -403,12 +404,12 @@ procedure _Выравнивание.Пустота_Не_Должна_Сдвиг�
 begin
   Settings.AlignVariables := true;
   Settings.AlignFields    := true;
-  PostponeTill(2020, 4, 10);
+  PostponeTill(2020, 4, 30);
 end;
 
 procedure _Выравнивание.Условий_В_Where;
 begin
-  PostponeTill(2020, 4, 4);
+  PostponeTill(2020, 4, 30);
   Settings.AlignExpressions := true;
 end;
 
@@ -756,7 +757,7 @@ end;
 procedure _Форматирование_Выражений.Перенос_При_Присвоении_Многострочного_Выражения;
 begin
   Settings.PreferredExpressionLength := 120;
-  PostponeTill(2020, 4, 5);
+  PostponeTill(2020, 4, 30);
 end;
 
 { _Контрольные_Примеры }
@@ -799,13 +800,18 @@ procedure _Контрольные_Примеры.fm_pc_user;
 begin
 end;
 
+procedure _Контрольные_Примеры.fm_pc_v_pcgi_link;
+begin
+  PostponeTill(2020, 4, 30);
+end;
+
 procedure _Контрольные_Примеры.fm_cc_user;
 begin
 end;
 
 procedure _Контрольные_Примеры.top_lc_calc_utils;
 begin
-  PostponeTill(2020, 4, 1);
+  PostponeTill(2020, 4, 30);
 end;
 
 initialization

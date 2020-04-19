@@ -57,6 +57,7 @@ type
     procedure Drop_Type;
     procedure Drop_Type_Body;
     procedure Drop_Trigger;
+    procedure Drop_Database_Link;
   end;
 
   { Тесты на comment }
@@ -72,9 +73,11 @@ type
   published
     procedure Create_Synonym;
     procedure Create_Role;
+    procedure Create_Database_Link;
     procedure Grant;
     procedure Alter_Role;
     procedure Alter_Sequence;
+    procedure Alter_Database_Link;
     procedure Set_Role;
   end;
 
@@ -158,6 +161,10 @@ begin
   Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды DDL\Drop';
 end;
 
+procedure _Drop.Drop_Database_Link;
+begin
+end;
+
 procedure _Drop.Drop_Function;
 begin
 end;
@@ -227,9 +234,16 @@ procedure _Команды_DDL.Alter_Role;
 begin
 end;
 
+procedure _Команды_DDL.Alter_Database_Link;
+begin
+end;
+
 procedure _Команды_DDL.Alter_Sequence;
 begin
-  PostponeTill(2020, 4, 4);
+end;
+
+procedure _Команды_DDL.Create_Database_Link;
+begin
 end;
 
 procedure _Команды_DDL.Create_Role;
@@ -246,7 +260,7 @@ end;
 
 procedure _Команды_DDL.Set_Role;
 begin
-  PostponeTill(2020, 4, 10);
+  PostponeTill(2020, 4, 30);
 end;
 
 initialization

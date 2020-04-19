@@ -588,7 +588,7 @@ function TMerger.InternalNext: TToken;
       else
         if S3 <> '' then Source.Restore(P4);
     AResult := TEpithet.Create(S, T1.Line, T1.Col);
-    TEpithet(AResult).IsKeyword := true;
+    {!! Ќ≈Ћ№«я !! TEpithet(AResult).IsKeyword := true; например, из-за grant dissassociate statistics to public }
     Result := true;
     Exclude(T1);
     Exclude(T2);
@@ -616,6 +616,7 @@ begin
   if Check(Result, 'after', 'statement') then exit;
   if Check(Result, 'after', 'suspend') then exit;
   if Check(Result, 'associate', 'statistics') then exit;
+  if Check(Result, 'authenticated', 'by') then exit;
   if Check(Result, 'authid', 'current_user') then exit;
   if Check(Result, 'authid', 'definer') then exit;
   if Check(Result, 'before', 'each', 'row') then exit;
@@ -627,17 +628,22 @@ begin
   if Check(Result, 'bulk', 'collect', 'into') then exit;
   if Check(Result, 'cascade', 'constraints') then exit;
   if Check(Result, 'compound', 'trigger') then exit;
+  if Check(Result, 'connect', 'by', 'nocycle') then exit;
   if Check(Result, 'connect', 'by') then exit;
+  { !!Ќ≈Ћ№«я!! if Check(Result, 'connect', 'to') then exit; »з-за grant connect to user }
   if Check(Result, 'cross', 'apply') then exit;
+  if Check(Result, 'database', 'link') then exit;
   if Check(Result, 'default', 'tablespace') then exit;
   if Check(Result, 'disassociate', 'statistics') then exit;
-  if Check(Result, 'for', 'each', 'row') then exit;
-  if Check(Result, 'full', 'join') then exit;
-  if Check(Result, 'full', 'natural', 'join') then exit;
-  if Check(Result, 'full', 'outer', 'join') then exit;
   if Check(Result, 'end', 'case') then exit;
   if Check(Result, 'end', 'if') then exit;
   if Check(Result, 'end', 'loop') then exit;
+  if Check(Result, 'for', 'each', 'row') then exit;
+  // !! Ќ≈Ћ№«я !! if Check(Result, 'for', 'update') then exit; »з-за create trigger ... for update on
+  if Check(Result, 'full', 'join') then exit;
+  if Check(Result, 'full', 'natural', 'join') then exit;
+  if Check(Result, 'full', 'outer', 'join') then exit;
+  if Check(Result, 'grouping', 'sets') then exit;
   if Check(Result, 'identified', 'by') then exit;
   if Check(Result, 'identified', 'externally') then exit;
   if Check(Result, 'identified', 'globally') then exit;
@@ -665,15 +671,21 @@ begin
   if Check(Result, 'not', 'identified') then exit;
   if Check(Result, 'not', 'in') then exit;
   if Check(Result, 'not', 'like') then exit;
+  if Check(Result, 'nulls', 'first') then exit;
+  if Check(Result, 'nulls', 'last') then exit;
+  if Check(Result, 'order', 'by') then exit;
+  if Check(Result, 'order', 'siblings', 'by') then exit;
   if Check(Result, 'outer', 'apply') then exit;
   if Check(Result, 'package', 'body') then exit;
   if Check(Result, 'partition', 'by') then exit;
+  if Check(Result, 'public', 'database', 'link') then exit;
   if Check(Result, 'public', 'synonym') then exit;
   if Check(Result, 'quota', 'unlimited', 'on') then exit;
   if Check(Result, 'right', 'join') then exit;
   if Check(Result, 'right', 'natural', 'join') then exit;
   if Check(Result, 'right', 'outer', 'join') then exit;
   if Check(Result, 'self', 'as', 'result') then exit;
+  if Check(Result, 'skip', 'locked') then exit;
   if Check(Result, 'start', 'with') then exit;
   if Check(Result, 'subpartition', 'by') then exit;
   if Check(Result, 'temporary', 'tablespace') then exit;
@@ -682,8 +694,10 @@ begin
   if Check(Result, 'when', 'matched', 'then') then exit;
   if Check(Result, 'when', 'not', 'matched', 'then') then exit;
   if Check(Result, 'with', 'admin', 'option') then exit;
+  if Check(Result, 'with', 'check', 'option') then exit;
   if Check(Result, 'with', 'grant', 'option') then exit;
   if Check(Result, 'with', 'hierarchy', 'option') then exit;
+  if Check(Result, 'with', 'read', 'only') then exit;
   if Check(Result, 'with', 'time', 'zone') then exit;
   { –аз не удалось - возвращаем первую лексему }
   Source.Restore(P2);

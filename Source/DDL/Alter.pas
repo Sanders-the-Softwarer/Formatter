@@ -29,7 +29,7 @@ type
 
 implementation
 
-uses Role, Sequence;
+uses Role, Sequence, DatabaseLink;
 
 { TAlter }
 
@@ -39,7 +39,8 @@ begin
   _Alter := Keyword('alter');
   if not Assigned(_Alter) then exit(false);
   if not TSequence.Parse(Self, Source, _What) and
-     not TRole.Parse(Self, Source, _What) then
+     not TRole.Parse(Self, Source, _What) and
+     not TDatabaseLink.Parse(Self, Source, _What) then
     TUnexpectedToken.Parse(Self, Source, _What);
   inherited;
 end;

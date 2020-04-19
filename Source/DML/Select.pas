@@ -1,0 +1,1137 @@
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                           Форматизатор исходников                          //
+//                                                                            //
+//                                Команда SELECT                              //
+//                                                                            //
+//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+unit Select;
+
+interface
+
+uses Statements, Tokens, Printer, DML;
+
+type
+  { Собственно, SQL-запрос }
+  TNewSelect = class(TDML)
+  strict private
+    _SubQuery, _ForUpdate: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+    procedure InternalMatch(AStatement: TStatement); override;
+  public
+  end;
+
+  { Встраиваемый запрос }
+  TSubQuery = class(TStatement)
+  strict private
+    _Main, _OrderBy, _RowLimit, _NextQuery: TStatement;
+    _Union: TEpithet;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+    procedure InternalMatch(AStatement: TStatement); override;
+  end;
+
+  { Блок запроса данных }
+  TQueryBlock = class(TStatement)
+  strict private
+    _With, _Select, _Distinct, _From: TEpithet;
+    _WithList, _SelectList, _FromList, _Where, _ConnectBy, _GroupBy,
+      _Model: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+    procedure InternalMatch(AStatement: TStatement); override;
+  end;
+
+  { Выражение for update }
+  TForUpdate = class(TStatement)
+  strict private
+    _ForUpdate, _Of, _Mode: TEpithet;
+    _Columns: TStatement;
+    _WaitTime: TNumber;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Выражение order by }
+  TOrderBy = class(TStatement)
+  strict private
+    _OrderBy: TEpithet;
+    _List: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Элемент списка order by }
+  TOrderByItem = class(TStatement)
+  strict private
+    _Expr: TStatement;
+    _Direction, _Nulls: TEpithet;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Выражение row limit }
+  TRowLimit = class(TStatement)
+  strict private
+    _Offset, _OffsetRows, _Fetch, _First, _Percent, _FetchRows,
+      _Only, _With, _Ties: TEpithet;
+    _OffsetValue, _FetchValue: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Элемент списка with }
+  TWithItem = class(TStatement)
+  strict private
+    _Body: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { subquery factoring clause }
+  TFactoring = class(TStatement)
+  strict private
+    _Name, _As: TEpithet;
+    _Columns, _SubQuery, _Search, _Cycle: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { search clause в factoring }
+  TFactoringSearch = class(TStatement)
+  strict private
+    _Search, _Depth, _First, _By, _Set: TEpithet;
+    _Items, _Column: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { cycle clause в factoring }
+  TFactoringCycle = class(TStatement)
+  strict private
+    _Cycle, _Set, _Alias, _To, _Default: TEpithet;
+    _CycleValue, _NoCycleValue: TLiteral;
+    _Columns: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Поле в select или аналогичное выражение с алиасом }
+  TAliasedExpression = class(TStatement)
+  strict private
+    _Expression: TStatement;
+    _As, _Alias: TEpithet;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Источник данных во from }
+  TFromField = class(TStatement)
+  strict private
+    _Body: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Ссылка на таблицу во from }
+  TTableReference = class(TStatement)
+  strict private
+    _Only, _Alias: TEpithet;
+    _QueryTableExpression, _Containers, _Flashback, _Pivot, _Unpivot,
+      _RowPattern: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Join-выражение во from }
+  TJoin = class(TStatement)
+  strict private
+    _TableRef, _JoinedTables: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция where }
+  TWhere = class(TStatement)
+  strict private
+    _Where: TEpithet;
+    _Condition: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция start with / connect by }
+  TConnectBy = class(TStatement)
+  strict private
+    _StartWith, _ConnectBy: TEpithet;
+    _StartCondition, _ConnectCondition: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция group by / having }
+  TGroupBy = class(TStatement)
+  strict private
+    _GroupBy, _Having: TEpithet;
+    _Groups, _Condition: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Элемент группировки }
+  TGroupItem = class(TStatement)
+  strict private
+    _Expr: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция cube либо rollup }
+  TCubeRollup = class(TStatement)
+  strict private
+    _Name: TEpithet;
+    _Expr: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция grouping sets }
+  TGroupingSets = class(TStatement)
+  strict private
+    _GroupingSets: TEpithet;
+    _Items: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция model }
+  TModel = class(TStatement)
+  strict private
+    _Model: TEpithet;
+    _CellReference, _ReturnRows, _ReferenceModels, _MainModel: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция query table expression }
+  TQueryTableExpression = class(TStatement)
+  strict private
+    _Body: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция table collection expression }
+  TTableCollectionExpression = class(TStatement)
+  strict private
+    _Table: TEpithet;
+    _Value: TStatement;
+    _Outer: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция containers }
+  TContainers = class(TStatement)
+  strict private
+    _Containers: TEpithet;
+    _Value: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция lateral }
+  TLateral = class(TStatement)
+  strict private
+    _Lateral: TEpithet;
+    _OpenBracket, _CloseBracket: TTerminal;
+    _SubQuery, _Restrictions: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция subquery restrictions }
+  TSubqueryRestrictions = class(TStatement)
+  strict private
+    _With, _Constraint, _Name: TEpithet;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция flashback }
+  TFlashback = class(TStatement)
+  strict private
+    _Versions, _Between, _Scn, _Timestamp, _And, _Period, _For, _ValidTimeColumn,
+      _As, _Of: TEpithet;
+    _Expr1, _Expr2: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция pivot }
+  TPivot = class(TStatement)
+  strict private
+    _Pivot, _Xml: TEpithet;
+    _Rest: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Внутренняя часть конструкции pivot }
+  TPivotRest = class(TStatement)
+  strict private
+    _Aggregates, _PivotFor, _PivotIn: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция pivot for }
+  TPivotFor = class(TStatement)
+  strict private
+    _For: TEpithet;
+    _Expr: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция pivot in }
+  TPivotIn = class(TStatement)
+  strict private
+    _In: TEpithet;
+    _Rest: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Внутренняя часть конструкции pivot in }
+  TPivotInRest = class(TStatement)
+  strict private
+    _Body: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция unpivot }
+  TUnpivot = class(TStatement)
+  strict private
+    _Unpivot, _Include, _Nulls: TEpithet;
+    _Rest: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Внутренняя часть конструкции unpivot }
+  TUnpivotRest = class(TStatement)
+  strict private
+    _Expr, _For, _In: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Упоминание таблицы во from }
+  TTableViewExpression = class(TStatement)
+  strict private
+    _Hierarchies: TEpithet;
+    _Name, _Partition, _HierList, _Sample: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Вторая и последующие таблицы в выражении join }
+  TJoinedTable = class(TStatement)
+  strict private
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция row pattern }
+  TRowPattern = class(TStatement)
+  strict private
+    _MatchRecognize: TEpithet;
+    _Body: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+(*
+  { Внутренняя часть конструкции row pattern }
+  TRowPatternInternal = class(TStatement)
+  strict private
+    _Pattern, _Define: TEpithet;
+    _PartitionBy, _OrderBy, _Measures, _RowsPerMatch, _SkipTo, _RowPattern,
+      _Subset, _Definitions: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция cell reference в model }
+  TCellReference = class(TStatement)
+  strict private
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция return rows в model }
+  TReturnRows = class(TStatement)
+  strict private
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция reference model в model }
+  TReferenceModel = class(TStatement)
+  strict private
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция main model в model }
+  TMainModel = class(TStatement)
+  strict private
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+(*
+
+  { Конструкция  }
+  T = class(TStatement)
+  strict private
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+*)
+
+implementation
+
+uses Commons, Parser, PLSQL;
+
+{ TNewSelect }
+
+function TNewSelect.InternalParse: boolean;
+begin
+  Result := TSubquery.Parse(Self, Source, _SubQuery);
+  if Result then TForUpdate.Parse(Self, Source, _ForUpdate);
+end;
+
+procedure TNewSelect.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_SubQuery, _NextLine, _ForUpdate]);
+end;
+
+procedure TNewSelect.InternalMatch(AStatement: TStatement);
+begin
+  _SubQuery.Match(AStatement);
+end;
+
+{ TForUpdate }
+
+function TForUpdate.InternalParse: boolean;
+begin
+  Result := true;
+  _ForUpdate := Keyword('for update');
+  if not Assigned(_ForUpdate) then exit(false);
+  _Of := Keyword('of');
+  if Assigned(_Of) then TSingleLine<TIdentFields>.Parse(Self, Source, _Columns);
+  _Mode := Keyword(['wait', 'nowait', 'skip locked']);
+  if Assigned(_Mode) and (_Mode.Value = 'wait') then _WaitTime := Number;
+end;
+
+procedure TForUpdate.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_ForUpdate, _Of, _Columns, _Mode, _WaitTime]);
+end;
+
+{ TSubQuery }
+
+function TSubQuery.InternalParse: boolean;
+begin
+  Result := TBracketedStatement<TSubQuery>.Parse(Self, Source, _Main) or
+            TQueryBlock.Parse(Self, Source, _Main);
+  TOrderBy.Parse(Self, Source, _OrderBy);
+  TRowLimit.Parse(Self, Source, _RowLimit);
+  _Union := Keyword(['union all', 'union', 'intersect', 'minus']);
+  if Assigned(_Union) then TSubQuery.Parse(Self, Source, _NextQuery);
+end;
+
+procedure TSubQuery.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Main, _NextLine,
+                       _OrderBy, _NextLine,
+                       _RowLimit, _NextLine,
+                       _Union, _NextLine,
+                       _NextQuery]);
+end;
+
+procedure TSubQuery.InternalMatch(AStatement: TStatement);
+begin
+  _Main.Match(AStatement);
+end;
+
+{ TOrderBy }
+
+function TOrderBy.InternalParse: boolean;
+begin
+  _OrderBy := Keyword(['order by', 'order siblings by']);
+  Result := Assigned(_OrderBy);
+  if Result then TCommaList<TOrderByItem>.Parse(Self, Source, _List);
+end;
+
+procedure TOrderBy.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_OrderBy, _IndentNextLine, _List, _Undent]);
+end;
+
+{ TOrderByItem }
+
+function TOrderByItem.InternalParse: boolean;
+begin
+  Result := TParser.ParseExpression(Self, Source, _Expr);
+  if not Result then exit;
+  _Direction := Keyword(['asc', 'desc']);
+  _Nulls := Keyword(['nulls first', 'nulls last']);
+end;
+
+procedure TOrderByItem.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Expr, _Direction, _Nulls]);
+end;
+
+{ TRowLimit }
+
+function TRowLimit.InternalParse: boolean;
+begin
+  _Offset := Keyword('offset');
+  if Assigned(_Offset) then
+  begin
+    TParser.ParseExpression(Self, Source, _OffsetValue);
+    _OffsetRows := Keyword(['row', 'rows']);
+  end;
+  _Fetch := Keyword('fetch');
+  if Assigned(_Fetch) then
+  begin
+    _First := Keyword(['first', 'next']);
+    TParser.ParseExpression(Self, Source, _FetchValue);
+    _Percent := Keyword('percent');
+    _FetchRows := Keyword(['row', 'rows']);
+    _Only := Keyword('only');
+    _With := Keyword('with');
+    _Ties := Keyword('ties');
+  end;
+  Result := Assigned(_Offset) or Assigned(_Fetch);
+end;
+
+procedure TRowLimit.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Offset, _IndentNextLine,
+                                _OffsetValue, _OffsetRows, _UndentNextLine,
+                       _Fetch,  _IndentNextLine,
+                                _First, _FetchValue, _Percent, _FetchRows,
+                                _Only, _With, _Ties]);
+end;
+
+{ TQueryBlock }
+
+function TQueryBlock.InternalParse: boolean;
+begin
+  Result := true;
+  _With := Keyword('with');
+  if Assigned(_With) then TCommaList<TWithItem>.Parse(Self, Source, _WithList);
+  _Select := Keyword('select');
+  if not Assigned(_Select) then exit(false);
+  _Distinct := Keyword(['distinct', 'unique', 'all']);
+  TCommaList<TAliasedExpression>.Parse(Self, Source, _SelectList);
+  _From := Keyword('from');
+  TCommaList<TFromField>.Parse(Self, Source, _FromList);
+  TWhere.Parse(Self, Source, _Where);
+  TConnectBy.Parse(Self, Source, _ConnectBy);
+  TGroupBy.Parse(Self, Source, _GroupBy);
+  TModel.Parse(Self, Source, _Model);
+end;
+
+procedure TQueryBlock.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_With,      _IndentNextLine,
+                                   _WithList,       _UndentNextLine,
+                       _Select,    _IndentNextLine,
+                                   _SelectList,     _UndentNextLine,
+                       _From,      _IndentNextLine,
+                                   _FromList,       _UndentNextLine,
+                       _Where,     _NextLine,
+                       _ConnectBy, _NextLine,
+                       _GroupBy,   _NextLine,
+                       _Model]);
+end;
+
+procedure TQueryBlock.InternalMatch(AStatement: TStatement);
+begin
+  if Assigned(_SelectList) then _SelectList.Match(AStatement);
+end;
+
+{ TWithItem }
+
+function TWithItem.InternalParse: boolean;
+begin
+  Result := TSubroutine.Parse(Self, Source, _Body) or
+            TFactoring.Parse(Self, Source, _Body);
+end;
+
+procedure TWithItem.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Body);
+end;
+
+{ TFactoring }
+
+function TFactoring.InternalParse: boolean;
+begin
+  Result := true;
+  _Name := Identifier;
+  TBracketedStatement<TIdentFields>.Parse(Self, Source, _Columns);
+  _As := Keyword('as');
+  if not Assigned(_Name) or not Assigned(_As) then exit(false);
+  TBracketedStatement<TSubQuery>.Parse(Self, Source, _SubQuery);
+  TFactoringSearch.Parse(Self, Source, _Search);
+  TFactoringCycle.Parse(Self, Source, _Cycle);
+end;
+
+procedure TFactoring.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Name, _Columns,  _As, _IndentNextLine,
+                              _SubQuery,      _NextLine,
+                              _Search,        _NextLine,
+                              _Cycle,         _UndentNextLine]);
+end;
+
+{ TAliasedExpression }
+
+function TAliasedExpression.InternalParse: boolean;
+begin
+  Result := TParser.ParseExpression(Self, Source, _Expression);
+  if Result then
+  begin
+    _As := Keyword('as');
+    _Alias := Identifier;
+  end;
+end;
+
+procedure TAliasedExpression.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.StartRuler(Settings.AlignFields);
+  APrinter.PrintRulerItems('expression', [_Expression]);
+  APrinter.PrintRulerItems('as', [_As]);
+  APrinter.PrintRulerItems('alias', [_Alias]);
+end;
+
+{ TFromField }
+
+function TFromField.InternalParse: boolean;
+begin
+  Result := TTableReference.Parse(Self, Source, _Body) or
+            TBracketedStatement<TJoin>.Parse(Self, Source, _Body) or
+            TJoin.Parse(Self, Source, _Body);
+end;
+
+procedure TFromField.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Body);
+end;
+
+{ TWhere }
+
+function TWhere.InternalParse: boolean;
+begin
+  _Where := Keyword('where');
+  Result := Assigned(_Where);
+  if Result then TParser.ParseExpression(Self, Source, _Condition);
+end;
+
+procedure TWhere.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Where, _IndentNextLine, _Condition, _Undent]);
+end;
+
+{ TConnectBy }
+
+function TConnectBy.InternalParse: boolean;
+begin
+  Result := true;
+  _StartWith := Keyword('start with');
+  if Assigned(_StartWith) then TParser.ParseExpression(Self, Source, _StartCondition);
+  _ConnectBy := Keyword(['connect by', 'connect by nocycle']);
+  if not Assigned(_ConnectBy) then exit(false);
+  TParser.ParseExpression(Self, Source, _ConnectCondition);
+  if not Assigned(_StartWith) then _StartWith := Keyword('start with');
+  if Assigned(_StartWith) then TParser.ParseExpression(Self, Source, _StartCondition);
+end;
+
+procedure TConnectBy.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_StartWith, _IndentNextLine,
+                                   _StartCondition, _UndentNextLine,
+                       _ConnectBy, _IndentNextLine,
+                                   _ConnectCondition, _UndentNextLine]);
+end;
+
+{ TGroupBy }
+
+function TGroupBy.InternalParse: boolean;
+begin
+  Result := true;
+  _GroupBy := Keyword('group by');
+  if not Assigned(_GroupBy) then exit(false);
+  TCommaList<TGroupItem>.Parse(Self, Source, _Groups);
+  _Having := Keyword('having');
+  if Assigned(_Having) then TParser.ParseExpression(Self, Source, _Condition);
+end;
+
+procedure TGroupBy.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_GroupBy, _IndentNextLine,
+                                 _Groups,         _UndentNextLine,
+                       _Having,  _IndentNextLine,
+                                 _Condition,      _UndentNextLine]);
+end;
+
+{ TGroupItem }
+
+function TGroupItem.InternalParse: boolean;
+begin
+  Result := TCubeRollup.Parse(Self, Source, _Expr) or
+            TGroupingSets.Parse(Self, Source, _Expr) or
+            TParser.ParseExpression(Self, Source, _Expr);
+end;
+
+procedure TGroupItem.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Expr);
+end;
+
+{ TCubeRollup }
+
+function TCubeRollup.InternalParse: boolean;
+begin
+  _Name := Keyword(['cube', 'rollup']);
+  Result := Assigned(_Name);
+  if Result then TParser.ParseExpression(Self, Source, _Expr);
+end;
+
+procedure TCubeRollup.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Name, _Expr]);
+end;
+
+{ TGroupingSets }
+
+function TGroupingSets.InternalParse: boolean;
+begin
+  _GroupingSets := Keyword('grouping sets');
+  Result := Assigned(_GroupingSets);
+  if Result then TBracketedStatement<TCommaList<TGroupItem>>.Parse(Self, Source, _Items);
+end;
+
+procedure TGroupingSets.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_GroupingSets, _IndentNextLine, _Items, _UndentNextLine]);
+end;
+
+{ TFactoringSearch }
+
+function TFactoringSearch.InternalParse: boolean;
+begin
+  Result := true;
+  _Search := Keyword('search');
+  if not Assigned(_Search) then exit(false);
+  _Depth := Keyword(['depth', 'breadth']);
+  _First := Keyword('first');
+  _By    := Keyword('by');
+  TCommaList<TOrderByItem>.Parse(Self, Source, _Items);
+  _Set   := Keyword('set');
+  TQualifiedIdent.Parse(Self, Source, _Column);
+end;
+
+procedure TFactoringSearch.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Search, _Depth, _IndentNextLine,
+                                _First, _By,             _IndentNextLine,
+                                        _Items,          _UndentNextLine,
+                                _Set,   _IndentNextLine,
+                                        _Column,         _Undent, _UndentNextLine]);
+end;
+
+{ TFactoringCycle }
+
+function TFactoringCycle.InternalParse: boolean;
+begin
+  Result := true;
+  _Cycle := Keyword('cycle');
+  if not Assigned(_Cycle) then exit(false);
+  TSingleLine<TIdentFields>.Parse(Self, Source, _Columns);
+  _Set   := Keyword('set');
+  _Alias := Identifier;
+  _To    := Keyword('to');
+  _CycleValue := Literal;
+  _Default := Keyword('default');
+  _NoCycleValue := Literal;
+end;
+
+procedure TFactoringCycle.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Cycle, _Columns, _Set, _Alias, _To, _CycleValue,
+                       _Default, _NoCycleValue]);
+end;
+
+{ TTableReference }
+
+function TTableReference.InternalParse: boolean;
+begin
+  _Only := Keyword('only');
+  if Assigned(_Only) then
+    Result := TBracketedStatement<TQueryTableExpression>.Parse(Self, Source, _QueryTableExpression)
+  else
+    Result := TContainers.Parse(Self, Source, _Containers) or
+              TQueryTableExpression.Parse(Self, Source, _QueryTableExpression);
+  if not Result then exit;
+  if Assigned(_QueryTableExpression) then
+  begin
+    TFlashback.Parse(Self, Source, _Flashback);
+    TPivot.Parse(Self, Source, _Pivot);
+    TUnpivot.Parse(Self, Source, _Unpivot);
+    TRowPattern.Parse(Self, Source, _RowPattern);
+  end;
+  _Alias := Identifier;
+end;
+
+procedure TTableReference.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Only, _QueryTableExpression, _Containers, _Indent]);
+  APrinter.NextLineIf(_Flashback);
+  APrinter.NextLineIf([_Pivot, _Unpivot, _RowPattern]);
+  APrinter.PrintItem(_Alias);
+end;
+
+{ TQueryTableExpression }
+
+function TQueryTableExpression.InternalParse: boolean;
+begin
+  Result := TTableCollectionExpression.Parse(Self, Source, _Body) or
+            TLateral.Parse(Self, Source, _Body) or
+            TTableViewExpression.Parse(Self, Source, _Body);
+end;
+
+procedure TQueryTableExpression.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Body]);
+end;
+
+{ TContainers }
+
+function TContainers.InternalParse: boolean;
+begin
+  _Containers := Keyword('containers');
+  Result := Assigned(_Containers);
+  if Result then TSingleLine<TBracketedStatement<TQualifiedIdent>>.Parse(Self, Source, _Value);
+end;
+
+procedure TContainers.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Containers, _Value]);
+end;
+
+{ TTableCollectionExpression }
+
+function TTableCollectionExpression.InternalParse: boolean;
+begin
+  _Table := Keyword('table');
+  Result := Assigned(_Table);
+  if not Result then exit;
+  TParser.ParseExpression(Self, Source, _Value);
+  _Outer := Terminal('(+)');
+end;
+
+procedure TTableCollectionExpression.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Table, _Value, _Outer]);
+end;
+
+{ TLateral }
+
+function TLateral.InternalParse: boolean;
+begin
+  _Lateral := Keyword('lateral');
+  Result := Assigned(_Lateral);
+  if not Result then exit;
+  _OpenBracket := Terminal('(');
+  TSubQuery.Parse(Self, Source, _SubQuery);
+  TSubQueryRestrictions.Parse(Self, Source, _Restrictions);
+  _CloseBracket := Terminal(')');
+end;
+
+procedure TLateral.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Lateral, _IndentNextLine,
+                                 _OpenBracket,    _IndentNextLine,
+                                                  _SubQuery,       _NextLine,
+                                                  _Restrictions,   _UndentNextLine,
+                                 _CloseBracket,   _Undent]);
+end;
+
+{ TJoin }
+
+function TJoin.InternalParse: boolean;
+begin
+  Result := TTableReference.Parse(Self, Source, _TableRef);
+  if Result then TStrictStatementList<TJoinedTable>.Parse(Self, Source, _JoinedTables);
+end;
+
+procedure TJoin.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_TableRef, _JoinedTables]);
+end;
+
+{ TModel }
+
+function TModel.InternalParse: boolean;
+begin
+  Result := true;
+  _Model := Keyword('model');
+  if not Assigned(_Model) then exit(false);
+  (*
+  TCellReference.Parse(Self, Source, _CellReference);
+  TReturnRows.Parse(Self, Source, _ReturnRows);
+  TStrictStatementList<TReferenceModel>.Parse(Self, Source, _ReferenceModels);
+  TMainModel.Parse(Self, Source, _MainModel);
+  *)
+end;
+
+procedure TModel.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Model, _CellReference, _ReturnRows, _ReferenceModels, _MainModel]);
+end;
+
+{ TSubqueryRestrictions }
+
+function TSubqueryRestrictions.InternalParse: boolean;
+begin
+  Result := true;
+  _With := Keyword(['with check option', 'with read only']);
+  if not Assigned(_With) then exit(false);
+  _Constraint := Keyword('constraint');
+  _Name := Identifier;
+end;
+
+procedure TSubqueryRestrictions.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_With, _Constraint, _Name]);
+end;
+
+{ TFlashback }
+
+function TFlashback.InternalParse: boolean;
+begin
+  _Versions := Keyword('versions');
+  if Assigned(_Versions) then
+  begin
+    _Period := Keyword('period');
+    _For := Keyword('for');
+    if Assigned(_Period) or Assigned(_For) then _ValidTimeColumn := Identifier;
+    _Between := Keyword('between');
+    _Scn := Keyword('scn');
+    _Timestamp := Keyword('timestamp');
+    TParser.ParseExpression(Self, Source, _Expr1);
+    _And := Keyword('and');
+    TParser.ParseExpression(Self, Source, _Expr2);
+    exit(true);
+  end;
+  _As := Keyword('as');
+  if Assigned(_As) then
+  begin
+    _Of := Keyword('of');
+    _Scn := Keyword('scn');
+    _Timestamp := Keyword('timestamp');
+    _Period := Keyword('period');
+    _For := Keyword('for');
+    if Assigned(_Period) or Assigned(_For) then _ValidTimeColumn := Identifier;
+    TParser.ParseExpression(Self, Source, _Expr1);
+    exit(true);
+  end;
+  Result := false;
+end;
+
+procedure TFlashback.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Versions, _As, _Of, _Period, _For, _ValidTimeColumn,
+    _Between, _Scn, _Timestamp, _Expr1, _And, _Expr2]);
+end;
+
+{ TPivot }
+
+function TPivot.InternalParse: boolean;
+begin
+  Result := true;
+  _Pivot := Keyword('pivot');
+  if not Assigned(_Pivot) then exit(false);
+  _Xml   := Keyword('xml');
+  TBracketedStatement<TPivotRest>.Parse(Self, Source, _Rest);
+end;
+
+procedure TPivot.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Pivot, _Xml, _Rest]);
+end;
+
+{ TPivotRest }
+
+function TPivotRest.InternalParse: boolean;
+begin
+  Result := TCommaList<TAliasedExpression>.Parse(Self, Source, _Aggregates);
+  if not Result then exit;
+  TPivotFor.Parse(Self, Source, _PivotFor);
+  TPivotIn.Parse(Self, Source, _PivotIn);
+end;
+
+procedure TPivotRest.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Aggregates, _PivotFor, _PivotIn]);
+end;
+
+{ TPivotFor }
+
+function TPivotFor.InternalParse: boolean;
+begin
+  Result := true;
+  _For := Keyword('for');
+  if not Assigned(_For) then exit(false);
+  TParser.ParseExpression(Self, Source, _Expr);
+end;
+
+procedure TPivotFor.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_For, _Expr]);
+end;
+
+{ TPivotIn }
+
+function TPivotIn.InternalParse: boolean;
+begin
+  _In := Keyword('in');
+  Result := Assigned(_In);
+  if Result then TPivotInRest.Parse(Self, Source, _Rest);
+end;
+
+procedure TPivotIn.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_In, _Rest]);
+end;
+
+{ TPivotInRest }
+
+function TPivotInRest.InternalParse: boolean;
+begin
+  Result := TSubQuery.Parse(Self, Source, _Body) or
+            TCommaList<TAliasedExpression>.Parse(Self, Source, _Body);
+end;
+
+procedure TPivotInRest.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Body);
+end;
+
+{ TUnpivot }
+
+function TUnpivot.InternalParse: boolean;
+begin
+  Result := true;
+  _Unpivot := Keyword('unpivot');
+  if not Assigned(_Unpivot) then exit(false);
+  _Include := Keyword(['include', 'exclude']);
+  _Nulls := Keyword('nulls');
+  TBracketedStatement<TUnpivotRest>.Parse(Self, Source, _Rest);
+end;
+
+procedure TUnpivot.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Unpivot, _Include, _Nulls, _Rest]);
+end;
+
+{ TUnpivotRest }
+
+function TUnpivotRest.InternalParse: boolean;
+begin
+  Result := true;
+  TParser.ParseExpression(Self, Source, _Expr);
+  TPivotFor.Parse(Self, Source, _For);
+  TPivotIn.Parse(Self, Source, _In);
+end;
+
+procedure TUnpivotRest.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Expr, _For, _In]);
+end;
+
+{ TRowPattern }
+
+function TRowPattern.InternalParse: boolean;
+begin
+  _MatchRecognize := Keyword('match_recognize');
+  Result := Assigned(_MatchRecognize);
+  (*
+  if Result then TBracketedStatement<TRowPatternInternal>.Parse(Self, Source, _Body);
+  *)
+end;
+
+procedure TRowPattern.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_MatchRecognize, _Body]);
+end;
+
+end.

@@ -28,7 +28,8 @@ uses
   Sequence in 'Source\DDL\Sequence.pas',
   Alter in 'Source\DDL\Alter.pas',
   Synonym in 'Source\DDL\Synonym.pas',
-  Create in 'Source\DDL\Create.pas';
+  Create in 'Source\DDL\Create.pas',
+  DatabaseLink in 'Source\DDL\DatabaseLink.pas';
 
 {$R *.res}
 

@@ -31,7 +31,7 @@ type
 
 implementation
 
-uses DDL, PLSQL, Sequence, Trigger, Role, Synonym;
+uses DDL, PLSQL, Sequence, Trigger, Role, Synonym, DatabaseLink;
 
 { TCreate }
 
@@ -62,6 +62,7 @@ begin
      TSynonym.Parse(Self, Source, _What) or
      TUser.Parse(Self, Source, _What) or
      TRole.Parse(Self, Source, _What) or
+     TDatabaseLink.Parse(Self, Source, _What) or
      TUnexpectedToken.Parse(Self, Source, _What) then inherited;
   { Завершающий слеш }
   _Slash := Terminal('/');

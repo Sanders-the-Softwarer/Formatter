@@ -86,8 +86,8 @@ type
     procedure StartRuler(Enabled: boolean; Continued: boolean = false); override;
   protected
     procedure Ruler(const ARuler: string); override;
-    procedure PrintRulerItems(const ARuler: string; AItems: array of TObject); override;
   public
+    procedure PrintRulerItems(const ARuler: string; AItems: array of TObject); override;
     function GetText: string; override;
     function CurrentLine: integer;
     function CurrentCol: integer;

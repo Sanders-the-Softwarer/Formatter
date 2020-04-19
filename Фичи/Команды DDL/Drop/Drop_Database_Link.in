@@ -1,0 +1,2 @@
+drop database link remote;
+drop public database link public.remote;

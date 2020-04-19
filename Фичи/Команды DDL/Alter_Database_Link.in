@@ -1,0 +1,12 @@
+alter database link private_link
+    connect to hr identified by hr_new_password;
+
+alter public database link public_link
+    connect to scott identified by scott_new_password;
+
+alter shared public database link shared_pub_link
+    connect to scott identified by scott_new_password
+    authenticated by hr identified by hr_new_password;
+
+alter shared database link shared_pub_link
+    connect to scott identified by scott_new_password;

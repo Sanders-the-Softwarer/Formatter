@@ -285,16 +285,17 @@ type
   TOrderByItem = class(TStatement)
   strict private
     _Expression: TStatement;
-    _Nulls, _Position, _Direction: TEpithet;
+    _Nulls, _Direction: TEpithet;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Выражение order by }
-  TOrderBy = class(TCommaList<TOrderByItem>)
+  TOrderBy = class(TStatement)
   strict private
-    _Order, _Siblings, _By: TEpithet;
+    _OrderBy: TEpithet;
+    _Items: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -326,7 +327,7 @@ type
   { Конструкция for update }
   TForUpdate = class(TStatement)
   strict private
-    _For, _Update, _Of, _WaitMode, _Skip, _Locked: TEpithet;
+    _For, _Update, _Of, _WaitMode, _SkipLocked: TEpithet;
     _WaitTime: TNumber;
     _Columns: TStatement;
   strict protected
@@ -552,36 +553,30 @@ end;
 
 function TOrderByItem.InternalParse: boolean;
 begin
+  Result := true;
   if not TParser.ParseExpression(Self, Source, _Expression) then exit(false);
   _Direction := Keyword(['asc', 'desc']);
-  _Nulls := Keyword('nulls');
-  _Position := Keyword(['first', 'last']);
-  Result := true;
+  _Nulls := Keyword(['nulls', 'nulls first', 'nulls last']);
 end;
 
 procedure TOrderByItem.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Expression, _Direction, _Nulls, _Position]);
+  APrinter.PrintItems([_Expression, _Direction, _Nulls]);
 end;
 
 { TOrderBy }
 
 function TOrderBy.InternalParse: boolean;
 begin
-  _Order    := Keyword('order');
-  _Siblings := Keyword('siblings');
-  _By       := Keyword('by');
-  if not Assigned(_Order) then exit(false);
-  Result := inherited InternalParse;
+  Result := true;
+  _OrderBy := Keyword(['order by', 'order siblings by']);
+  if not Assigned(_OrderBy) then exit(false);
+  TCommaList<TOrderByItem>.Parse(Self, Source, _Items);
 end;
 
 procedure TOrderBy.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Order, _Siblings, _By]);
-  APrinter.NextLine;
-  APrinter.Indent;
-  inherited;
-  APrinter.Undent;
+  APrinter.PrintItems([_OrderBy, _IndentNextLine, _Items, _Undent]);
 end;
 
 { TExpressionField }
@@ -672,6 +667,7 @@ end;
 
 function TForUpdate.InternalParse: boolean;
 begin
+  Result := true;
   _For := Keyword('for');
   if not Assigned(_For) then exit(false);
   _Update := Keyword('update');
@@ -679,16 +675,14 @@ begin
   if Assigned(_Of) then TIdentFields.Parse(Self, Source, _Columns);
   _WaitMode := Keyword(['wait', 'nowait']);
   if Assigned(_WaitMode) then _WaitTime := Number;
-  _Skip := Keyword('skip');
-  _Locked := Keyword('locked');
-  Result := true;
+  _SkipLocked := Keyword(['skip', 'skip locked']);
 end;
 
 procedure TForUpdate.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_For, _Update, _Of]);
   APrinter.NextLineIf([_Indent, _Columns,  _UndentNextLine]);
-  APrinter.PrintItems([_WaitMode, _WaitTime, _Skip, _Locked]);
+  APrinter.PrintItems([_WaitMode, _WaitTime, _SkipLocked]);
 end;
 
 { TTableClause }
@@ -1084,7 +1078,7 @@ function TStartWith.InternalParse: boolean;
 begin
   Result := true;
   _StartWith := Keyword('start with');
-  if not Assigned(_StartWith) then exit;
+  if not Assigned(_StartWith) then exit(false);
   TParser.ParseExpression(Self, Source, _Condition);
 end;
 

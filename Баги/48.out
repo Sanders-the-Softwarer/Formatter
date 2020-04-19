@@ -1,0 +1,42 @@
+-- Выражения case не должны выстраиваться "лесенкой" со сбитыми отступами
+
+select
+    substr
+        (
+            -- помещаем в t_pcge_link для дальнейшей перезагрузки когда шапка МСН не проходит соединение с шапкой/строкой МСН
+            case
+                when sl.id_r_from is null then
+                    'from msn_r.id=<null>, отсутствует связь со строкой МСН списания;' || chr(13)
+            end
+            ||
+            case
+                when sl.id_r_to is null then
+                    'to msn_r.id=<null>, отсутствует связь со строкой МСН завоза;' || chr(13)
+            end
+            ||
+            case
+                when frommsnh.id is null then
+                    'from msn_h.id=<null>, отсутствует связь с шапкой МСН списания;' || chr(13)
+            end
+            ||
+            case
+                when tomsnh.id is null then
+                    'to msn_h.id=<null>, отсутствует связь с шапкой МСН завоза;' || chr(13)
+            end
+            ||
+            -- остальные ошибки
+            case
+                when sl.id_r_from = sl.id_r_to then
+                    'id_r_from != id_r_to violated: id_r_from=' || sl.id_r_from || ';' || chr(13)
+            end
+            ||
+            case when sl.zavoz_chainqnty = 0 then 'chainQuantity_to != 0 violated;' || chr(13) end
+            ||
+            case when sl.spis_chainqnty = 0 then 'chainQuantity_from != 0 violated;' || chr(13) end
+            ||
+            case when sl.zavoz_docqnty = 0 then 'totQuantity_to != 0 violated;' || chr(13) end
+            ||
+            case when sl.spis_docqnty = 0 then 'totQuantity_from != 0 violated;' || chr(13) end,
+            1,
+            2000
+        )

@@ -513,8 +513,8 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         APrinter.PrintItem(Item(i));
       if TermInfo[i].SingleLine then
         APrinter.SupressNextLine(false)
-      else
-        APrinter.Undent;
+      else{
+        APrinter.Undent};
       if TermInfo[i].LineBreak and TermInfo[i].BreakBeforeDelimiter then NewLineCombo;
 //      APrinter.PrintRulerItem(RulerName, Delimiter(i));
       APrinter.PrintItem(Delimiter(i));
