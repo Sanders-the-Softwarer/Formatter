@@ -11,7 +11,6 @@ uses
   PLSQL in 'Source\PLSQL.pas',
   Expressions in 'Source\Expressions.pas',
   DML in 'Source\DML.pas',
-  Statements in 'Source\Statements.pas',
   DDL in 'Source\DDL.pas',
   SQLPlus in 'Source\SQLPlus.pas',
   Utils in 'Source\Utils.pas',
@@ -29,7 +28,9 @@ uses
   Alter in 'Source\DDL\Alter.pas',
   Synonym in 'Source\DDL\Synonym.pas',
   Create in 'Source\DDL\Create.pas',
-  DatabaseLink in 'Source\DDL\DatabaseLink.pas';
+  DatabaseLink in 'Source\DDL\DatabaseLink.pas',
+  Select in 'Source\DML\Select.pas',
+  Statements in 'Source\Statements.pas';
 
 {$R *.res}
 

@@ -31,7 +31,6 @@ type
     procedure Запрос_С_Bulk_Collect_Into;
     procedure Запрос_Из_Нескольких_Таблиц;
     procedure Запрос_Из_Табличной_Функции;
-    procedure Запрос_Из_Подзапроса;
     procedure Запрос_Из_Вложенных_Структур_И_Табличных_Типов;
     procedure Запрос_С_Lateral;
     procedure Запрос_С_Where;
@@ -234,10 +233,6 @@ begin
 end;
 
 procedure _Select.Запрос_Из_Нескольких_Таблиц;
-begin
-end;
-
-procedure _Select.Запрос_Из_Подзапроса;
 begin
 end;
 

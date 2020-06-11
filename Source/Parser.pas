@@ -80,7 +80,7 @@ type
 
 implementation
 
-uses DDL, DML, PLSQL, SQLPlus, Expressions, Create, Alter;
+uses DDL, DML, PLSQL, SQLPlus, Expressions, Create, Alter, Select;
 
 type
   { "Пустое" выражение }
@@ -100,7 +100,7 @@ end;
 { Разбор поддерживаемых конструкций DML }
 class function TParser.ParseDML(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
-  Result := TSelect.Parse(AParent, ASource, AResult) or
+  Result := TNewSelect.Parse(AParent, ASource, AResult) or
             TInsert.Parse(AParent, ASource, AResult) or
             TUpdate.Parse(AParent, ASource, AResult) or
             TDelete.Parse(AParent, ASource, AResult) or

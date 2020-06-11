@@ -42,7 +42,7 @@ type
   strict private
     _With, _Select, _Distinct, _From: TEpithet;
     _WithList, _SelectList, _FromList, _Where, _ConnectBy, _GroupBy,
-      _Model: TStatement;
+      _Model, _Into: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -155,7 +155,7 @@ type
   strict private
     _Only, _Alias: TEpithet;
     _QueryTableExpression, _Containers, _Flashback, _Pivot, _Unpivot,
-      _RowPattern: TStatement;
+      _RowPattern, _SubQuery: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -370,8 +370,7 @@ type
   { Упоминание таблицы во from }
   TTableViewExpression = class(TStatement)
   strict private
-    _Hierarchies: TEpithet;
-    _Name, _Partition, _HierList, _Sample: TStatement;
+    _Name, _PartitionExtension, _Sample, _Hierarchies: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -390,6 +389,46 @@ type
   strict private
     _MatchRecognize: TEpithet;
     _Body: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция HIERARCHIES }
+  THierarchies = class(TStatement)
+  strict private
+    _Hierarchies: TEpithet;
+    _List: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция partition extension }
+  TPartitionExtension = class(TStatement)
+  strict private
+    _Partition: TEpithet;
+    _Value: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция sample }
+  TSample = class(TStatement)
+  strict private
+    _Sample, _Block, _Seed: TEpithet;
+    _Percent, _Value: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Конструкция into }
+  TInto = class(TStatement)
+  strict private
+    _Into: TEpithet;
+    _Targets: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -453,7 +492,7 @@ type
 
 implementation
 
-uses Commons, Parser, PLSQL;
+uses Commons, Parser, PLSQL, Expressions;
 
 { TNewSelect }
 
@@ -590,6 +629,7 @@ begin
   if not Assigned(_Select) then exit(false);
   _Distinct := Keyword(['distinct', 'unique', 'all']);
   TCommaList<TAliasedExpression>.Parse(Self, Source, _SelectList);
+  TInto.Parse(Self, Source, _Into);
   _From := Keyword('from');
   TCommaList<TFromField>.Parse(Self, Source, _FromList);
   TWhere.Parse(Self, Source, _Where);
@@ -604,6 +644,7 @@ begin
                                    _WithList,       _UndentNextLine,
                        _Select,    _IndentNextLine,
                                    _SelectList,     _UndentNextLine,
+                       _Into,
                        _From,      _IndentNextLine,
                                    _FromList,       _UndentNextLine,
                        _Where,     _NextLine,
@@ -839,7 +880,8 @@ begin
     Result := TBracketedStatement<TQueryTableExpression>.Parse(Self, Source, _QueryTableExpression)
   else
     Result := TContainers.Parse(Self, Source, _Containers) or
-              TQueryTableExpression.Parse(Self, Source, _QueryTableExpression);
+              TQueryTableExpression.Parse(Self, Source, _QueryTableExpression) or
+              TBracketedStatement<TSubQuery>.Parse(Self, Source, _SubQuery);
   if not Result then exit;
   if Assigned(_QueryTableExpression) then
   begin
@@ -853,10 +895,11 @@ end;
 
 procedure TTableReference.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Only, _QueryTableExpression, _Containers, _Indent]);
+  APrinter.PrintItems([_Only, _QueryTableExpression, _Containers, _SubQuery, _Indent]);
   APrinter.NextLineIf(_Flashback);
   APrinter.NextLineIf([_Pivot, _Unpivot, _RowPattern]);
   APrinter.PrintItem(_Alias);
+  APrinter.Undent;
 end;
 
 { TQueryTableExpression }
@@ -1132,6 +1175,95 @@ end;
 procedure TRowPattern.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_MatchRecognize, _Body]);
+end;
+
+{ TTableViewExpression }
+
+function TTableViewExpression.InternalParse: boolean;
+begin
+  Result := false;
+  if not TQualifiedIdent.Parse(Self, Source, _Name) then exit;
+  THierarchies.Parse(Self, Source, _Hierarchies);
+  TPartitionExtension.Parse(Self, Source, _PartitionExtension);
+  TSample.Parse(Self, Source, _Sample);
+  Result := true;
+end;
+
+procedure TTableViewExpression.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Name, _PartitionExtension, _Hierarchies, _Sample]);
+end;
+
+{ THierarchies }
+
+function THierarchies.InternalParse: boolean;
+begin
+  Result := false;
+  _Hierarchies := Keyword('hierarchies');
+  if not Assigned(_Hierarchies) then exit;
+  Result := TSingleLine<TBracketedStatement<TCommaList<TQualifiedIdent>>>.Parse(Self, Source, _List);
+end;
+
+procedure THierarchies.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Hierarchies, _List]);
+end;
+
+{ TPartitionExtension }
+
+function TPartitionExtension.InternalParse: boolean;
+begin
+  _Partition := Keyword(['partition', 'partition for', 'subpartition', 'subpartition for']);
+  Result := Assigned(_Partition) and
+            TSingleLine<TBracketedStatement<TCommaList<TExpression>>>.Parse(Self, Source, _Value);
+end;
+
+procedure TPartitionExtension.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Partition, _Value]);
+end;
+
+{ TSample }
+
+function TSample.InternalParse: boolean;
+begin
+  _Sample := Keyword('sample');
+  if not Assigned(_Sample) then exit(false);
+  _Block := Keyword('block');
+  TParser.ParseExpression(Self, Source, _Percent);
+  _Seed := Keyword('seed');
+  TParser.ParseExpression(Self, Source, _Value);
+  Result := true;
+end;
+
+procedure TSample.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Sample, _Block, _Percent, _Seed, _Value]);
+end;
+
+{ TJoinedTable }
+
+function TJoinedTable.InternalParse: boolean;
+begin
+  Result := false;
+end;
+
+procedure TJoinedTable.InternalPrintSelf(APrinter: TPrinter);
+begin
+end;
+
+{ TInto }
+
+function TInto.InternalParse: boolean;
+begin
+  _Into := Keyword(['into', 'bulk collect into']);
+  Result := Assigned(_Into);
+  if Result then TIdentFields.Parse(Self, Source, _Targets);
+end;
+
+procedure TInto.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Into, _IndentNextLine, _Targets, _Undent, _NextLine]);
 end;
 
 end.

@@ -140,6 +140,7 @@ type
     procedure Left_Right_Full_Join;
     procedure Using;
     procedure Лишние_Слова_В_Joinах;
+    procedure Из_Подзапроса;
   end;
 
   { Тесты на пакеты }
@@ -678,6 +679,10 @@ begin
 end;
 
 procedure _Запросы.Using;
+begin
+end;
+
+procedure _Запросы.Из_Подзапроса;
 begin
 end;
 

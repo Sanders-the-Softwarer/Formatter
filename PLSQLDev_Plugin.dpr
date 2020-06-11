@@ -29,7 +29,8 @@ uses
   TextBuilder in 'Source\TextBuilder.pas',
   Tokenizer in 'Source\Tokenizer.pas',
   Tokens in 'Source\Tokens.pas',
-  Utils in 'Source\Utils.pas';
+  Utils in 'Source\Utils.pas',
+  Select in 'Source\DML\Select.pas';
 
 const
   Desc  = 'Formatter';

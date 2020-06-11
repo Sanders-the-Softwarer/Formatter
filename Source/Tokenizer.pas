@@ -678,6 +678,7 @@ begin
   if Check(Result, 'outer', 'apply') then exit;
   if Check(Result, 'package', 'body') then exit;
   if Check(Result, 'partition', 'by') then exit;
+  if Check(Result, 'partition', 'for') then exit;
   if Check(Result, 'public', 'database', 'link') then exit;
   if Check(Result, 'public', 'synonym') then exit;
   if Check(Result, 'quota', 'unlimited', 'on') then exit;
@@ -688,6 +689,7 @@ begin
   if Check(Result, 'skip', 'locked') then exit;
   if Check(Result, 'start', 'with') then exit;
   if Check(Result, 'subpartition', 'by') then exit;
+  if Check(Result, 'subpartition', 'for') then exit;
   if Check(Result, 'temporary', 'tablespace') then exit;
   if Check(Result, 'type', 'body') then exit;
   if Check(Result, 'union', 'all') then exit;
