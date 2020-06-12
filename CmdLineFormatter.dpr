@@ -32,7 +32,8 @@ uses
   Role in 'Source\DDL\Role.pas',
   Sequence in 'Source\DDL\Sequence.pas',
   Synonym in 'Source\DDL\Synonym.pas',
-  Trigger in 'Source\PLSQL\Trigger.pas';
+  Trigger in 'Source\PLSQL\Trigger.pas',
+  Set_ in 'Source\DDL\Set_.pas';
 
 var
   InFileName, OutFileName, InText, OutText: string;

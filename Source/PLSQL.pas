@@ -610,7 +610,7 @@ type
 
 implementation
 
-uses Parser, Expressions, DML, DDL, Keywords;
+uses Parser, Expressions, DML, DDL, Keywords, Select;
 
 { TProgramBlock }
 
@@ -1311,7 +1311,7 @@ begin
   _Variable := Identifier;
   _In := Keyword('in');
   _Reverse := Keyword('reverse');
-  if not TInnerSelect.Parse(Self, Source, _Select) then
+  if not TBracketedStatement<TSelect>.Parse(Self, Source, _Select) then
   begin
     P := Source.Mark;
     TParser.ParseExpression(Self, Source, _Low);

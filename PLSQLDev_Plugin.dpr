@@ -30,7 +30,8 @@ uses
   Tokenizer in 'Source\Tokenizer.pas',
   Tokens in 'Source\Tokens.pas',
   Utils in 'Source\Utils.pas',
-  Select in 'Source\DML\Select.pas';
+  Select in 'Source\DML\Select.pas',
+  Set_ in 'Source\DDL\Set_.pas';
 
 const
   Desc  = 'Formatter';

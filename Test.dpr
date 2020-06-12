@@ -77,57 +77,57 @@ type
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_ArgumentSingleLineParamLimit;
 begin
-  PostponeTill(2020, 4, 30);
+  PostponeTill(2020, 6, 30);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_Create_Trigger;
 begin
-  PostponeTill(2020, 4, 30);
+  PostponeTill(2020, 6, 30);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_DeclarationSingleLineParamLimit;
 begin
-  PostponeTill(2020, 4, 30);
+  PostponeTill(2020, 6, 30);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_MatchParamLimit;
 begin
-  PostponeTill(2020, 4, 30);
+  PostponeTill(2020, 6, 30);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_PreferredExpressionLength;
 begin
-  PostponeTill(2020, 4, 30);
+  PostponeTill(2020, 6, 30);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_ReplaceAsIs;
 begin
-  PostponeTill(2020, 4, 30);
+  PostponeTill(2020, 6, 30);
 end;
 
 procedure _UnderConstruction.Нужно_Добавить_Group_By_Rollup_Cube_Grouping_Sets;
 begin
-  PostponeTill(2020, 4, 30);
+  PostponeTill(2020, 6, 30);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_ReplaceDefault;
 begin
-  PostponeTill(2020, 4, 30);
+  PostponeTill(2020, 6, 30);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_Команды_SQLPLUS;
 begin
-  PostponeTill(2020, 4, 30);
+  PostponeTill(2020, 6, 30);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_Невыравнивание_Везде_Где_Есть_На_Выравнивание;
 begin
-  PostponeTill(2020, 4, 30);
+  PostponeTill(2020, 6, 30);
 end;
 
 procedure _UnderConstruction.Нужно_Написать_Тесты_На_Объектные_Типы;
 begin
-  PostponeTill(2020, 4, 30);
+  PostponeTill(2020, 6, 30);
 end;
 
 procedure _UnderConstruction.PostponeTill(AYear, AMonth, ADay: integer);

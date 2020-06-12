@@ -32,7 +32,6 @@ type
     procedure Запрос_Из_Нескольких_Таблиц;
     procedure Запрос_Из_Табличной_Функции;
     procedure Запрос_Из_Вложенных_Структур_И_Табличных_Типов;
-    procedure Запрос_С_Lateral;
     procedure Запрос_С_Where;
     procedure Запрос_С_Having;
     procedure Запрос_Со_Start_With_И_Connect_By;
@@ -65,7 +64,6 @@ type
     procedure Insert_В_Подзапрос;
     procedure Insert_В_Подзапрос_С_Алиасом;
     procedure Insert_С_Указанием_Полей;
-    procedure Insert_С_Сопоставлением_Полей;
     procedure Insert_Select_С_Сопоставлением_Полей;
     procedure Insert_С_Returning;
     procedure Insert_С_Returning_С_Сопоставлением;
@@ -213,10 +211,6 @@ procedure _Select.Запрос_Из_Вложенных_Структур_И_Табличных_Типов;
 begin
 end;
 
-procedure _Select.Запрос_С_Lateral;
-begin
-end;
-
 procedure _Select.Запрос_С_Order_By;
 begin
 end;
@@ -275,11 +269,6 @@ end;
 
 procedure _Insert.Insert_С_Алиасом_Таблицы;
 begin
-end;
-
-procedure _Insert.Insert_С_Сопоставлением_Полей;
-begin
-  Settings.MatchParamLimit := 5;
 end;
 
 procedure _Insert.Insert_С_Указанием_Полей;

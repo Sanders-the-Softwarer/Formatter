@@ -35,31 +35,6 @@ type
     function Aligned: boolean; override;
   end;
 
-  { Оператор select }
-  TSelect = class(TDML)
-  strict private
-    _With: TStatement;
-    _Select: TEpithet;
-    _Mode: TEpithet;
-    _Fields: TStatement;
-    _Into: TEpithet;
-    _IntoFields: TStatement;
-    _From: TEpithet;
-    _Tables: TStatement;
-    _Where: TStatement;
-    _StartWith: TStatement;
-    _ConnectBy: TStatement;
-    _GroupBy: TStatement;
-    _Having: TStatement;
-    _OrderBy: TStatement;
-    _AdditionalSelect: TStatement;
-    _ForUpdate: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    function InternalMatchTo(AStatement: TStatement): boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
   { Оператор insert }
   TInsert = class(TDML)
   strict private
@@ -132,17 +107,6 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Вложенный запрос }
-  TInnerSelect = class(TStatement)
-  strict private
-    _OpenBracket: TTerminal;
-    _Select: TStatement;
-    _CloseBracket: TTerminal;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
   { Идентификатор как поле в insert, select into итп }
   TIdentField = class(TStatement)
   strict private
@@ -180,7 +144,7 @@ type
 
 implementation
 
-uses Parser, Keywords;
+uses Parser, Keywords, Select;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -201,9 +165,10 @@ type
   end;
 
   { Условие exists }
-  TExists = class(TInnerSelect)
+  TExists = class(TStatement)
   strict private
     _Exists: TEpithet;
+    _Select: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -396,16 +361,12 @@ function TExists.InternalParse: boolean;
 begin
   _Exists := Keyword('exists');
   Result := Assigned(_Exists);
-  if Result then inherited;
+  if Result then TSelect.Parse(Self, Source, _Select);
 end;
 
 procedure TExists.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Exists);
-  APrinter.Indent;
-  APrinter.NextLine;
-  inherited;
-  APrinter.Undent;
+  APrinter.PrintItems([_Exists, _IndentNextLine, _Select, _Undent]);
 end;
 
 { TWithinGroup }
@@ -668,7 +629,7 @@ end;
 
 function TTableRef.InternalParse: boolean;
 begin
-  if not TInnerSelect.Parse(Self, Source, _Select) then
+  if not TBracketedStatement<TSelect>.Parse(Self, Source, _Select) then
   begin
     _Table := Keyword('table');
     if Assigned(_Table) then _OpenBracket := Terminal('(');
@@ -698,406 +659,6 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                               Оператор SELECT                              //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-
-type
-
-  { Запрос в with }
-  TWithItem = class(TStatement)
-  strict private
-    _Alias: TEpithet;
-    _As: TEpithet;
-    _Select: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function StatementName: string; override;
-  end;
-
-  { Конструкция with }
-  TWith = class(TCommaList<TWithItem>)
-  strict private
-    _With: TEpithet;
-  strict protected
-    function InternalParse: boolean; override;
-    function ParseBreak: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Поле в select }
-  TSelectField = class(TExpressionField)
-  strict private
-    _As: TEpithet;
-    _Alias: TEpithet;
-  strict protected
-    function InternalParse: boolean; override;
-  public
-    procedure PrintSelfBefore(APrinter: TPrinter); override;
-    procedure PrintSelfAfter(APrinter: TPrinter); override;
-    function StatementName: string; override;
-  end;
-
-  { Список полей в select }
-  TSelectFields = class(TExpressionFields)
-  strict protected
-    function ParseStatement(out AResult: TStatement): boolean; override;
-    function Aligned: boolean; override;
-  end;
-
-  { Указание таблицы в select }
-  TSelectTableRef = class(TTableRef)
-  strict private
-    _Lateral: TEpithet;
-    _On: TEpithet;
-    _JoinCondition: TStatement;
-    _Using: TEpithet;
-    _Fields: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    function ParseTableExpression(out AResult: TStatement): boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Список таблиц в select }
-  TSelectTables = class(TCommaList<TSelectTableRef>)
-  strict protected
-    function ParseDelimiter(out AResult: TObject): boolean; override;
-    procedure PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject; ALast: boolean); override;
-  end;
-
-  { Выражение group by }
-  TGroupBy = class(TCommaList<TExpressionField>)
-  strict private
-    _Group, _By: TEpithet;
-  strict protected
-    function InternalParse: boolean; override;
-    function ParseBreak: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Выражение having }
-  THaving = class(TStatement)
-  strict private
-    _Having: TEpithet;
-    _Condition: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Выражение start with }
-  TStartWith = class(TStatement)
-  strict private
-    _StartWith: TEpithet;
-    _Condition: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-    { Выражение start with }
-  TConnectBy = class(TStatement)
-  strict private
-    _ConnectBy: TEpithet;
-    _Condition: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Следующий запрос в цепочке union all }
-  TAdditionalSelect = class(TSelect)
-  strict private
-    _SetOperation: TEpithet;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-{ TSelect }
-
-function TSelect.InternalParse: boolean;
-begin
-  TWith.Parse(Self, Source, _With);
-  _Select := Keyword('select');
-  { Чтобы распознать конструкцию, надо увидеть либо with, либо select }
-  if not Assigned(_With) and not Assigned(_Select) then exit(false);
-  _Mode := Keyword(['distinct', 'unique', 'all']);
-  TSelectFields.Parse(Self, Source, _Fields);
-  _Into := Keyword(['into', 'bulk collect into']);
-  TIdentFields.Parse(Self, Source, _IntoFields);
-  _From := Keyword('from');
-  TSelectTables.Parse(Self, Source, _Tables);
-  TWhere.Parse(Self, Source, _Where);
-  TStartWith.Parse(Self, Source, _StartWith);
-  TConnectBy.Parse(Self, Source, _ConnectBy);
-  TGroupBy.Parse(Self, Source, _GroupBy);
-  THaving.Parse(Self, Source, _Having);
-  TOrderBy.Parse(Self, Source, _OrderBy);
-  TAdditionalSelect.Parse(Self, Source, _AdditionalSelect);
-  TForUpdate.Parse(Self, Source, _ForUpdate);
-  inherited;
-  Result := true;
-end;
-
-procedure TSelect.InternalPrintSelf(APrinter: TPrinter);
-begin
-  _Fields.MatchTo(_IntoFields);
-  APrinter.PrintItems([_With,
-                       _Select,           _Mode,           _IndentNextLine,
-                                          _Fields,         _UndentNextLine,
-                       _Into,             _IndentNextLine,
-                                          _IntoFields,     _UndentNextLine,
-                       _From,             _IndentNextLine,
-                                          _Tables,         _UndentNextLine,
-                       _Where,            _NextLine,
-                       _StartWith,        _NextLine,
-                       _ConnectBy,        _NextLine,
-                       _GroupBy,          _NextLine,
-                       _Having,           _NextLine,
-                       _OrderBy,          _NextLine,
-                       _AdditionalSelect, _NextLine,
-                       _ForUpdate]);
-  inherited;
-end;
-
-function TSelect.InternalMatchTo(AStatement: TStatement): boolean;
-begin
-  Result := _Fields.MatchTo(AStatement);
-end;
-
-{ TInnerSelect }
-
-function TInnerSelect.InternalParse: boolean;
-begin
-  _OpenBracket := Terminal('(');
-  TSelect.Parse(Self, Source, _Select);
-  _CloseBracket := Terminal(')');
-  Result := Assigned(_OpenBracket) and Assigned(_Select);
-end;
-
-procedure TInnerSelect.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_OpenBracket, _IndentNextLine, _Select, _UndentNextLine, _CloseBracket]);
-end;
-
-{ TWithItem }
-
-function TWithItem.InternalParse: boolean;
-begin
-  _Alias := Identifier;
-  _As    := Keyword('as');
-  TInnerSelect.Parse(Self, Source, _Select);
-  Result := Assigned(_Alias);
-end;
-
-procedure TWithItem.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Alias, _As, _IndentNextLine, _Select, _Undent]);
-end;
-
-function TWithItem.StatementName: string;
-begin
-  Result := Concat([_Alias]);
-end;
-
-{ TWith }
-
-function TWith.InternalParse: boolean;
-begin
-  _With := Keyword('with');
-  if not Assigned(_With) then exit(false);
-  inherited;
-  Result := true;
-end;
-
-function TWith.ParseBreak: boolean;
-begin
-  Result := Any([Keyword('select'), Terminal([')', ';'])]);
-end;
-
-procedure TWith.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_With, _IndentNextLine]);
-  inherited;
-  APrinter.PrintItems([_UndentNextLine]);
-end;
-
-{ TSelectField }
-
-function TSelectField.InternalParse: boolean;
-begin
-  Result := inherited InternalParse;
-  if not Result then exit;
-  _As := Keyword('as');
-  _Alias := Identifier;
-end;
-
-function TSelectField.StatementName: string;
-begin
-  Result := Concat([_Alias]);
-end;
-
-procedure TSelectField.PrintSelfBefore(APrinter: TPrinter);
-begin
-  APrinter.StartRuler(Settings.AlignFields);
-end;
-
-procedure TSelectField.PrintSelfAfter(APrinter: TPrinter);
-begin
-  APrinter.PrintRulerItems('as', [_As]);
-  APrinter.PrintRulerItems('alias', [_Alias]);
-end;
-
-{ TSelectFields }
-
-function TSelectFields.Aligned: boolean;
-begin
-  Result := true;
-end;
-
-function TSelectFields.ParseStatement(out AResult: TStatement): boolean;
-begin
-  Result := TSelectField.Parse(Self, Source, AResult);
-end;
-
-{ TSelectTableRef }
-
-function TSelectTableRef.InternalParse: boolean;
-begin
-  _Lateral := Keyword('lateral');
-  Result := inherited InternalParse;
-  if Result then _On := Keyword('on');
-  if Assigned(_On) then TParser.ParseExpression(Self, Source, _JoinCondition);
-  if not Assigned(_On) then _Using := Keyword('using');
-  if Assigned(_Using) then TSingleLine<TBracketedStatement<TIdentFields>>.Parse(Self, Source, _Fields);
-end;
-
-function TSelectTableRef.ParseTableExpression(out AResult: TStatement): boolean;
-begin
-  Result := TQualifiedIndexedIdent.Parse(Self, Source, AResult);
-end;
-
-procedure TSelectTableRef.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItem(_Lateral);
-  inherited;
-  APrinter.Indent;
-  APrinter.NextLineIf([_On, _IndentNextLine, _JoinCondition, _Undent]);
-  APrinter.NextLineIf([_Using, _IndentNextLine, _Fields, _Undent]);
-  APrinter.Undent;
-end;
-
-{ TSelectTables }
-
-function TSelectTables.ParseDelimiter(out AResult: TObject): boolean;
-begin
-  Result := inherited ParseDelimiter(AResult);
-  if not Result then
-  begin
-    AResult := Keyword(['join', 'inner join', 'full join', 'full natural join', 'full outer join', 'left join', 'left natural join', 'left outer join', 'right join', 'right natural join', 'right outer join', 'cross apply', 'outer apply']);
-    Result  := Assigned(AResult);
-  end;
-end;
-
-procedure TSelectTables.PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject; ALast: boolean);
-begin
-  if ADelimiter is TEpithet then
-    begin
-      APrinter.PrintIndented(ADelimiter);
-      if not ALast then APrinter.NextLine;
-    end
-  else
-    inherited;
-end;
-
-{ TGroupBy }
-
-function TGroupBy.InternalParse: boolean;
-begin
-  _Group := Keyword('group');
-  _By    := Keyword('by');
-  if not Assigned(_Group) then exit(false);
-  Result := inherited InternalParse;
-end;
-
-function TGroupBy.ParseBreak: boolean;
-begin
-  Result := Any([Terminal([';', ')']), Keyword('*')]);
-end;
-
-procedure TGroupBy.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Group, _By, _IndentNextLine]);
-  inherited;
-  APrinter.Undent;
-end;
-
-{ THaving }
-
-function THaving.InternalParse: boolean;
-begin
-  _Having := Keyword('having');
-  if not Assigned(_Having) then exit(false);
-  TParser.ParseExpression(Self, Source, _Condition);
-  Result := true;
-end;
-
-procedure THaving.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Having, _IndentNextLine, _Condition, _Undent]);
-end;
-
-{ TStartWith }
-
-function TStartWith.InternalParse: boolean;
-begin
-  Result := true;
-  _StartWith := Keyword('start with');
-  if not Assigned(_StartWith) then exit(false);
-  TParser.ParseExpression(Self, Source, _Condition);
-end;
-
-procedure TStartWith.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_StartWith, _IndentNextLine, _Condition, _Undent]);
-end;
-
-{ TConnectBy }
-
-function TConnectBy.InternalParse: boolean;
-begin
-  Result := true;
-  _ConnectBy := Keyword('connect by');
-  if not Assigned(_ConnectBy) then exit(false);
-  TParser.ParseExpression(Self, Source, _Condition);
-end;
-
-procedure TConnectBy.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_ConnectBy, _IndentNextLine, _Condition, _Undent]);
-end;
-
-{ TAdditionalSelect }
-
-function TAdditionalSelect.InternalParse: boolean;
-begin
-  _SetOperation := Keyword(['union', 'union all', 'intersect', 'minus']);
-  Result := Assigned(_SetOperation) and inherited InternalParse;
-end;
-
-procedure TAdditionalSelect.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItem(_SetOperation);
-  APrinter.NextLine;
-  inherited;
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
 //                               Оператор INSERT                              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
@@ -1120,8 +681,7 @@ end;
 
 procedure TInsert.InternalMatchChildren;
 begin
-  if not Assigned(_Fields) then exit;
-  _ValueList.MatchTo(TBracketedStatement<TIdentFields>(_Fields).InnerStatement);
+  _ValueList.MatchTo(_Fields);
 end;
 
 procedure TInsert.InternalPrintSelf(APrinter: TPrinter);
@@ -1295,10 +855,10 @@ begin
   _Merge := Keyword('merge');
   _Into  := Keyword('into');
   if not Assigned(_Merge) or not Assigned(_Into) then exit(false);
-  if not TInnerSelect.Parse(Self, Source, _DestSelect) then TQualifiedIdent.Parse(Self, Source, _DestTable);
+  if not TBracketedStatement<TSelect>.Parse(Self, Source, _DestSelect) then TQualifiedIdent.Parse(Self, Source, _DestTable);
   _DestAlias := Identifier;
   _Using := Keyword('using');
-  if not TInnerSelect.Parse(Self, Source, _SourceSelect) then TQualifiedIdent.Parse(Self, Source, _SourceTable);
+  if not TBracketedStatement<TSelect>.Parse(Self, Source, _SourceSelect) then TQualifiedIdent.Parse(Self, Source, _SourceTable);
   _SourceAlias := Identifier;
   _On    := Keyword('on');
   TParser.ParseExpression(Self, Source, _Condition);

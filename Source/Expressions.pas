@@ -94,7 +94,7 @@ type
 
 implementation
 
-uses Parser, Commons, DML, PLSQL, Keywords, FormatterPrinter;
+uses Parser, Commons, DML, PLSQL, Keywords, FormatterPrinter, Select;
 
 var
   Operations: TDictionary<String, integer>;
@@ -194,7 +194,7 @@ begin
       exit(true);
     end;
     { Вложенным запросом }
-    if TInnerSelect.Parse(Self, Source, _Select) then exit(true);
+    if TBracketedStatement<TSelect>.Parse(Self, Source, _Select) then exit(true);
     { Выраженим в скобках }
     _OpenBracket := Terminal('(');
     if Assigned(_OpenBracket) then

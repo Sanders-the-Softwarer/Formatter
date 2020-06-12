@@ -15,8 +15,9 @@ interface
 uses Statements, Tokens, Printer, DML;
 
 type
+
   { Собственно, SQL-запрос }
-  TNewSelect = class(TDML)
+  TSelect = class(TDML)
   strict private
     _SubQuery, _ForUpdate: TStatement;
   strict protected
@@ -25,6 +26,12 @@ type
     function InternalMatchTo(AStatement: TStatement): boolean; override;
   public
   end;
+
+implementation
+
+uses Commons, Parser, PLSQL, Expressions;
+
+type
 
   { Встраиваемый запрос }
   TSubQuery = class(TStatement)
@@ -379,8 +386,8 @@ type
   { Вторая и последующие таблицы в выражении join }
   TJoinedTable = class(TStatement)
   strict private
-    _Join, _On, _Using: TEpithet;
-    _TableRef, _Condition, _Columns, _Next: TStatement;
+    _Partition1, _Partition2, _Natural, _Join, _On, _Using: TEpithet;
+    _TableRef, _Condition, _Columns, _Next, _PartitionExpr1, _PartitionExpr2: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -493,26 +500,22 @@ type
 
 *)
 
-implementation
+{ TSelect }
 
-uses Commons, Parser, PLSQL, Expressions;
-
-{ TNewSelect }
-
-function TNewSelect.InternalParse: boolean;
+function TSelect.InternalParse: boolean;
 begin
   Result := TSubquery.Parse(Self, Source, _SubQuery);
   if Result then TForUpdate.Parse(Self, Source, _ForUpdate);
   inherited;
 end;
 
-procedure TNewSelect.InternalPrintSelf(APrinter: TPrinter);
+procedure TSelect.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_SubQuery, _NextLine, _ForUpdate]);
   inherited;
 end;
 
-function TNewSelect.InternalMatchTo(AStatement: TStatement): boolean;
+function TSelect.InternalMatchTo(AStatement: TStatement): boolean;
 begin
   Result := _SubQuery.MatchTo(AStatement);
 end;
@@ -1257,9 +1260,15 @@ end;
 function TJoinedTable.InternalParse: boolean;
 begin
   Result := true;
-  _Join := Keyword(['join', 'inner join', 'cross join', 'natural join', 'natural inner join']);
+  _Partition1 := Keyword('partition by');
+  if Assigned(_Partition1) then TParser.ParseExpression(Self, Source, _PartitionExpr1);
+  _Natural := Keyword('natural');
+  _Join := Keyword(['join', 'inner join', 'cross join', 'cross apply', 'outer apply', 'full join', 'left join', 'right join', 'full outer join', 'left outer join', 'right outer join']);
   if not Assigned(_Join) then exit(false);
-  TTableReference.Parse(Self, Source, _TableRef);
+  if not TTableCollectionExpression.Parse(Self, Source, _TableRef) then
+    TTableReference.Parse(Self, Source, _TableRef);
+  _Partition2 := Keyword('partition by');
+  if Assigned(_Partition2) then TParser.ParseExpression(Self, Source, _PartitionExpr2);
   _On := Keyword('on');
   if Assigned(_On) then TParser.ParseExpression(Self, Source, _Condition);
   _Using := Keyword('using');
@@ -1269,13 +1278,15 @@ end;
 
 procedure TJoinedTable.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([
-    _IndentNextLine,
-                     _Join,           _UndentNextLine,
-    _TableRef,       _IndentNextLine,
-                     _On, _Using,     _IndentNextLine,
-                                      _Condition, _Columns, _UndentNextLine, _Undent,
-    _Next]);
+  APrinter.Indent;
+  APrinter.NextLineIf([_Partition1, _PartitionExpr1]);
+  APrinter.PrintItems([_NextLine,
+                       _Natural, _Join, _UndentNextLine,
+            _TableRef, _IndentNextLine]);
+  APrinter.NextLineIf([_Partition2, _PartitionExpr2]);
+  APrinter.PrintItems([_On, _Using, _IndentNextLine,
+                            _Condition, _Columns, _UndentNextLine, _Undent,
+                       _Next]);
 end;
 
 { TInto }

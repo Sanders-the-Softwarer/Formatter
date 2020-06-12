@@ -138,6 +138,7 @@ type
     procedure Database_Links;
     procedure For_Update;
     procedure Group_By;
+    procedure Lateral;
     procedure Left_Right_Full_Join;
     procedure Using;
     procedure Из_Подзапроса;
@@ -211,6 +212,7 @@ type
   protected
     function GetDir: string; override;
   published
+    procedure Insert;
     procedure Select_Into;
   end;
 
@@ -683,6 +685,10 @@ procedure _Запросы.Ansi_Синтаксис;
 begin
 end;
 
+procedure _Запросы.Lateral;
+begin
+end;
+
 procedure _Запросы.Left_Right_Full_Join;
 begin
 end;
@@ -837,6 +843,11 @@ end;
 function _Сопоставление_Полей.GetDir: string;
 begin
   Result := ExtractFilePath(ExcludeTrailingPathDelimiter(inherited GetDir)) + '\Фичи\Сопоставление полей';
+end;
+
+procedure _Сопоставление_Полей.Insert;
+begin
+  Settings.MatchParamLimit := 5;
 end;
 
 procedure _Сопоставление_Полей.Select_Into;

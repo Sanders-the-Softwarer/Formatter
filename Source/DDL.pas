@@ -16,6 +16,12 @@ uses SysUtils, Tokens, Statements, Printer, Streams, Commons, PLSQL;
 
 type
 
+  { Парсер DDL }
+  DDLParser = class
+  public
+    class function Parse(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+  end;
+
   { Команда drop }
   TDrop = class(TSemicolonStatement)
   strict private
@@ -306,7 +312,8 @@ type
 
 implementation
 
-uses Parser, DML, Expressions, Trigger, Role, Sequence, Synonym;
+uses Parser, DML, Expressions, Trigger, Role, Sequence, Synonym, Create, Alter,
+  Set_, Select;
 
 { TView }
 
@@ -899,6 +906,19 @@ end;
 procedure TSharing.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Sharing, _Eq, _What]);
+end;
+
+{ DDLParser }
+
+class function DDLParser.Parse(AParent: TStatement;
+  ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+begin
+  Result := TCreate.Parse(AParent, ASource, AResult) or
+            TDrop.Parse(AParent, ASource, AResult) or
+            TAlter.Parse(AParent, ASource, AResult) or
+            TSet.Parse(AParent, ASource, AResult) or
+            TComment.Parse(AParent, ASource, AResult) or
+            TGrant.Parse(AParent, ASource, AResult);
 end;
 
 end.

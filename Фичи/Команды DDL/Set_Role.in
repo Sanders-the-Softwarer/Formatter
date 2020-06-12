@@ -1,5 +1,3 @@
 set role none;
-
 set role all except public, sysdba;
-
 set role vasya, petya, kolya identified by "KOLJAN", semen;

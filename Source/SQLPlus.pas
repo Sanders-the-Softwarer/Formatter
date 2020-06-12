@@ -12,9 +12,15 @@ unit SQLPlus;
 
 interface
 
-uses SysUtils, Statements, Tokens, Printer, Utils, System.Generics.Collections;
+uses SysUtils, Statements, Streams, Tokens, Printer, Utils, System.Generics.Collections;
 
 type
+
+  { Парсер команд SQL*Plus }
+  SQLPlusParser = class
+  public
+    class function Parse(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+  end;
 
   { Базовый класс команд SQL*Plus }
   TSQLPlusStatement = class(TStatement);
@@ -130,7 +136,7 @@ type
 
 implementation
 
-uses Parser, Streams, Commons, PLSQL, Keywords;
+uses Parser, Commons, PLSQL, Keywords;
 
 { TClear }
 
@@ -351,6 +357,20 @@ end;
 function TDefine.Grouping: TStatementClass;
 begin
   Result := TDefine;
+end;
+
+{ SQLPlusParser }
+
+class function SQLPlusParser.Parse(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+begin
+  Result := TClear.Parse(AParent, ASource, AResult) or
+            TWhenever.Parse(AParent, ASource, AResult) or
+            TSet.Parse(AParent, ASource, AResult) or
+            TAt.Parse(AParent, ASource, AResult) or
+            TSpool.Parse(AParent, ASource, AResult) or
+            TCall.Parse(AParent, ASource, AResult) or
+            TChcp.Parse(AParent, ASource, AResult) or
+            TDefine.Parse(AParent, ASource, AResult);
 end;
 
 initialization

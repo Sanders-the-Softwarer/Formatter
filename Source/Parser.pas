@@ -49,9 +49,7 @@ type
   public
     constructor Create(AStream: TBufferedStream<TToken>; ASettings: TFormatSettings);
     class function ParseDML(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-    class function ParseDDL(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParsePLSQL(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-    class function ParseSQLPlus(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseDeclaration(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseType(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseAny(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
@@ -80,7 +78,7 @@ type
 
 implementation
 
-uses DDL, DML, PLSQL, SQLPlus, Expressions, Create, Alter, Select;
+uses DDL, DML, PLSQL, SQLPlus, Expressions, Select;
 
 type
   { "Пустое" выражение }
@@ -100,7 +98,7 @@ end;
 { Разбор поддерживаемых конструкций DML }
 class function TParser.ParseDML(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
-  Result := TNewSelect.Parse(AParent, ASource, AResult) or
+  Result := TSelect.Parse(AParent, ASource, AResult) or
             TInsert.Parse(AParent, ASource, AResult) or
             TUpdate.Parse(AParent, ASource, AResult) or
             TDelete.Parse(AParent, ASource, AResult) or
@@ -108,16 +106,6 @@ begin
             TCommit.Parse(AParent, ASource, AResult) or
             TRollback.Parse(AParent, ASource, AResult) or
             TSavepoint.Parse(AParent, ASource, AResult);
-end;
-
-{ Разбор поддерживаемых конструкций DDL }
-class function TParser.ParseDDL(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-begin
-  Result := TCreate.Parse(AParent, ASource, AResult) or
-            TDrop.Parse(AParent, ASource, AResult) or
-            TAlter.Parse(AParent, ASource, AResult) or
-            TComment.Parse(AParent, ASource, AResult) or
-            TGrant.Parse(AParent, ASource, AResult);
 end;
 
 { Разбор операторов PL/SQL }
@@ -147,19 +135,6 @@ begin
             TStandaloneComment.Parse(AParent, ASource, AResult);
 end;
 
-{ Разбор операторов SQL*Plus }
-class function TParser.ParseSQLPlus(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-begin
-  Result := TClear.Parse(AParent, ASource, AResult) or
-            TWhenever.Parse(AParent, ASource, AResult) or
-            TSet.Parse(AParent, ASource, AResult) or
-            TAt.Parse(AParent, ASource, AResult) or
-            TSpool.Parse(AParent, ASource, AResult) or
-            TCall.Parse(AParent, ASource, AResult) or
-            TChcp.Parse(AParent, ASource, AResult) or
-            TDefine.Parse(AParent, ASource, AResult);
-end;
-
 { Разбор деклараций (переменных, процедур, типов, курсоров, прагм и т. п. }
 class function TParser.ParseDeclaration(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
@@ -184,11 +159,11 @@ end;
 { Разбор произвольной заранее неизвестной конструкции }
 class function TParser.ParseAny(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
-  Result := ParseDDL(AParent, ASource, AResult) or
+  Result := DDLParser.Parse(AParent, ASource, AResult) or
             ParseDML(AParent, ASource, AResult) or
             TStandaloneAnonymousBlock.Parse(AParent, ASource, AResult) { нужно до PLSQL } or
             ParsePLSQL(AParent, ASource, AResult) or
-            ParseSQLPlus(AParent, ASource, AResult) or
+            SQLPlusParser.Parse(AParent, ASource, AResult) or
             ParseDeclaration(AParent, ASource, AResult) { должно быть в конце из-за variable declaration } or
             ParseType(AParent, ASource, AResult) or
             ParseExpression(AParent, ASource, AResult);

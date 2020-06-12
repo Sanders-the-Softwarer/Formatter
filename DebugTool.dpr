@@ -30,7 +30,8 @@ uses
   Create in 'Source\DDL\Create.pas',
   DatabaseLink in 'Source\DDL\DatabaseLink.pas',
   Select in 'Source\DML\Select.pas',
-  Statements in 'Source\Statements.pas';
+  Statements in 'Source\Statements.pas',
+  Set_ in 'Source\DDL\Set_.pas';
 
 {$R *.res}
 
