@@ -49,8 +49,8 @@ unit Statements;
 
 interface
 
-uses Classes, SysUtils, System.Generics.Collections, Utils, Streams, Tokens,
-  Printer, Rulers;
+uses Classes, SysUtils, Math, System.Generics.Collections, Utils, Streams,
+  Tokens, Printer, Rulers;
 
 type
 
@@ -65,10 +65,12 @@ type
     FSettings: TFormatSettings;
     FFirstToken: TToken;
     FRulers: TRulers;
+    FMatchedTo: TStatement;
     function GetSettings: TFormatSettings;
   strict protected
     function InternalParse: boolean; virtual;
-    procedure InternalMatch(AStatement: TStatement); virtual;
+    function InternalMatchFrom(AStatement: TStatement): boolean; virtual;
+    function InternalMatchTo(AStatement: TStatement): boolean; virtual;
     procedure InternalMatchChildren; virtual;
     procedure InternalPrintSelf(APrinter: TPrinter); virtual;
   strict protected
@@ -93,13 +95,14 @@ type
     constructor Create(AParent: TStatement; ASource: TBufferedStream<TToken>); virtual;
     destructor Destroy; override;
     procedure PrintSelf(APrinter: TPrinter);
-    procedure Match(AStatement: TStatement);
+    function MatchTo(AStatement: TStatement): boolean;
     procedure MatchChildren;
     function HasCommentsAbove: boolean;
     property Parent: TStatement read FParent write FParent;
     property Settings: TFormatSettings read GetSettings write FSettings;
     property FirstToken: TToken read FFirstToken;
     property Rulers: TRulers read FRulers write FRulers;
+    property MatchedTo: TStatement read FMatchedTo write FMatchedTo;
   public
     class function StatementType: string;
     function Name: string; virtual;
@@ -111,14 +114,22 @@ type
   {$TypeInfo Off}
 
   { Базовый класс для списков однотипных конструкций (переменные, операторы и т. п.) }
-  TStatementList<S: TStatement> = class(TStatement)
+
+  TBaseStatementList = class(TStatement)
+  strict protected
+    SpecialCommentAfterDelimiter: string;
+  public
+    procedure PrintSpecialCommentAfterDelimiter(const AComment: string);
+  end;
+
+  TStatementList<S: TStatement> = class(TBaseStatementList)
   strict private
     Statements: TList<TStatement>;
     Delimiters: TList<TObject>;
-    SpecialCommentAfterDelimiter: string;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+    function InternalMatchTo(AStatement: TStatement): boolean; override;
     function ParseStatement(out AResult: TStatement): boolean; virtual;
     function ParseDelimiter(out AResult: TObject): boolean; virtual;
     function ParseBreak: boolean; virtual;
@@ -134,7 +145,6 @@ type
     function Item(Index: integer): TStatement;
     function Delimiter(Index: integer): TObject;
     function Any(Found: array of TObject): boolean;
-    procedure PrintSpecialCommentAfterDelimiter(const AComment: string);
   end;
 
   { Базовый класс для списка однотипных конструкций, разделённых запятыми }
@@ -182,7 +192,7 @@ type
     function InternalParse: boolean; override;
     function AllowEmpty: boolean; virtual;
     function MultiLine: boolean; virtual;
-    procedure InternalMatch(AStatement: TStatement); override;
+    function InternalMatchTo(AStatement: TStatement): boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     property InnerStatement: TStatement read _Stmt;
@@ -267,6 +277,8 @@ procedure TStatement.PrintSelf(APrinter: TPrinter);
 begin
   MatchChildren;
   InternalPrintSelf(APrinter);
+  if Assigned(MatchedTo) and (Parent is TBaseStatementList) then
+    (Parent as TBaseStatementList).PrintSpecialCommentAfterDelimiter('=> ' + MatchedTo.StatementName);
 end;
 
 class function TStatement.Candidates: TArray<TStatementClass>;
@@ -361,10 +373,9 @@ begin
   if Assigned(Self) then InternalMatchChildren;
 end;
 
-procedure TStatement.Match(AStatement: TStatement);
+function TStatement.MatchTo(AStatement: TStatement): boolean;
 begin
-  if not Assigned(Self) or not Assigned(AStatement) then exit;
-  InternalMatch(AStatement);
+  Result := Assigned(Self) and Assigned(AStatement) and (InternalMatchTo(AStatement) or AStatement.InternalMatchFrom(Self));
 end;
 
 function TStatement.HasCommentsAbove: boolean;
@@ -378,9 +389,14 @@ begin
   raise Exception.CreateFmt('Cannot parse %s - InternalParse is absent', [ClassName]);
 end;
 
-procedure TStatement.InternalMatch(AStatement: TStatement);
+function TStatement.InternalMatchFrom(AStatement: TStatement): boolean;
 begin
-  { ничего не делаем }
+  Result := false; { ничего не делаем }
+end;
+
+function TStatement.InternalMatchTo(AStatement: TStatement): boolean;
+begin
+  Result := false; { ничего не делаем }
 end;
 
 procedure TStatement.InternalMatchChildren;
@@ -623,6 +639,21 @@ begin
   end;
 end;
 
+function TStatementList<S>.InternalMatchTo(AStatement: TStatement): boolean;
+var
+  Count, i: integer;
+  TargetList: TStatementList<TStatement> absolute AStatement;
+begin
+  Result := false;
+  if not (AStatement is TBaseStatementList) then exit;
+  Count := Math.Min(Self.Count, TargetList.Count);
+  Assert(Settings <> nil);
+  if Count < Settings.MatchParamLimit then exit;
+  for i := 0 to Count - 1 do
+    if Assigned(Self.Item(i)) and Assigned(TargetList.Item(i)) then
+      Self.Item(i).MatchedTo := TargetList.Item(i);
+end;
+
 procedure TStatementList<S>.PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject; ALast: boolean);
 begin
   APrinter.PrintItem(ADelimiter);
@@ -684,7 +715,7 @@ begin
   for i := Low(Found) to High(Found) do Result := Result or Assigned(Found[i]);
 end;
 
-procedure TStatementList<S>.PrintSpecialCommentAfterDelimiter(const AComment: string);
+procedure TBaseStatementList.PrintSpecialCommentAfterDelimiter(const AComment: string);
 begin
   SpecialCommentAfterDelimiter := AComment;
 end;
@@ -762,9 +793,9 @@ begin
   Result := true;
 end;
 
-procedure TBracketedStatement<T>.InternalMatch(AStatement: TStatement);
+function TBracketedStatement<T>.InternalMatchTo(AStatement: TStatement): boolean;
 begin
-  _Stmt.Match(AStatement);
+  Result := _Stmt.MatchTo(AStatement);
 end;
 
 procedure TBracketedStatement<T>.InternalPrintSelf(APrinter: TPrinter);

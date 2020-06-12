@@ -22,7 +22,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-    procedure InternalMatch(AStatement: TStatement); override;
+    function InternalMatchTo(AStatement: TStatement): boolean; override;
   public
   end;
 
@@ -34,7 +34,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-    procedure InternalMatch(AStatement: TStatement); override;
+    function InternalMatchTo(AStatement: TStatement): boolean; override;
   end;
 
   { Блок запроса данных }
@@ -46,13 +46,13 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-    procedure InternalMatch(AStatement: TStatement); override;
+    procedure InternalMatchChildren; override;
   end;
 
   { Выражение for update }
   TForUpdate = class(TStatement)
   strict private
-    _ForUpdate, _Of, _Mode: TEpithet;
+    _For, _Update, _Of, _Mode: TEpithet;
     _Columns: TStatement;
     _WaitTime: TNumber;
   strict protected
@@ -379,6 +379,8 @@ type
   { Вторая и последующие таблицы в выражении join }
   TJoinedTable = class(TStatement)
   strict private
+    _Join, _On, _Using: TEpithet;
+    _TableRef, _Condition, _Columns, _Next: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -432,6 +434,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+    function InternalMatchFrom(AStatement: TStatement): boolean; override;
   end;
 
 (*
@@ -500,16 +503,18 @@ function TNewSelect.InternalParse: boolean;
 begin
   Result := TSubquery.Parse(Self, Source, _SubQuery);
   if Result then TForUpdate.Parse(Self, Source, _ForUpdate);
+  inherited;
 end;
 
 procedure TNewSelect.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_SubQuery, _NextLine, _ForUpdate]);
+  inherited;
 end;
 
-procedure TNewSelect.InternalMatch(AStatement: TStatement);
+function TNewSelect.InternalMatchTo(AStatement: TStatement): boolean;
 begin
-  _SubQuery.Match(AStatement);
+  Result := _SubQuery.MatchTo(AStatement);
 end;
 
 { TForUpdate }
@@ -517,17 +522,20 @@ end;
 function TForUpdate.InternalParse: boolean;
 begin
   Result := true;
-  _ForUpdate := Keyword('for update');
-  if not Assigned(_ForUpdate) then exit(false);
+  _For := Keyword('for');
+  _Update := Keyword('update');
+  if not Assigned(_For) or not Assigned(_Update) then exit(false);
   _Of := Keyword('of');
-  if Assigned(_Of) then TSingleLine<TIdentFields>.Parse(Self, Source, _Columns);
+  if Assigned(_Of) then TIdentFields.Parse(Self, Source, _Columns);
   _Mode := Keyword(['wait', 'nowait', 'skip locked']);
   if Assigned(_Mode) and (_Mode.Value = 'wait') then _WaitTime := Number;
 end;
 
 procedure TForUpdate.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_ForUpdate, _Of, _Columns, _Mode, _WaitTime]);
+  APrinter.PrintItems([_For, _Update, _Of]);
+  APrinter.NextLineIf([_Indent, _Columns, _UndentNextLine]);
+  APrinter.PrintItems([_Mode, _WaitTime]);
 end;
 
 { TSubQuery }
@@ -551,9 +559,9 @@ begin
                        _NextQuery]);
 end;
 
-procedure TSubQuery.InternalMatch(AStatement: TStatement);
+function TSubQuery.InternalMatchTo(AStatement: TStatement): boolean;
 begin
-  _Main.Match(AStatement);
+  Result := _Main.MatchTo(AStatement);
 end;
 
 { TOrderBy }
@@ -642,7 +650,7 @@ procedure TQueryBlock.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_With,      _IndentNextLine,
                                    _WithList,       _UndentNextLine,
-                       _Select,    _IndentNextLine,
+                       _Select,    _Distinct,       _IndentNextLine,
                                    _SelectList,     _UndentNextLine,
                        _Into,
                        _From,      _IndentNextLine,
@@ -653,9 +661,9 @@ begin
                        _Model]);
 end;
 
-procedure TQueryBlock.InternalMatch(AStatement: TStatement);
+procedure TQueryBlock.InternalMatchChildren;
 begin
-  if Assigned(_SelectList) then _SelectList.Match(AStatement);
+  _SelectList.MatchTo(_Into);
 end;
 
 { TWithItem }
@@ -717,8 +725,7 @@ end;
 
 function TFromField.InternalParse: boolean;
 begin
-  Result := TTableReference.Parse(Self, Source, _Body) or
-            TBracketedStatement<TJoin>.Parse(Self, Source, _Body) or
+  Result := TBracketedStatement<TJoin>.Parse(Self, Source, _Body) or
             TJoin.Parse(Self, Source, _Body);
 end;
 
@@ -746,12 +753,16 @@ end;
 function TConnectBy.InternalParse: boolean;
 begin
   Result := true;
+  { start with может быть до connect by }
   _StartWith := Keyword('start with');
   if Assigned(_StartWith) then TParser.ParseExpression(Self, Source, _StartCondition);
+  { Теперь сам connect by }
   _ConnectBy := Keyword(['connect by', 'connect by nocycle']);
   if not Assigned(_ConnectBy) then exit(false);
   TParser.ParseExpression(Self, Source, _ConnectCondition);
-  if not Assigned(_StartWith) then _StartWith := Keyword('start with');
+  { И start with может быть после connect by }
+  if Assigned(_StartWith) then exit;
+  _StartWith := Keyword('start with');
   if Assigned(_StartWith) then TParser.ParseExpression(Self, Source, _StartCondition);
 end;
 
@@ -1245,11 +1256,26 @@ end;
 
 function TJoinedTable.InternalParse: boolean;
 begin
-  Result := false;
+  Result := true;
+  _Join := Keyword(['join', 'inner join', 'cross join', 'natural join', 'natural inner join']);
+  if not Assigned(_Join) then exit(false);
+  TTableReference.Parse(Self, Source, _TableRef);
+  _On := Keyword('on');
+  if Assigned(_On) then TParser.ParseExpression(Self, Source, _Condition);
+  _Using := Keyword('using');
+  if Assigned(_Using) then TSingleLine<TBracketedStatement<TIdentFields>>.Parse(Self, Source, _Columns);
+  TJoin.Parse(Self, Source, _Next);
 end;
 
 procedure TJoinedTable.InternalPrintSelf(APrinter: TPrinter);
 begin
+  APrinter.PrintItems([
+    _IndentNextLine,
+                     _Join,           _UndentNextLine,
+    _TableRef,       _IndentNextLine,
+                     _On, _Using,     _IndentNextLine,
+                                      _Condition, _Columns, _UndentNextLine, _Undent,
+    _Next]);
 end;
 
 { TInto }
@@ -1264,6 +1290,11 @@ end;
 procedure TInto.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Into, _IndentNextLine, _Targets, _Undent, _NextLine]);
+end;
+
+function TInto.InternalMatchFrom(AStatement: TStatement): boolean;
+begin
+  Result := AStatement.MatchTo(_Targets);
 end;
 
 end.

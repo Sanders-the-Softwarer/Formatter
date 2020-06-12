@@ -34,7 +34,6 @@ type
     procedure Запрос_Из_Вложенных_Структур_И_Табличных_Типов;
     procedure Запрос_С_Lateral;
     procedure Запрос_С_Where;
-    procedure Запрос_С_Group_By;
     procedure Запрос_С_Having;
     procedure Запрос_Со_Start_With_И_Connect_By;
     procedure Запрос_С_Order_By;
@@ -42,7 +41,6 @@ type
     procedure Запрос_С_Подстановками;
     procedure Указание_Направления_Сортировки_И_Расположения_Null_В_Order_By;
     procedure Связывание_Запросов_Через_Операции_Над_Множествами;
-    procedure Сопоставление_Полей_В_Into;
     procedure Запрос_С_Оракловым_Синтаксисом_Внешних_Соединений;
     procedure Запрос_С_Outer_Cross_Apply;
     procedure Запрос_С_Distinct_Unique_All;
@@ -122,11 +120,6 @@ end;
 
 procedure _Select.Связывание_Запросов_Через_Операции_Над_Множествами;
 begin
-end;
-
-procedure _Select.Сопоставление_Полей_В_Into;
-begin
-  Settings.MatchParamLimit := 5;
 end;
 
 procedure _Select.Указание_Направления_Сортировки_И_Расположения_Null_В_Order_By;
@@ -249,10 +242,6 @@ begin
 end;
 
 procedure _Select.Запрос_С_Distinct_Unique_All;
-begin
-end;
-
-procedure _Select.Запрос_С_Group_By;
 begin
 end;
 

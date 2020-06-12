@@ -643,6 +643,7 @@ begin
   if Check(Result, 'full', 'join') then exit;
   if Check(Result, 'full', 'natural', 'join') then exit;
   if Check(Result, 'full', 'outer', 'join') then exit;
+  if Check(Result, 'group', 'by') then exit;
   if Check(Result, 'grouping', 'sets') then exit;
   if Check(Result, 'identified', 'by') then exit;
   if Check(Result, 'identified', 'externally') then exit;

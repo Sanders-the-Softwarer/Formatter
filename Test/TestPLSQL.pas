@@ -137,10 +137,11 @@ type
     procedure Ansi_Синтаксис;
     procedure Database_Links;
     procedure For_Update;
+    procedure Group_By;
     procedure Left_Right_Full_Join;
     procedure Using;
-    procedure Лишние_Слова_В_Joinах;
     procedure Из_Подзапроса;
+    procedure Лишние_Слова_В_Joinах;
   end;
 
   { Тесты на пакеты }
@@ -203,6 +204,14 @@ type
   published
     procedure Перенос_При_Присвоении_Многострочного_Выражения;
     procedure Конкатенация_Должна_Делать_Перенос_По_Одинаковым_Символам;
+  end;
+
+  { Тесты на сопоставление полей }
+  _Сопоставление_Полей = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure Select_Into;
   end;
 
   { Контрольные примеры - большие файлы, на которых проверяется глобально
@@ -698,6 +707,10 @@ procedure _Запросы.For_Update;
 begin
 end;
 
+procedure _Запросы.Group_By;
+begin
+end;
+
 { _Команды_SQLPLUS }
 
 function _Команды_SQLPLUS.GetDir: string;
@@ -819,12 +832,25 @@ begin
   PostponeTill(2020, 4, 30);
 end;
 
+{ _Сопоставление_Полей }
+
+function _Сопоставление_Полей.GetDir: string;
+begin
+  Result := ExtractFilePath(ExcludeTrailingPathDelimiter(inherited GetDir)) + '\Фичи\Сопоставление полей';
+end;
+
+procedure _Сопоставление_Полей.Select_Into;
+begin
+  Settings.MatchParamLimit := 5;
+end;
+
 initialization
   RegisterTest(_PLSQL.Suite);
   RegisterTest(_Выравнивание.Suite);
   RegisterTest(_Комментарии.Suite);
   RegisterTest(_Отмена_Форматирования.Suite);
   RegisterTest(_Запросы.Suite);
+  RegisterTest(_Сопоставление_Полей.Suite);
   RegisterTest(_Операторы.Suite);
   RegisterTest(_Пакеты.Suite);
   RegisterTest(_Пустые_Строки.Suite);

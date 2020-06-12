@@ -56,7 +56,7 @@ type
     _ForUpdate: TStatement;
   strict protected
     function InternalParse: boolean; override;
-    procedure InternalMatch(AStatement: TStatement); override;
+    function InternalMatchTo(AStatement: TStatement): boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
@@ -166,20 +166,15 @@ type
   TExpressionField = class(TStatement)
   strict private
     _Expression: TStatement;
-    _Match: TIdentField;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override; final;
   public
     procedure PrintSelfBefore(APrinter: TPrinter); virtual;
     procedure PrintSelfAfter(APrinter: TPrinter); virtual;
-    property MatchedTo: TIdentField read _Match write _Match;
   end;
 
   TExpressionFields = class(TCommaList<TExpressionField>)
-  strict protected
-    procedure InternalMatch(AStatement: TStatement); override;
-  public
     function Aligned: boolean; override;
   end;
 
@@ -591,8 +586,6 @@ begin
   PrintSelfBefore(APrinter);
   APrinter.PrintItem(_Expression);
   PrintSelfAfter(APrinter);
-  if Assigned(_Match) then
-    (Parent as TExpressionFields).PrintSpecialCommentAfterDelimiter('=> ' + TIdentField(_Match).Name);
 end;
 
 procedure TExpressionField.PrintSelfBefore(APrinter: TPrinter);
@@ -610,20 +603,6 @@ end;
 function TExpressionFields.Aligned: boolean;
 begin
   Result := true;
-end;
-
-procedure TExpressionFields.InternalMatch(AStatement: TStatement);
-var
-  Count, i: integer;
-  AFields: TIdentFields absolute AStatement;
-begin
-  if not (AStatement is TIdentFields) then exit;
-  Count := Math.Min(Self.Count, AFields.Count);
-  Assert(Settings <> nil);
-  if Count < Settings.MatchParamLimit then exit;
-  for i := 0 to Count - 1 do
-    if (Self.Item(i) is TExpressionField) and (AFields.Item(i) is TIdentField) then
-      TExpressionField(Self.Item(i)).MatchedTo := TIdentField(AFields.Item(i));
 end;
 
 { TWhere }
@@ -654,7 +633,7 @@ end;
 
 procedure TReturning.InternalMatchChildren;
 begin
-  _ReturningFields.Match(_Targets);
+  _ReturningFields.MatchTo(_Targets);
 end;
 
 procedure TReturning.InternalPrintSelf(APrinter: TPrinter);
@@ -866,7 +845,7 @@ end;
 
 procedure TSelect.InternalPrintSelf(APrinter: TPrinter);
 begin
-  TExpressionFields(_Fields).Match(TIdentFields(_IntoFields));
+  _Fields.MatchTo(_IntoFields);
   APrinter.PrintItems([_With,
                        _Select,           _Mode,           _IndentNextLine,
                                           _Fields,         _UndentNextLine,
@@ -885,9 +864,9 @@ begin
   inherited;
 end;
 
-procedure TSelect.InternalMatch(AStatement: TStatement);
+function TSelect.InternalMatchTo(AStatement: TStatement): boolean;
 begin
-  _Fields.Match(AStatement);
+  Result := _Fields.MatchTo(AStatement);
 end;
 
 { TInnerSelect }
@@ -1142,7 +1121,7 @@ end;
 procedure TInsert.InternalMatchChildren;
 begin
   if not Assigned(_Fields) then exit;
-  _ValueList.Match(TBracketedStatement<TIdentFields>(_Fields).InnerStatement);
+  _ValueList.MatchTo(TBracketedStatement<TIdentFields>(_Fields).InnerStatement);
 end;
 
 procedure TInsert.InternalPrintSelf(APrinter: TPrinter);
