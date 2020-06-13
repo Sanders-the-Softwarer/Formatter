@@ -48,7 +48,6 @@ type
     function InternalNext: TStatement; override;
   public
     constructor Create(AStream: TBufferedStream<TToken>; ASettings: TFormatSettings);
-    class function ParseDML(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParsePLSQL(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseDeclaration(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseType(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
@@ -93,19 +92,6 @@ constructor TParser.Create(AStream: TBufferedStream<TToken>; ASettings: TFormatS
 begin
   inherited Create(AStream);
   Settings := ASettings;
-end;
-
-{ Разбор поддерживаемых конструкций DML }
-class function TParser.ParseDML(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-begin
-  Result := TSelect.Parse(AParent, ASource, AResult) or
-            TInsert.Parse(AParent, ASource, AResult) or
-            TUpdate.Parse(AParent, ASource, AResult) or
-            TDelete.Parse(AParent, ASource, AResult) or
-             TMerge.Parse(AParent, ASource, AResult) or
-            TCommit.Parse(AParent, ASource, AResult) or
-            TRollback.Parse(AParent, ASource, AResult) or
-            TSavepoint.Parse(AParent, ASource, AResult);
 end;
 
 { Разбор операторов PL/SQL }
@@ -160,7 +146,7 @@ end;
 class function TParser.ParseAny(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
   Result := DDLParser.Parse(AParent, ASource, AResult) or
-            ParseDML(AParent, ASource, AResult) or
+            DMLParser.Parse(AParent, ASource, AResult) or
             TStandaloneAnonymousBlock.Parse(AParent, ASource, AResult) { нужно до PLSQL } or
             ParsePLSQL(AParent, ASource, AResult) or
             SQLPlusParser.Parse(AParent, ASource, AResult) or

@@ -57,6 +57,9 @@ type
   { Ссылка на класс синтаксических конструкций }
   TStatementClass = class of TStatement;
 
+  { Предобъявление списка для использования в GetMatchSource/Target }
+  TBaseStatementList = class;
+
   { Базовый класс синтаксических конструкций }
   {$TypeInfo On}
   TStatement = class
@@ -69,10 +72,10 @@ type
     function GetSettings: TFormatSettings;
   strict protected
     function InternalParse: boolean; virtual;
-    function InternalMatchFrom(AStatement: TStatement): boolean; virtual;
-    function InternalMatchTo(AStatement: TStatement): boolean; virtual;
-    procedure InternalMatchChildren; virtual;
     procedure InternalPrintSelf(APrinter: TPrinter); virtual;
+    procedure MatchChildren; virtual;
+    function InternalGetMatchSource: TBaseStatementList; virtual;
+    function InternalGetMatchTarget: TBaseStatementList; virtual;
   strict protected
     Source: TBufferedStream<TToken>;
     function IsStrongKeyword(const AEpithet: string): boolean;
@@ -95,8 +98,6 @@ type
     constructor Create(AParent: TStatement; ASource: TBufferedStream<TToken>); virtual;
     destructor Destroy; override;
     procedure PrintSelf(APrinter: TPrinter);
-    function MatchTo(AStatement: TStatement): boolean;
-    procedure MatchChildren;
     function HasCommentsAbove: boolean;
     property Parent: TStatement read FParent write FParent;
     property Settings: TFormatSettings read GetSettings write FSettings;
@@ -105,11 +106,14 @@ type
     property MatchedTo: TStatement read FMatchedTo write FMatchedTo;
   public
     class function StatementType: string;
+    class procedure Match(ASource, ATarget: TStatement);
     function Name: string; virtual;
     function StatementName: string; virtual;
     function Aligned: boolean; virtual;
     function Transparent: boolean; virtual;
     function Grouping: TStatementClass; virtual;
+    function GetMatchSource: TBaseStatementList;
+    function GetMatchTarget: TBaseStatementList;
   end;
   {$TypeInfo Off}
 
@@ -120,6 +124,8 @@ type
     SpecialCommentAfterDelimiter: string;
   public
     procedure PrintSpecialCommentAfterDelimiter(const AComment: string);
+    function Count: integer; virtual; abstract;
+    function Item(Index: integer): TStatement; virtual; abstract;
   end;
 
   TStatementList<S: TStatement> = class(TBaseStatementList)
@@ -129,7 +135,6 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-    function InternalMatchTo(AStatement: TStatement): boolean; override;
     function ParseStatement(out AResult: TStatement): boolean; virtual;
     function ParseDelimiter(out AResult: TObject): boolean; virtual;
     function ParseBreak: boolean; virtual;
@@ -141,8 +146,8 @@ type
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
     function StatementName: string; override;
-    function Count: integer;
-    function Item(Index: integer): TStatement;
+    function Count: integer; override;
+    function Item(Index: integer): TStatement; override;
     function Delimiter(Index: integer): TObject;
     function Any(Found: array of TObject): boolean;
   end;
@@ -192,8 +197,9 @@ type
     function InternalParse: boolean; override;
     function AllowEmpty: boolean; virtual;
     function MultiLine: boolean; virtual;
-    function InternalMatchTo(AStatement: TStatement): boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+    function InternalGetMatchSource: TBaseStatementList; override;
+    function InternalGetMatchTarget: TBaseStatementList; override;
   public
     property InnerStatement: TStatement read _Stmt;
     function Transparent: boolean; override;
@@ -223,6 +229,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+    function InternalGetMatchSource: TBaseStatementList; override;
   public
     function Transparent: boolean; override;
     function Aligned: boolean; override;
@@ -273,6 +280,7 @@ begin
   Result := false;
 end;
 
+{ Вывод разобранного выражения на печать }
 procedure TStatement.PrintSelf(APrinter: TPrinter);
 begin
   MatchChildren;
@@ -281,6 +289,7 @@ begin
     (Parent as TBaseStatementList).PrintSpecialCommentAfterDelimiter('=> ' + MatchedTo.StatementName);
 end;
 
+{ По умолчанию единственным кандидатом на реализацию класса является сам класс }
 class function TStatement.Candidates: TArray<TStatementClass>;
 begin
   Result := TArray<TStatementClass>.Create(Self);
@@ -363,6 +372,67 @@ begin
   raise Exception.CreateFmt('Cannot print %s - PrintSelf is absent', [ClassName]);
 end;
 
+function TStatement.InternalGetMatchSource: TBaseStatementList;
+begin
+  Result := nil;
+end;
+
+function TStatement.InternalGetMatchTarget: TBaseStatementList;
+begin
+  Result := nil;
+end;
+
+{ Реализация сопоставления полей }
+class procedure TStatement.Match(ASource, ATarget: TStatement);
+var
+  SourceList, TargetList: TBaseStatementList;
+  SourceItem, TargetItem: TStatement;
+  Count, i: integer;
+begin
+  { Определим исходный список }
+  if not Assigned(ASource) then exit;
+  if ASource is TBaseStatementList
+    then SourceList := TBaseStatementList(ASource)
+    else SourceList := ASource.GetMatchSource;
+  if not Assigned(SourceList) then exit;
+  { Определим целевой список }
+  if not Assigned(ATarget) then exit;
+  if ATarget is TBaseStatementList
+    then TargetList := TBaseStatementList(ATarget)
+    else TargetList := ATarget.GetMatchTarget;
+  if not Assigned(TargetList) then exit;
+  { Сопоставим элементы списков }
+  Count := Math.Min(SourceList.Count, TargetList.Count);
+  if Count < ASource.Settings.MatchParamLimit then exit;
+  for i := 0 to Count - 1 do
+  begin
+    SourceItem := SourceList.Item(i);
+    TargetItem := TargetList.Item(i);
+    if Assigned(SourceItem) then SourceItem.MatchedTo := TargetItem;
+  end;
+end;
+
+function TStatement.GetMatchSource: TBaseStatementList;
+begin
+  if not Assigned(Self) then
+    Result := nil
+  else if Self is TBaseStatementList then
+    Result := TBaseStatementList(Self)
+  else
+    Result := Self.InternalGetMatchSource;
+  Assert((Result = nil) or (TObject(Result) is TBaseStatementList));
+end;
+
+function TStatement.GetMatchTarget: TBaseStatementList;
+begin
+  if not Assigned(Self) then
+    Result := nil
+  else if Self is TBaseStatementList then
+    Result := TBaseStatementList(Self)
+  else
+    Result := Self.InternalGetMatchTarget;
+end;
+
 function TStatement.Aligned: boolean;
 begin
   Result := false;
@@ -370,12 +440,7 @@ end;
 
 procedure TStatement.MatchChildren;
 begin
-  if Assigned(Self) then InternalMatchChildren;
-end;
-
-function TStatement.MatchTo(AStatement: TStatement): boolean;
-begin
-  Result := Assigned(Self) and Assigned(AStatement) and (InternalMatchTo(AStatement) or AStatement.InternalMatchFrom(Self));
+  { ничего не делаем }
 end;
 
 function TStatement.HasCommentsAbove: boolean;
@@ -387,21 +452,6 @@ end;
 function TStatement.InternalParse: boolean;
 begin
   raise Exception.CreateFmt('Cannot parse %s - InternalParse is absent', [ClassName]);
-end;
-
-function TStatement.InternalMatchFrom(AStatement: TStatement): boolean;
-begin
-  Result := false; { ничего не делаем }
-end;
-
-function TStatement.InternalMatchTo(AStatement: TStatement): boolean;
-begin
-  Result := false; { ничего не делаем }
-end;
-
-procedure TStatement.InternalMatchChildren;
-begin
-  { ничего не делаем }
 end;
 
 function TStatement.IsStrongKeyword(const AEpithet: string): boolean;
@@ -639,21 +689,6 @@ begin
   end;
 end;
 
-function TStatementList<S>.InternalMatchTo(AStatement: TStatement): boolean;
-var
-  Count, i: integer;
-  TargetList: TStatementList<TStatement> absolute AStatement;
-begin
-  Result := false;
-  if not (AStatement is TBaseStatementList) then exit;
-  Count := Math.Min(Self.Count, TargetList.Count);
-  Assert(Settings <> nil);
-  if Count < Settings.MatchParamLimit then exit;
-  for i := 0 to Count - 1 do
-    if Assigned(Self.Item(i)) and Assigned(TargetList.Item(i)) then
-      Self.Item(i).MatchedTo := TargetList.Item(i);
-end;
-
 procedure TStatementList<S>.PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject; ALast: boolean);
 begin
   APrinter.PrintItem(ADelimiter);
@@ -793,9 +828,14 @@ begin
   Result := true;
 end;
 
-function TBracketedStatement<T>.InternalMatchTo(AStatement: TStatement): boolean;
+function TBracketedStatement<T>.InternalGetMatchSource: TBaseStatementList;
 begin
-  Result := _Stmt.MatchTo(AStatement);
+  Result := _Stmt.GetMatchSource;
+end;
+
+function TBracketedStatement<T>.InternalGetMatchTarget: TBaseStatementList;
+begin
+  Result := _Stmt.GetMatchTarget;
 end;
 
 procedure TBracketedStatement<T>.InternalPrintSelf(APrinter: TPrinter);
@@ -858,6 +898,11 @@ end;
 function TAligned<T>.Transparent: boolean;
 begin
   Result := true;
+end;
+
+function TAligned<T>.InternalGetMatchSource: TBaseStatementList;
+begin
+  Result := _Stmt.GetMatchSource;
 end;
 
 { TStrictStatementList<S> }

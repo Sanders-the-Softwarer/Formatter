@@ -141,6 +141,7 @@
         <DCCReference Include="Source\DML\Select.pas"/>
         <DCCReference Include="Source\Statements.pas"/>
         <DCCReference Include="Source\DDL\Set_.pas"/>
+        <DCCReference Include="Source\DML\Insert.pas"/>
         <None Include="Profiling\AQtimeModule2.aqt"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>

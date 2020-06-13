@@ -1022,11 +1022,11 @@ begin
   APrinter.PrintItem(_Semicolon);
 end;
 
-{ TOperators }
+{ TStatements }
 
 function TStatements.ParseStatement(out AResult: TStatement): boolean;
 begin
-  Result := TParser.ParseDML(Self, Source, AResult) or
+  Result := DMLParser.Parse(Self, Source, AResult) or
             TParser.ParsePLSQL(Self, Source, AResult);
 end;
 
@@ -1495,7 +1495,7 @@ begin
     end;
   _Save := Keyword('save');
   _Exceptions := Keyword('exceptions');
-  if not TParser.ParseDML(Self, Source, _DML) then TParser.ParsePLSQL(Self, Source, _DML);
+  if not DMLParser.Parse(Self, Source, _DML) then TParser.ParsePLSQL(Self, Source, _DML);
   inherited;
   Result := true;
 end;

@@ -145,6 +145,7 @@
         <DCCReference Include="Source\Tokens.pas"/>
         <DCCReference Include="Source\Utils.pas"/>
         <DCCReference Include="Source\DML\Select.pas"/>
+        <DCCReference Include="Source\DML\Insert.pas"/>
         <DCCReference Include="Source\DDL\Set_.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

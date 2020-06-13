@@ -31,6 +31,7 @@ uses
   Tokens in 'Source\Tokens.pas',
   Utils in 'Source\Utils.pas',
   Select in 'Source\DML\Select.pas',
+  Insert in 'Source\DML\Insert.pas',
   Set_ in 'Source\DDL\Set_.pas';
 
 const

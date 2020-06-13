@@ -23,8 +23,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-    function InternalMatchTo(AStatement: TStatement): boolean; override;
-  public
+    function InternalGetMatchSource: TBaseStatementList; override;
   end;
 
 implementation
@@ -41,7 +40,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-    function InternalMatchTo(AStatement: TStatement): boolean; override;
+    function InternalGetMatchSource: TBaseStatementList; override;
   end;
 
   { Блок запроса данных }
@@ -53,7 +52,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-    procedure InternalMatchChildren; override;
+    procedure MatchChildren; override;
+    function InternalGetMatchSource: TBaseStatementList; override;
   end;
 
   { Выражение for update }
@@ -441,7 +441,7 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-    function InternalMatchFrom(AStatement: TStatement): boolean; override;
+    function InternalGetMatchTarget: TBaseStatementList; override;
   end;
 
 (*
@@ -515,9 +515,9 @@ begin
   inherited;
 end;
 
-function TSelect.InternalMatchTo(AStatement: TStatement): boolean;
+function TSelect.InternalGetMatchSource: TBaseStatementList;
 begin
-  Result := _SubQuery.MatchTo(AStatement);
+  Result := _SubQuery.GetMatchSource;
 end;
 
 { TForUpdate }
@@ -543,6 +543,11 @@ end;
 
 { TSubQuery }
 
+function TSubQuery.InternalGetMatchSource: TBaseStatementList;
+begin
+  Result := _Main.GetMatchSource;
+end;
+
 function TSubQuery.InternalParse: boolean;
 begin
   Result := TBracketedStatement<TSubQuery>.Parse(Self, Source, _Main) or
@@ -560,11 +565,6 @@ begin
                        _RowLimit, _NextLine,
                        _Union, _NextLine,
                        _NextQuery]);
-end;
-
-function TSubQuery.InternalMatchTo(AStatement: TStatement): boolean;
-begin
-  Result := _Main.MatchTo(AStatement);
 end;
 
 { TOrderBy }
@@ -639,7 +639,7 @@ begin
   _Select := Keyword('select');
   if not Assigned(_Select) then exit(false);
   _Distinct := Keyword(['distinct', 'unique', 'all']);
-  TCommaList<TAliasedExpression>.Parse(Self, Source, _SelectList);
+  TAligned<TCommaList<TAliasedExpression>>.Parse(Self, Source, _SelectList);
   TInto.Parse(Self, Source, _Into);
   _From := Keyword('from');
   TCommaList<TFromField>.Parse(Self, Source, _FromList);
@@ -664,9 +664,14 @@ begin
                        _Model]);
 end;
 
-procedure TQueryBlock.InternalMatchChildren;
+procedure TQueryBlock.MatchChildren;
 begin
-  _SelectList.MatchTo(_Into);
+  Match(_SelectList, _Into);
+end;
+
+function TQueryBlock.InternalGetMatchSource: TBaseStatementList;
+begin
+  Result := _SelectList.GetMatchSource;
 end;
 
 { TWithItem }
@@ -1303,9 +1308,9 @@ begin
   APrinter.PrintItems([_Into, _IndentNextLine, _Targets, _Undent, _NextLine]);
 end;
 
-function TInto.InternalMatchFrom(AStatement: TStatement): boolean;
+function TInto.InternalGetMatchTarget: TBaseStatementList;
 begin
-  Result := AStatement.MatchTo(_Targets);
+  Result := TBaseStatementList(_Targets);
 end;
 
 end.

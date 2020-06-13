@@ -64,7 +64,6 @@ type
     procedure Insert_В_Подзапрос;
     procedure Insert_В_Подзапрос_С_Алиасом;
     procedure Insert_С_Указанием_Полей;
-    procedure Insert_Select_С_Сопоставлением_Полей;
     procedure Insert_С_Returning;
     procedure Insert_С_Returning_С_Сопоставлением;
   end;
@@ -247,11 +246,6 @@ end;
 
 procedure _Insert.Insert_С_Returning;
 begin
-end;
-
-procedure _Insert.Insert_Select_С_Сопоставлением_Полей;
-begin
-  Settings.MatchParamLimit := 5;
 end;
 
 procedure _Insert.Insert_В_Подзапрос;

@@ -12,13 +12,50 @@ unit DML;
 
 interface
 
-uses Classes, SysUtils, Math, Tokens, Statements, Printer, Commons,
+uses Classes, SysUtils, Math, Tokens, Streams, Statements, Printer, Commons,
   Expressions, Utils;
 
 type
 
+  { Парсер DML-команд }
+  DMLParser = class
+  public
+    class function Parse(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+  end;
+
   { Общий предок DML-операторов }
   TDML = class(TSemicolonStatement);
+
+  { Указание таблицы - в select, merge, delete и т. п. }
+  TTableRef = class(TStatement)
+  strict private
+    _Select: TStatement;
+    _Table: TEpithet;
+    _OpenBracket: TTerminal;
+    _TableName: TStatement;
+    _CloseBracket: TTerminal;
+    _Alias: TEpithet;
+  strict protected
+    function InternalParse: boolean; override;
+    function ParseTableExpression(out AResult: TStatement): boolean; virtual;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+    function InternalGetMatchSource: TBaseStatementList; override;
+  public
+    function StatementName: string; override;
+  end;
+
+  { Конструкция returning }
+  TReturning = class(TStatement)
+  strict private
+    _Returning: TEpithet;
+    _ReturningFields: TStatement;
+    _Into: TEpithet;
+    _Targets: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure MatchChildren; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
 
   { Расширение понятия операнда для SQL-выражений }
   TSqlTerm = class(TTerm)
@@ -33,17 +70,6 @@ type
     function ForcedLineBreaks: boolean; override;
   public
     function Aligned: boolean; override;
-  end;
-
-  { Оператор insert }
-  TInsert = class(TDML)
-  strict private
-    _Insert, _Into, _Values: TEpithet;
-    _Table, _Fields, _ValueList, _Returning: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalMatchChildren; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Оператор update }
@@ -144,7 +170,7 @@ type
 
 implementation
 
-uses Parser, Keywords, Select;
+uses Parser, Keywords, Select, Insert;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -269,47 +295,6 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Конструкция returning }
-  TReturning = class(TStatement)
-  strict private
-    _Returning: TEpithet;
-    _ReturningFields: TStatement;
-    _Into: TEpithet;
-    _Targets: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalMatchChildren; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Конструкция for update }
-  TForUpdate = class(TStatement)
-  strict private
-    _For, _Update, _Of, _WaitMode, _SkipLocked: TEpithet;
-    _WaitTime: TNumber;
-    _Columns: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Указание таблицы - в select, merge, delete и т. п. }
-  TTableRef = class(TStatement)
-  strict private
-    _Select: TStatement;
-    _Table: TEpithet;
-    _OpenBracket: TTerminal;
-    _TableName: TStatement;
-    _CloseBracket: TTerminal;
-    _Alias: TEpithet;
-  strict protected
-    function InternalParse: boolean; override;
-    function ParseTableExpression(out AResult: TStatement): boolean; virtual;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function StatementName: string; override;
   end;
 
 { TSQLTerm }
@@ -592,37 +577,15 @@ begin
   Result := true;
 end;
 
-procedure TReturning.InternalMatchChildren;
+procedure TReturning.MatchChildren;
 begin
-  _ReturningFields.MatchTo(_Targets);
+  Match(_ReturningFields, _Targets);
 end;
 
 procedure TReturning.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.NextLineIf([_Returning, _IndentNextLine, _ReturningFields, _Undent]);
   APrinter.NextLineIf([_Into, _IndentNextLine, _Targets, _Undent]);
-end;
-
-{ TForUpdate }
-
-function TForUpdate.InternalParse: boolean;
-begin
-  Result := true;
-  _For := Keyword('for');
-  if not Assigned(_For) then exit(false);
-  _Update := Keyword('update');
-  _Of := Keyword('of');
-  if Assigned(_Of) then TIdentFields.Parse(Self, Source, _Columns);
-  _WaitMode := Keyword(['wait', 'nowait']);
-  if Assigned(_WaitMode) then _WaitTime := Number;
-  _SkipLocked := Keyword(['skip', 'skip locked']);
-end;
-
-procedure TForUpdate.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_For, _Update, _Of]);
-  APrinter.NextLineIf([_Indent, _Columns,  _UndentNextLine]);
-  APrinter.PrintItems([_WaitMode, _WaitTime, _SkipLocked]);
 end;
 
 { TTableClause }
@@ -657,45 +620,9 @@ begin
   APrinter.PrintItems([_Select, _Table, _OpenBracket, _TableName, _CloseBracket, _Alias]);
 end;
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-//                               Оператор INSERT                              //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-
-function TInsert.InternalParse: boolean;
+function TTableRef.InternalGetMatchSource: TBaseStatementList;
 begin
-  Result := true;
-  _Insert := Keyword('insert');
-  if not Assigned(_Insert) then exit(false);
-  _Into := Keyword('into');
-  TTableRef.Parse(Self, Source, _Table);
-  TBracketedStatement<TIdentFields>.Parse(Self, Source, _Fields);
-  _Values := Keyword('values');
-  if not Assigned(_Values) then TSelect.Parse(Self, Source, _ValueList);
-  if not Assigned(_ValueList) then TBracketedStatement<TExpressionFields>.Parse(Self, Source, _ValueList);
-  if not Assigned(_ValueList) then TParser.ParseExpression(Self, Source, _ValueList);
-  TReturning.Parse(Self, Source, _Returning);
-  inherited;
-end;
-
-procedure TInsert.InternalMatchChildren;
-begin
-  _ValueList.MatchTo(_Fields);
-end;
-
-procedure TInsert.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Insert, _NextLine,
-                       _Into,   _IndentNextLine,
-                                _Table, _NextLine,
-                                _Fields, _UndentNextLine,
-                       _Values, _IndentNextLine]);
-  if not Assigned(_Values) then APrinter.Undent;
-  APrinter.PrintItem(_ValueList);
-  if Assigned(_Values) then APrinter.Undent;
-  APrinter.PrintItems([_NextLine, _Returning]);
-  inherited;
+  Result := _Select.GetMatchSource;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -969,6 +896,21 @@ procedure TSavepoint.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Savepoint, _Name]);
   inherited;
+end;
+
+{ DMLParser }
+
+class function DMLParser.Parse(AParent: TStatement;
+  ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+begin
+  Result := TSelect.Parse(AParent, ASource, AResult) or
+            TInsert.Parse(AParent, ASource, AResult) or
+            TUpdate.Parse(AParent, ASource, AResult) or
+            TDelete.Parse(AParent, ASource, AResult) or
+             TMerge.Parse(AParent, ASource, AResult) or
+            TCommit.Parse(AParent, ASource, AResult) or
+            TRollback.Parse(AParent, ASource, AResult) or
+            TSavepoint.Parse(AParent, ASource, AResult);
 end;
 
 initialization

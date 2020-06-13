@@ -31,7 +31,8 @@ uses
   DatabaseLink in 'Source\DDL\DatabaseLink.pas',
   Select in 'Source\DML\Select.pas',
   Statements in 'Source\Statements.pas',
-  Set_ in 'Source\DDL\Set_.pas';
+  Set_ in 'Source\DDL\Set_.pas',
+  Insert in 'Source\DML\Insert.pas';
 
 {$R *.res}
 

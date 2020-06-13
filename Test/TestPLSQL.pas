@@ -213,6 +213,7 @@ type
     function GetDir: string; override;
   published
     procedure Insert;
+    procedure Insert_Select;
     procedure Select_Into;
   end;
 
@@ -846,6 +847,11 @@ begin
 end;
 
 procedure _Сопоставление_Полей.Insert;
+begin
+  Settings.MatchParamLimit := 5;
+end;
+
+procedure _Сопоставление_Полей.Insert_Select;
 begin
   Settings.MatchParamLimit := 5;
 end;
