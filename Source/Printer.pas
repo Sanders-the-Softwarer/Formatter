@@ -64,6 +64,7 @@ type
     AlignTableColumnComments: boolean;
     AlignSpecialComments: boolean;
     AlignSQLPLUS: boolean;
+    AlignUseSpace: boolean;
     ReplaceDefault: boolean;
     ReplaceAsIs: boolean;
     ChangeCommentType: boolean;
@@ -307,6 +308,7 @@ begin
   AlignTableColumnComments        := true;
   AlignSpecialComments            := true;
   AlignSQLPLUS                    := true;
+  AlignUseSpace                   := true;
   ReplaceDefault                  := true;
   ReplaceAsIs                     := true;
   AddInAccessSpecificator         := true;

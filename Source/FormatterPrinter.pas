@@ -446,6 +446,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     DraftPrinter := TFormatterPrinter.Create(Self.Settings, false, [poFarAbove..poFarBelow], false);
     try
       DraftPrinter.Rulers := TRulers.Create;
+      DraftPrinter.Rulers.UseSpaces := Settings.AlignUseSpace;
       DraftPrinter.Mode   := fpmGetRulers;
       DraftPrinter.BeginPrint;
       DraftPrinter.PrintItem(AStatement);

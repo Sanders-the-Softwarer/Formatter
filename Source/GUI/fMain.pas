@@ -79,6 +79,7 @@ type
     edCompareAutoTestResult: TMemo;
     GroupBox4: TGroupBox;
     checkChangeCommentType: TCheckBox;
+    checkUseSpace: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -145,6 +146,7 @@ begin
     Settings.AlignSpecialComments            := checkAlignSpecialComments.Checked;
     Settings.AlignTableColumnComments        := checkAlignTableColumnComments.Checked;
     Settings.AlignSQLPLUS                    := checkAlignSQLPLUS.Checked;
+    Settings.AlignUseSpace                   := checkUseSpace.Checked;
     Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
     Settings.ReplaceAsIs                     := checkReplaceAsIs.Checked;
     Settings.AddInAccessSpecificator         := checkAddInAccessSpecificator.Checked;
@@ -217,6 +219,7 @@ begin
     checkAlignTableColumnComments.Checked   := Settings.AlignTableColumnComments;
     checkAlignSQLPLUS.Checked               := Settings.AlignSQLPLUS;
     checkAlignExpressions.Checked           := Settings.AlignExpressions;
+    checkUseSpace.Checked                   := Settings.AlignUseSpace;
     checkReplaceDefault.Checked             := Settings.ReplaceDefault;
     checkReplaceAsIs.Checked                := Settings.ReplaceAsIs;
     checkAddInAccessSpecificator.Checked    := Settings.AddInAccessSpecificator;

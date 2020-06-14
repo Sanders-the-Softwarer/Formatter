@@ -417,12 +417,12 @@ procedure _Выравнивание.Пустота_Не_Должна_Сдвиг�
 begin
   Settings.AlignVariables := true;
   Settings.AlignFields    := true;
-  PostponeTill(2020, 4, 30);
+  Settings.AlignUseSpace  := true;
 end;
 
 procedure _Выравнивание.Условий_В_Where;
 begin
-  PostponeTill(2020, 4, 30);
+  PostponeTill(2020, 6, 30);
   Settings.AlignExpressions := true;
 end;
 

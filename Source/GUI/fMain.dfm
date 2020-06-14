@@ -233,8 +233,8 @@ object FormMain: TFormMain
           Caption = #1057#1086#1087#1086#1089#1090#1072#1074#1083#1103#1090#1100' '#1087#1086#1083#1103' '#1074#1099#1088#1072#1078#1077#1085#1080#1103#1084' '#1085#1072#1095#1080#1085#1072#1103' '#1089
         end
         object Label4: TLabel
-          Left = 3
-          Top = 351
+          Left = 5
+          Top = 373
           Width = 233
           Height = 13
           Caption = #1064#1080#1088#1080#1085#1072' '#1074#1099#1088#1072#1078#1077#1085#1080#1081' '#1087#1086' '#1074#1086#1079#1084#1086#1078#1085#1086#1089#1090#1080' '#1085#1077' '#1073#1086#1083#1077#1077
@@ -281,7 +281,7 @@ object FormMain: TFormMain
           Left = 3
           Top = 147
           Width = 153
-          Height = 194
+          Height = 217
           Caption = '  '#1042#1099#1088#1072#1074#1085#1080#1074#1072#1090#1100'  '
           TabOrder = 2
           object checkAlignFields: TCheckBox
@@ -361,6 +361,17 @@ object FormMain: TFormMain
             TabOrder = 6
             OnClick = UpdateRequired
           end
+          object checkUseSpace: TCheckBox
+            Left = 13
+            Top = 189
+            Width = 128
+            Height = 17
+            Caption = #1047#1072#1087#1086#1083#1085#1103#1103' '#1087#1091#1089#1090#1086#1090#1099
+            Checked = True
+            State = cbChecked
+            TabOrder = 7
+            OnClick = UpdateRequired
+          end
         end
         object GroupBox3: TGroupBox
           Left = 162
@@ -404,8 +415,8 @@ object FormMain: TFormMain
           OnChange = UpdateRequired
         end
         object edPreferredExpressionLength: TSpinEdit
-          Left = 267
-          Top = 348
+          Left = 269
+          Top = 370
           Width = 46
           Height = 22
           MaxValue = 1000
@@ -416,7 +427,7 @@ object FormMain: TFormMain
         end
         object GroupBox2: TGroupBox
           Left = 162
-          Top = 233
+          Top = 244
           Width = 153
           Height = 51
           Caption = ' '#1044#1086#1073#1072#1074#1083#1103#1090#1100' '
@@ -446,7 +457,7 @@ object FormMain: TFormMain
         end
         object GroupBox4: TGroupBox
           Left = 162
-          Top = 290
+          Top = 313
           Width = 153
           Height = 51
           Caption = ' '#1056#1072#1079#1088#1077#1096#1080#1090#1100' '
