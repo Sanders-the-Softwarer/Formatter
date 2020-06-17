@@ -74,6 +74,7 @@ type
     procedure _51;
     procedure _52;
     procedure _53;
+    procedure _54;
   end;
 
 implementation
@@ -278,6 +279,10 @@ procedure _Bugs._53;
 begin
   Settings.AlignSQLPLUS := true;
   Settings.AlignUseSpace := true;
+end;
+
+procedure _Bugs._54;
+begin
 end;
 
 procedure _Bugs._6;

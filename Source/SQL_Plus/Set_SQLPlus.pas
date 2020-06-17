@@ -126,6 +126,7 @@ initialization
     Add('blo', 'ckterminator');
     Add('cmds', 'ep');
     Add('colinvi', 'sible');
+    Add('col', ''); // мистическая команда, которой нет в документации, но которая, тем не менее, встречается в скриптах top
     Add('colsep', '');
     Add('con', 'cat');
     Add('copyc', 'ommit');

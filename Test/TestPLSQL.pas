@@ -164,9 +164,11 @@ type
     procedure at_Собираются_Вместе;
     procedure Exec_Собираются_Вместе;
     procedure Define_Собираются_Вместе;
+    procedure Grant_Собираются_Вместе;
     procedure Set_Собираются_Вместе;
     procedure Whenever_Собираются_Вместе;
     procedure Синонимы_Собираются_Вместе;
+    procedure Alter_Package_Собираются_Вместе;
   end;
 
   { Тесты на SQL типы }
@@ -234,6 +236,10 @@ type
     procedure fm_pc_user;
     procedure fm_pc_v_pcgi_link;
     procedure top_lc_calc_utils;
+    procedure root_container_init;
+    procedure top_report_api;
+    procedure top_ref_api;
+    procedure top_dev_style_sop_link_api;
   end;
 
 implementation
@@ -541,6 +547,15 @@ begin
   Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Пустые строки';
 end;
 
+procedure _Пустые_Строки.Grant_Собираются_Вместе;
+begin
+  Settings.AlignSQLPLUS := true;
+end;
+
+procedure _Пустые_Строки.Alter_Package_Собираются_Вместе;
+begin
+end;
+
 procedure _Пустые_Строки.at_Собираются_Вместе;
 begin
 end;
@@ -819,6 +834,10 @@ begin
   Result := AFileName + '.actual';
 end;
 
+procedure _Контрольные_Примеры.root_container_init;
+begin
+end;
+
 procedure _Контрольные_Примеры.SetUp;
 begin
   Settings := TFormatSettings.Default;
@@ -844,7 +863,19 @@ procedure _Контрольные_Примеры.fm_cc_user;
 begin
 end;
 
+procedure _Контрольные_Примеры.top_dev_style_sop_link_api;
+begin
+  end;
+
 procedure _Контрольные_Примеры.top_lc_calc_utils;
+begin
+end;
+
+procedure _Контрольные_Примеры.top_ref_api;
+begin
+end;
+
+procedure _Контрольные_Примеры.top_report_api;
 begin
 end;
 

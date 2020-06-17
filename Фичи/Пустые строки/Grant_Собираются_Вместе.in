@@ -1,0 +1,17 @@
+-- Причём команды с частью on отдельно от команд без этой части
+
+grant create any context    to top;
+grant create database link  to top;
+grant create job            to top;
+grant create view           to top;
+grant alter session         to top;
+grant execute program       to top;
+grant execute class         to top;
+grant manage scheduler      to top;
+grant debug connect session to top;
+grant drop context          to top;
+grant manage scheduler      to top;
+grant unlimited tablespace  to top;
+grant select any dictionary to top;
+
+grant execute on sys.dbms_lock to top;

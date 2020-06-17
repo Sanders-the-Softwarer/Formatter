@@ -34,7 +34,10 @@ uses
   Insert in 'Source\DML\Insert.pas',
   Session in 'Source\DDL\Session.pas',
   Set_ in 'Source\DDL\Set_.pas',
-  Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas';
+  Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas',
+  Exit_SQLPlus in 'Source\SQL_Plus\Exit_SQLPlus.pas',
+  AlterPackageProcedureFunction in 'Source\DDL\AlterPackageProcedureFunction.pas',
+  Grant in 'Source\DDL\Grant.pas';
 
 const
   Desc  = 'Formatter';

@@ -134,7 +134,7 @@ type
 
 implementation
 
-uses Parser, Commons, PLSQL, Keywords, Set_SQLPlus;
+uses Parser, Commons, PLSQL, Keywords, Set_SQLPlus, Exit_SQLPlus;
 
 { TClear }
 
@@ -308,6 +308,7 @@ begin
   Result := TClear.Parse(AParent, ASource, AResult) or
             TWhenever.Parse(AParent, ASource, AResult) or
             TSet.Parse(AParent, ASource, AResult) or
+            TExit.Parse(AParent, ASource, AResult) or
             TAt.Parse(AParent, ASource, AResult) or
             TSpool.Parse(AParent, ASource, AResult) or
             TCall.Parse(AParent, ASource, AResult) or

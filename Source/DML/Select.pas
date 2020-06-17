@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //                           Форматизатор исходников                          //
 //                                                                            //
@@ -148,30 +148,12 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Источник данных во from }
-  TFromField = class(TStatement)
-  strict private
-    _Body: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
   { Ссылка на таблицу во from }
   TTableReference = class(TStatement)
   strict private
     _Only, _Alias: TEpithet;
     _QueryTableExpression, _Containers, _Flashback, _Pivot, _Unpivot,
-      _RowPattern, _SubQuery: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Join-выражение во from }
-  TJoin = class(TStatement)
-  strict private
-    _TableRef, _JoinedTables: TStatement;
+      _RowPattern, _SubQuery, _JoinedTable: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -552,10 +534,10 @@ function TSubQuery.InternalParse: boolean;
 begin
   Result := TBracketedStatement<TSubQuery>.Parse(Self, Source, _Main) or
             TQueryBlock.Parse(Self, Source, _Main);
-  TOrderBy.Parse(Self, Source, _OrderBy);
-  TRowLimit.Parse(Self, Source, _RowLimit);
   _Union := Keyword(['union all', 'union', 'intersect', 'minus']);
   if Assigned(_Union) then TSubQuery.Parse(Self, Source, _NextQuery);
+  TOrderBy.Parse(Self, Source, _OrderBy);
+  TRowLimit.Parse(Self, Source, _RowLimit);
 end;
 
 procedure TSubQuery.InternalPrintSelf(APrinter: TPrinter);
@@ -626,7 +608,7 @@ begin
                                 _OffsetValue, _OffsetRows, _UndentNextLine,
                        _Fetch,  _IndentNextLine,
                                 _First, _FetchValue, _Percent, _FetchRows,
-                                _Only, _With, _Ties]);
+                                _Only, _With, _Ties, _Undent]);
 end;
 
 { TQueryBlock }
@@ -642,7 +624,7 @@ begin
   TAligned<TCommaList<TAliasedExpression>>.Parse(Self, Source, _SelectList);
   TInto.Parse(Self, Source, _Into);
   _From := Keyword('from');
-  TCommaList<TFromField>.Parse(Self, Source, _FromList);
+  TCommaList<TOptionalBracketedStatement<TTableReference>>.Parse(Self, Source, _FromList);
   TWhere.Parse(Self, Source, _Where);
   TConnectBy.Parse(Self, Source, _ConnectBy);
   TGroupBy.Parse(Self, Source, _GroupBy);
@@ -727,19 +709,6 @@ begin
   APrinter.PrintRulerItems('expression', [_Expression]);
   APrinter.PrintRulerItems('as', [_As]);
   APrinter.PrintRulerItems('alias', [_Alias]);
-end;
-
-{ TFromField }
-
-function TFromField.InternalParse: boolean;
-begin
-  Result := TBracketedStatement<TJoin>.Parse(Self, Source, _Body) or
-            TJoin.Parse(Self, Source, _Body);
-end;
-
-procedure TFromField.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItem(_Body);
 end;
 
 { TWhere }
@@ -900,7 +869,7 @@ begin
   else
     Result := TContainers.Parse(Self, Source, _Containers) or
               TQueryTableExpression.Parse(Self, Source, _QueryTableExpression) or
-              TBracketedStatement<TSubQuery>.Parse(Self, Source, _SubQuery);
+              TOptionalBracketedStatement<TSubQuery>.Parse(Self, Source, _SubQuery);
   if not Result then exit;
   if Assigned(_QueryTableExpression) then
   begin
@@ -910,6 +879,7 @@ begin
     TRowPattern.Parse(Self, Source, _RowPattern);
   end;
   _Alias := Identifier;
+  TJoinedTable.Parse(Self, Source, _JoinedTable);
 end;
 
 procedure TTableReference.InternalPrintSelf(APrinter: TPrinter);
@@ -919,6 +889,7 @@ begin
   APrinter.NextLineIf([_Pivot, _Unpivot, _RowPattern]);
   APrinter.PrintItem(_Alias);
   APrinter.Undent;
+  APrinter.NextLineIf([_JoinedTable]);
 end;
 
 { TQueryTableExpression }
@@ -985,19 +956,6 @@ begin
                                                   _SubQuery,       _NextLine,
                                                   _Restrictions,   _UndentNextLine,
                                  _CloseBracket,   _Undent]);
-end;
-
-{ TJoin }
-
-function TJoin.InternalParse: boolean;
-begin
-  Result := TTableReference.Parse(Self, Source, _TableRef);
-  if Result then TStrictStatementList<TJoinedTable>.Parse(Self, Source, _JoinedTables);
-end;
-
-procedure TJoin.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_TableRef, _JoinedTables]);
 end;
 
 { TModel }
@@ -1201,7 +1159,7 @@ end;
 function TTableViewExpression.InternalParse: boolean;
 begin
   Result := false;
-  if not TQualifiedIdent.Parse(Self, Source, _Name) then exit;
+  if not TQualifiedIndexedIdent.Parse(Self, Source, _Name) then exit;
   THierarchies.Parse(Self, Source, _Hierarchies);
   TPartitionExtension.Parse(Self, Source, _PartitionExtension);
   TSample.Parse(Self, Source, _Sample);
@@ -1278,7 +1236,7 @@ begin
   if Assigned(_On) then TParser.ParseExpression(Self, Source, _Condition);
   _Using := Keyword('using');
   if Assigned(_Using) then TSingleLine<TBracketedStatement<TIdentFields>>.Parse(Self, Source, _Columns);
-  TJoin.Parse(Self, Source, _Next);
+  TJoinedTable.Parse(Self, Source, _Next);
 end;
 
 procedure TJoinedTable.InternalPrintSelf(APrinter: TPrinter);

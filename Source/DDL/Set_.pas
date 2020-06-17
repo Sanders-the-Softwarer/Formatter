@@ -29,6 +29,8 @@ type
 
 implementation
 
+uses Commons;
+
 type
 
   { Синтаксис ролей для команды set }

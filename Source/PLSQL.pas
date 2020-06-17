@@ -173,6 +173,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function Aligned: boolean; override;
+    function Transparent: boolean; override;
   end;
 
   { Блок деклараций }
@@ -788,6 +789,11 @@ end;
 { TParamsDeclaration }
 
 function TParamsDeclaration.Aligned: boolean;
+begin
+  Result := true;
+end;
+
+function TParamsDeclaration.Transparent: boolean;
 begin
   Result := true;
 end;
@@ -1451,7 +1457,7 @@ function TObject_.InternalParse: boolean;
 begin
   _Object := Keyword('object');
   if not Assigned(_Object) then exit(false);
-  TOptionalBracketedStatement<TObjectMemberList>.Parse(Self, Source, _Body);
+  TBracketedStatement<TObjectMemberList>.Parse(Self, Source, _Body);
   Result := true;
 end;
 
@@ -1643,12 +1649,13 @@ end;
 
 function TExit.InternalParse: boolean;
 begin
+  Result := true;
   _Exit := Keyword('exit');
   if not Assigned(_Exit) then exit(false);
   _When := Keyword('when');
   if Assigned(_When) then TParser.ParseExpression(Self, Source, _Condition);
-  inherited;
-  Result := true;
+  { Чтобы не путать с sqlplus-ным when, потребуем либо when, либо точку с запятой }
+  if not inherited and not Assigned(_When) then exit(false);
 end;
 
 procedure TExit.InternalPrintSelf(APrinter: TPrinter);

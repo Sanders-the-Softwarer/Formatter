@@ -1,0 +1,34 @@
+-- Из-за лишних скобок, окружающих запрос, не должно идти
+-- нарушения парности скобок и ложной индикации ошибки в
+-- верном запросе
+
+select
+    to_char(v_obj_code) || chr(1) || to_char(country_code)
+bulk collect into
+    v_country_diff
+from
+    (
+        (
+            select
+                *
+            from
+                p_new
+            minus
+            select
+                *
+            from
+                p_old
+        )
+        union
+        (
+            select
+                *
+            from
+                p_old
+            minus
+            select
+                *
+            from
+                p_new
+        )
+    );

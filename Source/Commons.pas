@@ -46,6 +46,15 @@ type
     function IsSimpleIdent: boolean;
   end;
 
+  { Базовый класс для списка однотипных конструкций, разделённых запятыми }
+  TCommaList<S: TStatement> = class(TStatementList<S>)
+  strict protected
+    function ParseDelimiter(out AResult: TObject): boolean; override;
+    function ParseBreak: boolean; override;
+  public
+    function Transparent: boolean; override;
+  end;
+
   { Аргумент вызова подпрограммы }
   TArgument = class(TStatement)
   strict private
@@ -58,6 +67,7 @@ type
   public
     function IsNamedNotation: boolean;
     function IsMultiLine: boolean;
+    function StatementName: string; override;
   end;
 
   { Аргументы вызова подпрограммы }
@@ -69,12 +79,14 @@ type
     function OnePerLine: boolean; override;
     function IsNamedNotation: boolean;
     function Aligned: boolean; override;
+    function Transparent: boolean; override;
   end;
 
   { Список аргументов в скобках }
-  TBracketedArguments = class(TOptionalBracketedStatement<TArguments>)
+  TBracketedArguments = class(TBracketedStatement<TArguments>)
   public
     function MultiLine: boolean; override;
+    function AllowEmpty: boolean; override;
   end;
 
   { Тип данных }
@@ -90,6 +102,26 @@ type
   public
     function IsSimpleIdent: boolean;
   end;
+
+  { Список пар имя = значение }
+
+  TNameValuePair = class(TStatement)
+  strict private
+    _Eq: TTerminal;
+  strict protected
+    _Name, _Value: TObject;
+    function ParseName: boolean; virtual;
+    function ParseValue: boolean; virtual;
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  TEqList<S: TNameValuePair> = class(TStatementList<S>)
+  strict protected
+    function AllowUnexpected: boolean; override;
+  end;
+
+  TNameValueList = class(TEqList<TNameValuePair>);
 
 implementation
 
@@ -185,6 +217,28 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
+//              Список однотипных выражений, разделённых запятыми             //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+function TCommaList<S>.ParseDelimiter(out AResult: TObject): boolean;
+begin
+  AResult := Terminal(',');
+  Result  := Assigned(AResult);
+end;
+
+function TCommaList<S>.ParseBreak: boolean;
+begin
+  Result := true;
+end;
+
+function TCommaList<S>.Transparent: boolean;
+begin
+  Result := true;
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
 //                       Аргумент в вызове подпрограммы                       //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
@@ -229,6 +283,11 @@ begin
   Result := (_Expression is TExpression) and TExpression(_Expression).IsMultiLine;
 end;
 
+function TArgument.StatementName: string;
+begin
+  Result := Concat([_Ident]);
+end;
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //                       Аргументы в вызове подпрограммы                      //
@@ -248,6 +307,11 @@ begin
 end;
 
 function TArguments.Aligned: boolean;
+begin
+  Result := true;
+end;
+
+function TArguments.Transparent: boolean;
 begin
   Result := true;
 end;
@@ -279,6 +343,11 @@ end;
 function TBracketedArguments.MultiLine: boolean;
 begin
   Result := (InnerStatement is TArguments) and TArguments(InnerStatement).OnePerLine;
+end;
+
+function TBracketedArguments.AllowEmpty: boolean;
+begin
+  Result := true;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -321,6 +390,40 @@ end;
 function TTypeRef.IsSimpleIdent: boolean;
 begin
   Result := not Assigned(_Type) and not Assigned(_OpenBracket);
+end;
+
+{ TNameValuePair }
+
+function TNameValuePair.InternalParse: boolean;
+begin
+  Result := true;
+  if not ParseName then exit(false);
+  _Eq := Terminal('=');
+  if not Assigned(_Eq) then exit(false);
+  if not ParseValue then exit(false);
+end;
+
+procedure TNameValuePair.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Name, _Eq, _Value]);
+end;
+
+function TNameValuePair.ParseName: boolean;
+begin
+  _Name := Identifier;
+  Result := Assigned(_Name);
+end;
+
+function TNameValuePair.ParseValue: boolean;
+begin
+  Result := TExpression.Parse(Self, Source, TStatement(_Value));
+end;
+
+{ TEqList<S> }
+
+function TEqList<S>.AllowUnexpected: boolean;
+begin
+  Result := false;
 end;
 
 end.

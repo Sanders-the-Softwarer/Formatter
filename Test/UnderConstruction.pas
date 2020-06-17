@@ -21,9 +21,11 @@ type
     procedure Тесты_ReplaceAsIs;
     procedure Тесты_Group_By_Rollup_Cube_Grouping_Sets;
     procedure Тесты_Alter_Session;
+    procedure Тесты_Alter_Package;
     procedure Тесты_Connect;
     procedure Удаление_Паролей_В_Команде_Connect;
     procedure Тесты_SQLPlus_Set;
+    procedure Тесты_SQLPlus_Exit;
   end;
 
 implementation
@@ -33,6 +35,11 @@ implementation
 procedure _UnderConstruction.PostponeTill(AYear, AMonth, ADay: integer);
 begin
   Check(Now < EncodeDate(AYear, AMonth, ADay), 'Пока не сделано!');
+end;
+
+procedure _UnderConstruction.Тесты_Alter_Package;
+begin
+  PostponeTill(2020, 6, 30);
 end;
 
 procedure _UnderConstruction.Тесты_Alter_Session;
@@ -81,6 +88,11 @@ begin
 end;
 
 procedure _UnderConstruction.Тесты_ReplaceDefault;
+begin
+  PostponeTill(2020, 6, 30);
+end;
+
+procedure _UnderConstruction.Тесты_SQLPlus_Exit;
 begin
   PostponeTill(2020, 6, 30);
 end;

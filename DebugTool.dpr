@@ -34,7 +34,10 @@ uses
   Set_ in 'Source\DDL\Set_.pas',
   Insert in 'Source\DML\Insert.pas',
   Session in 'Source\DDL\Session.pas',
-  Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas';
+  Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas',
+  AlterPackageProcedureFunction in 'Source\DDL\AlterPackageProcedureFunction.pas',
+  Exit_SQLPlus in 'Source\SQL_Plus\Exit_SQLPlus.pas',
+  Grant in 'Source\DDL\Grant.pas';
 
 {$R *.res}
 

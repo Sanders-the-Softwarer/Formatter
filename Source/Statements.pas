@@ -153,13 +153,6 @@ type
     function Any(Found: array of TObject): boolean;
   end;
 
-  { Базовый класс для списка однотипных конструкций, разделённых запятыми }
-  TCommaList<S: TStatement> = class(TStatementList<S>)
-  strict protected
-    function ParseDelimiter(out AResult: TObject): boolean; override;
-    function ParseBreak: boolean; override;
-  end;
-
   { Базовый класс для списка однотипных конструкций без разделителя }
   TStrictStatementList<S: TStatement> = class(TStatementList<S>)
   strict protected
@@ -206,10 +199,10 @@ type
     function Transparent: boolean; override;
   end;
 
-  { Конструкция заданного типа в скобках, допускающая пустые скобки }
+  { Конструкция заданного типа, возможно, заключённая в скобки }
   TOptionalBracketedStatement<T: TStatement> = class(TBracketedStatement<T>)
-  strict protected
-    function AllowEmpty: boolean; override;
+  public
+    class function Candidates: TArray<TStatementClass>; override;
   end;
 
   { Конструкция для форматирования заданной в одну строку }
@@ -293,7 +286,7 @@ end;
 { По умолчанию единственным кандидатом на реализацию класса является сам класс }
 class function TStatement.Candidates: TArray<TStatementClass>;
 begin
-  Result := TArray<TStatementClass>.Create(Self);
+  Result := [Self];
 end;
 
 { Определение необходимости пустой строки перед конструкцией }
@@ -774,19 +767,6 @@ begin
   SpecialCommentAfterDelimiter := AComment;
 end;
 
-{ TCommaList }
-
-function TCommaList<S>.ParseDelimiter(out AResult: TObject): boolean;
-begin
-  AResult := Terminal(',');
-  Result  := Assigned(AResult);
-end;
-
-function TCommaList<S>.ParseBreak: boolean;
-begin
-  Result := true;
-end;
-
 { TUnexpectedToken }
 
 function TUnexpectedToken.StatementName: string;
@@ -830,11 +810,11 @@ end;
 
 function TBracketedStatement<T>.InternalParse: boolean;
 begin
+  Result := true;
   _OpenBracket := Terminal('(');
   if not Assigned(_OpenBracket) then exit(false);
   if not T.Parse(Self, Source, _Stmt) and not AllowEmpty then exit(false);
   _CloseBracket := Terminal(')');
-  Result := true;
 end;
 
 function TBracketedStatement<T>.AllowEmpty: boolean;
@@ -873,9 +853,9 @@ end;
 
 { TOptionalBracketedStatement<T> }
 
-function TOptionalBracketedStatement<T>.AllowEmpty: boolean;
+class function TOptionalBracketedStatement<T>.Candidates: TArray<TStatementClass>;
 begin
-  Result := true;
+  Result := [T, TBracketedStatement<T>];
 end;
 
 { TSingleLine<T> }

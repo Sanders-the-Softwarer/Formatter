@@ -1,6 +1,7 @@
 grant sysdba to public;
 grant all privileges to scott with admin option;
 grant connect, resource, unlimited tablespace to vasya identified by "petya";
+
 grant select, insert, update, delete on my.data to kolya;
 grant insert(object_id), update(object_type, object_name) on hr.user_objects to sys;
 grant select on user_objects to system with hierarchy option with grant option;

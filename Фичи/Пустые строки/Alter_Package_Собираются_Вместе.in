@@ -1,0 +1,8 @@
+set echo on
+
+alter package ut_lock compile;
+alter package ut_lock compile body;
+alter package ut_utils compile;
+alter package ut_utils compile body;
+
+set echo off
