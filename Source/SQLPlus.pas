@@ -12,7 +12,8 @@ unit SQLPlus;
 
 interface
 
-uses SysUtils, Statements, Streams, Tokens, Printer, Utils, System.Generics.Collections;
+uses SysUtils, Statements, Streams, Tokens, Printer, Utils, Contnrs,
+  System.Generics.Collections;
 
 type
 
@@ -23,7 +24,16 @@ type
   end;
 
   { Базовый класс команд SQL*Plus }
-  TSQLPlusStatement = class(TStatement);
+  TSQLPlusStatement = class(TSemicolonStatement)
+  strict private
+    FreeList: TObjectList;
+  strict protected
+    { Считывание лексемы "символы до конца строки" }
+    function SqlPlusString: TTerminal;
+  public
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
+  end;
 
   { Команда clear }
   TClear = class(TSQLPlusStatement)
@@ -74,8 +84,7 @@ type
   { Команда @ }
   TAt = class(TSQLPlusStatement)
   strict private
-    _At: TTerminal;
-    _FileName: TStatement;
+    _At, _FileName: TTerminal;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -87,14 +96,14 @@ type
   TSpool = class(TSQLPlusStatement)
   strict private
     _Spool: TEpithet;
-    _FileName: TStatement;
+    _FileName: TTerminal;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Команда call }
-  TCall = class(TSemicolonStatement)
+  TCall = class(TSQLPlusStatement)
   strict private
     _Call: TEpithet;
     _What: TStatement;
@@ -103,15 +112,6 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function Grouping: TStatementClass; override;
-  end;
-
-  { Имя файла }
-  TFileName = class(TStatement)
-  strict private
-    _Tokens: TArray<TToken>;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Анонимный блок в SQL*Plus }
@@ -134,6 +134,16 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Команда connect }
+  TConnect = class(TSQLPlusStatement)
+  strict private
+    _Connect: TEpithet;
+    _ConnectString: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
 implementation
 
 uses Parser, Commons, PLSQL, Keywords;
@@ -144,17 +154,20 @@ function TClear.InternalParse: boolean;
 begin
   _Clear := Keyword('clear');
   Result := Assigned(_Clear);
+  inherited;
 end;
 
 procedure TClear.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Clear]);
+  inherited;
 end;
 
 { TWhenever }
 
 function TWhenever.InternalParse: boolean;
 begin
+  Result := true;
   _Whenever := Keyword('whenever');
   if not Assigned(_Whenever) then exit(false);
   _Condition := Keyword(['sqlerror', 'oserror']);
@@ -169,7 +182,7 @@ begin
     if not Assigned(_Param1) then TParser.ParseExpression(Self, Source, _Expr);
     _Param2 := Keyword(['commit', 'rollback']);
   end;
-  Result := true;
+  inherited;
 end;
 
 procedure TWhenever.InternalPrintSelf(APrinter: TPrinter);
@@ -177,6 +190,7 @@ begin
   APrinter.StartRuler(Settings.AlignSQLPLUS);
   APrinter.PrintRulerItems('Cmd', [_Whenever, _Condition]);
   APrinter.PrintRulerItems('Action', [_Action, _Param1, _Expr, _Param2]);
+  inherited;
 end;
 
 function TWhenever.Grouping: TStatementClass;
@@ -188,11 +202,12 @@ end;
 
 function TSet.InternalParse: boolean;
 begin
+  Result := true;
   _Set := Keyword('set');
   if not Assigned(_Set) then exit(false);
   TQualifiedIdent.Parse(Self, Source, _Target);
   TParser.ParseExpression(Self, Source, _Value);
-  Result := true;
+  inherited;
 end;
 
 procedure TSet.InternalPrintSelf(APrinter: TPrinter);
@@ -200,6 +215,7 @@ begin
   APrinter.StartRuler(Settings.AlignSQLPLUS);
   APrinter.PrintRulerItems('Target', [_Set, _Target]);
   APrinter.PrintRulerItems('Value', [_Value]);
+  inherited;
 end;
 
 function TSet.Grouping: TStatementClass;
@@ -213,14 +229,14 @@ function TAt.InternalParse: boolean;
 begin
   _At := Terminal(['@', '@@']);
   Result := Assigned(_At);
-  if Result then TFileName.Parse(Self, Source, _FileName);
+  if Result then _FileName := SqlPlusString;
+  inherited;
 end;
 
 procedure TAt.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.SupressSpaces(true);
   APrinter.PrintItems([_At, _FileName]);
-  APrinter.SupressSpaces(false);
+  inherited;
 end;
 
 function TAt.Grouping: TStatementClass;
@@ -234,20 +250,17 @@ function TSpool.InternalParse: boolean;
 begin
   _Spool := Keyword('spool');
   Result := Assigned(_Spool);
-  if Result then TFileName.Parse(Self, Source, _FileName);
+  if Result then _FileName := SqlPlusString;
+  inherited;
 end;
 
 procedure TSpool.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Spool, _FileName]);
+  inherited;
 end;
 
 { TCall }
-
-function TCall.Grouping: TStatementClass;
-begin
-  Result := TCall;
-end;
 
 function TCall.InternalParse: boolean;
 begin
@@ -263,47 +276,9 @@ begin
   inherited;
 end;
 
-{ TFileName }
-
-function TFileName.InternalParse: boolean;
-var
-  Tokens: TList<TToken>;
-  P: TMark;
-  T: TToken;
-  Line: integer;
+function TCall.Grouping: TStatementClass;
 begin
-  Tokens := TList<TToken>.Create;
-  T := NextToken;
-  Line := T.Line;
-  repeat
-    Tokens.Add(T);
-    P := Source.Mark;
-    if Source.Eof
-      then break
-      else T := NextToken;
-  until T.Line <> Line;
-  Source.Restore(P);
-  Result := true;
-  _Tokens := Tokens.ToArray;
-  FreeAndNil(Tokens);
-end;
-
-procedure TFileName.InternalPrintSelf(APrinter: TPrinter);
-var
-  T: TToken;
-  S: boolean;
-begin
-  S := false;
-  for T in _Tokens do
-  begin
-    APrinter.PrintItem(T);
-    if not S then
-    begin
-      APrinter.SupressSpaces(true); { первую лексему печатаем с пробелом, чтобы отделить от spool }
-      S := true;
-    end;
-  end;
-  if S then APrinter.SupressSpaces(false);
+  Result := TCall;
 end;
 
 { TStandaloneAnonymousBlock }
@@ -324,27 +299,30 @@ end;
 
 function TChcp.InternalParse: boolean;
 begin
+  Result := true;
   _Chcp := Keyword('chcp');
   if not Assigned(_Chcp) then exit(false);
   _CodePage := Number;
-  Result := true;
+  inherited;
 end;
 
 procedure TChcp.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Chcp, _CodePage]);
+  inherited;
 end;
 
 { TDefine }
 
 function TDefine.InternalParse: boolean;
 begin
+  Result := true;
   _Define := Keyword('define');
   if not Assigned(_Define) then exit(false);
   _Target := Identifier;
   _Eq := Terminal('=');
   TParser.ParseExpression(Self, Source, _Value);
-  Result := true;
+  inherited;
 end;
 
 procedure TDefine.InternalPrintSelf(APrinter: TPrinter);
@@ -352,6 +330,7 @@ begin
   APrinter.StartRuler(Settings.AlignSQLPLUS);
   APrinter.PrintRulerItems('target', [_Define, _Target]);
   APrinter.PrintRulerItems('value', [_Eq, _Value]);
+  inherited;
 end;
 
 function TDefine.Grouping: TStatementClass;
@@ -370,17 +349,77 @@ begin
             TSpool.Parse(AParent, ASource, AResult) or
             TCall.Parse(AParent, ASource, AResult) or
             TChcp.Parse(AParent, ASource, AResult) or
-            TDefine.Parse(AParent, ASource, AResult);
+            TDefine.Parse(AParent, ASource, AResult) or
+            TConnect.Parse(AParent, ASource, AResult);
+end;
+
+{ TConnect }
+
+function TConnect.InternalParse: boolean;
+begin
+  Result := true;
+  _Connect := Keyword('connect');
+  if not Assigned(_Connect) then exit(false);
+  _ConnectString := SqlPlusString;
+  inherited;
+end;
+
+procedure TConnect.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Connect, _ConnectString]);
+  inherited;
+end;
+
+{ TSQLPlusStatement }
+
+procedure TSQLPlusStatement.AfterConstruction;
+begin
+  inherited;
+  FreeList := TObjectList.Create(true);
+end;
+
+procedure TSQLPlusStatement.BeforeDestruction;
+begin
+  FreeAndNil(FreeList);
+  inherited;
+end;
+
+function TSQLPlusStatement.SqlPlusString: TTerminal;
+var
+  Token: TToken;
+  Line, Col: integer;
+  Text: string;
+  P: TMark;
+begin
+  { Выделим лексемы до конца строки и сложим их в текстовую строку }
+  P := Source.Mark;
+  Token := NextToken;
+  Line := Token.Line;
+  Col  := Token.Col;
+  while (Line = Token.Line) and not (Token is TUnexpectedEOF)
+        and not ((Token is TTerminal) and (Token.Value = ';')) do
+  begin
+    Text := Text + StringOfChar(' ', Token.Col - Col - Length(Text)) + Token.InitialValue;
+    P := Source.Mark;
+    Token.Printed := true; { лексема печатается в составе другой, поэтому гасим предупреждение }
+    Token := NextToken;
+  end;
+  Source.Restore(P);
+  { Теперь сформируем лексему из этой строки, она и будет результатом }
+  Result := TTerminal.Create(Text, Line, Col);
+  FreeList.Add(Result);
 end;
 
 initialization
   { Команды SQL*Plus не разделяются точками с запятой, поэтому нужно явно
     назвать их ключевыми словами, в противном случае легко случится так,
     что начало следующей команды будет распознано как аргумент предыдущей
-    whenever или подобной}
+    whenever или подобной. По этой же причине здесь нужны стартовые
+    ключевые слова основных SQL-комад }
   RegisterOrphan(TSQLPlusStatement);
-  RegisterKeywords(TSQLPlusStatement, ['call', 'chcp', 'clear', 'exec', 'set',
-    'define', 'spool', 'whenever']);
+  RegisterKeywords(TSQLPlusStatement, ['alter', 'begin', 'call', 'chcp',
+    'connect', 'clear', 'create', 'declare', 'exec', 'set', 'define', 'spool',
+    'whenever']);
 
 end.
 

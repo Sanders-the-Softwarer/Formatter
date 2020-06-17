@@ -93,7 +93,6 @@ type
     procedure NextLine; virtual; abstract;
     procedure CancelNextLine; virtual; abstract;
     procedure SupressNextLine(ASupress: boolean); virtual; abstract;
-    procedure SupressSpaces(ASupress: boolean); virtual; abstract;
     procedure PrintSpecialComment(AValue: string); virtual; abstract;
     procedure StartRuler(Enabled: boolean; Continued: boolean = false); virtual; abstract;
   protected

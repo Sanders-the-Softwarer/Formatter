@@ -42,8 +42,8 @@ type
     RulerEnabled: boolean;
     { Предыдущие напечатанные лексемы - в текущей строке и вообще по тексту }
     PrevToken, FarPrevToken: TToken;
-    { Блокировка вставки пробела и перехода на следующую строку }
-    SupSpace, SupNextLine: integer;
+    { Блокировка вставки перехода на следующую строку }
+    SupNextLine: integer;
     { Название линейки, которую нужно установить на следующей печатаемой лексеме }
     RulerName: string;
     { Флаг фиксации текущего отступа как базового }
@@ -81,7 +81,6 @@ type
     procedure NextLine; override;
     procedure CancelNextLine; override;
     procedure SupressNextLine(ASupress: boolean); override;
-    procedure SupressSpaces(ASupress: boolean); override;
     procedure PrintSpecialComment(AValue: string); override;
     procedure StartRuler(Enabled: boolean; Continued: boolean = false); override;
   protected
@@ -188,8 +187,6 @@ end;
 function TFormatterPrinter.SpaceRequired(ALeft, ARight: TToken): boolean;
 begin
   Result := false;
-  { Если пробелы запрещены - не ставим их }
-  if SupSpace > 0 then exit;
   { Терминалы, которым явно указали не отделяться - не отделяем }
   if (ALeft is TTerminal) and TTerminal(ALeft).WithoutSpace then exit;
   if (ARight is TTerminal) and TTerminal(ARight).WithoutSpace then exit;
@@ -200,6 +197,8 @@ begin
   if (ARight.Value = '.') and not ((ALeft is TEpithet) and TEpithet(ALeft).IsKeyword) then exit;
   { Собаку прижимаем с обеих сторон ко всему }
   if (ALeft.Value = '@') or (ARight.Value = '@') then exit;
+  { Двойную собаку прижимаем слева ко всему }
+  if (ALeft.Value = '@@') then exit;
   { Двоеточие/амперсанд прижимаем к следующему за ним идентификатору }
   if ((ALeft.Value = ':') or (ALeft.Value = '&') or (ALeft.Value = '&&')) and ((ARight is TEpithet) or (ARight is TNumber)) then exit;
   { Запятую прижимаем справа ко всему }
@@ -531,14 +530,6 @@ begin
   if ASupress
     then Inc(SupNextLine)
     else Dec(SupNextLine);
-end;
-
-{ Установка режима подавления пробелов }
-procedure TFormatterPrinter.SupressSpaces(ASupress: boolean);
-begin
-  if ASupress
-    then Inc(SupSpace)
-    else Dec(SupSpace);
 end;
 
 { Вывод на принтер специального комментария (отсутствующего в исходном тексте)}

@@ -81,6 +81,7 @@ type
     procedure Спецкомментариев_В_Insert_Values;
     procedure Спецкомментариев_В_Insert_Select;
     procedure Пустота_Не_Должна_Сдвигать_Выравнивание_Вправо;
+    procedure Конкатенаций_По_Одинаковым_Символам;
   end;
 
   { Тесты на расстановку комментариев }
@@ -224,6 +225,7 @@ type
     function GetDir: string; override;
     function GetExtIn: string; override;
     function GetExtOut: string; override;
+    function GetFileNameToSave(const AFileName: string): string; override;
     procedure SetUp; override;
   published
     procedure fm_cc_user;
@@ -381,6 +383,11 @@ end;
 procedure _Выравнивание.Комментарий_Разрывает_Выравнивание_В_Блоке_Переменных;
 begin
   Settings.AlignVariables := true;
+end;
+
+procedure _Выравнивание.Конкатенаций_По_Одинаковым_Символам;
+begin
+  PostponeTill(2020, 6, 30);
 end;
 
 procedure _Выравнивание.Параметров_В_Execute_Immediate;
@@ -781,8 +788,7 @@ end;
 
 procedure _Форматирование_Выражений.Перенос_При_Присвоении_Многострочного_Выражения;
 begin
-  Settings.PreferredExpressionLength := 120;
-  PostponeTill(2020, 4, 30);
+  Settings.PreferredExpressionLength := 100;
 end;
 
 { _Контрольные_Примеры }
@@ -808,6 +814,11 @@ begin
   Result := '.formatted';
 end;
 
+function _Контрольные_Примеры.GetFileNameToSave(const AFileName: string): string;
+begin
+  Result := AFileName + '.actual';
+end;
+
 procedure _Контрольные_Примеры.SetUp;
 begin
   Settings := TFormatSettings.Default;
@@ -827,7 +838,6 @@ end;
 
 procedure _Контрольные_Примеры.fm_pc_v_pcgi_link;
 begin
-  PostponeTill(2020, 4, 30);
 end;
 
 procedure _Контрольные_Примеры.fm_cc_user;
@@ -836,7 +846,6 @@ end;
 
 procedure _Контрольные_Примеры.top_lc_calc_utils;
 begin
-  PostponeTill(2020, 4, 30);
 end;
 
 { _Сопоставление_Полей }

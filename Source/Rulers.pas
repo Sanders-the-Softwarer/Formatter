@@ -63,11 +63,13 @@ type
     { Информация о ячейках }
     Cells: array of array of array of integer;
     { Позиция, на которой мы остановились }
-    PrevLine, PrevCol, PrevColIndex, MinLine, MaxLine: integer;
+    PrevLine, PrevCol, PrevColIndex, MinLine, MaxLine, MaxColIndex: integer;
     { Отступ конструкции, относительно которого нормируем Take и Fix }
     FShift: integer;
     { Настройка заполнения пустот }
     FUseSpaces: boolean;
+    { Флаг пропуска после строчного комментария }
+    SkipUntilNewLine: boolean;
     { Итоговые позиции линеек }
     Rulers: TDictionary<string, integer>;
   protected
@@ -114,26 +116,37 @@ begin
   if MaxLine < ALine then MaxLine := ALine;
   { Добавим очередную линейку в список, если её там ещё нет }
   AddRuler(ARuler);
+  { Найдём её номер }
+  ColIndex := Names.IndexOf(ARuler);
+  { После комментария пропустим всё до нулевой колонки, стартующей новую строку }
+  if SkipUntilNewLine then
+    if ColIndex > 0
+      then exit
+      else SkipUntilNewLine := false;
   { При смене строки сбросим информацию о достигнутой в строке позиции }
   if ALine <> PrevLine then
   begin
     PrevCol := 1;
     PrevColIndex := -1;
   end;
-  { Найдём номер очередной колонки }
-  ColIndex := Names.IndexOf(ARuler);
   { Строчные комментарии могут спутать порядок вызовов, что приводит к
     ложной информации о ширине последней колонки (баг №10). Чтобы этого
     избежать, отловим ситуацию такого прыжка и скорректируем номер
     колонки }
-  if ColIndex > PrevColIndex + 1
-    then FactIndex := PrevColIndex + 1
-    else FactIndex := ColIndex;
+  if ColIndex = PrevColIndex + 1 then
+    FactIndex := ColIndex
+  else
+    begin
+      FactIndex := PrevColIndex + 1;
+      SkipUntilNewLine := true;
+    end;
+  { Сохраним ширину текущей ячейки }
   Width[ALine, FactIndex] := ACol - PrevCol - Shift;
   { Сохраним текущее положение, от которого будем отсчитывать следующую ячейку }
   PrevLine := ALine;
   PrevCol := ACol;
   PrevColIndex := ColIndex;
+  MaxColIndex := Math.Max(MaxColIndex, FactIndex);
 end;
 
 function TRulers.Fix(const ARuler: string): integer;
@@ -177,7 +190,7 @@ begin
     { Если можем переносить и у колонки нет правого соседа, записываем её
       ширину в переносимые, иначе в непереносимые }
     for Line := MinLine to MaxLine do
-      if UseSpaces and (Width[Line, Col] > 0) and (Col < Names.Count - 1) and (Width[Line, Col + 1] = 0) then
+      if UseSpaces and (Width[Line, Col] > 0) and (Col < MaxColIndex) and (Width[Line, Col + 1] = 0) then
         begin Carry[Line, Col] := Width[Line, Col]; Width[Line, Col] := 0; end
       else if (Carry[Line, Col] > 0) and (Width[Line, Col + 1] > 0) then
         begin Width[Line, Col] := Carry[Line, Col]; Carry[Line, Col] := 0; end;

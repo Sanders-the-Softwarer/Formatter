@@ -70,6 +70,9 @@ type
     procedure _47;
     procedure _48;
     procedure _49;
+    procedure _50;
+    procedure _51;
+    procedure _52;
   end;
 
 implementation
@@ -103,8 +106,6 @@ end;
 procedure _Bugs._21;
 begin
   Settings.AlignVariables := true;
-  Settings.ChangeCommentType := true;
-  PostponeTill(2020, 4, 30);
 end;
 
 procedure _Bugs._22;
@@ -121,8 +122,8 @@ end;
 
 procedure _Bugs._25;
 begin
+  PostponeTill(2020, 6, 30);
   Settings.AlignSQLPLUS := true;
-  PostponeTill(2020, 4, 30);
 end;
 
 procedure _Bugs._26;
@@ -182,13 +183,14 @@ end;
 
 procedure _Bugs._37;
 begin
-  PostponeTill(2020, 4, 30);
-  Settings.PreferredExpressionLength := 120;
+  PostponeTill(2020, 6, 30);
+  Settings.AlignFields := true;
+  Settings.PreferredExpressionLength := 100;
 end;
 
 procedure _Bugs._38;
 begin
-  PostponeTill(2020, 4, 30);
+  PostponeTill(2020, 6, 30);
   Settings.PreferredExpressionLength := 120;
 end;
 
@@ -248,6 +250,26 @@ begin
 end;
 
 procedure _Bugs._5;
+begin
+end;
+
+procedure _Bugs._50;
+begin
+  Settings.AlignVariables := true;
+  Settings.AlignSpecialComments := true;
+  Settings.MatchParamLimit := 5;
+  Settings.PreferredExpressionLength := 80;
+  Settings.AlignUseSpace := true;
+end;
+
+procedure _Bugs._51;
+begin
+  PostponeTill(2020, 6, 30);
+  Settings.AlignVariables := true;
+  Settings.ChangeCommentType := true;
+end;
+
+procedure _Bugs._52;
 begin
 end;
 
@@ -315,8 +337,7 @@ end;
 
 procedure _Bugs._19;
 begin
-  Settings.PreferredExpressionLength := 120;
-  PostponeTill(2020, 4, 30);
+  Settings.PreferredExpressionLength := 100;
 end;
 
 initialization

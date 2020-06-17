@@ -63,7 +63,7 @@ type
   { Лексема }
   TToken = class(TBaseToken)
   strict private
-    FValue: string;
+    FValue, FInitialValue: string;
     FLine, FCol: integer;
     FPrinted, FCanReplace: boolean;
     FComments: array[TCommentPosition] of TComment;
@@ -80,6 +80,7 @@ type
     property Value: string read FValue;
     property Line: integer read FLine;
     property Col: integer read FCol;
+    property InitialValue: string read FInitialValue;
     property Printed: boolean read FPrinted write FPrinted;
     property CanReplace: boolean read FCanReplace write FCanReplace;
     property CommentFarAbove: TComment index poFarAbove read GetComment write SetComment;
@@ -206,7 +207,8 @@ end;
 
 constructor TToken.Create(AChar: TPositionedChar);
 begin
-  FValue := ModifyValue(AChar.Value);
+  FInitialValue := AChar.Value;
+  FValue := ModifyValue(FInitialValue);
   FLine  := AChar.Line;
   FCol   := AChar.Col;
 end;
@@ -214,12 +216,14 @@ end;
 constructor TToken.Create(const AValue: string; AChar: TPositionedChar);
 begin
   Create(AChar);
-  FValue := ModifyValue(AValue);
+  FInitialValue := AValue;
+  FValue := ModifyValue(FInitialValue);
 end;
 
 constructor TToken.Create(const AValue: string; ALine, ACol: integer);
 begin
-  FValue := ModifyValue(AValue);
+  FInitialValue := AValue;
+  FValue := ModifyValue(FInitialValue);
   FLine  := ALine;
   FCol   := ACol;
 end;

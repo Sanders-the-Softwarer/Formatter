@@ -1,0 +1,64 @@
+-- При установленной опции "Заполняя пустоты" съезжает выравнивание в спецкомментариях
+
+insert
+into
+    t_acc_bal_map_log
+    (
+        id,
+        id_acc_bal,
+        is_cr,
+        code_cr,
+        rm_user_cr,
+        user_info_cr,
+        code_cr_dt,
+        is_fmgl,
+        code_fmgl,
+        rm_user_fmgl,
+        user_info_fmgl,
+        code_fmgl_dt
+    )
+values
+    (
+        t_acc_bal_map_log_seq.nextval, /*/ => id             /*/
+        :new.id_acc_bal,               /*/ => id_acc_bal     /*/
+        v_is_cr,                       /*/ => is_cr          /*/
+        :new.code_cr,                  /*/ => code_cr        /*/
+        case -- Если изменился маппинг корр., то проставляем пользователя, изменившего запись
+            when v_is_cr = 'Y' then
+                ui_rm_utils.get_user
+            else
+                null
+        end,                           /*/ => rm_user_cr     /*/
+        case -- Если изменился маппинг корр., то проставляем информацию о том кто изменил запись (если кто-то сделает изменение из PLSQLDev)
+            when v_is_cr = 'Y' then
+                v_info
+            else
+                null
+        end,                           /*/ => user_info_cr   /*/
+        case -- Если изменился маппинг корр., то проставляем время изменения записи
+            when v_is_cr = 'Y' then
+                sysdate
+            else
+                null
+        end,                           /*/ => code_cr_dt     /*/
+        v_is_fmgl,                     /*/ => is_fmgl        /*/
+        :new.code_fmgl,                /*/ => code_fmgl      /*/
+        case -- Если изменился маппинг МСФО, то проставляем пользователя, изменившего запись
+            when v_is_fmgl = 'Y' then
+                ui_rm_utils.get_user
+            else
+                null
+        end,                           /*/ => rm_user_fmgl   /*/
+        case -- Если изменился маппинг МСФО, то проставляем информацию о том кто изменил запись (если кто-то сделает изменение из PLSQLDev)
+            when v_is_fmgl = 'Y' then
+                v_info
+            else
+                null
+        end,                           /*/ => user_info_fmgl /*/
+        case -- Если изменился маппинг МСФО, то проставляем время изменения записи
+            when v_is_fmgl = 'Y' then
+                sysdate
+            else
+                null
+        end                            /*/ => code_fmgl_dt   /*/
+    );

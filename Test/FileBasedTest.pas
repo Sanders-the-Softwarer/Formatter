@@ -41,6 +41,7 @@ type
     function GetDir: string; virtual;
     function GetExtIn: string; virtual;
     function GetExtOut: string; virtual;
+    function GetFileNameToSave(const AFileName: string): string; virtual;
   protected
     { Загрузка файлов и проверка форматирования }
     procedure CheckFile(AFileName: string);
@@ -51,7 +52,7 @@ type
     { Приведение строки к наглядному для сравнения виду }
     function Beautify(const S: string): string;
     { Сравнение форматированного текста с ожидаемым }
-    procedure Check(AText, AExpected: string);
+    procedure Check(AText, AExpected, ASaveToFile: string);
     { Отложить тест до указанной даты }
     procedure PostponeTill(AYear, AMonth, ADay: integer);
   protected
@@ -92,19 +93,25 @@ begin
   Result := '.out';
 end;
 
+function TFileBasedTest.GetFileNameToSave(const AFileName: string): string;
+begin
+  Result := '';
+end;
+
 { Загрузка файлов и проверка форматирования }
 procedure TFileBasedTest.CheckFile(AFileName: string);
-var Dir, FileNameIn, FileNameOut, TextIn, TextOut: string;
+var Dir, FileNameIn, FileNameOut, FileNameSave, TextIn, TextOut: string;
 begin
   if AFileName.StartsWith('_') then AFileName := AFileName.Substring(1);
   Dir := IncludeTrailingPathDelimiter(GetDir);
   FileNameIn  := Dir + AFileName + GetExtIn;
   FileNameOut := Dir + AFileName + GetExtOut;
+  FileNameSave := GetFileNameToSave(Dir + AFileName);
   TextIn      := LoadFile(FileNameIn);
   if FileExists(FileNameOut)
     then TextOut := LoadFile(FileNameOut)
     else TextOut := TextIn;
-  Check(TextIn, TextOut);
+  Check(TextIn, TextOut, FileNameSave);
 end;
 
 { Запуск тестового метода }
@@ -138,7 +145,7 @@ begin
 end;
 
 { Сравнение форматированного текста с ожидаемым }
-procedure TFileBasedTest.Check(AText, AExpected: string);
+procedure TFileBasedTest.Check(AText, AExpected, ASaveToFile: string);
 var Actual: string;
 begin
   { С вероятностью 1/2 поставим либо не поставим на входе последний перевод
@@ -147,6 +154,14 @@ begin
     then AText := TrimRight(AText) + #13
     else AText := TrimRight(AText);
   Controller.MakeFormatted(AText, Settings, Actual);
+  if ASaveToFile <> '' then
+    with TStringList.Create do
+    try
+      Text := Actual;
+      SaveToFile(ASaveToFile);
+    finally
+      Free;
+    end;
   CheckEquals(Beautify(AExpected), Beautify(Actual));
 end;
 

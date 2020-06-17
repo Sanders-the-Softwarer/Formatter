@@ -38,7 +38,6 @@ type
     procedure NextLine; override;
     procedure CancelNextLine; override;
     procedure SupressNextLine(ASupress: boolean); override;
-    procedure SupressSpaces(ASupress: boolean); override;
     procedure PrintSpecialComment(AValue: string); override;
     procedure StartRuler(Enabled: boolean; Continued: boolean = false); override;
   protected
@@ -148,11 +147,6 @@ begin
 end;
 
 procedure TBasePrinter.SupressNextLine;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.SupressSpaces(ASupress: boolean);
 begin
   { ничего не делаем }
 end;

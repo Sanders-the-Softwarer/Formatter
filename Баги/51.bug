@@ -1,0 +1,12 @@
+-- Комментарий в последней строке не должен конвертироваться в скобочный,
+-- когда в этом нет никакой нужды
+
+procedure send_mail_msg
+    (
+        p_sender     in varchar2,                 -- отправитель
+        p_recipients in varchar2,                 -- получатель (список получателей)
+        p_msg        in varchar2,                 -- текст сообщения
+        p_subject    in varchar2 := null,         -- тема
+        p_mime_type  in varchar2 := 'text/plain', -- тип сообщения - по умолчанию просто текст, можно передать text/html
+        p_with_error in boolean  := false         -- true - оповещать об ошибках
+    );

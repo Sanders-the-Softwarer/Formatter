@@ -1,0 +1,23 @@
+-- Выражение слишком длинное для того, чтобы форматироваться в одну строку
+function get_quantity_by_data_source
+    (
+        p_mnemocode in varchar2
+    )
+    return t_calc_quantity_tbl
+is
+    v_result t_calc_quantity_tbl;
+begin
+    v_result := case
+                    when p_mnemocode = top_const.data_source_po then
+                        get_quantity_po(p_manual_data_source_code)
+                    when p_mnemocode = top_const.data_source_specification then
+                        get_quantity_spec(p_manual_data_source_code)
+                    when p_mnemocode in (top_const.data_source_1fs, top_const.data_source_2fs, top_const.data_source_order) then
+                        get_quantity_request(p_manual_data_source_code)
+                    when p_mnemocode = top_const.data_source_init_fcst then
+                        get_quantity_initial_forecast(p_manual_data_source_code)
+                    else
+                        t_calc_quantity_tbl()
+                end;
+    return v_result;
+end;

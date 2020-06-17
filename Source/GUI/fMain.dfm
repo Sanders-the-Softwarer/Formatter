@@ -40,6 +40,10 @@ object FormMain: TFormMain
     OnChange = pgDestChange
     object tabTokenizer: TTabSheet
       Caption = #1051#1077#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object edTokenizer: TListBox
         AlignWithMargins = True
         Left = 5
@@ -59,6 +63,10 @@ object FormMain: TFormMain
     object tabParser: TTabSheet
       Caption = #1057#1080#1085#1090#1072#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object treeParser: TTreeView
         AlignWithMargins = True
         Left = 5
@@ -80,6 +88,10 @@ object FormMain: TFormMain
     object tabResult: TTabSheet
       Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object edResult: TMemo
         AlignWithMargins = True
         Left = 5
@@ -106,6 +118,10 @@ object FormMain: TFormMain
     object tabAlarmToken: TTabSheet
       Caption = '>>> '#1058#1056#1045#1042#1054#1043#1040' <<<'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object edAlarmToken: TListBox
         AlignWithMargins = True
         Left = 5
@@ -125,6 +141,10 @@ object FormMain: TFormMain
     object tabAlarmStatement: TTabSheet
       Caption = '>>> '#1058#1056#1045#1042#1054#1043#1040' <<<'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object edAlarmStatement: TListBox
         AlignWithMargins = True
         Left = 5
@@ -144,6 +164,10 @@ object FormMain: TFormMain
     object tabCompareAutoTestResult: TTabSheet
       Caption = #1055#1088#1086#1089#1084#1086#1090#1088' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074' '#1072#1074#1090#1086#1090#1077#1089#1090#1072
       ImageIndex = 5
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object edCompareAutoTestResult: TMemo
         Left = 0
         Top = 0
@@ -186,6 +210,10 @@ object FormMain: TFormMain
       TabOrder = 0
       object tabSrc: TTabSheet
         Caption = #1048#1089#1093#1086#1076#1085#1080#1082
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object edSrc: TMemo
           AlignWithMargins = True
           Left = 5
@@ -211,6 +239,10 @@ object FormMain: TFormMain
       end
       object tabSettings: TTabSheet
         Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object Label1: TLabel
           Left = 5
           Top = 15

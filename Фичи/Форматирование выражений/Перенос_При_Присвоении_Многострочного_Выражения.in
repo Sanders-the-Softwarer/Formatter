@@ -1,32 +1,30 @@
-        v_rec.quantity_total :=
-            nvl
-            (
-                case
-                    when v_manual_retail is not null then
-                        v_rec.quantity_retail_manual
-                    else
-                        v_rec.quantity_retail
-                end,
-                0
-            ) +
-            nvl
-            (
-                case
-                    when v_manual_wholesale is not null then
-                        v_rec.quantity_wholesale_manual
-                    else
-                        v_rec.quantity_wholesale
-                end,
-                0
-            )
-            +
-            case -- При Quantity Retail (manual) (T.И) = Null добавляем Quantity (on hold) (T.И)
-                when
-                    v_manual_retail /*v_rec.quantity_retail_manual*/ is null -- пока проверку исходящего(Т.И.) меняем на проверку входящего
-                    and v_data_source_mnemo in (top_const.data_source_1fs, top_const.data_source_2fs)
-                then
-                    nvl(v_rec.quantity_on_hold, 0)
-                else
-                    0
-            end
-            ;
+v_rec.quantity_total := nvl
+                            (
+                                case
+                                    when v_manual_retail is not null then
+                                        v_rec.quantity_retail_manual
+                                    else
+                                        v_rec.quantity_retail
+                                end,
+                                0
+                            )
+                        +
+                        nvl
+                            (
+                                case
+                                    when v_manual_wholesale is not null then
+                                        v_rec.quantity_wholesale_manual
+                                    else
+                                        v_rec.quantity_wholesale
+                                end,
+                                0
+                            )
+                        +
+                        case -- При Quantity Retail (manual) (T.И) = Null добавляем Quantity (on hold) (T.И)
+                            when v_manual_retail /*v_rec.quantity_retail_manual*/ is null -- пока проверку исходящего(Т.И.) меняем на проверку входящего
+                                 and v_data_source_mnemo in (top_const.data_source_1fs, top_const.data_source_2fs)
+                            then
+                                nvl(v_rec.quantity_on_hold, 0)
+                            else
+                                0
+                        end;

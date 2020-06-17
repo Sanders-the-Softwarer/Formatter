@@ -158,9 +158,20 @@ begin
   AdvTokenStream  := Controller.MakeAdvancedTokenStream(MinTokenStream);
   StatementStream := Controller.MakeStatementStream(AdvTokenStream, Settings);
   { Ќапечатаем данные }
-  StatementStream.PrintAll(ResultPrinter);
-  StatementStream.PrintAll(SyntaxTreePrinter);
-  StatementStream.PrintAll(AlarmStatementPrinter);
+  try
+    StatementStream.PrintAll(ResultPrinter);
+  except
+    on E: Exception do Application.ShowException(E);
+  end;
+  { ƒаже если разбор завершаетс€ ошибкой, выведем сформированные части данных в другие принтеры }
+  try
+    StatementStream.PrintAll(SyntaxTreePrinter);
+  except
+  end;
+  try
+    StatementStream.PrintAll(AlarmStatementPrinter);
+  except
+  end;
   { —юда печатаем из MinTokenStream, чтобы увидеть лексемы, выпавшие при печати из синтаксического анализа }
   MinTokenStream.PrintAll(TokenizerPrinter);
   MinTokenStream.PrintAll(AlarmTokenPrinter);
