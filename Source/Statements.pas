@@ -83,6 +83,7 @@ type
     function Keyword(const AKeyword: string): TEpithet; overload;
     function Keyword(const AKeywords: array of string): TEpithet; overload;
     function Identifier: TEpithet;
+    function Epithet: TEpithet;
     function Number: TNumber;
     function Literal: TLiteral;
     function Terminal(const ATerminal: string): TTerminal; overload;
@@ -504,6 +505,24 @@ begin
   P := Source.Mark;
   Token := NextToken;
   if (Token is TEpithet) and not IsStrongKeyword(Token.Value) then
+    begin
+      Result := Token as TEpithet;
+      Result.IsKeyword := false;
+      Result.IsIdent   := true;
+    end
+  else
+    Source.Restore(P);
+end;
+
+function TStatement.Epithet: TEpithet;
+var
+  Token: TToken;
+  P: TMark;
+begin
+  Result := nil;
+  P := Source.Mark;
+  Token := NextToken;
+  if Token is TEpithet then
     begin
       Result := Token as TEpithet;
       Result.IsKeyword := false;

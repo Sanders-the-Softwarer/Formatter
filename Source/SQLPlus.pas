@@ -56,18 +56,6 @@ type
     function Grouping: TStatementClass; override;
   end;
 
-  { Команда set }
-  TSet = class(TSQLPlusStatement)
-  strict private
-    _Set: TEpithet;
-    _Target, _Value: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function Grouping: TStatementClass; override;
-  end;
-
   { Команда define }
   TDefine = class(TSQLPlusStatement)
   strict private
@@ -146,7 +134,7 @@ type
 
 implementation
 
-uses Parser, Commons, PLSQL, Keywords;
+uses Parser, Commons, PLSQL, Keywords, Set_SQLPlus;
 
 { TClear }
 
@@ -196,31 +184,6 @@ end;
 function TWhenever.Grouping: TStatementClass;
 begin
   Result := TWhenever;
-end;
-
-{ TSet }
-
-function TSet.InternalParse: boolean;
-begin
-  Result := true;
-  _Set := Keyword('set');
-  if not Assigned(_Set) then exit(false);
-  TQualifiedIdent.Parse(Self, Source, _Target);
-  TParser.ParseExpression(Self, Source, _Value);
-  inherited;
-end;
-
-procedure TSet.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.StartRuler(Settings.AlignSQLPLUS);
-  APrinter.PrintRulerItems('Target', [_Set, _Target]);
-  APrinter.PrintRulerItems('Value', [_Value]);
-  inherited;
-end;
-
-function TSet.Grouping: TStatementClass;
-begin
-  Result := TSet;
 end;
 
 { TAt }
@@ -387,10 +350,13 @@ end;
 function TSQLPlusStatement.SqlPlusString: TTerminal;
 var
   Token: TToken;
+  Comment: TComment;
+  LastComment: TComment;
   Line, Col: integer;
   Text: string;
   P: TMark;
 begin
+  Comment := nil;
   { Выделим лексемы до конца строки и сложим их в текстовую строку }
   P := Source.Mark;
   Token := NextToken;
@@ -402,11 +368,22 @@ begin
     Text := Text + StringOfChar(' ', Token.Col - Col - Length(Text)) + Token.InitialValue;
     P := Source.Mark;
     Token.Printed := true; { лексема печатается в составе другой, поэтому гасим предупреждение }
+    { Лексема не печатается, поэтому перепривязываем комментарии }
+    if Assigned(Token.CommentAfter) then
+    begin
+      if Assigned(Comment)
+        then LastComment.CommentAfter := Token.CommentAfter
+        else Comment := Token.CommentAfter;
+      LastComment := Token.CommentAfter;
+      Token.CommentAfter := nil;
+    end;
+    { Идём дальше }
     Token := NextToken;
   end;
   Source.Restore(P);
   { Теперь сформируем лексему из этой строки, она и будет результатом }
   Result := TTerminal.Create(Text, Line, Col);
+  Result.CommentAfter := Comment;
   FreeList.Add(Result);
 end;
 

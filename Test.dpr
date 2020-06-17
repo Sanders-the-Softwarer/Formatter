@@ -53,7 +53,8 @@ uses
   Tokens in 'Source\Tokens.pas',
   Utils in 'Source\Utils.pas',
   UnderConstruction in 'Test\UnderConstruction.pas',
-  Session in 'Source\DDL\Session.pas';
+  Session in 'Source\DDL\Session.pas',
+  Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas';
 
 {$R *.RES}
 

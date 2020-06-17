@@ -1,7 +1,7 @@
-set a 1
+set define on
 
 define a = 123
 define b = 456
 define c = 789
 
-set b 2
+set define off

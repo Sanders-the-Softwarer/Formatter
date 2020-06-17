@@ -33,7 +33,8 @@ uses
   Statements in 'Source\Statements.pas',
   Set_ in 'Source\DDL\Set_.pas',
   Insert in 'Source\DML\Insert.pas',
-  Session in 'Source\DDL\Session.pas';
+  Session in 'Source\DDL\Session.pas',
+  Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas';
 
 {$R *.res}
 

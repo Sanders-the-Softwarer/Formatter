@@ -23,6 +23,7 @@ type
     procedure Тесты_Alter_Session;
     procedure Тесты_Connect;
     procedure Удаление_Паролей_В_Команде_Connect;
+    procedure Тесты_SQLPlus_Set;
   end;
 
 implementation
@@ -80,6 +81,11 @@ begin
 end;
 
 procedure _UnderConstruction.Тесты_ReplaceDefault;
+begin
+  PostponeTill(2020, 6, 30);
+end;
+
+procedure _UnderConstruction.Тесты_SQLPlus_Set;
 begin
   PostponeTill(2020, 6, 30);
 end;

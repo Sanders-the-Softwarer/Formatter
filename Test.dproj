@@ -127,6 +127,7 @@
         <DCCReference Include="Source\Utils.pas"/>
         <DCCReference Include="Test\UnderConstruction.pas"/>
         <DCCReference Include="Source\DDL\Session.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Set_SQLPlus.pas"/>
         <None Include="Profiling\AQtimeModule1.aqt"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

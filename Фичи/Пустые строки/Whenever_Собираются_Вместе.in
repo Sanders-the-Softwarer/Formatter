@@ -1,8 +1,8 @@
 -- Команда whenever группируется
 
-set a b
+set define on
 
 whenever sqlerror continue
 whenever oserror exit 666
 
-set c d
+set define off

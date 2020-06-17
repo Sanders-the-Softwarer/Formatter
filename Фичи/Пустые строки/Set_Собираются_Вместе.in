@@ -1,7 +1,7 @@
 @x:\dir\1.sql
 
-set a 1
-set b 2
-set c 3
+set define on
+set define off
+set define &
 
 @x:\dir\2.sql
