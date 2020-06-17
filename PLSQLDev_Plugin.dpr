@@ -32,6 +32,7 @@ uses
   Utils in 'Source\Utils.pas',
   Select in 'Source\DML\Select.pas',
   Insert in 'Source\DML\Insert.pas',
+  Session in 'Source\DDL\Session.pas',
   Set_ in 'Source\DDL\Set_.pas';
 
 const

@@ -29,7 +29,7 @@ type
 
 implementation
 
-uses Role, Sequence, DatabaseLink;
+uses Role, Sequence, DatabaseLink, Session;
 
 { TAlter }
 
@@ -40,7 +40,8 @@ begin
   if not Assigned(_Alter) then exit(false);
   if not TSequence.Parse(Self, Source, _What) and
      not TRole.Parse(Self, Source, _What) and
-     not TDatabaseLink.Parse(Self, Source, _What) then;
+     not TDatabaseLink.Parse(Self, Source, _What) and
+     not TSession.Parse(Self, Source, _What) then;
   inherited;
 end;
 

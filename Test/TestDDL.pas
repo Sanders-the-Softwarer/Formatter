@@ -76,6 +76,7 @@ type
     procedure Create_Database_Link;
     procedure Grant;
     procedure Alter_Role;
+    procedure Alter_Session;
     procedure Alter_Sequence;
     procedure Alter_Database_Link;
     procedure Set_Role;
@@ -239,6 +240,10 @@ begin
 end;
 
 procedure _Команды_DDL.Alter_Sequence;
+begin
+end;
+
+procedure _Команды_DDL.Alter_Session;
 begin
 end;
 

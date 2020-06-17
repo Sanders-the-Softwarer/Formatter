@@ -51,92 +51,13 @@ uses
   TextBuilder in 'Source\TextBuilder.pas',
   Tokenizer in 'Source\Tokenizer.pas',
   Tokens in 'Source\Tokens.pas',
-  Utils in 'Source\Utils.pas';
+  Utils in 'Source\Utils.pas',
+  UnderConstruction in 'Test\UnderConstruction.pas',
+  Session in 'Source\DDL\Session.pas';
 
 {$R *.RES}
 
-type
-  _UnderConstruction = class(TTestCase)
-  protected
-    procedure PostponeTill(AYear, AMonth, ADay: integer);
-  published
-    procedure Нужно_Написать_Тесты_На_Команды_SQLPLUS;
-    procedure Нужно_Написать_Тесты_На_Объектные_Типы;
-    procedure Нужно_Написать_Тесты_На_Create_Trigger;
-    procedure Нужно_Написать_Тесты_На_Невыравнивание_Везде_Где_Есть_На_Выравнивание;
-    procedure Нужно_Написать_Тесты_На_DeclarationSingleLineParamLimit;
-    procedure Нужно_Написать_Тесты_На_ArgumentSingleLineParamLimit;
-    procedure Нужно_Написать_Тесты_На_PreferredExpressionLength;
-    procedure Нужно_Написать_Тесты_На_MatchParamLimit;
-    procedure Нужно_Написать_Тесты_На_ReplaceDefault;
-    procedure Нужно_Написать_Тесты_На_ReplaceAsIs;
-    procedure Нужно_Добавить_Group_By_Rollup_Cube_Grouping_Sets;
-  end;
-
-{ _UnderConstruction }
-
-procedure _UnderConstruction.Нужно_Написать_Тесты_На_ArgumentSingleLineParamLimit;
 begin
-  PostponeTill(2020, 6, 30);
-end;
-
-procedure _UnderConstruction.Нужно_Написать_Тесты_На_Create_Trigger;
-begin
-  PostponeTill(2020, 6, 30);
-end;
-
-procedure _UnderConstruction.Нужно_Написать_Тесты_На_DeclarationSingleLineParamLimit;
-begin
-  PostponeTill(2020, 6, 30);
-end;
-
-procedure _UnderConstruction.Нужно_Написать_Тесты_На_MatchParamLimit;
-begin
-  PostponeTill(2020, 6, 30);
-end;
-
-procedure _UnderConstruction.Нужно_Написать_Тесты_На_PreferredExpressionLength;
-begin
-  PostponeTill(2020, 6, 30);
-end;
-
-procedure _UnderConstruction.Нужно_Написать_Тесты_На_ReplaceAsIs;
-begin
-  PostponeTill(2020, 6, 30);
-end;
-
-procedure _UnderConstruction.Нужно_Добавить_Group_By_Rollup_Cube_Grouping_Sets;
-begin
-  PostponeTill(2020, 6, 30);
-end;
-
-procedure _UnderConstruction.Нужно_Написать_Тесты_На_ReplaceDefault;
-begin
-  PostponeTill(2020, 6, 30);
-end;
-
-procedure _UnderConstruction.Нужно_Написать_Тесты_На_Команды_SQLPLUS;
-begin
-  PostponeTill(2020, 6, 30);
-end;
-
-procedure _UnderConstruction.Нужно_Написать_Тесты_На_Невыравнивание_Везде_Где_Есть_На_Выравнивание;
-begin
-  PostponeTill(2020, 6, 30);
-end;
-
-procedure _UnderConstruction.Нужно_Написать_Тесты_На_Объектные_Типы;
-begin
-  PostponeTill(2020, 6, 30);
-end;
-
-procedure _UnderConstruction.PostponeTill(AYear, AMonth, ADay: integer);
-begin
-  Check(Now < EncodeDate(AYear, AMonth, ADay), 'Пока не сделано!');
-end;
-
-begin
-  RegisterTest(_UnderConstruction.Suite);
   DUnitTestRunner.RunRegisteredTests;
 end.
 

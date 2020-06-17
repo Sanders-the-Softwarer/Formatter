@@ -32,7 +32,8 @@ uses
   Select in 'Source\DML\Select.pas',
   Statements in 'Source\Statements.pas',
   Set_ in 'Source\DDL\Set_.pas',
-  Insert in 'Source\DML\Insert.pas';
+  Insert in 'Source\DML\Insert.pas',
+  Session in 'Source\DDL\Session.pas';
 
 {$R *.res}
 

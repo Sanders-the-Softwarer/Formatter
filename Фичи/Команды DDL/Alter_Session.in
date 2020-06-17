@@ -1,0 +1,25 @@
+-- Примеры из документации Oracle
+
+alter session enable parallel dml;
+
+alter session advise commit; 
+
+alter session advise rollback; 
+
+alter session close database link local;
+
+alter session set nls_date_format = 'yyyy mm dd hh24:mi:ss';
+
+alter session set nls_date_language = french;
+
+alter session set nls_iso_currency = america; 
+
+alter session set nls_numeric_characters = ',.';
+
+alter session set nls_currency = 'ff';
+
+alter session set nls_language = french; 
+
+alter session set nls_sort = xspanish; 
+
+alter session set query_rewrite_enabled = true;
