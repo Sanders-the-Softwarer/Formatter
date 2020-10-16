@@ -9,7 +9,7 @@ type
   protected
     procedure PostponeTill(AYear, AMonth, ADay: integer);
   published
-    procedure Тесты_Команды_SQLPLUS;
+    procedure Тесты_Команд_SQLPLUS;
     procedure Тесты_Объектные_Типы;
     procedure Тесты_Create_Trigger;
     procedure Тесты_Невыравнивание_Везде_Где_Есть_На_Выравнивание;
@@ -22,10 +22,6 @@ type
     procedure Тесты_Group_By_Rollup_Cube_Grouping_Sets;
     procedure Тесты_Alter_Session;
     procedure Тесты_Alter_Package;
-    procedure Тесты_Connect;
-    procedure Удаление_Паролей_В_Команде_Connect;
-    procedure Тесты_SQLPlus_Set;
-    procedure Тесты_SQLPlus_Exit;
   end;
 
 implementation
@@ -48,11 +44,6 @@ begin
 end;
 
 procedure _UnderConstruction.Тесты_ArgumentSingleLineParamLimit;
-begin
-  PostponeTill(2020, 6, 30);
-end;
-
-procedure _UnderConstruction.Тесты_Connect;
 begin
   PostponeTill(2020, 6, 30);
 end;
@@ -92,17 +83,7 @@ begin
   PostponeTill(2020, 6, 30);
 end;
 
-procedure _UnderConstruction.Тесты_SQLPlus_Exit;
-begin
-  PostponeTill(2020, 6, 30);
-end;
-
-procedure _UnderConstruction.Тесты_SQLPlus_Set;
-begin
-  PostponeTill(2020, 6, 30);
-end;
-
-procedure _UnderConstruction.Тесты_Команды_SQLPLUS;
+procedure _UnderConstruction.Тесты_Команд_SQLPLUS;
 begin
   PostponeTill(2020, 6, 30);
 end;
@@ -113,11 +94,6 @@ begin
 end;
 
 procedure _UnderConstruction.Тесты_Объектные_Типы;
-begin
-  PostponeTill(2020, 6, 30);
-end;
-
-procedure _UnderConstruction.Удаление_Паролей_В_Команде_Connect;
 begin
   PostponeTill(2020, 6, 30);
 end;

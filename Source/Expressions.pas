@@ -47,9 +47,7 @@ type
     _Suffix: TTerminal;
     _KeywordValue: TEpithet;
     _Select: TStatement;
-    _OpenBracket: TTerminal;
     _Expression: TStatement;
-    _CloseBracket: TTerminal;
     _Case: TStatement;
     _Cast: TStatement;
     _OuterJoin: TTerminal;
@@ -74,8 +72,6 @@ type
   { Выражение }
   TExpression = class(TStatementList<TTerm>)
   strict private
-    class var FlagCreatedRight: boolean;
-  strict private
     LineCount: integer;
     function GetMultiLine: boolean;
   strict protected
@@ -87,8 +83,7 @@ type
     function OnePerLine: boolean; override;
     function ForcedLineBreaks: boolean; virtual;
   public
-    class procedure CreatedRight;
-    procedure AfterConstruction; override;
+    class function Candidates(AParent: TStatement): TArray<TStatementClass>; override;
     property IsMultiLine: boolean read GetMultiLine;
   end;
 
@@ -187,22 +182,15 @@ begin
     { Выражением cast }
     if TCast.Parse(Self, Source, _Cast) then exit(true);
     { Идентификатором или подобным выражением, включая вызов функции }
-    TQualifiedIndexedIdent.Parse(Self, Source, _Ident);
-    if Assigned(_Ident) then
+    if TQualifiedIndexedIdent.Parse(Self, Source, _Ident) then
     begin
       _Suffix := Terminal(['%rowcount', '%found', '%notfound', '%isopen']);
       exit(true);
     end;
     { Вложенным запросом }
     if TBracketedStatement<TSelect>.Parse(Self, Source, _Select) then exit(true);
-    { Выраженим в скобках }
-    _OpenBracket := Terminal('(');
-    if Assigned(_OpenBracket) then
-    begin
-      TParser.ParseExpression(Self, Source, _Expression);
-      _CloseBracket := Terminal(')');
-      exit(true);
-    end;
+    { Выражением в скобках }
+    if TBracketedStatement<TExpression>.Parse(Self, Source, _Expression) then exit(true);
   finally
     { Суффиксы }
     _OuterJoin := Terminal('(+)');
@@ -217,18 +205,8 @@ end;
 
 procedure TTerm.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Prefix, _Number, _Literal, _SQLStatement, _Ident, _Suffix, _KeywordValue, _Case, _Cast]);
-  if Assigned(_Select) then
-    APrinter.PrintItem(_Select);
-  if Assigned(_Expression) then
-  begin
-    APrinter.PrintItem(_OpenBracket);
-    if MultiLine then APrinter.PrintItem(_IndentNextLine);
-    APrinter.PrintItem(_Expression);
-    if MultiLine then APrinter.PrintItem(_UndentNextLine);
-    APrinter.PrintItem(_CloseBracket);
-  end;
-  APrinter.PrintItems([_OuterJoin, _Postfix]);
+  APrinter.PrintItems([_Prefix, _Number, _Literal, _SQLStatement, _Ident,
+    _Suffix, _KeywordValue, _Case, _Cast, _Select, _Expression, _OuterJoin, _Postfix]);
 end;
 
 function TTerm.IsSimpleIdent: boolean;
@@ -258,7 +236,6 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   begin
     SetLength(TermInfo, Count);
     DraftPrinter := TFormatterPrinter.Create(APrinter.Settings, true, [poAbove, poBelow, poFarAbove, poFarBelow], false);
-    DraftPrinter.ForceChangeCommentType := true;
     try
       DraftPrinter.BeginPrint;
       for i := 0 to Count - 1 do
@@ -542,7 +519,7 @@ var
 begin
   T := NextToken;
   if T is TEpithet then TEpithet(T).IsKeyword := true;
-  if HasOperation(T, D) and ((T.Value <> ',') or (Self.Parent is TTerm)) then AResult := T;
+  if HasOperation(T, D) and ((T.Value <> ',') or (Self.Parent is TBracketedStatement<TExpression>)) then AResult := T;
   Result := Assigned(AResult);
   if AResult is TTerminal then TTerminal(AResult).OpType := otBinary;
 end;
@@ -562,17 +539,12 @@ begin
   Result := false;
 end;
 
-class procedure TExpression.CreatedRight;
+class function TExpression.Candidates(AParent: TStatement): TArray<TStatementClass>;
 begin
-  FlagCreatedRight := true;
-end;
-
-procedure TExpression.AfterConstruction;
-begin
-  inherited;
-  if FlagCreatedRight
-    then FlagCreatedRight := false
-    else raise Exception.Create('Expression must be created using TParser.ParseExpression, do it!');
+  while Assigned(AParent) and not (AParent is TDML) do AParent := AParent.Parent;
+  if AParent is TDML
+    then Result := [TSQLExpression]
+    else Result := [TExpression];
 end;
 
 function TExpression.GetMultiLine: boolean;
@@ -597,7 +569,7 @@ function TCase.InternalParse: boolean;
 begin
   _Case := Keyword('case');
   if not Assigned(_Case) then exit(false);
-  TParser.ParseExpression(Self, Source, _Expression);
+  TExpression.Parse(Self, Source, _Expression);
   TCaseSections.Parse(Self, Source, _Sections);
   _End := Keyword('end');
   Result := true;
@@ -619,13 +591,13 @@ begin
   _When := Keyword('when');
   if Assigned(_When) then
     begin
-      TParser.ParseExpression(Self, Source, _Condition);
+      TExpression.Parse(Self, Source, _Condition);
       _Then := Keyword('then');
     end
   else
     _Else := Keyword('else');
   if not Assigned(_When) and not Assigned(_Else) then exit(false);
-  TParser.ParseExpression(Self, Source, _Value);
+  TExpression.Parse(Self, Source, _Value);
   Result := true;
 end;
 
@@ -664,7 +636,7 @@ begin
   _Cast := Keyword('cast');
   if not Assigned(_Cast) then exit(false);
   _OpenBracket := Terminal('(');
-  TParser.ParseExpression(Self, Source, _Expression);
+  TExpression.Parse(Self, Source, _Expression);
   _As := Keyword('as');
   TTypeRef.Parse(Self, Source, _TypeRef);
   _CloseBracket := Terminal(')');

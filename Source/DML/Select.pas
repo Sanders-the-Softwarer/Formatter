@@ -567,7 +567,7 @@ end;
 
 function TOrderByItem.InternalParse: boolean;
 begin
-  Result := TParser.ParseExpression(Self, Source, _Expr);
+  Result := TExpression.Parse(Self, Source, _Expr);
   if not Result then exit;
   _Direction := Keyword(['asc', 'desc']);
   _Nulls := Keyword(['nulls first', 'nulls last']);
@@ -585,14 +585,14 @@ begin
   _Offset := Keyword('offset');
   if Assigned(_Offset) then
   begin
-    TParser.ParseExpression(Self, Source, _OffsetValue);
+    TExpression.Parse(Self, Source, _OffsetValue);
     _OffsetRows := Keyword(['row', 'rows']);
   end;
   _Fetch := Keyword('fetch');
   if Assigned(_Fetch) then
   begin
     _First := Keyword(['first', 'next']);
-    TParser.ParseExpression(Self, Source, _FetchValue);
+    TExpression.Parse(Self, Source, _FetchValue);
     _Percent := Keyword('percent');
     _FetchRows := Keyword(['row', 'rows']);
     _Only := Keyword('only');
@@ -695,7 +695,7 @@ end;
 
 function TAliasedExpression.InternalParse: boolean;
 begin
-  Result := TParser.ParseExpression(Self, Source, _Expression);
+  Result := TExpression.Parse(Self, Source, _Expression);
   if Result then
   begin
     _As := Keyword('as');
@@ -717,7 +717,7 @@ function TWhere.InternalParse: boolean;
 begin
   _Where := Keyword('where');
   Result := Assigned(_Where);
-  if Result then TParser.ParseExpression(Self, Source, _Condition);
+  if Result then TExpression.Parse(Self, Source, _Condition);
 end;
 
 procedure TWhere.InternalPrintSelf(APrinter: TPrinter);
@@ -732,15 +732,15 @@ begin
   Result := true;
   { start with может быть до connect by }
   _StartWith := Keyword('start with');
-  if Assigned(_StartWith) then TParser.ParseExpression(Self, Source, _StartCondition);
+  if Assigned(_StartWith) then TExpression.Parse(Self, Source, _StartCondition);
   { Теперь сам connect by }
   _ConnectBy := Keyword(['connect by', 'connect by nocycle']);
   if not Assigned(_ConnectBy) then exit(false);
-  TParser.ParseExpression(Self, Source, _ConnectCondition);
+  TExpression.Parse(Self, Source, _ConnectCondition);
   { И start with может быть после connect by }
   if Assigned(_StartWith) then exit;
   _StartWith := Keyword('start with');
-  if Assigned(_StartWith) then TParser.ParseExpression(Self, Source, _StartCondition);
+  if Assigned(_StartWith) then TExpression.Parse(Self, Source, _StartCondition);
 end;
 
 procedure TConnectBy.InternalPrintSelf(APrinter: TPrinter);
@@ -760,7 +760,7 @@ begin
   if not Assigned(_GroupBy) then exit(false);
   TCommaList<TGroupItem>.Parse(Self, Source, _Groups);
   _Having := Keyword('having');
-  if Assigned(_Having) then TParser.ParseExpression(Self, Source, _Condition);
+  if Assigned(_Having) then TExpression.Parse(Self, Source, _Condition);
 end;
 
 procedure TGroupBy.InternalPrintSelf(APrinter: TPrinter);
@@ -777,7 +777,7 @@ function TGroupItem.InternalParse: boolean;
 begin
   Result := TCubeRollup.Parse(Self, Source, _Expr) or
             TGroupingSets.Parse(Self, Source, _Expr) or
-            TParser.ParseExpression(Self, Source, _Expr);
+            TExpression.Parse(Self, Source, _Expr);
 end;
 
 procedure TGroupItem.InternalPrintSelf(APrinter: TPrinter);
@@ -791,7 +791,7 @@ function TCubeRollup.InternalParse: boolean;
 begin
   _Name := Keyword(['cube', 'rollup']);
   Result := Assigned(_Name);
-  if Result then TParser.ParseExpression(Self, Source, _Expr);
+  if Result then TExpression.Parse(Self, Source, _Expr);
 end;
 
 procedure TCubeRollup.InternalPrintSelf(APrinter: TPrinter);
@@ -927,7 +927,7 @@ begin
   _Table := Keyword('table');
   Result := Assigned(_Table);
   if not Result then exit;
-  TParser.ParseExpression(Self, Source, _Value);
+  TExpression.Parse(Self, Source, _Value);
   _Outer := Terminal('(+)');
 end;
 
@@ -1007,9 +1007,9 @@ begin
     _Between := Keyword('between');
     _Scn := Keyword('scn');
     _Timestamp := Keyword('timestamp');
-    TParser.ParseExpression(Self, Source, _Expr1);
+    TExpression.Parse(Self, Source, _Expr1);
     _And := Keyword('and');
-    TParser.ParseExpression(Self, Source, _Expr2);
+    TExpression.Parse(Self, Source, _Expr2);
     exit(true);
   end;
   _As := Keyword('as');
@@ -1021,7 +1021,7 @@ begin
     _Period := Keyword('period');
     _For := Keyword('for');
     if Assigned(_Period) or Assigned(_For) then _ValidTimeColumn := Identifier;
-    TParser.ParseExpression(Self, Source, _Expr1);
+    TExpression.Parse(Self, Source, _Expr1);
     exit(true);
   end;
   Result := false;
@@ -1071,7 +1071,7 @@ begin
   Result := true;
   _For := Keyword('for');
   if not Assigned(_For) then exit(false);
-  TParser.ParseExpression(Self, Source, _Expr);
+  TExpression.Parse(Self, Source, _Expr);
 end;
 
 procedure TPivotFor.InternalPrintSelf(APrinter: TPrinter);
@@ -1128,7 +1128,7 @@ end;
 function TUnpivotRest.InternalParse: boolean;
 begin
   Result := true;
-  TParser.ParseExpression(Self, Source, _Expr);
+  TExpression.Parse(Self, Source, _Expr);
   TPivotFor.Parse(Self, Source, _For);
   TPivotIn.Parse(Self, Source, _In);
 end;
@@ -1207,9 +1207,9 @@ begin
   _Sample := Keyword('sample');
   if not Assigned(_Sample) then exit(false);
   _Block := Keyword('block');
-  TParser.ParseExpression(Self, Source, _Percent);
+  TExpression.Parse(Self, Source, _Percent);
   _Seed := Keyword('seed');
-  TParser.ParseExpression(Self, Source, _Value);
+  TExpression.Parse(Self, Source, _Value);
   Result := true;
 end;
 
@@ -1224,16 +1224,16 @@ function TJoinedTable.InternalParse: boolean;
 begin
   Result := true;
   _Partition1 := Keyword('partition by');
-  if Assigned(_Partition1) then TParser.ParseExpression(Self, Source, _PartitionExpr1);
+  if Assigned(_Partition1) then TExpression.Parse(Self, Source, _PartitionExpr1);
   _Natural := Keyword('natural');
   _Join := Keyword(['join', 'inner join', 'cross join', 'cross apply', 'outer apply', 'full join', 'left join', 'right join', 'full outer join', 'left outer join', 'right outer join']);
   if not Assigned(_Join) then exit(false);
   if not TTableCollectionExpression.Parse(Self, Source, _TableRef) then
     TTableReference.Parse(Self, Source, _TableRef);
   _Partition2 := Keyword('partition by');
-  if Assigned(_Partition2) then TParser.ParseExpression(Self, Source, _PartitionExpr2);
+  if Assigned(_Partition2) then TExpression.Parse(Self, Source, _PartitionExpr2);
   _On := Keyword('on');
-  if Assigned(_On) then TParser.ParseExpression(Self, Source, _Condition);
+  if Assigned(_On) then TExpression.Parse(Self, Source, _Condition);
   _Using := Keyword('using');
   if Assigned(_Using) then TSingleLine<TBracketedStatement<TIdentFields>>.Parse(Self, Source, _Columns);
   TJoinedTable.Parse(Self, Source, _Next);

@@ -153,12 +153,10 @@ type
     _ParamType: TStatement;
     _Assignment: TToken;
     _DefaultValue: TStatement;
-    FreeAccessor: boolean;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    procedure BeforeDestruction; override;
     function StatementName: string; override;
   end;
 
@@ -445,12 +443,9 @@ type
   strict private
     _Accessor: TEpithet;
     _Value: TStatement;
-    FreeAccessor: boolean;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    procedure BeforeDestruction; override;
   end;
 
   { Оператор fetch }
@@ -758,7 +753,7 @@ begin
   if Assigned(_Assignment) then
   begin
     _Assignment.CanReplace := true;
-    TParser.ParseExpression(Self, Source, _DefaultValue);
+    TExpression.Parse(Self, Source, _DefaultValue);
   end;
   Result := true;
 end;
@@ -770,20 +765,17 @@ end;
 
 procedure TParamDeclaration.InternalPrintSelf(APrinter: TPrinter);
 begin
-  FreeAccessor := Settings.AddInAccessSpecificator and not Assigned(_InOut);
-  if FreeAccessor then _InOut := TEpithet.Create('in', -1, -1);
+  if Settings.AddInAccessSpecificator and not Assigned(_InOut) then
+  begin
+    _InOut := TEpithet.Create('in', -1, -1);
+    AddToFreeList(_InOut);
+  end;
   APrinter.StartRuler(Settings.AlignVariables);
   APrinter.PrintRulerItems('name', [_ParamName]);
   APrinter.PrintRulerItems('modifiers', [_InOut, _Nocopy]);
   APrinter.PrintRulerItems('type', [_ParamType]);
   APrinter.PrintRulerItems('assignment', [_Assignment]);
   APrinter.PrintRulerItems('value', [_DefaultValue]);
-end;
-
-procedure TParamDeclaration.BeforeDestruction;
-begin
-  if FreeAccessor then FreeAndNil(_InOut);
-  inherited;
 end;
 
 { TParamsDeclaration }
@@ -864,7 +856,7 @@ begin
   if Assigned(_Assignment) then
   begin
     _Assignment.CanReplace := true;
-    TParser.ParseExpression(Self, Source, _Value);
+    TExpression.Parse(Self, Source, _Value);
   end;
   { Слишком многие проблемные конструкции выглядят как пара идущих подряд
     идентификаторов и распознаются как variable declaration. Поэтому
@@ -950,7 +942,7 @@ begin
   _Assignment := Terminal(':=');
   Result := Assigned(_Target) and Assigned(_Assignment);
   if not Result then exit;
-  TParser.ParseExpression(Self, Source, _Expression);
+  TExpression.Parse(Self, Source, _Expression);
   inherited;
 end;
 
@@ -967,7 +959,7 @@ begin
   _Return := Keyword('return');
   if not Assigned(_Return) then exit(false);
   Result := true;
-  TParser.ParseExpression(Self, Source, _Value);
+  TExpression.Parse(Self, Source, _Value);
   inherited;
 end;
 
@@ -1053,7 +1045,7 @@ function TIf.InternalParse: boolean;
 begin
   _If := Keyword('if');
   if not Assigned(_If) then exit(false);
-  TParser.ParseExpression(Self, Source, _Condition);
+  TExpression.Parse(Self, Source, _Condition);
   TIfSections.Parse(Self, Source, _Sections);
   _EndIf := Keyword('end if');
   Result := true;
@@ -1102,7 +1094,7 @@ end;
 function TExceptionHandler.InternalParse: boolean;
 begin
   _When := Keyword('when');
-  Result := Assigned(_When) and TParser.ParseExpression(Self, Source, _Condition);
+  Result := Assigned(_When) and TExpression.Parse(Self, Source, _Condition);
   if not Result then exit;
   _Then := Keyword('then');
   TStatements.Parse(Self, Source, _Body);
@@ -1181,7 +1173,7 @@ begin
   if not Assigned(_ThenOrElsifOrElse) then exit(false);
   if _ThenOrElsifOrElse.Value = 'elsif' then
   begin
-    TParser.ParseExpression(Self, Source, _Condition);
+    TExpression.Parse(Self, Source, _Condition);
     _Then := Keyword('then');
   end;
   TStatements.Parse(Self, Source, _Statements);
@@ -1214,7 +1206,7 @@ begin
   if not Assigned(_Open) then exit(false);
   TQualifiedIdent.Parse(Self, Source, _Cursor);
   _For := Keyword('for');
-  if not TSelect.Parse(Self, Source, _Select) then TParser.ParseExpression(Self, Source, _Select);
+  if not TSelect.Parse(Self, Source, _Select) then TExpression.Parse(Self, Source, _Select);
   TUsing.Parse(Self, Source, _Using);
   inherited;
   Result := true;
@@ -1249,23 +1241,20 @@ end;
 function TUsingParam.InternalParse: boolean;
 begin
   _Accessor := Keyword(['in', 'out', 'in out']);
-  TParser.ParseExpression(Self, Source, _Value);
+  TExpression.Parse(Self, Source, _Value);
   Result := Assigned(_Accessor) or Assigned(_Value);
 end;
 
 procedure TUsingParam.InternalPrintSelf(APrinter: TPrinter);
 begin
-  FreeAccessor := Settings.AddInAccessSpecificator and not Assigned(_Accessor);
-  if FreeAccessor then _Accessor := TEpithet.Create('in', -1, -1);
+  if Settings.AddInAccessSpecificator and not Assigned(_Accessor) then
+  begin
+    _Accessor := TEpithet.Create('in', -1, -1);
+    AddToFreeList(_Accessor);
+  end;
   APrinter.StartRuler(Settings.AlignVariables);
   APrinter.PrintRulerItems('accessor', [_Accessor]);
   APrinter.PrintRulerItems('value', [_Value]);
-end;
-
-procedure TUsingParam.BeforeDestruction;
-begin
-  if FreeAccessor then FreeAndNil(_Accessor);
-  inherited;
 end;
 
 { TPragma }
@@ -1320,9 +1309,9 @@ begin
   if not TBracketedStatement<TSelect>.Parse(Self, Source, _Select) then
   begin
     P := Source.Mark;
-    TParser.ParseExpression(Self, Source, _Low);
+    TExpression.Parse(Self, Source, _Low);
     if Assigned(_Low) then _To := Terminal('..');
-    if Assigned(_To)  then TParser.ParseExpression(Self, Source, _High);
+    if Assigned(_To)  then TExpression.Parse(Self, Source, _High);
     if not Assigned(_To) then
     begin
       _Low := nil;
@@ -1354,7 +1343,7 @@ function TWhile.InternalParse: boolean;
 begin
   _While := Keyword('while');
   if not Assigned(_While) then exit(false);
-  TParser.ParseExpression(Self, Source, _Condition);
+  TExpression.Parse(Self, Source, _Condition);
   TLoop.Parse(Self, Source, _Loop);
   Result := true;
 end;
@@ -1495,9 +1484,9 @@ begin
     end
   else
     begin
-      TParser.ParseExpression(Self, Source, _Low);
+      TExpression.Parse(Self, Source, _Low);
       _To := Terminal('..');
-      TParser.ParseExpression(Self, Source, _High);
+      TExpression.Parse(Self, Source, _High);
     end;
   _Save := Keyword('save');
   _Exceptions := Keyword('exceptions');
@@ -1520,7 +1509,7 @@ begin
   _When := Keyword('when');
   if Assigned(_When) then
     begin
-      TParser.ParseExpression(Self, Source, _Condition);
+      TExpression.Parse(Self, Source, _Condition);
       _Then := Keyword('then');
     end
   else
@@ -1542,7 +1531,7 @@ function TCase.InternalParse: boolean;
 begin
   _Case := Keyword('case');
   if not Assigned(_Case) then exit(false);
-  TParser.ParseExpression(Self, Source, _Condition);
+  TExpression.Parse(Self, Source, _Condition);
   inherited;
   _EndCase := Keyword('end case');
   _Semicolon := Terminal(';');
@@ -1592,7 +1581,7 @@ begin
   _Pipe := Keyword('pipe');
   _Row  := Keyword('row');
   Result := Assigned(_Pipe) or Assigned(_Row);
-  if Result then TArguments.Parse(Self, Source, _Arguments);
+  if Result then TBracketedArguments.Parse(Self, Source, _Arguments);
   inherited;
 end;
 
@@ -1612,7 +1601,7 @@ begin
   _Into := Keyword(['into', 'bulk collect into']);
   if Assigned(_Into) then TIdentFields.Parse(Self, Source, _Targets);
   _Limit := Keyword('limit');
-  if Assigned(_Limit) then TParser.ParseExpression(Self, Source, _LimitValue);
+  if Assigned(_Limit) then TExpression.Parse(Self, Source, _LimitValue);
   inherited;
   Result := true;
 end;
@@ -1653,7 +1642,7 @@ begin
   _Exit := Keyword('exit');
   if not Assigned(_Exit) then exit(false);
   _When := Keyword('when');
-  if Assigned(_When) then TParser.ParseExpression(Self, Source, _Condition);
+  if Assigned(_When) then TExpression.Parse(Self, Source, _Condition);
   { Чтобы не путать с sqlplus-ным when, потребуем либо when, либо точку с запятой }
   if not inherited and not Assigned(_When) then exit(false);
 end;
@@ -1671,7 +1660,7 @@ begin
   _Execute := Keyword('execute');
   if not Assigned(_Execute) then exit(false);
   _Immediate := Keyword('immediate');
-  TParser.ParseExpression(Self, Source, _Command);
+  TExpression.Parse(Self, Source, _Command);
   _Into := Keyword('into');
   if Assigned(_Into) then TIdentFields.Parse(Self, Source, _IntoFields);
   TUsing.Parse(Self, Source, _Using);

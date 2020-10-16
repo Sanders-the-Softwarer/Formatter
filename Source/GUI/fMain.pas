@@ -80,6 +80,8 @@ type
     GroupBox4: TGroupBox;
     checkChangeCommentType: TCheckBox;
     checkUseSpace: TCheckBox;
+    GroupBox5: TGroupBox;
+    checkRemovePasswords: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -151,6 +153,7 @@ begin
     Settings.ReplaceAsIs                     := checkReplaceAsIs.Checked;
     Settings.AddInAccessSpecificator         := checkAddInAccessSpecificator.Checked;
     Settings.ChangeCommentType               := checkChangeCommentType.Checked;
+    Settings.RemoveConnectPasswords          := checkRemovePasswords.Checked;
     Settings.PreferredExpressionLength       := edPreferredExpressionLength.Value;
   end;
   { Создадим потоки }
@@ -221,20 +224,21 @@ begin
     edDeclarationSingleLineParamLimit.Value := Settings.DeclarationSingleLineParamLimit;
     edNamedArgumentSingleLineParamLimit.Value := Settings.NamedArgumentSingleLineParamLimit;
     edPositionalArgumentSingleLineParamLimit.Value := Settings.PositionalArgumentSingleLineParamLimit;
-    edMatchParamLimit.Value                 := Settings.MatchParamLimit;
-    edPreferredExpressionLength.Value       := Settings.PreferredExpressionLength;
-    checkAlignFields.Checked                := Settings.AlignFields;
-    checkAlignColumns.Checked               := Settings.AlignColumns;
-    checkAlignVariables.Checked             := Settings.AlignVariables;
-    checkAlignSpecialComments.Checked       := Settings.AlignSpecialComments;
-    checkAlignTableColumnComments.Checked   := Settings.AlignTableColumnComments;
-    checkAlignSQLPLUS.Checked               := Settings.AlignSQLPLUS;
-    checkAlignExpressions.Checked           := Settings.AlignExpressions;
-    checkUseSpace.Checked                   := Settings.AlignUseSpace;
-    checkReplaceDefault.Checked             := Settings.ReplaceDefault;
-    checkReplaceAsIs.Checked                := Settings.ReplaceAsIs;
-    checkAddInAccessSpecificator.Checked    := Settings.AddInAccessSpecificator;
-    checkChangeCommentType.Checked          := Settings.ChangeCommentType;
+    edMatchParamLimit.Value               := Settings.MatchParamLimit;
+    edPreferredExpressionLength.Value     := Settings.PreferredExpressionLength;
+    checkAlignFields.Checked              := Settings.AlignFields;
+    checkAlignColumns.Checked             := Settings.AlignColumns;
+    checkAlignVariables.Checked           := Settings.AlignVariables;
+    checkAlignSpecialComments.Checked     := Settings.AlignSpecialComments;
+    checkAlignTableColumnComments.Checked := Settings.AlignTableColumnComments;
+    checkAlignSQLPLUS.Checked             := Settings.AlignSQLPLUS;
+    checkAlignExpressions.Checked         := Settings.AlignExpressions;
+    checkUseSpace.Checked                 := Settings.AlignUseSpace;
+    checkReplaceDefault.Checked           := Settings.ReplaceDefault;
+    checkReplaceAsIs.Checked              := Settings.ReplaceAsIs;
+    checkAddInAccessSpecificator.Checked  := Settings.AddInAccessSpecificator;
+    checkChangeCommentType.Checked        := Settings.ChangeCommentType;
+    checkRemovePasswords.Checked          := Settings.RemoveConnectPasswords;
   finally
     IntoUpdateSettings := false;
   end;

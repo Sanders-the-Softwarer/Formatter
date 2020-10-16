@@ -49,8 +49,8 @@ unit Statements;
 
 interface
 
-uses Classes, SysUtils, Math, System.Generics.Collections, Utils, Streams,
-  Tokens, Printer, Rulers;
+uses Classes, SysUtils, Math, System.Generics.Collections, Contnrs, Utils,
+  Streams, Tokens, Printer, Rulers;
 
 type
 
@@ -69,7 +69,9 @@ type
     FFirstToken: TToken;
     FRulers: TRulers;
     FMatchedTo: TStatement;
+    FreeList: TObjectList;
     function GetSettings: TFormatSettings;
+    function GetRulers: TRulers;
   strict protected
     function InternalParse: boolean; virtual;
     procedure InternalPrintSelf(APrinter: TPrinter); virtual;
@@ -89,9 +91,11 @@ type
     function Terminal(const ATerminal: string): TTerminal; overload;
     function Terminal(const ATerminals: array of string): TTerminal; overload;
     function Concat(Params: array of TObject): string;
+    procedure AddToFreeList(AObj: TObject);
+    procedure ReplaceToken(var AOld: TToken; ANew: TToken);
   public
     class function Parse(AParent: TStatement; Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-    class function Candidates: TArray<TStatementClass>; virtual;
+    class function Candidates(AParent: TStatement): TArray<TStatementClass>; virtual;
     function EmptyLineBefore: boolean; virtual;
     function EmptyLineAfter: boolean; virtual;
     function EmptyLineInside: boolean; virtual;
@@ -103,7 +107,7 @@ type
     property Parent: TStatement read FParent write FParent;
     property Settings: TFormatSettings read GetSettings write FSettings;
     property FirstToken: TToken read FFirstToken;
-    property Rulers: TRulers read FRulers write FRulers;
+    property Rulers: TRulers read GetRulers;
     property MatchedTo: TStatement read FMatchedTo write FMatchedTo;
   public
     class function StatementType: string;
@@ -202,7 +206,7 @@ type
   { Конструкция заданного типа, возможно, заключённая в скобки }
   TOptionalBracketedStatement<T: TStatement> = class(TBracketedStatement<T>)
   public
-    class function Candidates: TArray<TStatementClass>; override;
+    class function Candidates(AParent: TStatement): TArray<TStatementClass>; override;
   end;
 
   { Конструкция для форматирования заданной в одну строку }
@@ -245,6 +249,7 @@ destructor TStatement.Destroy;
 begin
   inherited;
   FreeAndNil(FRulers);
+  FreeAndNil(FreeList);
 end;
 
 { Ключевое место продукта - попытка разбора указанного выражения и восстановление при неудаче }
@@ -256,7 +261,7 @@ var
 begin
   AResult := nil;
   SavedPosition := Tokens.Mark;
-  Candidates := Self.Candidates;
+  Candidates := Self.Candidates(AParent);
   for Candidate in Candidates do
     if Candidate = Self then
       begin
@@ -284,7 +289,7 @@ begin
 end;
 
 { По умолчанию единственным кандидатом на реализацию класса является сам класс }
-class function TStatement.Candidates: TArray<TStatementClass>;
+class function TStatement.Candidates(AParent: TStatement): TArray<TStatementClass>;
 begin
   Result := [Self];
 end;
@@ -591,10 +596,43 @@ begin
   end;
 end;
 
+procedure TStatement.AddToFreeList(AObj: TObject);
+begin
+  if not Assigned(FreeList) then FreeList := TObjectList.Create(true);
+  FreeList.Add(AObj);
+end;
+
+procedure TStatement.ReplaceToken(var AOld: TToken; ANew: TToken);
+begin
+  if Assigned(AOld) and Assigned(ANew) then
+  begin
+    ANew.CommentFarAbove := AOld.CommentFarAbove;
+    ANew.CommentAbove := AOld.CommentAbove;
+    ANew.CommentAfter := AOld.CommentAfter;
+    ANew.CommentBelow := AOld.CommentBelow;
+    ANew.CommentFarBelow := AOld.CommentFarBelow;
+  end;
+  AOld := ANew;
+  AddToFreeList(ANew);
+end;
+
 function TStatement.GetSettings: TFormatSettings;
 begin
   if not Assigned(FSettings) and Assigned(Parent) then FSettings := Parent.Settings;
   Result := FSettings;
+end;
+
+function TStatement.GetRulers: TRulers;
+begin
+  if Aligned then
+    begin
+      if not Assigned(FRulers) then FRulers := TRulers.Create(Self);
+      Result := FRulers;
+    end
+  else if Assigned(Parent) then
+    Result := Parent.Rulers
+  else
+    Result := nil;
 end;
 
 { TStatementList }
@@ -771,7 +809,7 @@ end;
 
 function TUnexpectedToken.StatementName: string;
 begin
-  Result := Format('*** НЕОЖИДАННАЯ КОНСТРУКЦИЯ *** [%s ''%s'']', [Token.TokenType, Token.Value]);
+  Result := Format('*** НЕОЖИДАННАЯ КОНСТРУКЦИЯ *** [%s ''%s'']', [Token.TokenType, Token.InitialValue]);
 end;
 
 function TUnexpectedToken.InternalParse: boolean;
@@ -853,7 +891,7 @@ end;
 
 { TOptionalBracketedStatement<T> }
 
-class function TOptionalBracketedStatement<T>.Candidates: TArray<TStatementClass>;
+class function TOptionalBracketedStatement<T>.Candidates(AParent: TStatement): TArray<TStatementClass>;
 begin
   Result := [T, TBracketedStatement<T>];
 end;

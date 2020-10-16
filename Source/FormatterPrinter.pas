@@ -57,8 +57,6 @@ type
     { Информация режима сохранения исходного форматирования }
     OriginalFormatCount, OriginalFormatStartLine: integer;
     OriginalFormatToken: TToken;
-    { Флаг перекрытия настройки из Settings }
-    FForceChangeCommentType: boolean;
   strict protected
     TokenPos, TokenLen: TDictionary<TToken, integer>;
     function SpaceRequired(ALeft, ARight: TToken): boolean;
@@ -91,8 +89,6 @@ type
     function CurrentLine: integer;
     function CurrentCol: integer;
     function CurrentMaxWidth: integer;
-  public
-    property ForceChangeCommentType: boolean read FForceChangeCommentType write FForceChangeCommentType;
   end;
 
 const
@@ -345,21 +341,22 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
         end;
       RulerName := '';
     end;
-    { Определим окончательное значение печатаемого текста }
+    { Внесём в многострочный комментарий поправку на сдвиг к колонке, в которой он должен быть выведен }
     if IsComment and not LineComment then
       if (EOLLimit > 0) and (TextBuilder.Col = 1)
-        then Value := AComment.ShiftedValue(Shift + 1)
-        else Value := AComment.ShiftedValue(TextBuilder.Col)
-    else if IsComment and LineComment and (SupNextLine > 0) and
-            (AComment.Position = poAfter) and
-            (ForceChangeCommentType or Settings.ChangeCommentType) then
-      begin
-        Value := '/* ' + Trim(AToken.Value.Substring(2)) + ' */';
-        LineComment := false;
-      end
-    else
-      Value := AToken.Value;
-    Value := Trim(Value);
+        then AComment.ShiftTo(Shift + 1)
+        else AComment.ShiftTo(TextBuilder.Col);
+    { В режиме подавления переводов строки заменим строчный комментарий справа от лексемы скобочным }
+    if IsComment and LineComment and (SupNextLine > 0) and (AComment.Position = poAfter) and
+       Settings.ChangeCommentType and not OriginalFormat then
+    begin
+      AComment.ChangeTypeToBrackets;
+      LineComment := false;
+    end;
+    { Получим значение выводимого текста }
+    if OriginalFormat
+      then Value := AToken.InitialValue
+      else Value := Trim(AToken.Value);
     { Учтём настройки замены лексем на синонимы и вывод в нижнем регистре }
     if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and not OriginalFormat and
        SameText(AToken.Value, 'default') and Settings.ReplaceDefault and AToken.CanReplace
@@ -441,16 +438,16 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   procedure CollectRulers;
   var DraftPrinter: TFormatterPrinter;
   begin
-    if Assigned(AStatement.Rulers) then exit;
+    if AStatement.Rulers.Full then exit;
     DraftPrinter := TFormatterPrinter.Create(Self.Settings, false, [poFarAbove..poFarBelow], false);
     try
-      DraftPrinter.Rulers := TRulers.Create;
+      DraftPrinter.Rulers := AStatement.Rulers;
       DraftPrinter.Rulers.UseSpaces := Settings.AlignUseSpace;
       DraftPrinter.Mode   := fpmGetRulers;
       DraftPrinter.BeginPrint;
       DraftPrinter.PrintItem(AStatement);
       DraftPrinter.EndPrint;
-      AStatement.Rulers   := DraftPrinter.Rulers;
+      AStatement.Rulers.Full := true;
     finally
       FreeAndNil(DraftPrinter);
     end;
@@ -476,6 +473,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   end;
 
 begin
+  //Self.Rulers := AStatement.Rulers;
   if AStatement.Aligned and (Mode <> fpmGetRulers) then
     begin
       CollectRulers;

@@ -71,6 +71,7 @@ type
     AddInAccessSpecificator: boolean;
     AddFromToDelete: boolean;
     PreferredExpressionLength: integer;
+    RemoveConnectPasswords: boolean;
   public
     constructor Default;
     constructor ForTest;
@@ -313,16 +314,17 @@ begin
   AddInAccessSpecificator         := true;
   AddFromToDelete                 := true;
   ChangeCommentType               := false;
+  RemoveConnectPasswords          := false;
   PreferredExpressionLength       := 100;
 end;
 
 constructor TFormatSettings.ForTest;
 begin
-  DeclarationSingleLineParamLimit := 99;
-  NamedArgumentSingleLineParamLimit := 99;
+  DeclarationSingleLineParamLimit        := 99;
+  NamedArgumentSingleLineParamLimit      := 99;
   PositionalArgumentSingleLineParamLimit := 999;
-  PreferredExpressionLength       := 9999;
-  MatchParamLimit                 := 99;
+  PreferredExpressionLength              := 9999;
+  MatchParamLimit                        := 99;
 end;
 
 end.

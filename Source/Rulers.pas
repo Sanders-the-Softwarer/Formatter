@@ -58,6 +58,7 @@ type
   { Информация о выравниваниях }
   TRulers = class
   private
+    FOwner: TObject;
     { Линейки в том порядке, в котором они идут в обрабатываемой конструкции }
     Names: TStringList;
     { Информация о ячейках }
@@ -68,6 +69,8 @@ type
     FShift: integer;
     { Настройка заполнения пустот }
     FUseSpaces: boolean;
+    { Флаг заполненности информации }
+    FFull: boolean;
     { Флаг пропуска после строчного комментария }
     SkipUntilNewLine: boolean;
     { Итоговые позиции линеек }
@@ -79,7 +82,7 @@ type
     property Width[ALine, ACol: integer]: integer index 0 read GetCell write SetCell;
     property Carry[ALine, ACol: integer]: integer index 1 read GetCell write SetCell;
   public
-    constructor Create;
+    constructor Create(AOwner: TObject);
     destructor Destroy; override;
     procedure AddRuler(const ARuler: string);
     procedure Take(const ARuler: string; ALine, ACol: integer);
@@ -87,6 +90,7 @@ type
     function Empty: boolean;
     property Shift: integer read FShift write FShift;
     property UseSpaces: boolean read FUseSpaces write FUseSpaces;
+    property Full: boolean read FFull write FFull;
   end;
 
 implementation
@@ -94,6 +98,7 @@ implementation
 constructor TRulers.Create;
 begin
   Names := TStringList.Create;
+  FOwner := AOwner;
 end;
 
 destructor TRulers.Destroy;
@@ -131,17 +136,12 @@ begin
   end;
   { Строчные комментарии могут спутать порядок вызовов, что приводит к
     ложной информации о ширине последней колонки (баг №10). Чтобы этого
-    избежать, отловим ситуацию такого прыжка и скорректируем номер
-    колонки }
-  if ColIndex = PrevColIndex + 1 then
-    FactIndex := ColIndex
-  else
-    begin
-      FactIndex := PrevColIndex + 1;
-      SkipUntilNewLine := true;
-    end;
+    избежать, отловим ситуацию такого прыжка }
+  FactIndex := PrevColIndex + 1;
+  SkipUntilNewLine := (ColIndex <> FactIndex);
   { Сохраним ширину текущей ячейки }
   Width[ALine, FactIndex] := ACol - PrevCol - Shift;
+  Utils._Debug('[%p] Take %s (%d, %d) => index = %d, width = %d', [pointer(Self), ARuler, ALine, ACol, FactIndex, Width[ALine, FactIndex]]);
   { Сохраним текущее положение, от которого будем отсчитывать следующую ячейку }
   PrevLine := ALine;
   PrevCol := ACol;
@@ -152,6 +152,9 @@ end;
 function TRulers.Fix(const ARuler: string): integer;
 begin
   if not Assigned(Rulers) then CalcRulers;
+  if Rulers.ContainsKey(ARuler)
+    then Utils._Debug('[%p] Fix %s, shift = %d, offset = %d', [pointer(Self), ARuler, Shift, Rulers[ARuler]])
+    else Utils._Debug('[%p] Fix %s, shift = %d, - no ruler -', [pointer(Self), ARuler, Shift]);
   if Rulers.ContainsKey(ARuler)
     then Result := Shift + Rulers[ARuler]
     else Result := 0;

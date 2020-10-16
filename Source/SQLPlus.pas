@@ -25,14 +25,9 @@ type
 
   { Базовый класс команд SQL*Plus }
   TSQLPlusStatement = class(TSemicolonStatement)
-  strict private
-    FreeList: TObjectList;
   strict protected
     { Считывание лексемы "символы до конца строки" }
     function SqlPlusString: TTerminal;
-  public
-    procedure AfterConstruction; override;
-    procedure BeforeDestruction; override;
   end;
 
   { Команда clear }
@@ -127,6 +122,7 @@ type
   strict private
     _Connect: TEpithet;
     _ConnectString: TTerminal;
+    procedure RemovePassword;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -134,7 +130,7 @@ type
 
 implementation
 
-uses Parser, Commons, PLSQL, Keywords, Set_SQLPlus, Exit_SQLPlus;
+uses Expressions, Commons, PLSQL, Keywords, Set_SQLPlus, Exit_SQLPlus;
 
 { TClear }
 
@@ -167,7 +163,7 @@ begin
   begin
     _Action := Keyword('exit');
     _Param1 := Keyword(['success', 'failure', 'warning']);
-    if not Assigned(_Param1) then TParser.ParseExpression(Self, Source, _Expr);
+    if not Assigned(_Param1) then TExpression.Parse(Self, Source, _Expr);
     _Param2 := Keyword(['commit', 'rollback']);
   end;
   inherited;
@@ -284,7 +280,7 @@ begin
   if not Assigned(_Define) then exit(false);
   _Target := Identifier;
   _Eq := Terminal('=');
-  TParser.ParseExpression(Self, Source, _Value);
+  TExpression.Parse(Self, Source, _Value);
   inherited;
 end;
 
@@ -330,29 +326,30 @@ end;
 
 procedure TConnect.InternalPrintSelf(APrinter: TPrinter);
 begin
+  RemovePassword;
   APrinter.PrintItems([_Connect, _ConnectString]);
   inherited;
 end;
 
+procedure TConnect.RemovePassword;
+var
+  Str: string;
+  p1, p2: integer;
+begin
+  if not Settings.RemoveConnectPasswords or not Assigned(_ConnectString) then exit;
+  Str := _ConnectString.Value;
+  p1 := Pos('/', Str);
+  p2 := Pos('@', Str + '@');
+  if p1 <= 0 then exit;
+  _ConnectString.Value := Copy(Str, 1, p1 - 1) + Copy(Str, p2, length(Str));
+end;
+
 { TSQLPlusStatement }
-
-procedure TSQLPlusStatement.AfterConstruction;
-begin
-  inherited;
-  FreeList := TObjectList.Create(true);
-end;
-
-procedure TSQLPlusStatement.BeforeDestruction;
-begin
-  FreeAndNil(FreeList);
-  inherited;
-end;
 
 function TSQLPlusStatement.SqlPlusString: TTerminal;
 var
   Token: TToken;
   Comment: TComment;
-  LastComment: TComment;
   Line, Col: integer;
   Text: string;
   P: TMark;
@@ -373,9 +370,8 @@ begin
     if Assigned(Token.CommentAfter) then
     begin
       if Assigned(Comment)
-        then LastComment.CommentAfter := Token.CommentAfter
+        then Comment.CommentAfter := Token.CommentAfter
         else Comment := Token.CommentAfter;
-      LastComment := Token.CommentAfter;
       Token.CommentAfter := nil;
     end;
     { Идём дальше }
@@ -384,8 +380,8 @@ begin
   Source.Restore(P);
   { Теперь сформируем лексему из этой строки, она и будет результатом }
   Result := TTerminal.Create(Text, Line, Col);
+  ReplaceToken(Token, Result);
   Result.CommentAfter := Comment;
-  FreeList.Add(Result);
 end;
 
 initialization
@@ -400,4 +396,3 @@ initialization
     'whenever']);
 
 end.
-

@@ -142,7 +142,7 @@ begin
   TTriggerOrdering.Parse(Self, Source, _Ordering);
   _State := Keyword(['enable', 'disable']);
   _When := Keyword('when');
-  if Assigned(_When) then TParser.ParseExpression(Self, Source, _Condition);
+  if Assigned(_When) then TExpression.Parse(Self, Source, _Condition);
   { Самое весёлое - тело триггера }
   if not TTriggerCompoundBody.Parse(Self, Source, _Body) and
      not TAnonymousBlock.Parse(Self, Source, _Body) and

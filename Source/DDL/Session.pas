@@ -30,7 +30,7 @@ type
 
 implementation
 
-uses Streams, Commons, Parser;
+uses Streams, Commons, Expressions;
 
 type
 
@@ -166,7 +166,7 @@ begin
   end;
   _Eq := Terminal('=');
   if not Assigned(_Eq) then exit(false);
-  TParser.ParseExpression(Self, Source, _Value);
+  TExpression.Parse(Self, Source, _Value);
 end;
 
 procedure TSessionParam.InternalPrintSelf(APrinter: TPrinter);

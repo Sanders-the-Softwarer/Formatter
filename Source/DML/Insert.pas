@@ -29,7 +29,7 @@ type
 
 implementation
 
-uses Parser, Select;
+uses Expressions, Select;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -48,7 +48,7 @@ begin
   _Values := Keyword('values');
   if not Assigned(_Values) then TSelect.Parse(Self, Source, _ValueList);
   if not Assigned(_ValueList) then TBracketedStatement<TExpressionFields>.Parse(Self, Source, _ValueList);
-  if not Assigned(_ValueList) then TParser.ParseExpression(Self, Source, _ValueList);
+  if not Assigned(_ValueList) then TExpression.Parse(Self, Source, _ValueList);
   TReturning.Parse(Self, Source, _Returning);
   inherited;
 end;

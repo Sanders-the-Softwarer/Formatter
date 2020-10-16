@@ -255,7 +255,7 @@ begin
     _Assignment := nil;
     Source.Restore(P);
   end;
-  Result := TParser.ParseExpression(Self, Source, _Expression);
+  Result := TExpression.Parse(Self, Source, _Expression);
 end;
 
 procedure TArgument.InternalPrintSelf(APrinter: TPrinter);

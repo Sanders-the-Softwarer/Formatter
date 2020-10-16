@@ -96,7 +96,7 @@ type
   { Общий класс для составных частей таблицы }
   TTableItem = class(TStatement)
   public
-    class function Candidates: TArray<TStatementClass>; override;
+    class function Candidates(AParent: TStatement): TArray<TStatementClass>; override;
   end;
 
   { Описание поля таблицы }
@@ -120,7 +120,7 @@ type
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
-    class function Candidates: TArray<TStatementClass>; override;
+    class function Candidates(AParent: TStatement): TArray<TStatementClass>; override;
   end;
 
   { Описание primary key }
@@ -382,7 +382,7 @@ begin
       _Organization := Keyword('organization');
       _Index := Keyword('index');
       TTablespace.Parse(Self, Source, _Tablespace);
-      TLobStores.Parse(Self, Source, _LobStores)
+      TLobStores.Parse(Self, Source, _LobStores);
     end;
   inherited;
   Result := true;
@@ -422,7 +422,7 @@ end;
 
 { TTableItem }
 
-class function TTableItem.Candidates: TArray<TStatementClass>;
+class function TTableItem.Candidates(AParent: TStatement): TArray<TStatementClass>;
 begin
   Result := [TConstraint, TTableField];
 end;
@@ -435,7 +435,7 @@ begin
   TTypeRef.Parse(Self, Source, _Type);
   if not Assigned(_Name) and not Assigned(_Type) then exit(false);
   _Default := Keyword('default');
-  if Assigned(_Default) then TParser.ParseExpression(Self, Source, _Value);
+  if Assigned(_Default) then TExpression.Parse(Self, Source, _Value);
   _Not  := Keyword('not');
   _Null := Keyword('null');
   Result := true;
@@ -465,7 +465,7 @@ begin
   APrinter.PrintItems([_Constraint, _ConstraintName]);
 end;
 
-class function TConstraint.Candidates: TArray<TStatementClass>;
+class function TConstraint.Candidates(AParent: TStatement): TArray<TStatementClass>;
 begin
   if Self = TConstraint
     then Result := [TPrimaryKey, TUnique, TForeignKey, TCheck]
@@ -582,7 +582,7 @@ begin
   if not inherited then exit(false);
   _Check := Keyword('check');
   if not Assigned(_Check) then exit(false);
-  TParser.ParseExpression(Self, Source, _Condition);
+  TExpression.Parse(Self, Source, _Condition);
   Result := true;
 end;
 
@@ -624,7 +624,7 @@ begin
   _Range := Keyword('range');
   if not Assigned(_Range) then exit(false);
   TSingleLine<TBracketedStatement<TIdentFields>>.Parse(Self, Source, _Fields);
-  TParser.ParseExpression(Self, Source, _Expression);
+  TExpression.Parse(Self, Source, _Expression);
   Result := true;
 end;
 
@@ -657,7 +657,7 @@ begin
   _Values := Keyword('values');
   _Less   := Keyword('less');
   _Than   := Keyword('than');
-  TParser.ParseExpression(Self, Source, _Expression);
+  TExpression.Parse(Self, Source, _Expression);
   TBracketedStatement<TCommaList<TPartition>>.Parse(Self, Source, _Subpartitions);
   Result  := true;
 end;

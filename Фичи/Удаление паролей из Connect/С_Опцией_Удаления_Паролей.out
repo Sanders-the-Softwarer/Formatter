@@ -1,0 +1,3 @@
+connect scott
+
+connect scott@manager

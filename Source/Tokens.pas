@@ -63,7 +63,7 @@ type
   { Лексема }
   TToken = class(TBaseToken)
   strict private
-    FValue, FInitialValue: string;
+    FInitialValue, FValue: string;
     FLine, FCol: integer;
     FPrinted, FCanReplace: boolean;
     FComments: array[TCommentPosition] of TComment;
@@ -77,10 +77,10 @@ type
     constructor Create(const AValue: string; AChar: TPositionedChar); overload;
     constructor Create(AChar: TPositionedChar); overload;
     constructor Create(const AValue: string; ALine, ACol: integer); overload;
-    property Value: string read FValue;
+    property InitialValue: string read FInitialValue;
+    property Value: string read FValue write FValue;
     property Line: integer read FLine;
     property Col: integer read FCol;
-    property InitialValue: string read FInitialValue;
     property Printed: boolean read FPrinted write FPrinted;
     property CanReplace: boolean read FCanReplace write FCanReplace;
     property CommentFarAbove: TComment index poFarAbove read GetComment write SetComment;
@@ -146,8 +146,9 @@ type
     function TokenType: string; override;
     function LineComment: boolean;
     function Height: integer;
-    function ShiftedValue(ACol: integer): string;
     function LeadComment: TComment;
+    procedure ShiftTo(ACol: integer);
+    procedure ChangeTypeToBrackets;
   end;
 
   { Число }
@@ -209,8 +210,8 @@ constructor TToken.Create(AChar: TPositionedChar);
 begin
   FInitialValue := AChar.Value;
   FValue := ModifyValue(FInitialValue);
-  FLine  := AChar.Line;
-  FCol   := AChar.Col;
+  FLine := AChar.Line;
+  FCol  := AChar.Col;
 end;
 
 constructor TToken.Create(const AValue: string; AChar: TPositionedChar);
@@ -224,8 +225,8 @@ constructor TToken.Create(const AValue: string; ALine, ACol: integer);
 begin
   FInitialValue := AValue;
   FValue := ModifyValue(FInitialValue);
-  FLine  := ALine;
-  FCol   := ACol;
+  FLine := ALine;
+  FCol  := ACol;
 end;
 
 function TToken.ModifyValue(const AValue: string): string;
@@ -240,9 +241,12 @@ end;
 
 procedure TToken.SetComment(Index: TCommentPosition; AComment: TComment);
 begin
-  if Assigned(AComment) and Assigned(FComments[Index])
-    then raise Exception.CreateFmt('Trying to link comment [%s] while comment [%s] is already linked', [AComment.Value, FComments[Index].Value])
-    else FComments[Index] := AComment;
+  if Assigned(AComment) and Assigned(FComments[Index]) then
+    if Index = poAfter
+      then FComments[Index].CommentAfter := AComment
+      else raise Exception.CreateFmt('Trying to link comment [%s] while comment [%s] is already linked', [AComment.Value, FComments[Index].Value])
+  else
+    FComments[Index] := AComment;
   if Assigned(AComment) then
   begin
     AComment.Position := Index;
@@ -306,21 +310,24 @@ end;
 
 { Внесение в текст многострочного комментария поправки на разницу между тем,
   в какой позиции он будет выведен, и той, в которой был в оригинале }
-function TComment.ShiftedValue(ACol: integer): string;
+procedure TComment.ShiftTo(ACol: integer);
 var
   D, i, j: integer;
   C: char;
+  S: string;
 begin
   D := ACol - Col;
+  if D = 0 then exit;
   i := 1;
+  S := '';
   while i <= Length(Value) do
   begin
     C := Value[i];
-    Result := Result + C;
+    S := S + C;
     Inc(i);
     if C = #13 then
       if D > 0 then
-        Result := Result + StringOfChar(' ', D)
+        S := S + StringOfChar(' ', D)
       else if D < 0 then
         begin
           j := 0;
@@ -331,6 +338,13 @@ begin
           end;
         end;
       end;
+  Value := S;
+end;
+
+procedure TComment.ChangeTypeToBrackets;
+begin
+  if not LineComment then exit;
+  Value := '/* ' + Trim(Value.Substring(2)) + ' */';
 end;
 
 function TComment.LeadComment: TComment;

@@ -26,7 +26,7 @@ type
 
 implementation
 
-uses Parser;
+uses Expressions;
 
 { TExit }
 
@@ -35,7 +35,7 @@ begin
   Result := true;
   _Exit := Keyword(['exit', 'quit']);
   if not Assigned(_Exit) then exit(false);
-  TParser.ParseExpression(Self, Source, _Expr);
+  TExpression.Parse(Self, Source, _Expr);
   _Action := Keyword(['commit', 'rollback']);
   inherited;
 end;

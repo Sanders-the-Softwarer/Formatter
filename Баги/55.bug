@@ -1,0 +1,9 @@
+-- Два комментария справа от select не должны приводить к ошибке привязки
+
+select /*+ leading(s) */ -- чтобы не сбивались планы при p_dev_style_tbl из одного эл-та
+    s.code,
+    s.sop_code
+from 
+    top_dev_style s 
+where 
+    s.code in (select value(t) from table(p_dev_style_tbl) t)

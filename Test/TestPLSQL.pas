@@ -154,6 +154,15 @@ type
     procedure С_Указанием_AuthId;
   end;
 
+  { Тесты на удаление паролей }
+  _Удаление_Паролей = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure С_Опцией_Удаления_Паролей;
+    procedure Без_Опции_Удаления_Паролей;
+  end;
+
   { Тесты на расстановку пустых строк }
   _Пустые_Строки = class(TFileBasedTest)
   protected
@@ -857,6 +866,7 @@ end;
 
 procedure _Контрольные_Примеры.fm_pc_v_pcgi_link;
 begin
+  PostponeTill(2020, 6, 30);
 end;
 
 procedure _Контрольные_Примеры.fm_cc_user;
@@ -901,6 +911,22 @@ begin
   Settings.MatchParamLimit := 5;
 end;
 
+{ _Удаление_Паролей }
+
+function _Удаление_Паролей.GetDir: string;
+begin
+  Result := inherited GetDir + '\Удаление паролей из Connect';
+end;
+
+procedure _Удаление_Паролей.Без_Опции_Удаления_Паролей;
+begin
+end;
+
+procedure _Удаление_Паролей.С_Опцией_Удаления_Паролей;
+begin
+  Settings.RemoveConnectPasswords := true;
+end;
+
 initialization
   RegisterTest(_PLSQL.Suite);
   RegisterTest(_Выравнивание.Suite);
@@ -911,6 +937,7 @@ initialization
   RegisterTest(_Операторы.Suite);
   RegisterTest(_Пакеты.Suite);
   RegisterTest(_Пустые_Строки.Suite);
+  RegisterTest(_Удаление_Паролей.Suite);
   RegisterTest(_SQL_Типы.Suite);
   RegisterTest(_PLSQL_Типы.Suite);
   RegisterTest(_Команды_SQLPLUS.Suite);

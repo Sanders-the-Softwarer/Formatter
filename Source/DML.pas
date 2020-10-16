@@ -13,7 +13,7 @@ unit DML;
 interface
 
 uses Classes, SysUtils, Math, Tokens, Streams, Statements, Printer, Commons,
-  Expressions, Utils;
+  Expressions, Utils, Rulers;
 
 type
 
@@ -145,7 +145,6 @@ type
   end;
 
   { Список идентификаторов }
-
   TIdentFields = class(TCommaList<TIdentField>)
   strict protected
     function ParseBreak: boolean; override;
@@ -322,7 +321,7 @@ end;
 
 function TSQLExpression.Aligned: boolean;
 begin
-  Result := true;
+  Result := not true;
 end;
 
 { TAsterisk }
@@ -447,7 +446,7 @@ begin
   _ListAgg := Keyword('listagg');
   if not Assigned(_ListAgg) then exit(false);
   _OpenBracket := Terminal('(');
-  TParser.ParseExpression(Self, Source, _Expression);
+  TExpression.Parse(Self, Source, _Expression);
   _Comma := Terminal(',');
   if Assigned(_Comma) then _Delimiter := Literal;
   _On := Keyword('on');
@@ -495,7 +494,7 @@ end;
 function TOrderByItem.InternalParse: boolean;
 begin
   Result := true;
-  if not TParser.ParseExpression(Self, Source, _Expression) then exit(false);
+  if not TExpression.Parse(Self, Source, _Expression) then exit(false);
   _Direction := Keyword(['asc', 'desc']);
   _Nulls := Keyword(['nulls', 'nulls first', 'nulls last']);
 end;
@@ -524,7 +523,7 @@ end;
 
 function TExpressionField.InternalParse: boolean;
 begin
-  Result := TParser.ParseExpression(Self, Source, _Expression);
+  Result := TExpression.Parse(Self, Source, _Expression);
 end;
 
 procedure TExpressionField.InternalPrintSelf(APrinter: TPrinter);
@@ -556,7 +555,7 @@ end;
 function TWhere.InternalParse: boolean;
 begin
   _Where := Keyword('where');
-  TParser.ParseExpression(Self, Source, _Condition);
+  TExpression.Parse(Self, Source, _Condition);
   Result := Assigned(_Where);
 end;
 
@@ -687,7 +686,7 @@ begin
   TQualifiedIdent.Parse(Self, Source, _Target);
   _Assignment := Terminal('=');
   Result := Assigned(_Target) and Assigned(_Assignment);
-  if Result then TParser.ParseExpression(Self, Source, _Value);
+  if Result then TExpression.Parse(Self, Source, _Value);
 end;
 
 function TUpdateAssignment.StatementName: string;
@@ -788,7 +787,7 @@ begin
   if not TBracketedStatement<TSelect>.Parse(Self, Source, _SourceSelect) then TQualifiedIdent.Parse(Self, Source, _SourceTable);
   _SourceAlias := Identifier;
   _On    := Keyword('on');
-  TParser.ParseExpression(Self, Source, _Condition);
+  TExpression.Parse(Self, Source, _Condition);
   TMergeSections.Parse(Self, Source, _Sections);
   inherited;
   Result := true;

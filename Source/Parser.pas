@@ -52,7 +52,6 @@ type
     class function ParseDeclaration(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseType(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseAny(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-    class function ParseExpression(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
   end;
 
   { Конструкция для группировки элементов одного типа }
@@ -152,26 +151,7 @@ begin
             SQLPlusParser.Parse(AParent, ASource, AResult) or
             ParseDeclaration(AParent, ASource, AResult) { должно быть в конце из-за variable declaration } or
             ParseType(AParent, ASource, AResult) or
-            ParseExpression(AParent, ASource, AResult);
-end;
-
-class function TParser.ParseExpression(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-var
-  S: TStatement;
-  SQL: boolean;
-begin
-  { Найдём в дереве конструкций SQL-оператор }
-  SQL := false;
-  S := AParent;
-  while not SQL and Assigned(S) do
-    if S is TDML
-      then SQL := true
-      else S := S.Parent;
-  { И в зависимости от результата используем нужный класс выражения }
-  TExpression.CreatedRight;
-  if SQL
-    then Result := TSQLExpression.Parse(AParent, ASource, AResult)
-    else Result := TExpression.Parse(AParent, ASource, AResult);
+            TExpression.Parse(AParent, ASource, AResult);
 end;
 
 { Вычисление очередного выходного символа сводится к вызову ParseAny }

@@ -75,6 +75,9 @@ type
     procedure _52;
     procedure _53;
     procedure _54;
+    procedure _55;
+    procedure _56;
+    procedure _57;
   end;
 
 implementation
@@ -282,6 +285,19 @@ begin
 end;
 
 procedure _Bugs._54;
+begin
+end;
+
+procedure _Bugs._55;
+begin
+end;
+
+procedure _Bugs._56;
+begin
+  Settings.AlignFields := true;
+end;
+
+procedure _Bugs._57;
 begin
 end;
 
