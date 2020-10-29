@@ -18,7 +18,7 @@ uses
 
 { Функции создания принтеров различных типов }
 function CreateTokenizerPrinter(AListBox: TListBox): TPrinter;
-function CreateSyntaxTreePrinter(ATreeView: TTreeView): TPrinter;
+function CreateSyntaxTreePrinter(ATreeView: TTreeView; AHideTransparentCheckBox: TCheckBox): TPrinter;
 function CreateFormatterPrinter(ASettings: TFormatSettings; AMemo: TMemo): TPrinter;
 function CreateAlarmTokenPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
 function CreateAlarmStatementPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
@@ -62,11 +62,12 @@ type
   TSyntaxTreePrinter = class(TBasePrinter)
   private
     TreeView: TTreeView;
+    HideTransparentCheckBox: TCheckBox;
     Parents: TStack<TTreeNode>;
     IntoSync: boolean;
     Tokens: TDictionary<TToken, TTreeNode>;
   public
-    constructor Create(ATreeView: TTreeView);
+    constructor Create(ATreeView: TTreeView; AHideTransparentCheckBox: TCheckBox);
     destructor Destroy; override;
     procedure BeginPrint; override;
     procedure Clear; override;
@@ -103,9 +104,9 @@ begin
   Result := TGUIFormatterPrinter.Create(ASettings, AMemo);
 end;
 
-function CreateSyntaxTreePrinter(ATreeView: TTreeView): TPrinter;
+function CreateSyntaxTreePrinter(ATreeView: TTreeView; AHideTransparentCheckBox: TCheckBox): TPrinter;
 begin
-  Result := TSyntaxTreePrinter.Create(ATreeView);
+  Result := TSyntaxTreePrinter.Create(ATreeView, AHideTransparentCheckBox);
 end;
 
 function CreateTokenizerPrinter(AListBox: TListBox): TPrinter;
@@ -272,9 +273,10 @@ end;
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-constructor TSyntaxTreePrinter.Create(ATreeView: TTreeView);
+constructor TSyntaxTreePrinter.Create(ATreeView: TTreeView; AHideTransparentCheckBox: TCheckBox);
 begin
   TreeView := ATreeView;
+  HideTransparentCheckBox := AHideTransparentCheckBox;
   inherited Create;
   Tokens := TDictionary<TToken, TTreeNode>.Create;
   Parents := TStack<TTreeNode>.Create;
@@ -313,7 +315,7 @@ end;
 procedure TSyntaxTreePrinter.PrintStatement(AStatement: TStatement);
 var Transparent: boolean;
 begin
-  Transparent := AStatement.Transparent;
+  Transparent := AStatement.Transparent and (not Assigned(HideTransparentCheckBox) or HideTransparentCheckBox.Checked);
   if not Transparent then Parents.Push(TreeView.Items.AddChild(Parents.Peek, '< ' + Trim(AStatement.Name) + ' >'));
   try
     inherited;

@@ -68,8 +68,6 @@ type
   strict protected
     function ParseStatement(out AResult: TStatement): boolean; override;
     function ForcedLineBreaks: boolean; override;
-  public
-    function Aligned: boolean; override;
   end;
 
   { Оператор update }
@@ -163,9 +161,7 @@ type
     procedure PrintSelfAfter(APrinter: TPrinter); virtual;
   end;
 
-  TExpressionFields = class(TCommaList<TExpressionField>)
-    function Aligned: boolean; override;
-  end;
+  TExpressionFields = class(TCommaList<TExpressionField>);
 
 implementation
 
@@ -317,11 +313,6 @@ end;
 function TSQLExpression.ForcedLineBreaks: boolean;
 begin
   Result := true;
-end;
-
-function TSQLExpression.Aligned: boolean;
-begin
-  Result := not true;
 end;
 
 { TAsterisk }
@@ -543,13 +534,6 @@ begin
   { ничего не делаем }
 end;
 
-{ TExpressionFields }
-
-function TExpressionFields.Aligned: boolean;
-begin
-  Result := true;
-end;
-
 { TWhere }
 
 function TWhere.InternalParse: boolean;
@@ -698,7 +682,6 @@ end;
 
 procedure TUpdateAssignment.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.StartRuler(Settings.AlignFields);
   APrinter.PrintRulerItems('target', [_Target]);
   APrinter.PrintRulerItems('assignment', [_Assignment]);
   APrinter.PrintRulerItems('value', [_Value]);
@@ -706,14 +689,14 @@ end;
 
 { TUpdateAssignments }
 
-function TUpdateAssignments.Aligned: boolean;
-begin
-  Result := true;
-end;
-
 function TUpdateAssignments.ParseBreak: boolean;
 begin
   Result := Any([Terminal(';'), Keyword(['*'])]);
+end;
+
+function TUpdateAssignments.Aligned: boolean;
+begin
+  Result := Settings.AlignFields;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////

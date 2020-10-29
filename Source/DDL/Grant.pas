@@ -25,6 +25,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function Grouping: TStatementClass; override;
+    function SameTypeAligned: boolean; override;
   end;
 
 implementation
@@ -75,7 +76,6 @@ end;
 
 procedure TGrant.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.StartRuler(Settings.AlignSQLPLUS);
   APrinter.PrintRulerItems('Grant', [_Grant, _Privileges]);
   APrinter.PrintRulerItems('On', [_On, _Object]);
   APrinter.PrintRulerItems('To', [_To, _Grantee]);
@@ -89,6 +89,11 @@ begin
   if Assigned(_On)
     then Result := TGrantOn
     else Result := TGrantOff;
+end;
+
+function TGrant.SameTypeAligned: boolean;
+begin
+  Result := Settings.AlignCommands;
 end;
 
 { TPrivileges }

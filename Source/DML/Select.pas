@@ -148,6 +148,12 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+  { —писок полей в select }
+  TAliasedExpressions = class(TCommaList<TAliasedExpression>)
+  strict protected
+    function Aligned: boolean; override;
+  end;
+
   { —сылка на таблицу во from }
   TTableReference = class(TStatement)
   strict private
@@ -621,7 +627,7 @@ begin
   _Select := Keyword('select');
   if not Assigned(_Select) then exit(false);
   _Distinct := Keyword(['distinct', 'unique', 'all']);
-  TAligned<TCommaList<TAliasedExpression>>.Parse(Self, Source, _SelectList);
+  TAliasedExpressions.Parse(Self, Source, _SelectList);
   TInto.Parse(Self, Source, _Into);
   _From := Keyword('from');
   TCommaList<TOptionalBracketedStatement<TTableReference>>.Parse(Self, Source, _FromList);
@@ -696,16 +702,13 @@ end;
 function TAliasedExpression.InternalParse: boolean;
 begin
   Result := TExpression.Parse(Self, Source, _Expression);
-  if Result then
-  begin
-    _As := Keyword('as');
-    _Alias := Identifier;
-  end;
+  if not Result then exit;
+  _As := Keyword('as');
+  _Alias := Identifier;
 end;
 
 procedure TAliasedExpression.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.StartRuler(Settings.AlignFields);
   APrinter.PrintRulerItems('expression', [_Expression]);
   APrinter.PrintRulerItems('as', [_As]);
   APrinter.PrintRulerItems('alias', [_Alias]);
@@ -1053,7 +1056,7 @@ end;
 
 function TPivotRest.InternalParse: boolean;
 begin
-  Result := TCommaList<TAliasedExpression>.Parse(Self, Source, _Aggregates);
+  Result := TAliasedExpressions.Parse(Self, Source, _Aggregates);
   if not Result then exit;
   TPivotFor.Parse(Self, Source, _PivotFor);
   TPivotIn.Parse(Self, Source, _PivotIn);
@@ -1098,7 +1101,7 @@ end;
 function TPivotInRest.InternalParse: boolean;
 begin
   Result := TSubQuery.Parse(Self, Source, _Body) or
-            TCommaList<TAliasedExpression>.Parse(Self, Source, _Body);
+            TAliasedExpressions.Parse(Self, Source, _Body);
 end;
 
 procedure TPivotInRest.InternalPrintSelf(APrinter: TPrinter);
@@ -1269,6 +1272,13 @@ end;
 function TInto.InternalGetMatchTarget: TBaseStatementList;
 begin
   Result := TBaseStatementList(_Targets);
+end;
+
+{ TAliasedExpressions }
+
+function TAliasedExpressions.Aligned: boolean;
+begin
+  Result := Settings.AlignFields;
 end;
 
 end.

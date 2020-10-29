@@ -62,9 +62,9 @@ object FormMain: TFormMain
       object treeParser: TTreeView
         AlignWithMargins = True
         Left = 5
-        Top = 5
+        Top = 27
         Width = 610
-        Height = 458
+        Height = 436
         Margins.Left = 5
         Margins.Top = 5
         Margins.Right = 5
@@ -75,6 +75,23 @@ object FormMain: TFormMain
         ReadOnly = True
         TabOrder = 0
         OnChange = treeParserChange
+      end
+      object checkHideTransparent: TCheckBox
+        AlignWithMargins = True
+        Left = 5
+        Top = 5
+        Width = 610
+        Height = 17
+        Margins.Left = 5
+        Margins.Top = 5
+        Margins.Right = 5
+        Margins.Bottom = 0
+        Align = alTop
+        Caption = #1053#1077' '#1087#1086#1082#1072#1079#1099#1074#1072#1090#1100' '#1090#1077#1093#1085#1080#1095#1077#1089#1082#1080#1077' '#1091#1079#1083#1099
+        Checked = True
+        State = cbChecked
+        TabOrder = 1
+        OnClick = checkHideTransparentClick
       end
     end
     object tabResult: TTabSheet
@@ -281,7 +298,7 @@ object FormMain: TFormMain
           Left = 3
           Top = 147
           Width = 153
-          Height = 217
+          Height = 194
           Caption = '  '#1042#1099#1088#1072#1074#1085#1080#1074#1072#1090#1100'  '
           TabOrder = 2
           object checkAlignFields: TCheckBox
@@ -317,12 +334,12 @@ object FormMain: TFormMain
             TabOrder = 2
             OnClick = UpdateRequired
           end
-          object checkAlignTableColumnComments: TCheckBox
+          object checkAlignCommands: TCheckBox
             Left = 13
             Top = 143
             Width = 128
             Height = 17
-            Caption = #1050#1086#1084#1072#1085#1076#1099' COMMENT'
+            Caption = #1050#1086#1084#1072#1085#1076#1099
             Checked = True
             State = cbChecked
             TabOrder = 3
@@ -350,26 +367,15 @@ object FormMain: TFormMain
             TabOrder = 5
             OnClick = UpdateRequired
           end
-          object checkAlignSQLPLUS: TCheckBox
-            Left = 13
-            Top = 166
-            Width = 128
-            Height = 17
-            Caption = #1050#1086#1084#1072#1085#1076#1099' SQL*Plus'
-            Checked = True
-            State = cbChecked
-            TabOrder = 6
-            OnClick = UpdateRequired
-          end
           object checkUseSpace: TCheckBox
             Left = 13
-            Top = 189
+            Top = 166
             Width = 128
             Height = 17
             Caption = #1047#1072#1087#1086#1083#1085#1103#1103' '#1087#1091#1089#1090#1086#1090#1099
             Checked = True
             State = cbChecked
-            TabOrder = 7
+            TabOrder = 6
             OnClick = UpdateRequired
           end
         end
@@ -492,6 +498,18 @@ object FormMain: TFormMain
             TabOrder = 0
             OnClick = UpdateRequired
           end
+        end
+        object checkLongOperands: TCheckBox
+          Left = 16
+          Top = 364
+          Width = 128
+          Height = 28
+          Caption = #1059#1095#1080#1090#1099#1074#1072#1090#1100' '#1076#1083#1080#1085#1085#1099#1077' '#1086#1087#1077#1088#1072#1085#1076#1099
+          Checked = True
+          State = cbChecked
+          TabOrder = 10
+          WordWrap = True
+          OnClick = UpdateRequired
         end
       end
     end

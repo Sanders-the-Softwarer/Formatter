@@ -140,7 +140,7 @@ end;
 
 procedure _Create.Комментарии_К_Таблицам;
 begin
-  Settings.AlignTableColumnComments := true;
+  Settings.AlignCommands := true;
 end;
 
 procedure _Create.Поля_И_Ограничения_Вперемешку;
@@ -265,7 +265,6 @@ end;
 
 procedure _Команды_DDL.Set_Role;
 begin
-  PostponeTill(2020, 4, 30);
 end;
 
 initialization

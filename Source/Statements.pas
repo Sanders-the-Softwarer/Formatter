@@ -67,17 +67,19 @@ type
     FParent: TStatement;
     FSettings: TFormatSettings;
     FFirstToken: TToken;
-    FRulers: TRulers;
     FMatchedTo: TStatement;
     FreeList: TObjectList;
+    FRulers: TRulers;
+    FHasSpecialComments: boolean;
     function GetSettings: TFormatSettings;
-    function GetRulers: TRulers;
+    procedure SetHasSpecialComments(AHasSpecialComments: boolean);
   strict protected
     function InternalParse: boolean; virtual;
     procedure InternalPrintSelf(APrinter: TPrinter); virtual;
     procedure MatchChildren; virtual;
     function InternalGetMatchSource: TBaseStatementList; virtual;
     function InternalGetMatchTarget: TBaseStatementList; virtual;
+    function Aligned: boolean; virtual;
   strict protected
     Source: TBufferedStream<TToken>;
     function IsStrongKeyword(const AEpithet: string): boolean;
@@ -93,6 +95,7 @@ type
     function Concat(Params: array of TObject): string;
     procedure AddToFreeList(AObj: TObject);
     procedure ReplaceToken(var AOld: TToken; ANew: TToken);
+    function GetRulers: TRulers;
   public
     class function Parse(AParent: TStatement; Tokens: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function Candidates(AParent: TStatement): TArray<TStatementClass>; virtual;
@@ -109,16 +112,18 @@ type
     property FirstToken: TToken read FFirstToken;
     property Rulers: TRulers read GetRulers;
     property MatchedTo: TStatement read FMatchedTo write FMatchedTo;
+    property HasSpecialComments: boolean read FHasSpecialComments write SetHasSpecialComments;
   public
     class function StatementType: string;
     class procedure Match(ASource, ATarget: TStatement);
     function Name: string; virtual;
     function StatementName: string; virtual;
-    function Aligned: boolean; virtual;
+    function SameTypeAligned: boolean; virtual;
     function Transparent: boolean; virtual;
     function Grouping: TStatementClass; virtual;
     function GetMatchSource: TBaseStatementList;
     function GetMatchTarget: TBaseStatementList;
+    function IsAligned: boolean;
   end;
   {$TypeInfo Off}
 
@@ -220,19 +225,6 @@ type
     function Transparent: boolean; override;
   end;
 
-  { Конструкция для выравнивания во вложенной }
-  TAligned<T: TStatement> = class(TStatement)
-  strict private
-    _Stmt: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-    function InternalGetMatchSource: TBaseStatementList; override;
-  public
-    function Transparent: boolean; override;
-    function Aligned: boolean; override;
-  end;
-
 implementation
 
 uses Keywords;
@@ -248,8 +240,8 @@ end;
 destructor TStatement.Destroy;
 begin
   inherited;
-  FreeAndNil(FRulers);
   FreeAndNil(FreeList);
+  FreeAndNil(FRulers);
 end;
 
 { Ключевое место продукта - попытка разбора указанного выражения и восстановление при неудаче }
@@ -353,6 +345,18 @@ begin
   Result := '';
 end;
 
+{ По умолчанию выражение не выравнивается }
+function TStatement.Aligned: boolean;
+begin
+  Result := false;
+end;
+
+{ По умолчанию в группе не выравнивается }
+function TStatement.SameTypeAligned: boolean;
+begin
+  Result := false;
+end;
+
 { Выражение по умолчанию видно в синтаксическом дереве }
 function TStatement.Transparent: boolean;
 begin
@@ -432,14 +436,14 @@ begin
     Result := Self.InternalGetMatchTarget;
 end;
 
-function TStatement.Aligned: boolean;
-begin
-  Result := false;
-end;
-
 procedure TStatement.MatchChildren;
 begin
   { ничего не делаем }
+end;
+
+function TStatement.IsAligned: boolean;
+begin
+  Result := HasSpecialComments or Aligned;
 end;
 
 function TStatement.HasCommentsAbove: boolean;
@@ -622,9 +626,16 @@ begin
   Result := FSettings;
 end;
 
+procedure TStatement.SetHasSpecialComments(AHasSpecialComments: boolean);
+begin
+  FHasSpecialComments := AHasSpecialComments;
+  if AHasSpecialComments and Assigned(Parent) and Parent.Transparent then
+    Parent.HasSpecialComments := true;
+end;
+
 function TStatement.GetRulers: TRulers;
 begin
-  if Aligned then
+  if IsAligned then
     begin
       if not Assigned(FRulers) then FRulers := TRulers.Create(Self);
       Result := FRulers;
@@ -913,33 +924,6 @@ end;
 function TSingleLine<T>.Transparent: boolean;
 begin
   Result := true;
-end;
-
-{ TAligned<T> }
-
-function TAligned<T>.Aligned: boolean;
-begin
-  Result := true;
-end;
-
-function TAligned<T>.InternalParse: boolean;
-begin
-  Result := T.Parse(Self, Source, _Stmt);
-end;
-
-procedure TAligned<T>.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItem(_Stmt);
-end;
-
-function TAligned<T>.Transparent: boolean;
-begin
-  Result := true;
-end;
-
-function TAligned<T>.InternalGetMatchSource: TBaseStatementList;
-begin
-  Result := _Stmt.GetMatchSource;
 end;
 
 { TStrictStatementList<S> }

@@ -25,6 +25,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function Grouping: TStatementClass; override;
+    function SameTypeAligned: boolean; override;
   end;
 
 implementation
@@ -46,15 +47,21 @@ end;
 
 procedure TSynonym.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.StartRuler(Settings.AlignSQLPLUS);
   APrinter.PrintRulerItems('synonym', [_Synonym]);
-  APrinter.PrintRulerItems('name',    [_Name, _Sharing]);
-  APrinter.PrintRulerItems('for',     [ _For, _Object]);
+  APrinter.PrintRulerItems('name', [_Name]);
+  APrinter.PrintRulerItems('sharing', [_Sharing]);
+  APrinter.PrintRulerItems('for', [_For]);
+  APrinter.PrintRulerItems('object', [_Object]);
 end;
 
 function TSynonym.Grouping: TStatementClass;
 begin
   Result := TSynonym;
+end;
+
+function TSynonym.SameTypeAligned: boolean;
+begin
+  Result := Settings.AlignCommands;
 end;
 
 end.

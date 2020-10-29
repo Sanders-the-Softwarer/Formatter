@@ -64,7 +64,6 @@ end;
 
 procedure TSet.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.StartRuler(Settings.AlignSQLPLUS);
   APrinter.PrintRulerItems('target', [_Set, _Target]);
   APrinter.PrintRulerItems('value', [_Value]);
   inherited;

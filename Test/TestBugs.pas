@@ -78,6 +78,10 @@ type
     procedure _55;
     procedure _56;
     procedure _57;
+    procedure _58;
+    procedure _59;
+    procedure _60;
+    procedure _61;
   end;
 
 implementation
@@ -96,7 +100,7 @@ end;
 
 procedure _Bugs._1;
 begin
-  Settings.AlignTableColumnComments := true;
+  Settings.AlignCommands := true;
 end;
 
 procedure _Bugs._2;
@@ -106,6 +110,7 @@ end;
 procedure _Bugs._20;
 begin
   Settings.PreferredExpressionLength := 82;
+  Settings.BeautifyLongOperands := true;
 end;
 
 procedure _Bugs._21;
@@ -127,8 +132,8 @@ end;
 
 procedure _Bugs._25;
 begin
-  PostponeTill(2020, 6, 30);
-  Settings.AlignSQLPLUS := true;
+  PostponeTill(2020, 10, 25);
+  Settings.AlignCommands := true;
 end;
 
 procedure _Bugs._26;
@@ -158,7 +163,7 @@ end;
 
 procedure _Bugs._31;
 begin
-  Settings.AlignSQLPLUS := true;
+  Settings.AlignCommands := true;
 end;
 
 procedure _Bugs._32;
@@ -188,20 +193,22 @@ end;
 
 procedure _Bugs._37;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 10, 25);
   Settings.AlignFields := true;
   Settings.PreferredExpressionLength := 100;
 end;
 
 procedure _Bugs._38;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 10, 25);
   Settings.PreferredExpressionLength := 120;
+  Settings.BeautifyLongOperands := true;
 end;
 
 procedure _Bugs._39;
 begin
   Settings.PreferredExpressionLength := 120;
+  Settings.BeautifyLongOperands := true;
 end;
 
 procedure _Bugs._4;
@@ -247,6 +254,7 @@ end;
 procedure _Bugs._48;
 begin
   Settings.PreferredExpressionLength := 100;
+  Settings.BeautifyLongOperands := true;
 end;
 
 procedure _Bugs._49;
@@ -260,6 +268,7 @@ end;
 
 procedure _Bugs._50;
 begin
+  PostponeTill(2020, 10, 25);
   Settings.AlignVariables := true;
   Settings.AlignSpecialComments := true;
   Settings.MatchParamLimit := 5;
@@ -269,7 +278,7 @@ end;
 
 procedure _Bugs._51;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 10, 25);
   Settings.AlignVariables := true;
   Settings.ChangeCommentType := true;
 end;
@@ -280,7 +289,7 @@ end;
 
 procedure _Bugs._53;
 begin
-  Settings.AlignSQLPLUS := true;
+  Settings.AlignCommands := true;
   Settings.AlignUseSpace := true;
 end;
 
@@ -301,9 +310,34 @@ procedure _Bugs._57;
 begin
 end;
 
+procedure _Bugs._58;
+begin
+  Settings.PreferredExpressionLength := 80;
+  Settings.BeautifyLongOperands := true;
+  PostponeTill(2020, 10, 25);
+end;
+
+procedure _Bugs._59;
+begin
+  Settings.AlignCommands := true;
+end;
+
 procedure _Bugs._6;
 begin
   Settings.AlignVariables := true;
+end;
+
+procedure _Bugs._60;
+begin
+  Settings.AlignCommands := true;
+end;
+
+procedure _Bugs._61;
+begin
+  PostponeTill(2020, 10, 25);
+  Settings.AlignFields := true;
+  Settings.AlignUseSpace := false;
+  Settings.PreferredExpressionLength := 100;
 end;
 
 procedure _Bugs._7;

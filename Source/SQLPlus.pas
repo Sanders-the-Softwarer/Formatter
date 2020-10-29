@@ -28,6 +28,8 @@ type
   strict protected
     { Считывание лексемы "символы до конца строки" }
     function SqlPlusString: TTerminal;
+  public
+    function SameTypeAligned: boolean; override;
   end;
 
   { Команда clear }
@@ -171,7 +173,6 @@ end;
 
 procedure TWhenever.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.StartRuler(Settings.AlignSQLPLUS);
   APrinter.PrintRulerItems('Cmd', [_Whenever, _Condition]);
   APrinter.PrintRulerItems('Action', [_Action, _Param1, _Expr, _Param2]);
   inherited;
@@ -286,7 +287,6 @@ end;
 
 procedure TDefine.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.StartRuler(Settings.AlignSQLPLUS);
   APrinter.PrintRulerItems('target', [_Define, _Target]);
   APrinter.PrintRulerItems('value', [_Eq, _Value]);
   inherited;
@@ -346,41 +346,44 @@ end;
 
 { TSQLPlusStatement }
 
+function TSQLPlusStatement.SameTypeAligned: boolean;
+begin
+  Result := Settings.AlignCommands;
+end;
+
 function TSQLPlusStatement.SqlPlusString: TTerminal;
 var
-  Token: TToken;
+  FirstToken, CurToken: TToken;
   Comment: TComment;
-  Line, Col: integer;
   Text: string;
   P: TMark;
 begin
   Comment := nil;
   { Выделим лексемы до конца строки и сложим их в текстовую строку }
   P := Source.Mark;
-  Token := NextToken;
-  Line := Token.Line;
-  Col  := Token.Col;
-  while (Line = Token.Line) and not (Token is TUnexpectedEOF)
-        and not ((Token is TTerminal) and (Token.Value = ';')) do
+  FirstToken := NextToken;
+  CurToken := FirstToken;
+  while (CurToken.Line = FirstToken.Line) and not (CurToken is TUnexpectedEOF)
+        and not ((CurToken is TTerminal) and (CurToken.Value = ';')) do
   begin
-    Text := Text + StringOfChar(' ', Token.Col - Col - Length(Text)) + Token.InitialValue;
+    Text := Text + StringOfChar(' ', CurToken.Col - FirstToken.Col - Length(Text)) + CurToken.InitialValue;
     P := Source.Mark;
-    Token.Printed := true; { лексема печатается в составе другой, поэтому гасим предупреждение }
+    CurToken.Printed := true; { лексема печатается в составе другой, поэтому гасим предупреждение }
     { Лексема не печатается, поэтому перепривязываем комментарии }
-    if Assigned(Token.CommentAfter) then
+    if Assigned(CurToken.CommentAfter) then
     begin
       if Assigned(Comment)
-        then Comment.CommentAfter := Token.CommentAfter
-        else Comment := Token.CommentAfter;
-      Token.CommentAfter := nil;
+        then Comment.CommentAfter := CurToken.CommentAfter
+        else Comment := CurToken.CommentAfter;
+      CurToken.CommentAfter := nil;
     end;
     { Идём дальше }
-    Token := NextToken;
+    CurToken := NextToken;
   end;
   Source.Restore(P);
   { Теперь сформируем лексему из этой строки, она и будет результатом }
-  Result := TTerminal.Create(Text, Line, Col);
-  ReplaceToken(Token, Result);
+  Result := TTerminal.Create(Text, FirstToken.Line, FirstToken.Col);
+  ReplaceToken(FirstToken, Result);
   Result.CommentAfter := Comment;
 end;
 
@@ -396,3 +399,4 @@ initialization
     'whenever']);
 
 end.
+

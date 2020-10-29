@@ -160,19 +160,16 @@ type
     function StatementName: string; override;
   end;
 
-  { Блок параметров подпрограммы }
-  TParamsDeclaration = class(TCommaList<TParamDeclaration>)
-  strict private
-    _OpenBracket: TTerminal;
-    _CloseBracket: TTerminal;
+  { Выровненный блок параметров подпрограммы }
+  TAlignedParamsDeclaration = class(TCommaList<TParamDeclaration>)
   strict protected
-    function InternalParse: boolean; override;
-    function ParseBreak: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
     function Aligned: boolean; override;
+  public
     function Transparent: boolean; override;
   end;
+
+  { Блок параметров подпрограммы в скобках }
+  TParamsDeclaration = class(TBracketedStatement<TAlignedParamsDeclaration>);
 
   { Блок деклараций }
   TDeclarations = class(TStatementList<TStatement>)
@@ -209,7 +206,6 @@ type
     function ParseBreak: boolean; override;
     function AllowUnexpected: boolean; override;
     function AllowStatement(AStatement: TStatement): boolean; override;
-  public
     function Aligned: boolean; override;
   end;
 
@@ -448,6 +444,12 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Параметры в операторе open for .. using }
+  TUsingParams = class(TCommaList<TUsingParam>)
+  strict protected
+    function Aligned: boolean; override;
+  end;
+
   { Оператор fetch }
   TFetch = class(TPLSQLStatement)
   strict private
@@ -546,8 +548,6 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function Aligned: boolean; override;
   end;
 
   { Декларация табличного типа }
@@ -580,8 +580,6 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function Aligned: boolean; override;
   end;
 
   { Список членов класса }
@@ -770,44 +768,11 @@ begin
     _InOut := TEpithet.Create('in', -1, -1);
     AddToFreeList(_InOut);
   end;
-  APrinter.StartRuler(Settings.AlignVariables);
   APrinter.PrintRulerItems('name', [_ParamName]);
   APrinter.PrintRulerItems('modifiers', [_InOut, _Nocopy]);
   APrinter.PrintRulerItems('type', [_ParamType]);
   APrinter.PrintRulerItems('assignment', [_Assignment]);
   APrinter.PrintRulerItems('value', [_DefaultValue]);
-end;
-
-{ TParamsDeclaration }
-
-function TParamsDeclaration.Aligned: boolean;
-begin
-  Result := true;
-end;
-
-function TParamsDeclaration.Transparent: boolean;
-begin
-  Result := true;
-end;
-
-function TParamsDeclaration.InternalParse: boolean;
-begin
-  _OpenBracket := Terminal('(');
-  if not Assigned(_OpenBracket) then exit(false);
-  Result := inherited InternalParse;
-  if Result then _CloseBracket := Terminal(')');
-end;
-
-function TParamsDeclaration.ParseBreak: boolean;
-begin
-  Result := Any([Terminal(')')]);
-end;
-
-procedure TParamsDeclaration.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_OpenBracket, _IndentNextLine]);
-  inherited;
-  APrinter.PrintItems([_UndentNextLine, _CloseBracket]);
 end;
 
 { TDeclarations }
@@ -873,7 +838,6 @@ end;
 
 procedure TVariableDeclaration.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.StartRuler(Settings.AlignVariables);
   APrinter.PrintRulerItems('name', [_Name]);
   APrinter.PrintRulerItems('constant', [_Constant]);
   APrinter.PrintRulerItems('type', [_Type]);
@@ -909,7 +873,7 @@ end;
 
 function TVariableDeclarations.Aligned: boolean;
 begin
-  Result := true;
+  Result := Settings.AlignVariables;
 end;
 
 function TVariableDeclarations.AllowStatement(AStatement: TStatement): boolean;
@@ -1228,7 +1192,7 @@ function TUsing.InternalParse: boolean;
 begin
   _Using := Keyword('using');
   Result := Assigned(_Using);
-  if Result then TAligned<TCommaList<TUsingParam>>.Parse(Self, Source, _Params);
+  if Result then TUsingParams.Parse(Self, Source, _Params);
 end;
 
 procedure TUsing.InternalPrintSelf(APrinter: TPrinter);
@@ -1252,9 +1216,15 @@ begin
     _Accessor := TEpithet.Create('in', -1, -1);
     AddToFreeList(_Accessor);
   end;
-  APrinter.StartRuler(Settings.AlignVariables);
   APrinter.PrintRulerItems('accessor', [_Accessor]);
   APrinter.PrintRulerItems('value', [_Value]);
+end;
+
+{ TUsingParams }
+
+function TUsingParams.Aligned: boolean;
+begin
+  Result := Settings.AlignVariables;
 end;
 
 { TPragma }
@@ -1381,11 +1351,6 @@ end;
 
 { TRecord }
 
-function TRecord.Aligned: boolean;
-begin
-  Result := true;
-end;
-
 function TRecord.InternalParse: boolean;
 begin
   _Record := Keyword('record');
@@ -1436,11 +1401,6 @@ begin
 end;
 
 { TObject_ }
-
-function TObject_.Aligned: boolean;
-begin
-  Result := true;
-end;
 
 function TObject_.InternalParse: boolean;
 begin
@@ -1722,6 +1682,18 @@ procedure TGoto.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Goto, _Address]);
   inherited;
+end;
+
+{ TAlignedParamsDeclaration }
+
+function TAlignedParamsDeclaration.Aligned: boolean;
+begin
+  Result := Settings.AlignVariables;
+end;
+
+function TAlignedParamsDeclaration.Transparent: boolean;
+begin
+  Result := true;
 end;
 
 initialization

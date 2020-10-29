@@ -402,7 +402,8 @@ end;
 
 procedure _Выравнивание.Конкатенаций_По_Одинаковым_Символам;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 10, 25);
+  Settings.PreferredExpressionLength := 80;
 end;
 
 procedure _Выравнивание.Параметров_В_Execute_Immediate;
@@ -444,7 +445,7 @@ end;
 
 procedure _Выравнивание.Условий_В_Where;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 10, 25);
   Settings.AlignExpressions := true;
 end;
 
@@ -456,17 +457,17 @@ end;
 
 procedure _Выравнивание.В_Comment;
 begin
-  Settings.AlignTableColumnComments := true;
+  Settings.AlignCommands := true;
 end;
 
 procedure _Выравнивание.Грантов;
 begin
-  Settings.AlignSQLPLUS := true;
+  Settings.AlignCommands := true;
 end;
 
 procedure _Выравнивание.Синонимов;
 begin
-  Settings.AlignSQLPLUS := true;
+  Settings.AlignCommands := true;
 end;
 
 procedure _Выравнивание.Спецкомментариев_В_Insert_Select;
@@ -494,17 +495,17 @@ end;
 
 procedure _Выравнивание.Команд_Define;
 begin
-  Settings.AlignSQLPLUS := true;
+  Settings.AlignCommands := true;
 end;
 
 procedure _Выравнивание.Команд_Set;
 begin
-  Settings.AlignSQLPLUS := true;
+  Settings.AlignCommands := true;
 end;
 
 procedure _Выравнивание.Команд_Whenever;
 begin
-  Settings.AlignSQLPLUS := true;
+  Settings.AlignCommands := true;
 end;
 
 procedure _Выравнивание.Комментариев_Справа_От_Деклараций;
@@ -558,7 +559,7 @@ end;
 
 procedure _Пустые_Строки.Grant_Собираются_Вместе;
 begin
-  Settings.AlignSQLPLUS := true;
+  Settings.AlignCommands := true;
 end;
 
 procedure _Пустые_Строки.Alter_Package_Собираются_Вместе;
@@ -630,6 +631,7 @@ end;
 procedure _Операторы.If_;
 begin
   Settings.PreferredExpressionLength := 100;
+  Settings.BeautifyLongOperands := true;
 end;
 
 procedure _Операторы.Loop;
@@ -812,6 +814,7 @@ end;
 
 procedure _Форматирование_Выражений.Перенос_При_Присвоении_Многострочного_Выражения;
 begin
+  PostponeTill(2020, 10, 25);
   Settings.PreferredExpressionLength := 100;
 end;
 
@@ -858,6 +861,7 @@ end;
 
 procedure _Контрольные_Примеры.fm_pc_triggers;
 begin
+  PostponeTill(2020, 10, 25);
 end;
 
 procedure _Контрольные_Примеры.fm_pc_user;
@@ -866,7 +870,7 @@ end;
 
 procedure _Контрольные_Примеры.fm_pc_v_pcgi_link;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 10, 25);
 end;
 
 procedure _Контрольные_Примеры.fm_cc_user;
@@ -875,18 +879,22 @@ end;
 
 procedure _Контрольные_Примеры.top_dev_style_sop_link_api;
 begin
-  end;
+  PostponeTill(2020, 10, 25);
+end;
 
 procedure _Контрольные_Примеры.top_lc_calc_utils;
 begin
+  PostponeTill(2020, 10, 25);
 end;
 
 procedure _Контрольные_Примеры.top_ref_api;
 begin
+  PostponeTill(2020, 10, 25);
 end;
 
 procedure _Контрольные_Примеры.top_report_api;
 begin
+  PostponeTill(2020, 10, 25);
 end;
 
 { _Сопоставление_Полей }

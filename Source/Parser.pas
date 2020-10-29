@@ -60,12 +60,12 @@ type
     FStatements: array of TStatement;
   strict protected
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+    function Aligned: boolean; override;
   public
     constructor Create(S: TStatement); reintroduce;
     procedure Add(S: TStatement);
     function ItemType: TStatementClass;
     function Transparent: boolean; override;
-    function Aligned: boolean; override;
   end;
 
   { Поток, объединяющий однотипные выражения в блоки }
@@ -232,17 +232,17 @@ begin
     APrinter.PrintItems([FStatements[i], _NextLine]);
 end;
 
+function TSameTypeList.Aligned: boolean;
+begin
+  Result := FStatements[0].SameTypeAligned;
+end;
+
 function TSameTypeList.ItemType: TStatementClass;
 begin
   Result := FStatements[0].Grouping;
 end;
 
 function TSameTypeList.Transparent: boolean;
-begin
-  Result := true;
-end;
-
-function TSameTypeList.Aligned: boolean;
 begin
   Result := true;
 end;

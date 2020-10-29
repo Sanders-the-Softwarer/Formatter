@@ -61,9 +61,8 @@ type
     AlignFields: boolean;
     AlignColumns: boolean;
     AlignExpressions: boolean;
-    AlignTableColumnComments: boolean;
+    AlignCommands: boolean;
     AlignSpecialComments: boolean;
-    AlignSQLPLUS: boolean;
     AlignUseSpace: boolean;
     ReplaceDefault: boolean;
     ReplaceAsIs: boolean;
@@ -72,6 +71,7 @@ type
     AddFromToDelete: boolean;
     PreferredExpressionLength: integer;
     RemoveConnectPasswords: boolean;
+    BeautifyLongOperands: boolean;
   public
     constructor Default;
     constructor ForTest;
@@ -95,9 +95,6 @@ type
     procedure CancelNextLine; virtual; abstract;
     procedure SupressNextLine(ASupress: boolean); virtual; abstract;
     procedure PrintSpecialComment(AValue: string); virtual; abstract;
-    procedure StartRuler(Enabled: boolean; Continued: boolean = false); virtual; abstract;
-  protected
-    procedure Ruler(const ARuler: string); virtual; abstract;
   public
     procedure ControlChanged; virtual; abstract;
     procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); virtual; abstract;
@@ -246,7 +243,6 @@ end;
 
 procedure TPrinter.PrintRulerItems(const ARuler: string; AItems: array of TObject);
 begin
-  Ruler(ARuler);
   PrintItems(AItems);
 end;
 
@@ -300,22 +296,22 @@ begin
   DeclarationSingleLineParamLimit := 1;
   NamedArgumentSingleLineParamLimit := 1;
   PositionalArgumentSingleLineParamLimit := 4;
-  MatchParamLimit                 := 3;
-  AlignVariables                  := true;
-  AlignFields                     := true;
-  AlignColumns                    := true;
-  AlignExpressions                := false;
-  AlignTableColumnComments        := true;
-  AlignSpecialComments            := true;
-  AlignSQLPLUS                    := true;
-  AlignUseSpace                   := true;
-  ReplaceDefault                  := true;
-  ReplaceAsIs                     := true;
-  AddInAccessSpecificator         := true;
-  AddFromToDelete                 := true;
-  ChangeCommentType               := false;
-  RemoveConnectPasswords          := false;
-  PreferredExpressionLength       := 100;
+  MatchParamLimit           := 3;
+  AlignVariables            := true;
+  AlignFields               := true;
+  AlignColumns              := true;
+  AlignExpressions          := false;
+  AlignCommands             := true;
+  AlignSpecialComments      := true;
+  AlignUseSpace             := true;
+  ReplaceDefault            := true;
+  ReplaceAsIs               := true;
+  AddInAccessSpecificator   := true;
+  AddFromToDelete           := true;
+  ChangeCommentType         := false;
+  RemoveConnectPasswords    := false;
+  BeautifyLongOperands      := true;
+  PreferredExpressionLength := 100;
 end;
 
 constructor TFormatSettings.ForTest;

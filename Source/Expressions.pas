@@ -66,7 +66,6 @@ type
   TTermInfo = record
     Priority, SingleLineLen, MultiLineLen, PrevDelimiterLen, PostDelimiterLen, RulerNumber: integer;
     HasOp, SingleLine, LineBreak, BreakBeforeDelimiter, BreakAfterDelimiter: boolean;
-    RulerChar: char;
   end;
 
   { Выражение }
@@ -317,7 +316,6 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   procedure PutRulers(Start, Finish: integer);
   var i, Prio, Min, Max: integer;
   begin
-    if not Self.Aligned then exit;
     { Проверим, что непереносимые операции одного приоритета }
     Min := MaxInt;
     Max := -MaxInt;
@@ -335,12 +333,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         exit;
     { Разметим линейки }
     for i := Start to Finish do
-    begin
       TermInfo[i].RulerNumber := Finish; { Start не подходит, так как может быть нулём }
-      if not TermInfo[i].LineBreak and TermInfo[i].SingleLine
-        then TermInfo[i].RulerChar := 'L'
-        else TermInfo[i].RulerChar := 'R';
-    end;
   end;
 
   { Специальный алгоритм расстановки переносов в случае конкатенации }
@@ -438,6 +431,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   procedure BeautifyLongTerms;
   var i: integer;
   begin
+    if not Settings.BeautifyLongOperands then exit;
     for i := 0 to Count - 1 do
       { Если у нас в строке один длинный операнд, для читаемости
         перенесём знак операции на следующую строку }

@@ -75,10 +75,10 @@ type
   strict protected
     function ParseBreak: boolean; override;
     function HasMultiLineArgument: boolean;
+    function Aligned: boolean; override;
   public
     function OnePerLine: boolean; override;
     function IsNamedNotation: boolean;
-    function Aligned: boolean; override;
     function Transparent: boolean; override;
   end;
 
@@ -262,7 +262,6 @@ procedure TArgument.InternalPrintSelf(APrinter: TPrinter);
 begin
   if IsNamedNotation then
     begin
-      APrinter.StartRuler(Settings.AlignVariables);
       APrinter.PrintRulerItems('ident', [_Ident]);
       APrinter.PrintRulerItems('argument', [_Assignment]);
       APrinter.PushIndent;
@@ -308,7 +307,7 @@ end;
 
 function TArguments.Aligned: boolean;
 begin
-  Result := true;
+  Result := Settings.AlignVariables;
 end;
 
 function TArguments.Transparent: boolean;

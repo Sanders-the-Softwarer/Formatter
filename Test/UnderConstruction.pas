@@ -35,67 +35,67 @@ end;
 
 procedure _UnderConstruction.Тесты_Alter_Package;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 11, 14);
 end;
 
 procedure _UnderConstruction.Тесты_Alter_Session;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 11, 14);
 end;
 
 procedure _UnderConstruction.Тесты_ArgumentSingleLineParamLimit;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 11, 14);
 end;
 
 procedure _UnderConstruction.Тесты_Create_Trigger;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 11, 14);
 end;
 
 procedure _UnderConstruction.Тесты_DeclarationSingleLineParamLimit;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 11, 14);
 end;
 
 procedure _UnderConstruction.Тесты_Group_By_Rollup_Cube_Grouping_Sets;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 11, 14);
 end;
 
 procedure _UnderConstruction.Тесты_MatchParamLimit;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 11, 14);
 end;
 
 procedure _UnderConstruction.Тесты_PreferredExpressionLength;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 11, 14);
 end;
 
 procedure _UnderConstruction.Тесты_ReplaceAsIs;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 11, 14);
 end;
 
 procedure _UnderConstruction.Тесты_ReplaceDefault;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 11, 14);
 end;
 
 procedure _UnderConstruction.Тесты_Команд_SQLPLUS;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 11, 14);
 end;
 
 procedure _UnderConstruction.Тесты_Невыравнивание_Везде_Где_Есть_На_Выравнивание;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 11, 14);
 end;
 
 procedure _UnderConstruction.Тесты_Объектные_Типы;
 begin
-  PostponeTill(2020, 6, 30);
+  PostponeTill(2020, 11, 14);
 end;
 
 initialization

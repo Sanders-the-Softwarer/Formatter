@@ -1,0 +1,9 @@
+-- Завершающий комментарий не должен теряться
+
+chcp 65001
+
+set echo         on
+set serveroutput on
+set sqlbl        on
+
+-- Включаем вывод в файл дампа

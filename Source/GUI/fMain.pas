@@ -63,7 +63,7 @@ type
     Label3: TLabel;
     edMatchParamLimit: TSpinEdit;
     tmMemo: TTimer;
-    checkAlignTableColumnComments: TCheckBox;
+    checkAlignCommands: TCheckBox;
     checkReplaceAsIs: TCheckBox;
     edPreferredExpressionLength: TSpinEdit;
     Label4: TLabel;
@@ -74,7 +74,6 @@ type
     Label5: TLabel;
     Label6: TLabel;
     edPositionalArgumentSingleLineParamLimit: TSpinEdit;
-    checkAlignSQLPLUS: TCheckBox;
     tabCompareAutoTestResult: TTabSheet;
     edCompareAutoTestResult: TMemo;
     GroupBox4: TGroupBox;
@@ -82,6 +81,8 @@ type
     checkUseSpace: TCheckBox;
     GroupBox5: TGroupBox;
     checkRemovePasswords: TCheckBox;
+    checkLongOperands: TCheckBox;
+    checkHideTransparent: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -93,6 +94,7 @@ type
     procedure tmMemoTimer(Sender: TObject);
     procedure pgDestChange(Sender: TObject);
     procedure edCompareAutoTestResultChange(Sender: TObject);
+    procedure checkHideTransparentClick(Sender: TObject);
   private
     TokenizerPrinter, SyntaxTreePrinter, ResultPrinter, AlarmTokenPrinter, AlarmStatementPrinter: TPrinter;
     MinTokenStream, AdvTokenStream: TBufferedStream<TToken>;
@@ -146,14 +148,14 @@ begin
     Settings.AlignColumns                    := checkAlignColumns.Checked;
     Settings.AlignExpressions                := checkAlignExpressions.Checked;
     Settings.AlignSpecialComments            := checkAlignSpecialComments.Checked;
-    Settings.AlignTableColumnComments        := checkAlignTableColumnComments.Checked;
-    Settings.AlignSQLPLUS                    := checkAlignSQLPLUS.Checked;
+    Settings.AlignCommands                   := checkAlignCommands.Checked;
     Settings.AlignUseSpace                   := checkUseSpace.Checked;
     Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
     Settings.ReplaceAsIs                     := checkReplaceAsIs.Checked;
     Settings.AddInAccessSpecificator         := checkAddInAccessSpecificator.Checked;
     Settings.ChangeCommentType               := checkChangeCommentType.Checked;
     Settings.RemoveConnectPasswords          := checkRemovePasswords.Checked;
+    Settings.BeautifyLongOperands            := checkLongOperands.Checked;
     Settings.PreferredExpressionLength       := edPreferredExpressionLength.Value;
   end;
   { Создадим потоки }
@@ -214,7 +216,7 @@ begin
   Self.WindowState  := wsMaximized;
   Settings          := TFormatSettings.Default;
   TokenizerPrinter  := GUIPrinters.CreateTokenizerPrinter(edTokenizer);
-  SyntaxTreePrinter := GUIPrinters.CreateSyntaxTreePrinter(treeParser);
+  SyntaxTreePrinter := GUIPrinters.CreateSyntaxTreePrinter(treeParser, checkHideTransparent);
   ResultPrinter     := GUIPrinters.CreateFormatterPrinter(Settings, edResult);
   AlarmTokenPrinter := GUIPrinters.CreateAlarmTokenPrinter(edAlarmToken, tabAlarmToken);
   AlarmStatementPrinter := GUIPrinters.CreateAlarmStatementPrinter(edAlarmStatement, tabAlarmStatement);
@@ -224,21 +226,21 @@ begin
     edDeclarationSingleLineParamLimit.Value := Settings.DeclarationSingleLineParamLimit;
     edNamedArgumentSingleLineParamLimit.Value := Settings.NamedArgumentSingleLineParamLimit;
     edPositionalArgumentSingleLineParamLimit.Value := Settings.PositionalArgumentSingleLineParamLimit;
-    edMatchParamLimit.Value               := Settings.MatchParamLimit;
-    edPreferredExpressionLength.Value     := Settings.PreferredExpressionLength;
-    checkAlignFields.Checked              := Settings.AlignFields;
-    checkAlignColumns.Checked             := Settings.AlignColumns;
-    checkAlignVariables.Checked           := Settings.AlignVariables;
-    checkAlignSpecialComments.Checked     := Settings.AlignSpecialComments;
-    checkAlignTableColumnComments.Checked := Settings.AlignTableColumnComments;
-    checkAlignSQLPLUS.Checked             := Settings.AlignSQLPLUS;
-    checkAlignExpressions.Checked         := Settings.AlignExpressions;
-    checkUseSpace.Checked                 := Settings.AlignUseSpace;
-    checkReplaceDefault.Checked           := Settings.ReplaceDefault;
-    checkReplaceAsIs.Checked              := Settings.ReplaceAsIs;
-    checkAddInAccessSpecificator.Checked  := Settings.AddInAccessSpecificator;
-    checkChangeCommentType.Checked        := Settings.ChangeCommentType;
-    checkRemovePasswords.Checked          := Settings.RemoveConnectPasswords;
+    edMatchParamLimit.Value              := Settings.MatchParamLimit;
+    edPreferredExpressionLength.Value    := Settings.PreferredExpressionLength;
+    checkAlignFields.Checked             := Settings.AlignFields;
+    checkAlignColumns.Checked            := Settings.AlignColumns;
+    checkAlignVariables.Checked          := Settings.AlignVariables;
+    checkAlignSpecialComments.Checked    := Settings.AlignSpecialComments;
+    checkAlignCommands.Checked           := Settings.AlignCommands;
+    checkAlignExpressions.Checked        := Settings.AlignExpressions;
+    checkUseSpace.Checked                := Settings.AlignUseSpace;
+    checkReplaceDefault.Checked          := Settings.ReplaceDefault;
+    checkReplaceAsIs.Checked             := Settings.ReplaceAsIs;
+    checkAddInAccessSpecificator.Checked := Settings.AddInAccessSpecificator;
+    checkChangeCommentType.Checked       := Settings.ChangeCommentType;
+    checkRemovePasswords.Checked         := Settings.RemoveConnectPasswords;
+    checkLongOperands.Checked            := Settings.BeautifyLongOperands;
   finally
     IntoUpdateSettings := false;
   end;
@@ -343,6 +345,12 @@ begin
     Inc(Line);
   end;
   Col := Pos + 1;
+end;
+
+{ Обновление дерева как реакция на перещёлкивание чекбокса }
+procedure TFormMain.checkHideTransparentClick(Sender: TObject);
+begin
+  UpdateData;
 end;
 
 { Переформатирование результата автотеста, вставленного в поле редактирования }

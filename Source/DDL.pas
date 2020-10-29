@@ -99,6 +99,12 @@ type
     class function Candidates(AParent: TStatement): TArray<TStatementClass>; override;
   end;
 
+  { Список полей и ограничений таблицы }
+  TTableItems = class(TCommaList<TTableItem>)
+  strict protected
+    function Aligned: boolean; override;
+  end;
+
   { Описание поля таблицы }
   TTableField = class(TTableItem)
   strict private
@@ -251,6 +257,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function Grouping: TStatementClass; override;
+    function SameTypeAligned: boolean; override;
   end;
 
   { Конструкция sharing }
@@ -368,7 +375,7 @@ begin
   _Table  := Keyword('table');
   if not Assigned(_Table) then exit(false);
   TQualifiedIdent.Parse(Self, Source, _TableName);
-  TBracketedStatement<TAligned<TCommaList<TTableItem>>>.Parse(Self, Source, _Items);
+  TBracketedStatement<TTableItems>.Parse(Self, Source, _Items);
   TPartitions.Parse(Self, Source, _PartitionBy);
   if Assigned(_Temporary) then
     begin
@@ -427,6 +434,13 @@ begin
   Result := [TConstraint, TTableField];
 end;
 
+{ TTableItems }
+
+function TTableItems.Aligned: boolean;
+begin
+  Result := Settings.AlignColumns;
+end;
+
 { TTableField }
 
 function TTableField.InternalParse: boolean;
@@ -443,7 +457,6 @@ end;
 
 procedure TTableField.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.StartRuler(Settings.AlignColumns);
   APrinter.PrintRulerItems('name', [_Name]);
   APrinter.PrintRulerItems('type', [_Type]);
   APrinter.PrintRulerItems('default', [_Default, _Value]);
@@ -686,7 +699,6 @@ end;
 
 procedure TComment.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.StartRuler(Settings.AlignTableColumnComments);
   APrinter.PrintRulerItems('comment', [_Comment, _On, _TableOrColumn]);
   APrinter.PrintRulerItems('name', [_Name]);
   APrinter.PrintRulerItems('is', [_Is, _Text]);
@@ -696,6 +708,11 @@ end;
 function TComment.Grouping: TStatementClass;
 begin
   Result := TComment;
+end;
+
+function TComment.SameTypeAligned: boolean;
+begin
+  Result := Settings.AlignCommands;
 end;
 
 { TDrop }

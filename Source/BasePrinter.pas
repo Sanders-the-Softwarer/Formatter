@@ -39,9 +39,6 @@ type
     procedure CancelNextLine; override;
     procedure SupressNextLine(ASupress: boolean); override;
     procedure PrintSpecialComment(AValue: string); override;
-    procedure StartRuler(Enabled: boolean; Continued: boolean = false); override;
-  protected
-    procedure Ruler(const ARuler: string); override;
   public
     procedure ControlChanged; override;
     procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
@@ -87,16 +84,6 @@ begin
 end;
 
 procedure TBasePrinter.PrintSpecialComment(AValue: string);
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.StartRuler;
-begin
-  { ничего не делаем }
-end;
-
-procedure TBasePrinter.Ruler(const ARuler: string);
 begin
   { ничего не делаем }
 end;
