@@ -124,6 +124,7 @@ type
     function GetMatchSource: TBaseStatementList;
     function GetMatchTarget: TBaseStatementList;
     function IsAligned: boolean;
+    function DebugInfo: string;
   end;
   {$TypeInfo Off}
 
@@ -444,6 +445,13 @@ end;
 function TStatement.IsAligned: boolean;
 begin
   Result := HasSpecialComments or Aligned;
+end;
+
+function TStatement.DebugInfo: string;
+begin
+  Result := Format('IsAligned = %s', [BoolToStr(IsAligned, true)]);
+  if IsAligned then
+    Result := Result + #13#13'Rulers:'#13 + Rulers.DebugInfo;
 end;
 
 function TStatement.HasCommentsAbove: boolean;

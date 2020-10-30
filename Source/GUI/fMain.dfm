@@ -21,8 +21,7 @@ object FormMain: TFormMain
     Left = 350
     Top = 0
     Height = 501
-    ExplicitLeft = 405
-    ExplicitHeight = 100
+    ExplicitLeft = 349
   end
   object pgDest: TPageControl
     AlignWithMargins = True
@@ -34,7 +33,7 @@ object FormMain: TFormMain
     Margins.Top = 0
     Margins.Right = 5
     Margins.Bottom = 5
-    ActivePage = tabResult
+    ActivePage = tabParser
     Align = alClient
     TabOrder = 0
     OnChange = pgDestChange
@@ -59,12 +58,22 @@ object FormMain: TFormMain
     object tabParser: TTabSheet
       Caption = #1057#1080#1085#1090#1072#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
       ImageIndex = 1
+      object spDebugInfo: TSplitter
+        Left = 0
+        Top = 278
+        Width = 620
+        Height = 3
+        Cursor = crVSplit
+        Align = alBottom
+        ExplicitTop = 281
+        ExplicitWidth = 0
+      end
       object treeParser: TTreeView
         AlignWithMargins = True
         Left = 5
         Top = 27
         Width = 610
-        Height = 436
+        Height = 246
         Margins.Left = 5
         Margins.Top = 5
         Margins.Right = 5
@@ -75,8 +84,9 @@ object FormMain: TFormMain
         ReadOnly = True
         TabOrder = 0
         OnChange = treeParserChange
+        ExplicitHeight = 249
       end
-      object checkHideTransparent: TCheckBox
+      object checkShowTransparent: TCheckBox
         AlignWithMargins = True
         Left = 5
         Top = 5
@@ -87,11 +97,34 @@ object FormMain: TFormMain
         Margins.Right = 5
         Margins.Bottom = 0
         Align = alTop
-        Caption = #1053#1077' '#1087#1086#1082#1072#1079#1099#1074#1072#1090#1100' '#1090#1077#1093#1085#1080#1095#1077#1089#1082#1080#1077' '#1091#1079#1083#1099
-        Checked = True
-        State = cbChecked
+        Caption = #1055#1086#1082#1072#1079#1099#1074#1072#1090#1100' '#1090#1077#1093#1085#1080#1095#1077#1089#1082#1080#1077' '#1091#1079#1083#1099
         TabOrder = 1
-        OnClick = checkHideTransparentClick
+        OnClick = checkShowTransparentClick
+      end
+      object edDebugInfo: TMemo
+        AlignWithMargins = True
+        Left = 5
+        Top = 286
+        Width = 610
+        Height = 177
+        Margins.Left = 5
+        Margins.Top = 5
+        Margins.Right = 5
+        Margins.Bottom = 5
+        Align = alBottom
+        Font.Charset = RUSSIAN_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Courier New'
+        Font.Style = []
+        HideSelection = False
+        ParentFont = False
+        ReadOnly = True
+        ScrollBars = ssBoth
+        TabOrder = 2
+        ExplicitTop = 5
+        ExplicitWidth = 327
+        ExplicitHeight = 458
       end
     end
     object tabResult: TTabSheet

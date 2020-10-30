@@ -18,7 +18,7 @@ uses
 
 { Функции создания принтеров различных типов }
 function CreateTokenizerPrinter(AListBox: TListBox): TPrinter;
-function CreateSyntaxTreePrinter(ATreeView: TTreeView; AHideTransparentCheckBox: TCheckBox): TPrinter;
+function CreateSyntaxTreePrinter(ATreeView: TTreeView; AShowTransparentCheckBox: TCheckBox): TPrinter;
 function CreateFormatterPrinter(ASettings: TFormatSettings; AMemo: TMemo): TPrinter;
 function CreateAlarmTokenPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
 function CreateAlarmStatementPrinter(AListBox: TListBox; ATabSheet: TTabSheet): TPrinter;
@@ -62,12 +62,12 @@ type
   TSyntaxTreePrinter = class(TBasePrinter)
   private
     TreeView: TTreeView;
-    HideTransparentCheckBox: TCheckBox;
+    ShowTransparentCheckBox: TCheckBox;
     Parents: TStack<TTreeNode>;
     IntoSync: boolean;
     Tokens: TDictionary<TToken, TTreeNode>;
   public
-    constructor Create(ATreeView: TTreeView; AHideTransparentCheckBox: TCheckBox);
+    constructor Create(ATreeView: TTreeView; AShowTransparentCheckBox: TCheckBox);
     destructor Destroy; override;
     procedure BeginPrint; override;
     procedure Clear; override;
@@ -104,9 +104,9 @@ begin
   Result := TGUIFormatterPrinter.Create(ASettings, AMemo);
 end;
 
-function CreateSyntaxTreePrinter(ATreeView: TTreeView; AHideTransparentCheckBox: TCheckBox): TPrinter;
+function CreateSyntaxTreePrinter(ATreeView: TTreeView; AShowTransparentCheckBox: TCheckBox): TPrinter;
 begin
-  Result := TSyntaxTreePrinter.Create(ATreeView, AHideTransparentCheckBox);
+  Result := TSyntaxTreePrinter.Create(ATreeView, AShowTransparentCheckBox);
 end;
 
 function CreateTokenizerPrinter(AListBox: TListBox): TPrinter;
@@ -273,10 +273,10 @@ end;
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-constructor TSyntaxTreePrinter.Create(ATreeView: TTreeView; AHideTransparentCheckBox: TCheckBox);
+constructor TSyntaxTreePrinter.Create(ATreeView: TTreeView; AShowTransparentCheckBox: TCheckBox);
 begin
   TreeView := ATreeView;
-  HideTransparentCheckBox := AHideTransparentCheckBox;
+  ShowTransparentCheckBox := AShowTransparentCheckBox;
   inherited Create;
   Tokens := TDictionary<TToken, TTreeNode>.Create;
   Parents := TStack<TTreeNode>.Create;
@@ -284,6 +284,7 @@ end;
 
 destructor TSyntaxTreePrinter.Destroy;
 begin
+  Clear;
   FreeAndNil(Tokens);
   FreeAndNil(Parents);
   inherited;
@@ -315,8 +316,8 @@ end;
 procedure TSyntaxTreePrinter.PrintStatement(AStatement: TStatement);
 var Transparent: boolean;
 begin
-  Transparent := AStatement.Transparent and (not Assigned(HideTransparentCheckBox) or HideTransparentCheckBox.Checked);
-  if not Transparent then Parents.Push(TreeView.Items.AddChild(Parents.Peek, '< ' + Trim(AStatement.Name) + ' >'));
+  Transparent := AStatement.Transparent and (not Assigned(ShowTransparentCheckBox) or not ShowTransparentCheckBox.Checked);
+  if not Transparent then Parents.Push(TreeView.Items.AddChildObject(Parents.Peek, '< ' + Trim(AStatement.Name) + ' >', nil {AStatement}));
   try
     inherited;
   finally
@@ -329,7 +330,6 @@ procedure TSyntaxTreePrinter.PrintToken(AToken: TToken);
 begin
   Tokens.Add(AToken, TreeView.Items.AddChildObject(Parents.Peek, Format('%s [ %s ]', [AToken.TokenType, AToken.Value]), AToken));
 end;
-
 
 { Реакция на действия пользователя в дереве }
 procedure TSyntaxTreePrinter.ControlChanged;

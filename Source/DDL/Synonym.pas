@@ -24,6 +24,7 @@ type
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
+    function StatementName: string; override;
     function Grouping: TStatementClass; override;
     function SameTypeAligned: boolean; override;
   end;
@@ -33,6 +34,11 @@ implementation
 uses Commons, DDL;
 
 { TSynonym }
+
+function TSynonym.StatementName: string;
+begin
+  Result := Concat([_Synonym, _Name]);
+end;
 
 function TSynonym.InternalParse: boolean;
 begin

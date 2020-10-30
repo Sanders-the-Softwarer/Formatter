@@ -482,6 +482,8 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
       Self.Mode    := fpmSetRulers;
       Rulers.Shift := Self.Shift;
       SimplePrintStatement;
+      // иногда будем включать для отладки
+      Rulers.Print(Self);
     finally
       Self.Rulers := _Rulers;
       Self.Mode   := _Mode;

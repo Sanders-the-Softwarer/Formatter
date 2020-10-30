@@ -82,7 +82,9 @@ type
     GroupBox5: TGroupBox;
     checkRemovePasswords: TCheckBox;
     checkLongOperands: TCheckBox;
-    checkHideTransparent: TCheckBox;
+    checkShowTransparent: TCheckBox;
+    edDebugInfo: TMemo;
+    spDebugInfo: TSplitter;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -94,7 +96,7 @@ type
     procedure tmMemoTimer(Sender: TObject);
     procedure pgDestChange(Sender: TObject);
     procedure edCompareAutoTestResultChange(Sender: TObject);
-    procedure checkHideTransparentClick(Sender: TObject);
+    procedure checkShowTransparentClick(Sender: TObject);
   private
     TokenizerPrinter, SyntaxTreePrinter, ResultPrinter, AlarmTokenPrinter, AlarmStatementPrinter: TPrinter;
     MinTokenStream, AdvTokenStream: TBufferedStream<TToken>;
@@ -216,7 +218,7 @@ begin
   Self.WindowState  := wsMaximized;
   Settings          := TFormatSettings.Default;
   TokenizerPrinter  := GUIPrinters.CreateTokenizerPrinter(edTokenizer);
-  SyntaxTreePrinter := GUIPrinters.CreateSyntaxTreePrinter(treeParser, checkHideTransparent);
+  SyntaxTreePrinter := GUIPrinters.CreateSyntaxTreePrinter(treeParser, checkShowTransparent);
   ResultPrinter     := GUIPrinters.CreateFormatterPrinter(Settings, edResult);
   AlarmTokenPrinter := GUIPrinters.CreateAlarmTokenPrinter(edAlarmToken, tabAlarmToken);
   AlarmStatementPrinter := GUIPrinters.CreateAlarmStatementPrinter(edAlarmStatement, tabAlarmStatement);
@@ -286,6 +288,9 @@ end;
 procedure TFormMain.treeParserChange(Sender: TObject; Node: TTreeNode);
 begin
   SyntaxTreePrinter.ControlChanged;
+  if TObject(Node.Data) is TStatement
+    then edDebugInfo.Text := StringReplace(TStatement(Node.Data).DebugInfo, #13, #13#10, [rfReplaceAll])
+    else edDebugInfo.Text := '';
 end;
 
 { Оповещение о движении пользователя по исходникам либо форматированному выводу }
@@ -348,7 +353,7 @@ begin
 end;
 
 { Обновление дерева как реакция на перещёлкивание чекбокса }
-procedure TFormMain.checkHideTransparentClick(Sender: TObject);
+procedure TFormMain.checkShowTransparentClick(Sender: TObject);
 begin
   UpdateData;
 end;
