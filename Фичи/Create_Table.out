@@ -1,5 +1,0 @@
-create table x 
-    (
-        i integer
-    ) 
-    tablespace tmp

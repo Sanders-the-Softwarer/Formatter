@@ -102,7 +102,7 @@ type
   { Список полей и ограничений таблицы }
   TTableItems = class(TCommaList<TTableItem>)
   strict protected
-    function Aligned: boolean; override;
+    function Aligned: TAlignMode; override;
   end;
 
   { Описание поля таблицы }
@@ -257,7 +257,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function Grouping: TStatementClass; override;
-    function SameTypeAligned: boolean; override;
+    function SameTypeAligned: TAlignMode; override;
   end;
 
   { Конструкция sharing }
@@ -436,9 +436,9 @@ end;
 
 { TTableItems }
 
-function TTableItems.Aligned: boolean;
+function TTableItems.Aligned: TAlignMode;
 begin
-  Result := Settings.AlignColumns;
+  Result := AlignMode(Settings.AlignColumns);
 end;
 
 { TTableField }
@@ -710,9 +710,9 @@ begin
   Result := TComment;
 end;
 
-function TComment.SameTypeAligned: boolean;
+function TComment.SameTypeAligned: TAlignMode;
 begin
-  Result := Settings.AlignCommands;
+  Result := AlignMode(Settings.AlignCommands);
 end;
 
 { TDrop }

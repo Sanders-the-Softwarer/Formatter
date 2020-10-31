@@ -1,1 +1,0 @@
-create index i$dual on dual(case when dummy = 'X' then null else 1 end, dummy)

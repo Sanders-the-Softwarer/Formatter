@@ -163,7 +163,7 @@ type
   { Выровненный блок параметров подпрограммы }
   TAlignedParamsDeclaration = class(TCommaList<TParamDeclaration>)
   strict protected
-    function Aligned: boolean; override;
+    function Aligned: TAlignMode; override;
   public
     function Transparent: boolean; override;
   end;
@@ -206,7 +206,7 @@ type
     function ParseBreak: boolean; override;
     function AllowUnexpected: boolean; override;
     function AllowStatement(AStatement: TStatement): boolean; override;
-    function Aligned: boolean; override;
+    function Aligned: TAlignMode; override;
   end;
 
   { Курсор }
@@ -447,7 +447,7 @@ type
   { Параметры в операторе open for .. using }
   TUsingParams = class(TCommaList<TUsingParam>)
   strict protected
-    function Aligned: boolean; override;
+    function Aligned: TAlignMode; override;
   end;
 
   { Оператор fetch }
@@ -548,6 +548,12 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Поля записи }
+  TRecordFields = class(TCommaList<TVariableDeclaration>)
+  strict protected
+    function Aligned: TAlignMode; override;
   end;
 
   { Декларация табличного типа }
@@ -871,9 +877,9 @@ begin
   Result := false;
 end;
 
-function TVariableDeclarations.Aligned: boolean;
+function TVariableDeclarations.Aligned: TAlignMode;
 begin
-  Result := Settings.AlignVariables;
+  Result := AlignMode(Settings.AlignVariables);
 end;
 
 function TVariableDeclarations.AllowStatement(AStatement: TStatement): boolean;
@@ -1222,9 +1228,9 @@ end;
 
 { TUsingParams }
 
-function TUsingParams.Aligned: boolean;
+function TUsingParams.Aligned: TAlignMode;
 begin
-  Result := Settings.AlignVariables;
+  Result := AlignMode(Settings.AlignVariables);
 end;
 
 { TPragma }
@@ -1355,7 +1361,7 @@ function TRecord.InternalParse: boolean;
 begin
   _Record := Keyword('record');
   Result  := Assigned(_Record) and
-             TBracketedStatement<TCommaList<TVariableDeclaration>>.Parse(Self, Source, _Declarations);
+             TBracketedStatement<TRecordFields>.Parse(Self, Source, _Declarations);
 end;
 
 procedure TRecord.InternalPrintSelf(APrinter: TPrinter);
@@ -1686,14 +1692,21 @@ end;
 
 { TAlignedParamsDeclaration }
 
-function TAlignedParamsDeclaration.Aligned: boolean;
+function TAlignedParamsDeclaration.Aligned: TAlignMode;
 begin
-  Result := Settings.AlignVariables;
+  Result := AlignMode(Settings.AlignVariables);
 end;
 
 function TAlignedParamsDeclaration.Transparent: boolean;
 begin
   Result := true;
+end;
+
+{ TRecordFields }
+
+function TRecordFields.Aligned: TAlignMode;
+begin
+  Result := AlignMode(Settings.AlignVariables);
 end;
 
 initialization

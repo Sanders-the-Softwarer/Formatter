@@ -12,28 +12,30 @@ unit Utils;
 
 interface
 
-uses Classes, SysUtils, Windows;
+uses Classes, SysUtils, Windows, Forms;
 
 { Вывод в отладочную консоль }
 procedure _Debug(const Msg: string; const Params: array of const);
 
 implementation
 
+var
+  IsDebug: boolean;
+
 { Вывод в отладочную консоль }
 procedure _Debug(const Msg: string; const Params: array of const);
-{$IfDef DEBUG_OUTPUT}
 var S: string;
 begin
+  if not IsDebug then exit;
   try
     S := Format(Msg, Params);
   except
     S := Msg;
   end;
   OutputDebugString(@S[1]);
-{$Else}
-begin
-{$EndIf}
 end;
 
+initialization
+  IsDebug := SameText(ExtractFileName(Application.ExeName), 'DebugTool.exe');
 end.
 

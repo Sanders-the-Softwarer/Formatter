@@ -151,7 +151,7 @@ type
   { —писок полей в select }
   TAliasedExpressions = class(TCommaList<TAliasedExpression>)
   strict protected
-    function Aligned: boolean; override;
+    function Aligned: TAlignMode; override;
   end;
 
   { —сылка на таблицу во from }
@@ -1276,9 +1276,9 @@ end;
 
 { TAliasedExpressions }
 
-function TAliasedExpressions.Aligned: boolean;
+function TAliasedExpressions.Aligned: TAlignMode;
 begin
-  Result := Settings.AlignFields;
+  Result := AlignMode(Settings.AlignFields);
 end;
 
 end.

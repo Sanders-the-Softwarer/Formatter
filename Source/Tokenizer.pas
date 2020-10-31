@@ -85,6 +85,7 @@ type
     function AppliedFarAbove(C: TComment; T: TToken): boolean;
     function AppliedFarAboveStrong(C: TComment; T: TToken): boolean;
     function AppliedFarBelowStrong(C: TComment; T: TToken): boolean;
+    function AppliedBelowBOL(C: TComment; T: TToken): boolean;
     function AppliedBelow(C: TComment; T: TToken): boolean;
     procedure Compress;
   strict protected
@@ -467,9 +468,14 @@ begin
   Result := Assigned(C) and Assigned(T) and (C.Line > T.Line + 1) and (LeftPos[T.Line] = C.Col);
 end;
 
+function TCommentProcessor.AppliedBelowBOL(C: TComment; T: TToken): boolean;
+begin
+  Result := Assigned(C) and Assigned(T) and (C.Line = T.Line + 1) and (C.Col < T.Col);
+end;
+
 function TCommentProcessor.AppliedBelow(C: TComment; T: TToken): boolean;
 begin
-  Result := Assigned(C) and Assigned(T) and (C.Line = T.Line + 1);
+  Result := Assigned(C) and Assigned(T) and (C.Line = T.Line + 1) and (C.Col >= T.Col);
 end;
 
 procedure TCommentProcessor.Compress;
@@ -499,6 +505,8 @@ begin
       T3.CommentAbove := C
     else if AppliedBelow(C, T1) then
       T1.CommentBelow := C
+    else if AppliedBelowBOL(C, T1) then
+      T1.CommentBelowBOL := C
     else if AppliedFarAboveStrong(C, T3) then
       T3.CommentFarAbove := C
     else if AppliedFarBelowStrong(C, T1) then
@@ -548,12 +556,17 @@ function TMerger.InternalNext: TToken;
         AResult.CommentAbove := T.CommentAbove;
       end;
       { Нижние комментарии сгруппируем снизу от результата }
-      if Assigned(T.CommentBelow) then
+      if Assigned(T.CommentBelow) or Assigned(T.CommentBelowBOL) then
       begin
         C := AResult;
-        while Assigned(C.CommentBelow) do C := C.CommentBelow;
+        while Assigned(C.CommentBelow) or Assigned(C.CommentBelowBOL) do
+          if Assigned(C.CommentBelow)
+            then C := C.CommentBelow
+            else C := C.CommentBelowBOL;
         C.CommentBelow := T.CommentBelow;
+        C.CommentBelowBOL := T.CommentBelowBOL;
         T.CommentBelow := nil;
+        T.CommentBelowBOL := nil;
       end;
       { С сильно верхними и сильно нижними ... }
       if Assigned(T.CommentFarAbove) then

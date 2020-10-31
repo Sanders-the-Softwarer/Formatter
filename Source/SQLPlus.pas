@@ -29,7 +29,7 @@ type
     { Считывание лексемы "символы до конца строки" }
     function SqlPlusString: TTerminal;
   public
-    function SameTypeAligned: boolean; override;
+    function SameTypeAligned: TAlignMode; override;
   end;
 
   { Команда clear }
@@ -346,9 +346,9 @@ end;
 
 { TSQLPlusStatement }
 
-function TSQLPlusStatement.SameTypeAligned: boolean;
+function TSQLPlusStatement.SameTypeAligned: TAlignMode;
 begin
-  Result := Settings.AlignCommands;
+  Result := AlignMode(Settings.AlignCommands);
 end;
 
 function TSQLPlusStatement.SqlPlusString: TTerminal;
@@ -399,4 +399,3 @@ initialization
     'whenever']);
 
 end.
-

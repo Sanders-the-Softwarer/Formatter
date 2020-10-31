@@ -49,8 +49,8 @@ unit Statements;
 
 interface
 
-uses Classes, SysUtils, Math, System.Generics.Collections, Contnrs, Utils,
-  Streams, Tokens, Printer, Rulers;
+uses Classes, SysUtils, Math, System.Generics.Collections, Contnrs, TypInfo,
+  Streams, Tokens, Printer, Rulers, Utils;
 
 type
 
@@ -59,6 +59,12 @@ type
 
   { Предобъявление списка для использования в GetMatchSource/Target }
   TBaseStatementList = class;
+
+  { Режим выравнивания }
+  TAlignMode = (amNever, amNo, amYes);
+
+  { Наличие спецкомментариев }
+  THasSpecialComments = (hscUnknown, hscNo, hscYes);
 
   { Базовый класс синтаксических конструкций }
   {$TypeInfo On}
@@ -70,16 +76,16 @@ type
     FMatchedTo: TStatement;
     FreeList: TObjectList;
     FRulers: TRulers;
-    FHasSpecialComments: boolean;
+    FHasSpecialComments: THasSpecialComments;
     function GetSettings: TFormatSettings;
-    procedure SetHasSpecialComments(AHasSpecialComments: boolean);
+    procedure SetHasSpecialComments(AHasSpecialComments: THasSpecialComments);
   strict protected
     function InternalParse: boolean; virtual;
     procedure InternalPrintSelf(APrinter: TPrinter); virtual;
     procedure MatchChildren; virtual;
     function InternalGetMatchSource: TBaseStatementList; virtual;
     function InternalGetMatchTarget: TBaseStatementList; virtual;
-    function Aligned: boolean; virtual;
+    function Aligned: TAlignMode; virtual;
   strict protected
     Source: TBufferedStream<TToken>;
     function IsStrongKeyword(const AEpithet: string): boolean;
@@ -112,13 +118,13 @@ type
     property FirstToken: TToken read FFirstToken;
     property Rulers: TRulers read GetRulers;
     property MatchedTo: TStatement read FMatchedTo write FMatchedTo;
-    property HasSpecialComments: boolean read FHasSpecialComments write SetHasSpecialComments;
+    property HasSpecialComments: THasSpecialComments read FHasSpecialComments write SetHasSpecialComments;
   public
     class function StatementType: string;
     class procedure Match(ASource, ATarget: TStatement);
     function Name: string; virtual;
     function StatementName: string; virtual;
-    function SameTypeAligned: boolean; virtual;
+    function SameTypeAligned: TAlignMode; virtual;
     function Transparent: boolean; virtual;
     function Grouping: TStatementClass; virtual;
     function GetMatchSource: TBaseStatementList;
@@ -226,9 +232,20 @@ type
     function Transparent: boolean; override;
   end;
 
+{ Конвертация настройки в TAlignMode }
+function AlignMode(ASetting: boolean): TAlignMode;
+
 implementation
 
 uses Keywords;
+
+{ Конвертация настройки в TAlignMode }
+function AlignMode(ASetting: boolean): TAlignMode;
+begin
+  if ASetting
+    then Result := amYes
+    else Result := amNo;
+end;
 
 { TStatement }
 
@@ -347,15 +364,15 @@ begin
 end;
 
 { По умолчанию выражение не выравнивается }
-function TStatement.Aligned: boolean;
+function TStatement.Aligned: TAlignMode;
 begin
-  Result := false;
+  Result := amNever;
 end;
 
 { По умолчанию в группе не выравнивается }
-function TStatement.SameTypeAligned: boolean;
+function TStatement.SameTypeAligned: TAlignMode;
 begin
-  Result := false;
+  Result := amNever;
 end;
 
 { Выражение по умолчанию видно в синтаксическом дереве }
@@ -444,14 +461,18 @@ end;
 
 function TStatement.IsAligned: boolean;
 begin
-  Result := HasSpecialComments or Aligned;
+  Result := (HasSpecialComments = hscYes) or (Aligned = amYes);
 end;
 
 function TStatement.DebugInfo: string;
 begin
-  Result := Format('IsAligned = %s', [BoolToStr(IsAligned, true)]);
+  Result := Format('Конструкция: %s (%s)'#13#13, [Name, ClassName]);
+  if Aligned <> amNever then
+    Result := Result + Format('Выравнивание: %s'#13#13, [GetEnumName(TypeInfo(TAlignMode), Ord(Aligned))]);
+  if (HasSpecialComments <> hscNo) then
+    Result := Result + Format('Спецкомментарии: %s'#13#13, [GetEnumName(TypeInfo(THasSpecialComments), Ord(HasSpecialComments))]);
   if IsAligned then
-    Result := Result + #13#13'Rulers:'#13 + Rulers.DebugInfo;
+    Result := Result + Format('Информация выравнивания:'#13#13'%s'#13#13, [Rulers.DebugInfo]);
 end;
 
 function TStatement.HasCommentsAbove: boolean;
@@ -615,15 +636,11 @@ begin
 end;
 
 procedure TStatement.ReplaceToken(var AOld: TToken; ANew: TToken);
+var i: TCommentPosition;
 begin
   if Assigned(AOld) and Assigned(ANew) then
-  begin
-    ANew.CommentFarAbove := AOld.CommentFarAbove;
-    ANew.CommentAbove := AOld.CommentAbove;
-    ANew.CommentAfter := AOld.CommentAfter;
-    ANew.CommentBelow := AOld.CommentBelow;
-    ANew.CommentFarBelow := AOld.CommentFarBelow;
-  end;
+    for i := Low(TCommentPosition) to High(TCommentPosition) do
+      ANew.SetComment(i, AOld.GetComment(i));
   AOld := ANew;
   AddToFreeList(ANew);
 end;
@@ -634,11 +651,16 @@ begin
   Result := FSettings;
 end;
 
-procedure TStatement.SetHasSpecialComments(AHasSpecialComments: boolean);
+procedure TStatement.SetHasSpecialComments(AHasSpecialComments: THasSpecialComments);
+var S: TStatement;
 begin
   FHasSpecialComments := AHasSpecialComments;
-  if AHasSpecialComments and Assigned(Parent) and Parent.Transparent then
-    Parent.HasSpecialComments := true;
+  { Если комментарии есть в низовой конструкции, нужно пробросить признак
+    в вышестоящую выравниваемую }
+  if AHasSpecialComments <> hscYes then exit;
+  S := Self.Parent;
+  while Assigned(S) and (S.Aligned = amNever) do S := S.Parent;
+  if Assigned(S) then S.HasSpecialComments := hscYes;
 end;
 
 function TStatement.GetRulers: TRulers;

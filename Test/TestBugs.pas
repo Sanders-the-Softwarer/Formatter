@@ -82,6 +82,14 @@ type
     procedure _59;
     procedure _60;
     procedure _61;
+    procedure _62;
+    procedure _63;
+    procedure _64;
+    procedure _65;
+    procedure _66;
+    procedure _67;
+    procedure _68;
+    procedure _69;
   end;
 
 implementation
@@ -132,7 +140,6 @@ end;
 
 procedure _Bugs._25;
 begin
-  PostponeTill(2020, 10, 25);
   Settings.AlignCommands := true;
 end;
 
@@ -193,14 +200,14 @@ end;
 
 procedure _Bugs._37;
 begin
-  PostponeTill(2020, 10, 25);
+  PostponeTill(2020, 11, 5);
   Settings.AlignFields := true;
   Settings.PreferredExpressionLength := 100;
 end;
 
 procedure _Bugs._38;
 begin
-  PostponeTill(2020, 10, 25);
+  PostponeTill(2020, 11, 5);
   Settings.PreferredExpressionLength := 120;
   Settings.BeautifyLongOperands := true;
 end;
@@ -268,7 +275,7 @@ end;
 
 procedure _Bugs._50;
 begin
-  PostponeTill(2020, 10, 25);
+  PostponeTill(2020, 11, 5);
   Settings.AlignVariables := true;
   Settings.AlignSpecialComments := true;
   Settings.MatchParamLimit := 5;
@@ -278,7 +285,7 @@ end;
 
 procedure _Bugs._51;
 begin
-  PostponeTill(2020, 10, 25);
+  PostponeTill(2020, 11, 5);
   Settings.AlignVariables := true;
   Settings.ChangeCommentType := true;
 end;
@@ -314,7 +321,7 @@ procedure _Bugs._58;
 begin
   Settings.PreferredExpressionLength := 80;
   Settings.BeautifyLongOperands := true;
-  PostponeTill(2020, 10, 25);
+  PostponeTill(2020, 11, 5);
 end;
 
 procedure _Bugs._59;
@@ -334,9 +341,59 @@ end;
 
 procedure _Bugs._61;
 begin
-  PostponeTill(2020, 10, 25);
+  PostponeTill(2020, 10, 5);
   Settings.AlignFields := true;
   Settings.AlignUseSpace := false;
+  Settings.PreferredExpressionLength := 100;
+end;
+
+procedure _Bugs._62;
+begin
+  Settings.AlignFields := true;
+  Settings.AlignUseSpace := true;
+  Settings.PreferredExpressionLength := 70;
+end;
+
+procedure _Bugs._63;
+begin
+  Settings.PreferredExpressionLength := 100;
+end;
+
+procedure _Bugs._64;
+begin
+  Settings.MatchParamLimit := 3;
+  Settings.AlignSpecialComments := true;
+  Settings.AlignUseSpace := true;
+  Settings.AlignFields := true;
+end;
+
+procedure _Bugs._65;
+begin
+  Settings.MatchParamLimit := 3;
+  Settings.AlignSpecialComments := true;
+  Settings.AlignUseSpace := true;
+end;
+
+procedure _Bugs._66;
+begin
+  Settings.MatchParamLimit := 3;
+  Settings.AlignSpecialComments := true;
+end;
+
+procedure _Bugs._67;
+begin
+  Settings.MatchParamLimit := 3;
+end;
+
+procedure _Bugs._68;
+begin
+  Settings.MatchParamLimit := 1;
+  Settings.AlignSpecialComments := true;
+  Settings.AlignUseSpace := true;
+end;
+
+procedure _Bugs._69;
+begin
   Settings.PreferredExpressionLength := 100;
 end;
 

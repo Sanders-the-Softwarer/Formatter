@@ -1,0 +1,25 @@
+-- ќпци€ "заполн€€ пустоты" не должна приводить к игнорированию значени€
+-- в последней и самой длинной строке при расчЄте выравнивани€ спецкомментариев
+
+insert
+into
+    t_a_channel
+    (
+        id,
+        code,
+        name_de,
+        id_shop,
+        id_shop_format,
+        id_activity_kind,
+        id_fmgl_activity_kind
+    )
+values
+    (
+        :new.id,                   /*/ => id                    /*/
+        :new.code,                 /*/ => code                  /*/
+        :new.name,                 /*/ => name_de               /*/
+        :new.id_shop,              /*/ => id_shop               /*/
+        :new.id_shop_format,       /*/ => id_shop_format        /*/
+        :new.id_activity_kind,     /*/ => id_activity_kind      /*/
+        :new.id_fmgl_activity_kind /*/ => id_fmgl_activity_kind /*/
+    );

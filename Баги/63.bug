@@ -1,0 +1,17 @@
+-- Скобки до и после updating должны располагаться на отдельных строках,
+-- не сжимаясь в )); итп.
+
+l_modified := l_modified
+              or (inserting and (:new.op_type like 'op_h_td_out_opt%' or :new.op_type like 'op_h_td_vn_opt%'))
+              or -- @todo зашивки нужно убрать
+              (deleting and (:old.op_type like 'op_h_td_out_opt%' or :old.op_type like 'op_h_td_vn_opt%'))
+              or
+              (
+                  updating and
+                  (
+                      :old.op_type like 'op_h_td_out_opt%'
+                      or :old.op_type like 'op_h_td_vn_opt%'
+                      or :new.op_type like 'op_h_td_out_opt%'
+                      or :new.op_type like 'op_h_td_vn_opt%'
+                  )
+              );

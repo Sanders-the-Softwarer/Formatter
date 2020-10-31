@@ -61,6 +61,8 @@ type
     FOwner: TObject;
     { Текущая линейка }
     CurrentRuler: string;
+    { Первая пользовательская линейка в строке }
+    FirstRuler: string;
     { Линейки в том порядке, в котором они идут в обрабатываемой конструкции }
     Names: TStringList;
     { Информация о ячейках }
@@ -120,12 +122,14 @@ end;
 
 procedure TRulers.AddRuler(const ARuler: string);
 begin
-  if Names.IndexOf(ARuler) < 0 then Names.Add(ARuler);
+  if Names.IndexOf(ARuler) >= 0 then exit;
+  Names.Add(ARuler);
+  if FirstRuler = '' then FirstRuler := ARuler;
 end;
 
 procedure TRulers.Start(const ARuler: string; ALine, ACol: integer);
 begin
-  if CurrentRuler = ARuler then exit;
+  if ARuler = FirstRuler then CurrentRuler := '';
   Measure(ALine, ACol, true);
   CurrentRuler := ARuler;
   StartLine := ALine;
@@ -137,7 +141,7 @@ procedure TRulers.Measure(ALine, ACol: integer; AFromStart: boolean = false);
 var ColIndex: integer;
 begin
   { При смене строки запоминаем левый отступ }
-  if AFromStart and (ALine <> StartLine) then
+  if AFromStart and (ALine <> StartLine) and (CurrentRuler = '') then
   begin
     CurrentRuler := LEFT_RULER;
     StartLine := ALine;

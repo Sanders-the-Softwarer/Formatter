@@ -161,7 +161,10 @@ type
     procedure PrintSelfAfter(APrinter: TPrinter); virtual;
   end;
 
-  TExpressionFields = class(TCommaList<TExpressionField>);
+  TExpressionFields = class(TCommaList<TExpressionField>)
+  strict protected
+    function Aligned: TAlignMode; override;
+  end;
 
 implementation
 
@@ -534,6 +537,13 @@ begin
   { ничего не делаем }
 end;
 
+{ TExpressionFields }
+
+function TExpressionFields.Aligned: TAlignMode;
+begin
+  Result := amNo; { нечего тут выравнивать, но нужно для спецкомментариев }
+end;
+
 { TWhere }
 
 function TWhere.InternalParse: boolean;
@@ -633,7 +643,7 @@ type
   TUpdateAssignments = class(TCommaList<TUpdateAssignment>)
   strict protected
     function ParseBreak: boolean; override;
-    function Aligned: boolean; override;
+    function Aligned: TAlignMode; override;
   end;
 
 { TUpdate }
@@ -694,9 +704,9 @@ begin
   Result := Any([Terminal(';'), Keyword(['*'])]);
 end;
 
-function TUpdateAssignments.Aligned: boolean;
+function TUpdateAssignments.Aligned: TAlignMode;
 begin
-  Result := Settings.AlignFields;
+  Result := AlignMode(Settings.AlignFields);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////

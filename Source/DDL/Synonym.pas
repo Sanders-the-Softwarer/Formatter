@@ -26,7 +26,7 @@ type
   public
     function StatementName: string; override;
     function Grouping: TStatementClass; override;
-    function SameTypeAligned: boolean; override;
+    function SameTypeAligned: TAlignMode; override;
   end;
 
 implementation
@@ -65,9 +65,9 @@ begin
   Result := TSynonym;
 end;
 
-function TSynonym.SameTypeAligned: boolean;
+function TSynonym.SameTypeAligned: TAlignMode;
 begin
-  Result := Settings.AlignCommands;
+  Result := AlignMode(Settings.AlignCommands);
 end;
 
 end.

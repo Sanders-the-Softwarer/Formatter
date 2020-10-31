@@ -38,7 +38,7 @@ type
     constructor Create(ASettings: TFormatSettings; AMemo: TMemo);
     procedure EndPrint; override;
     procedure ControlChanged; override;
-    procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
+    procedure SyncNotification(AObject: TObject; ALine, ACol, ALen: integer); override;
   end;
 
   { Принтер для вывода последовательности лексем }
@@ -55,7 +55,7 @@ type
     procedure PrintToken(AToken: TToken); override;
     procedure EndPrint; override;
     procedure ControlChanged; override;
-    procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
+    procedure SyncNotification(AObject: TObject; ALine, ACol, ALen: integer); override;
   end;
 
   { Принтер для построения синтаксического дерева }
@@ -75,7 +75,7 @@ type
     procedure PrintStatement(AStatement: TStatement); override;
     procedure EndPrint; override;
     procedure ControlChanged; override;
-    procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
+    procedure SyncNotification(AObject: TObject; ALine, ACol, ALen: integer); override;
   end;
 
   { Отладочный принтер для вывода пропущенных лексем }
@@ -165,21 +165,25 @@ begin
 end;
 
 { При оповещении от других элементов интерфейса выделим указанную лексему }
-procedure TGUIFormatterPrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
+procedure TGUIFormatterPrinter.SyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
 var T: TToken;
 begin
   if IntoSync then exit;
   try
     IntoSync := true;
     { Если лексема не указана - найдём подходящую по позиции }
-    if not Assigned(AToken) then
+    if not Assigned(AObject) then
       for T in TokenPos.Keys do
         if (T.Line = ALine) and (T.Col <= ACol) and (T.Col + Length(T.Value) > ACol) then
-          AToken := T;
+          AObject := T;
+    { Если лексема не передана и не найдена - ничего не делаем }
+    if AObject is TToken
+      then T := TToken(AObject)
+      else exit;
     { И выделим её в тексте }
-    if not TokenPos.ContainsKey(AToken) then exit;
-    Memo.SelStart := TokenPos[AToken] + TokenLen[AToken];
-    Memo.SelLength := -TokenLen[AToken]; { благодаря выделению в обратную сторону для длинных лексем скроллбар мотается к началу, а не к концу }
+    if not TokenPos.ContainsKey(T) then exit;
+    Memo.SelStart := TokenPos[T] + TokenLen[T];
+    Memo.SelLength := -TokenLen[T]; { благодаря выделению в обратную сторону для длинных лексем скроллбар мотается к началу, а не к концу }
   finally
     IntoSync := false;
   end;
@@ -250,21 +254,28 @@ end;
 { Реакция на изменения в привязанном листбоксе }
 procedure TTokenizerPrinter.ControlChanged;
 begin
+  if ListBox.ItemIndex < 0 then exit;
   SendSyncNotification(Tokens[ListBox.ItemIndex], 0, 0, 0);
 end;
 
 { Реакция на оповещения от других элементов интерфейса }
-procedure TTokenizerPrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
+procedure TTokenizerPrinter.SyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
 var T: TToken;
 begin
   { Если не указана лексема, найдём подходящую по позиции в тексте }
-  if not Assigned(AToken) then
+  if not Assigned(AObject) then
     for T in LineNumbers.Keys do
       if (T.Line = ALine) and (T.Col <= ACol) and (T.Col + T.Value.Length > ACol) then
-        AToken := T;
-  { И сфокусируемся на неё }
-  if Assigned(AToken) and LineNumbers.ContainsKey(AToken) then
-    ListBox.ItemIndex := LineNumbers[AToken];
+        AObject := T;
+  { Если лексема не передана и не найдена - делать нечего }
+  if AObject is TToken
+    then T := TToken(AObject)
+    else exit;
+  { Сфокусируемся на неё }
+  if LineNumbers.ContainsKey(T) then ListBox.ItemIndex := LineNumbers[T];
+  { Для того, чтобы отладочная панель корректно обновилась при движении по
+    исходнику, пошлём отсюда сигнал }
+  ControlChanged;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -317,7 +328,7 @@ procedure TSyntaxTreePrinter.PrintStatement(AStatement: TStatement);
 var Transparent: boolean;
 begin
   Transparent := AStatement.Transparent and (not Assigned(ShowTransparentCheckBox) or not ShowTransparentCheckBox.Checked);
-  if not Transparent then Parents.Push(TreeView.Items.AddChildObject(Parents.Peek, '< ' + Trim(AStatement.Name) + ' >', nil {AStatement}));
+  if not Transparent then Parents.Push(TreeView.Items.AddChildObject(Parents.Peek, '< ' + Trim(AStatement.Name) + ' >', AStatement));
   try
     inherited;
   finally
@@ -339,14 +350,14 @@ begin
   try
     IntoSync := true;
     Ptr := TreeView.Selected.Data;
-    if Assigned(Ptr) then SendSyncNotification(TToken(Ptr), 0, 0, 0);
+    if Assigned(Ptr) then SendSyncNotification(TObject(Ptr), 0, 0, 0);
   finally
     IntoSync := false;
   end;
 end;
 
 { Обработка оповещений от других элементов интерфейса }
-procedure TSyntaxTreePrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
+procedure TSyntaxTreePrinter.SyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
 var T: TToken;
 begin
   if IntoSync then exit;
@@ -355,7 +366,7 @@ begin
     { Найдём подходящую лексему и сфокусируемся на соответствующем ей узле дерева }
     for T in Tokens.Keys do
     begin
-      if (T = AToken) or (T.Line = ALine) and (T.Col <= ACol) and (T.Col + T.Value.Length > ACol) then
+      if (T = AObject) or (T.Line = ALine) and (T.Col <= ACol) and (T.Col + T.Value.Length > ACol) then
       try
         TreeView.Items.BeginUpdate;
         TreeView.FullCollapse;

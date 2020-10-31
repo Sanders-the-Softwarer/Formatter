@@ -75,7 +75,7 @@ type
   strict protected
     function ParseBreak: boolean; override;
     function HasMultiLineArgument: boolean;
-    function Aligned: boolean; override;
+    function Aligned: TAlignMode; override;
   public
     function OnePerLine: boolean; override;
     function IsNamedNotation: boolean;
@@ -305,9 +305,9 @@ begin
             (Self.Count > Settings.PositionalArgumentSingleLineParamLimit);
 end;
 
-function TArguments.Aligned: boolean;
+function TArguments.Aligned: TAlignMode;
 begin
-  Result := Settings.AlignVariables;
+  Result := AlignMode(Settings.AlignVariables);
 end;
 
 function TArguments.Transparent: boolean;

@@ -264,6 +264,7 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
       then { пропускаем }
       else TokenQueue.Enqueue(AToken);
     AddToken(AToken.CommentAfter);
+    AddToken(AToken.CommentBelowBOL);
     AddToken(AToken.CommentBelow);
     AddToken(AToken.CommentFarBelow);
   end;
@@ -275,11 +276,12 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     LeadComment: TComment;
     Value: string;
     IsComment, LineComment, SpecComment, FakeToken, EmptyToken, OriginalFormat: boolean;
-    EOLLimit: integer;
+    EOLLimit, ActualShift: integer;
   begin
     IsComment := AToken is TComment;
     LineComment := IsComment and AComment.LineComment;
     SpecComment := AToken is TSpecialComment;
+    ActualShift := Shift;
     { Если это команда начала исходного форматирования, скорректируем режим до печати лексемы }
     if IsComment and AComment.Value.StartsWith(C_UNFORMAT_START) then
     begin
@@ -308,9 +310,15 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
       { Если комментарий далеко внизу, точно нужна пустая строка }
       if AComment.Position = poFarBelow then
         EmptyLine := true
-      { Если комментарий прижат снизу, точно достаточно перевода строки }
+      { Если комментарий прижат снизу, достаточно перевода строки }
       else if AComment.Position = poBelow then
         ForceNextLine := true
+      { Если комментарий сдвинут к началу строки, нужно поправить отступ }
+      else if AComment.Position = poBelowBOL then
+        begin
+          ForceNextLine := true;
+          if Indents.Count > 0 then ActualShift := Indents.Peek;
+        end
       { Если комментарий далеко вверху от чего-то ниже себя, значит к текущей лексеме он прижат не был }
       else if AComment.Position = poFarAbove then
         EmptyLine := true
@@ -360,7 +368,7 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     { Внесём в многострочный комментарий поправку на сдвиг к колонке, в которой он должен быть выведен }
     if IsComment and not LineComment then
       if (EOLLimit > 0) and (TextBuilder.Col = 1)
-        then AComment.ShiftTo(Shift + 1)
+        then AComment.ShiftTo(ActualShift + 1)
         else AComment.ShiftTo(TextBuilder.Col);
     { В режиме подавления переводов строки заменим строчный комментарий справа от лексемы скобочным }
     if IsComment and LineComment and (SupNextLine > 0) and (AComment.Position = poAfter) and
@@ -381,7 +389,7 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
        SameText(AToken.Value, 'as') and Settings.ReplaceAsIs and AToken.CanReplace
       then Value := 'is';
     { Выполним отступ }
-    if (EOLLimit > 0) and (TextBuilder.Col = 1) and not OriginalFormat then TextBuilder.AppendSpace(Shift);
+    if (EOLLimit > 0) and (TextBuilder.Col = 1) and not OriginalFormat then TextBuilder.AppendSpace(ActualShift);
     { Если нужно сохранить текущий отступ - сделаем это }
     if FixShift and not IsComment then
     begin
@@ -462,6 +470,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
       DraftPrinter.Mode   := fpmGetRulers;
       DraftPrinter.BeginPrint;
       DraftPrinter.PrintItem(AStatement);
+      DraftPrinter.MeasureRuler;
       DraftPrinter.EndPrint;
       AStatement.Rulers.Full := true;
     finally
@@ -482,8 +491,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
       Self.Mode    := fpmSetRulers;
       Rulers.Shift := Self.Shift;
       SimplePrintStatement;
-      // иногда будем включать для отладки
-      Rulers.Print(Self);
+      // иногда будем включать для отладки {$IfDef DEBUG_OUTPUT} Rulers.Print(Self); {$EndIf}
     finally
       Self.Rulers := _Rulers;
       Self.Mode   := _Mode;
@@ -495,21 +503,30 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   begin
     if not Assigned(SpecCommentDraftPrinter) then
     begin
-      SpecCommentDraftPrinter := TFormatterPrinter.Create(Self.Settings, false, [poFarAbove..poFarBelow], false);
+      SpecCommentDraftPrinter := TFormatterPrinter.Create(Self.Settings, true, [poFarAbove..poFarBelow]);
       SpecCommentDraftPrinter.BeginPrint;
       SpecCommentDraftPrinter.Mode := fpmCheckSpecialComments;
     end;
-    SpecCommentDraftPrinter.CurrentStatement := AStatement;
     SpecCommentDraftPrinter.PrintItem(AStatement);
   end;
 
 begin
-  if Mode = fpmNormal then CheckSpecialComments;
-  if AStatement.IsAligned and (Mode <> fpmGetRulers) then
+  { Проверим наличие спецкомментариев - это может повлиять на выравнивание }
+  if (Mode = fpmNormal) and (AStatement.HasSpecialComments = hscUnknown) then
+    CheckSpecialComments;
+  { Запомним конструкцию для проставления признака спецкомментариев }
+  if Mode = fpmCheckSpecialComments then
+  begin
+    CurrentStatement := AStatement;
+    CurrentStatement.HasSpecialComments := hscNo;
+  end;
+  { Если конструкцию нужно ровнять - соберём информацию и распечатаем в соответствии }
+  if AStatement.IsAligned and (Mode = fpmNormal) then
     begin
       CollectRulers;
       PrintRuledStatement;
     end
+  { Иначе просто выдадим всё как есть }
   else
     SimplePrintStatement;
 end;
@@ -565,7 +582,7 @@ end;
 procedure TFormatterPrinter.PrintSpecialComment(AValue: string);
 var T1, T2: TSpecialComment;
 begin
-  if Assigned(CurrentStatement) then CurrentStatement.HasSpecialComments := true;
+  if Assigned(CurrentStatement) then CurrentStatement.HasSpecialComments := hscYes;
   T1 := TSpecialComment.Create('/*/ ' + AValue);
   T2 := TSpecialComment.Create('/*/');
   try

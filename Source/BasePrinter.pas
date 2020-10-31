@@ -41,7 +41,7 @@ type
     procedure PrintSpecialComment(AValue: string); override;
   public
     procedure ControlChanged; override;
-    procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); override;
+    procedure SyncNotification(AObject: TObject; ALine, ACol, ALen: integer); override;
     function  GetText: string; override;
   end;
 
@@ -93,7 +93,7 @@ begin
   { ничего не делаем }
 end;
 
-procedure TBasePrinter.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
+procedure TBasePrinter.SyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
 begin
   { ничего не делаем }
 end;

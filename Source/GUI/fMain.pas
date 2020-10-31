@@ -85,6 +85,7 @@ type
     checkShowTransparent: TCheckBox;
     edDebugInfo: TMemo;
     spDebugInfo: TSplitter;
+    checkShowDebugInfo: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -97,6 +98,7 @@ type
     procedure pgDestChange(Sender: TObject);
     procedure edCompareAutoTestResultChange(Sender: TObject);
     procedure checkShowTransparentClick(Sender: TObject);
+    procedure checkShowDebugInfoClick(Sender: TObject);
   private
     TokenizerPrinter, SyntaxTreePrinter, ResultPrinter, AlarmTokenPrinter, AlarmStatementPrinter: TPrinter;
     MinTokenStream, AdvTokenStream: TBufferedStream<TToken>;
@@ -106,10 +108,12 @@ type
     IntoSync, IntoUpdateSettings: boolean;
     function CorrectCRLF: boolean;
     procedure UpdateData;
-    procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
+    procedure SyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
     procedure CoordsToCaret(Memo: TMemo; const Line, Col: integer; out Pos: integer);
     procedure CaretToCoords(Memo: TMemo; out Line, Col: integer; Pos: integer);
     procedure CheckReformatAutoTestResult;
+    procedure UpdateDebugInfo(AToken: TToken); overload;
+    procedure UpdateDebugInfo(AStatement: TStatement); overload;
   public
   end;
 
@@ -187,26 +191,38 @@ begin
 end;
 
 { Рассылка оповещений для синхронизации движения по различным представлениям текста }
-procedure TFormMain.SyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
-var Caret: integer;
+procedure TFormMain.SyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
+var
+  Caret: integer;
+  Token: TToken absolute AObject;
+  Statement: TStatement absolute AObject;
 begin
+  { Обновим панель отладочной информации }
+  if AObject is TToken then
+    UpdateDebugInfo(Token)
+  else if AObject is TStatement then
+    UpdateDebugInfo(Statement)
+  else
+    edDebugInfo.Text := '';
+  { Заблокируем возможность зацикливания на оповещениях }
   if IntoSync then exit;
   try
     IntoSync := true;
     { Если указана лексема - сигнал от принтера, синхронизируем исходник }
-    if Assigned(AToken) then
+    if AObject is TToken then
     begin
-      CoordsToCaret(edSrc, AToken.Line, AToken.Col, Caret);
+      CoordsToCaret(edSrc, Token.Line, Token.Col, Caret);
       edSrc.SelStart := Caret;
-      edSrc.SelLength := AToken.Value.Length;
+      edSrc.SelLength := Token.Value.Length;
       PrevSrcCaret := Caret;
     end;
+    { Принтер лексем известим всегда - для срабатывания обновления отладочной информации }
+    TokenizerPrinter.SyncNotification(AObject, ALine, ACol, ALen);
     { Известим активный принтер, прочие для скорости оставим }
-    if pgDest.ActivePage = tabTokenizer then TokenizerPrinter.SyncNotification(AToken, ALine, ACol, ALen);
-    if pgDest.ActivePage = tabParser then SyntaxTreePrinter.SyncNotification(AToken, ALine, ACol, ALen);
-    if pgDest.ActivePage = tabResult then ResultPrinter.SyncNotification(AToken, ALine, ACol, ALen);
-    if pgDest.ActivePage = tabAlarmToken then AlarmTokenPrinter.SyncNotification(AToken, ALine, ACol, ALen);
-    if pgDest.ActivePage = tabAlarmStatement then AlarmStatementPrinter.SyncNotification(AToken, ALine, ACol, ALen);
+    if pgDest.ActivePage = tabParser then SyntaxTreePrinter.SyncNotification(AObject, ALine, ACol, ALen);
+    if pgDest.ActivePage = tabResult then ResultPrinter.SyncNotification(AObject, ALine, ACol, ALen);
+    if pgDest.ActivePage = tabAlarmToken then AlarmTokenPrinter.SyncNotification(AObject, ALine, ACol, ALen);
+    if pgDest.ActivePage = tabAlarmStatement then AlarmStatementPrinter.SyncNotification(AObject, ALine, ACol, ALen);
   finally
     IntoSync := false;
   end;
@@ -288,9 +304,6 @@ end;
 procedure TFormMain.treeParserChange(Sender: TObject; Node: TTreeNode);
 begin
   SyntaxTreePrinter.ControlChanged;
-  if TObject(Node.Data) is TStatement
-    then edDebugInfo.Text := StringReplace(TStatement(Node.Data).DebugInfo, #13, #13#10, [rfReplaceAll])
-    else edDebugInfo.Text := '';
 end;
 
 { Оповещение о движении пользователя по исходникам либо форматированному выводу }
@@ -356,6 +369,25 @@ end;
 procedure TFormMain.checkShowTransparentClick(Sender: TObject);
 begin
   UpdateData;
+end;
+
+{ Показ панели отладочной информации }
+procedure TFormMain.checkShowDebugInfoClick(Sender: TObject);
+begin
+  edDebugInfo.Visible := checkShowDebugInfo.Checked;
+  spDebugInfo.Visible := checkShowDebugInfo.Checked;
+end;
+
+{ Вывод отладочной информации по лексеме }
+procedure TFormMain.UpdateDebugInfo(AToken: TToken);
+begin
+  edDebugInfo.Text := StringReplace(AToken.DebugInfo, #13, #13#10, [rfReplaceAll]);
+end;
+
+{ Вывод отладочной информации по синтаксической конструкции }
+procedure TFormMain.UpdateDebugInfo(AStatement: TStatement);
+begin
+  edDebugInfo.Text := StringReplace(AStatement.DebugInfo, #13, #13#10, [rfReplaceAll]);
 end;
 
 { Переформатирование результата автотеста, вставленного в поле редактирования }

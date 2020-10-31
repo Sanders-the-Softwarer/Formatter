@@ -60,7 +60,7 @@ type
     FStatements: array of TStatement;
   strict protected
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-    function Aligned: boolean; override;
+    function Aligned: TAlignMode; override;
   public
     constructor Create(S: TStatement); reintroduce;
     procedure Add(S: TStatement);
@@ -232,7 +232,7 @@ begin
     APrinter.PrintItems([FStatements[i], _NextLine]);
 end;
 
-function TSameTypeList.Aligned: boolean;
+function TSameTypeList.Aligned: TAlignMode;
 begin
   Result := FStatements[0].SameTypeAligned;
 end;

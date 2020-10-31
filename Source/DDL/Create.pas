@@ -27,7 +27,7 @@ type
   public
     function StatementName: string; override;
     function Grouping: TStatementClass; override;
-    function SameTypeAligned: boolean; override;
+    function SameTypeAligned: TAlignMode; override;
   end;
 
 implementation
@@ -88,9 +88,11 @@ begin
     else Result := nil;
 end;
 
-function TCreate.SameTypeAligned: boolean;
+function TCreate.SameTypeAligned: TAlignMode;
 begin
-  Result := Assigned(_What) and _What.SameTypeAligned;
+  if Assigned(_What)
+    then Result := _What.SameTypeAligned
+    else Result := amNever;
 end;
 
 end.

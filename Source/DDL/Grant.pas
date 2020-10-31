@@ -25,7 +25,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function Grouping: TStatementClass; override;
-    function SameTypeAligned: boolean; override;
+    function SameTypeAligned: TAlignMode; override;
   end;
 
 implementation
@@ -91,9 +91,9 @@ begin
     else Result := TGrantOff;
 end;
 
-function TGrant.SameTypeAligned: boolean;
+function TGrant.SameTypeAligned: TAlignMode;
 begin
-  Result := Settings.AlignCommands;
+  Result := AlignMode(Settings.AlignCommands);
 end;
 
 { TPrivileges }

@@ -97,7 +97,7 @@ type
     procedure PrintSpecialComment(AValue: string); virtual; abstract;
   public
     procedure ControlChanged; virtual; abstract;
-    procedure SyncNotification(AToken: TToken; ALine, ACol, ALen: integer); virtual; abstract;
+    procedure SyncNotification(AObject: TObject; ALine, ACol, ALen: integer); virtual; abstract;
     function  GetText: string; virtual; abstract;
   public
     procedure PrintItems(AItems: array of TObject);
@@ -117,14 +117,14 @@ type
   end;
 
   { Тип извещения о необходимости синхронизации интерфейса }
-  TSyncNotification = procedure (AToken: TToken; ALine, ACol, ALen: integer) of object;
+  TSyncNotification = procedure (AObject: TObject; ALine, ACol, ALen: integer) of object;
 
 var
   { Извещение о необходимости синхронизации интерфейса }
   SyncNotification: TSyncNotification;
 
 { Отправка извещения о необходимости синхронизации интерфейса }
-procedure SendSyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
+procedure SendSyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
 
 { Конструкции, которые можно применять в TFormatterPrinter.PrintItems для форматирования }
 function _NextLine: TObject;
@@ -138,10 +138,10 @@ implementation
 uses SQLPlus, FormatterPrinter;
 
 { Отправка извещения о необходимости синхронизации интерфейса }
-procedure SendSyncNotification(AToken: TToken; ALine, ACol, ALen: integer);
+procedure SendSyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
 begin
   if Assigned(SyncNotification) then
-    SyncNotification(AToken, ALine, ACol, ALen);
+    SyncNotification(AObject, ALine, ACol, ALen);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////

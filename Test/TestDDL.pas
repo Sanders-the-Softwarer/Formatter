@@ -19,24 +19,29 @@ type
 
   { Тесты на create }
   _Create = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
   published
     procedure Create;
     procedure Create_Or_Replace;
-    procedure Create_View;
-    procedure Create_View_With;
-    procedure Create_View_С_Колонками;
-    procedure Create_Index;
-    procedure Create_Unique_Index;
-    procedure Create_Functional_Index;
-    procedure Create_Table;
-    procedure Create_Table_Partitioned;
-    procedure Create_Indexed_Table;
-    procedure Create_Temporary_Table;
+    procedure View;
+    procedure View_With;
+    procedure View_С_Колонками;
+    procedure Index;
+    procedure Unique_Index;
+    procedure Functional_Index;
+    procedure Table;
+    procedure Partitioned_Table;
+    procedure Indexed_Table;
+    procedure Temporary_Table;
     procedure Поля_Таблиц_Разных_Типов;
     procedure Поля_И_Ограничения_Вперемешку;
     procedure Указание_Места_Хранения_Lobов;
-    procedure Create_Sequence;
+    procedure Sequence;
     procedure Комментарии_К_Таблицам;
+    procedure Database_Link;
+    procedure Role;
+    procedure Synonym;
   end;
 
   { Тесты на drop }
@@ -71,9 +76,6 @@ type
   protected
     function GetDir: string; override;
   published
-    procedure Create_Synonym;
-    procedure Create_Role;
-    procedure Create_Database_Link;
     procedure Grant;
     procedure Alter_Role;
     procedure Alter_Session;
@@ -86,19 +88,24 @@ implementation
 
 { _Create }
 
+function _Create.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды DDL\Create';
+end;
+
 procedure _Create.Create;
 begin
 end;
 
-procedure _Create.Create_Functional_Index;
+procedure _Create.Functional_Index;
 begin
 end;
 
-procedure _Create.Create_Index;
+procedure _Create.Index;
 begin
 end;
 
-procedure _Create.Create_Indexed_Table;
+procedure _Create.Indexed_Table;
 begin
 end;
 
@@ -106,35 +113,47 @@ procedure _Create.Create_Or_Replace;
 begin
 end;
 
-procedure _Create.Create_Sequence;
+procedure _Create.Database_Link;
 begin
 end;
 
-procedure _Create.Create_Table;
+procedure _Create.Sequence;
 begin
 end;
 
-procedure _Create.Create_Table_Partitioned;
+procedure _Create.Synonym;
 begin
 end;
 
-procedure _Create.Create_Temporary_Table;
+procedure _Create.Table;
 begin
 end;
 
-procedure _Create.Create_Unique_Index;
+procedure _Create.Partitioned_Table;
 begin
 end;
 
-procedure _Create.Create_View;
+procedure _Create.Role;
 begin
 end;
 
-procedure _Create.Create_View_With;
+procedure _Create.Temporary_Table;
 begin
 end;
 
-procedure _Create.Create_View_С_Колонками;
+procedure _Create.Unique_Index;
+begin
+end;
+
+procedure _Create.View;
+begin
+end;
+
+procedure _Create.View_With;
+begin
+end;
+
+procedure _Create.View_С_Колонками;
 begin
 end;
 
@@ -244,18 +263,6 @@ begin
 end;
 
 procedure _Команды_DDL.Alter_Session;
-begin
-end;
-
-procedure _Команды_DDL.Create_Database_Link;
-begin
-end;
-
-procedure _Команды_DDL.Create_Role;
-begin
-end;
-
-procedure _Команды_DDL.Create_Synonym;
 begin
 end;
 

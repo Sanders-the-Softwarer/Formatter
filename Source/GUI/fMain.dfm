@@ -33,7 +33,7 @@ object FormMain: TFormMain
     Margins.Top = 0
     Margins.Right = 5
     Margins.Bottom = 5
-    ActivePage = tabParser
+    ActivePage = tabResult
     Align = alClient
     TabOrder = 0
     OnChange = pgDestChange
@@ -58,22 +58,12 @@ object FormMain: TFormMain
     object tabParser: TTabSheet
       Caption = #1057#1080#1085#1090#1072#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
       ImageIndex = 1
-      object spDebugInfo: TSplitter
-        Left = 0
-        Top = 278
-        Width = 620
-        Height = 3
-        Cursor = crVSplit
-        Align = alBottom
-        ExplicitTop = 281
-        ExplicitWidth = 0
-      end
       object treeParser: TTreeView
         AlignWithMargins = True
         Left = 5
         Top = 27
         Width = 610
-        Height = 246
+        Height = 436
         Margins.Left = 5
         Margins.Top = 5
         Margins.Right = 5
@@ -84,7 +74,6 @@ object FormMain: TFormMain
         ReadOnly = True
         TabOrder = 0
         OnChange = treeParserChange
-        ExplicitHeight = 249
       end
       object checkShowTransparent: TCheckBox
         AlignWithMargins = True
@@ -100,31 +89,6 @@ object FormMain: TFormMain
         Caption = #1055#1086#1082#1072#1079#1099#1074#1072#1090#1100' '#1090#1077#1093#1085#1080#1095#1077#1089#1082#1080#1077' '#1091#1079#1083#1099
         TabOrder = 1
         OnClick = checkShowTransparentClick
-      end
-      object edDebugInfo: TMemo
-        AlignWithMargins = True
-        Left = 5
-        Top = 286
-        Width = 610
-        Height = 177
-        Margins.Left = 5
-        Margins.Top = 5
-        Margins.Right = 5
-        Margins.Bottom = 5
-        Align = alBottom
-        Font.Charset = RUSSIAN_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'Courier New'
-        Font.Style = []
-        HideSelection = False
-        ParentFont = False
-        ReadOnly = True
-        ScrollBars = ssBoth
-        TabOrder = 2
-        ExplicitTop = 5
-        ExplicitWidth = 327
-        ExplicitHeight = 458
       end
     end
     object tabResult: TTabSheet
@@ -194,6 +158,10 @@ object FormMain: TFormMain
     object tabCompareAutoTestResult: TTabSheet
       Caption = #1055#1088#1086#1089#1084#1086#1090#1088' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074' '#1072#1074#1090#1086#1090#1077#1089#1090#1072
       ImageIndex = 5
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object edCompareAutoTestResult: TMemo
         Left = 0
         Top = 0
@@ -236,12 +204,22 @@ object FormMain: TFormMain
       TabOrder = 0
       object tabSrc: TTabSheet
         Caption = #1048#1089#1093#1086#1076#1085#1080#1082
+        object spDebugInfo: TSplitter
+          Left = 0
+          Top = 277
+          Width = 337
+          Height = 4
+          Cursor = crVSplit
+          Align = alBottom
+          Visible = False
+          ExplicitTop = 0
+        end
         object edSrc: TMemo
           AlignWithMargins = True
           Left = 5
-          Top = 5
+          Top = 27
           Width = 327
-          Height = 458
+          Height = 245
           Margins.Left = 5
           Margins.Top = 5
           Margins.Right = 5
@@ -257,6 +235,44 @@ object FormMain: TFormMain
           ScrollBars = ssBoth
           TabOrder = 0
           OnChange = UpdateRequired
+        end
+        object edDebugInfo: TMemo
+          AlignWithMargins = True
+          Left = 5
+          Top = 286
+          Width = 327
+          Height = 177
+          Margins.Left = 5
+          Margins.Top = 5
+          Margins.Right = 5
+          Margins.Bottom = 5
+          Align = alBottom
+          Font.Charset = RUSSIAN_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Courier New'
+          Font.Style = []
+          HideSelection = False
+          ParentFont = False
+          ReadOnly = True
+          ScrollBars = ssBoth
+          TabOrder = 1
+          Visible = False
+        end
+        object checkShowDebugInfo: TCheckBox
+          AlignWithMargins = True
+          Left = 5
+          Top = 5
+          Width = 327
+          Height = 17
+          Margins.Left = 5
+          Margins.Top = 5
+          Margins.Right = 5
+          Margins.Bottom = 0
+          Align = alTop
+          Caption = #1054#1090#1082#1088#1099#1090#1100' '#1087#1072#1085#1077#1083#1100' '#1086#1090#1083#1072#1076#1086#1095#1085#1086#1081' '#1080#1085#1092#1086#1088#1084#1072#1094#1080#1080
+          TabOrder = 2
+          OnClick = checkShowDebugInfoClick
         end
       end
       object tabSettings: TTabSheet

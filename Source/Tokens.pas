@@ -26,12 +26,18 @@ unit Tokens;
 
 interface
 
-uses System.SysUtils, System.Generics.Collections;
+uses System.SysUtils, System.Generics.Collections, TypInfo;
 
 type
 
   { Возможные расположения комментария }
-  TCommentPosition = (poSpecial, poAfter, poFarAbove, poAbove, poBelow, poFarBelow);
+  TCommentPosition = (poSpecial,  { спецкомментарий }
+                      poAfter,    { комментарий справа }
+                      poFarAbove, { комментарий сверху через строку }
+                      poAbove,    { комментарий сверху }
+                      poBelow,    { комментарий снизу на уровне лексемы }
+                      poBelowBOL, { комментарий снизу ближе к началу строки }
+                      poFarBelow  { комментарий снизу через строку });
   TCommentPositions = set of TCommentPosition;
 
   { Предварительное объявление типов }
@@ -69,10 +75,11 @@ type
     FComments: array[TCommentPosition] of TComment;
   strict protected
     function ModifyValue(const AValue: string): string; virtual;
-    function GetComment(Index: TCommentPosition): TComment;
-    procedure SetComment(Index: TCommentPosition; AComment: TComment);
   public
     function TokenType: string; virtual; abstract;
+    function GetComment(Index: TCommentPosition): TComment;
+    procedure SetComment(Index: TCommentPosition; AComment: TComment);
+    function DebugInfo: string; virtual;
   public
     constructor Create(const AValue: string; AChar: TPositionedChar); overload;
     constructor Create(AChar: TPositionedChar); overload;
@@ -87,6 +94,7 @@ type
     property CommentAbove: TComment    index poAbove    read GetComment write SetComment;
     property CommentAfter: TComment    index poAfter    read GetComment write SetComment;
     property CommentBelow: TComment    index poBelow    read GetComment write SetComment;
+    property CommentBelowBOL: TComment index poBelowBOL read GetComment write SetComment;
     property CommentFarBelow: TComment index poFarBelow read GetComment write SetComment;
   end;
 
@@ -149,6 +157,7 @@ type
     function LeadComment: TComment;
     procedure ShiftTo(ACol: integer);
     procedure ChangeTypeToBrackets;
+    function DebugInfo: string; override;
   end;
 
   { Число }
@@ -227,6 +236,11 @@ begin
   FValue := ModifyValue(FInitialValue);
   FLine := ALine;
   FCol  := ACol;
+end;
+
+function TToken.DebugInfo: string;
+begin
+  Result := Format('Лексема: %s'#13#13'Значение: %s'#13#13'Позиция: [%d, %d]', [TokenType, Value, Line, Col]);
 end;
 
 function TToken.ModifyValue(const AValue: string): string;
@@ -345,6 +359,11 @@ procedure TComment.ChangeTypeToBrackets;
 begin
   if not LineComment then exit;
   Value := '/* ' + Trim(Value.Substring(2)) + ' */';
+end;
+
+function TComment.DebugInfo: string;
+begin
+  Result := inherited + #13#13 + Format('Расположение: %s', [GetEnumName(TypeInfo(TCommentPosition), Ord(Position))]);
 end;
 
 function TComment.LeadComment: TComment;

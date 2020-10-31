@@ -1,0 +1,7 @@
+-- Выражение не должно записываться в три строки 
+-- со скобками на отдельных строках
+
+select
+    (sum(pd.quantity * sd.price_without_vat) / nullif(sum(pd.quantity), 0))
+from
+    top_lc_calc_goods_gtt t  

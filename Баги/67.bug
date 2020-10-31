@@ -1,0 +1,49 @@
+-- јлиасы полей в select-е using-а не должны выравниватьс€
+-- при отсутствии всех вообще опций выравнивани€
+
+create or replace trigger v_fe_cmn_translation_trg
+    instead of insert or update or delete on v_fe_cmn_translation
+    for each row
+declare
+    l_hkey raw(16);
+    --
+    procedure insert_row
+    is
+    begin
+        merge
+        into
+            t_translate_b t
+        using
+            (
+                select
+                    l_hkey code_h,
+                    :new.id_language language_code,
+                    :new.message text
+                from
+                    dual
+            ) s
+        on
+            (t.code_h = s.code_h and t.language_code = s.language_code)
+        when not matched then
+            insert
+                (
+                    code_h,
+                    language_code,
+                    text
+                )
+            values
+                (
+                    s.code_h, /*/ => code_h /*/
+                    s.language_code, /*/ => language_code /*/
+                    s.text /*/ => text /*/
+                )
+        when matched then
+            update
+            set
+                t.text = s.text
+            where
+                decode(t.text, s.text, 1, 0) = 0;
+    end;
+begin
+    null;
+end;

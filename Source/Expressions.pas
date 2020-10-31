@@ -104,6 +104,12 @@ end;
 
 type
 
+  { Выражение в скобках }
+  TBracketedExpression = class(TBracketedStatement<TExpression>)
+  public
+    function MultiLine: boolean; override;
+  end;
+
   { Выражение case }
   TCase = class(TStatement)
   strict private
@@ -189,7 +195,7 @@ begin
     { Вложенным запросом }
     if TBracketedStatement<TSelect>.Parse(Self, Source, _Select) then exit(true);
     { Выражением в скобках }
-    if TBracketedStatement<TExpression>.Parse(Self, Source, _Expression) then exit(true);
+    if TBracketedExpression.Parse(Self, Source, _Expression) then exit(true);
   finally
     { Суффиксы }
     _OuterJoin := Terminal('(+)');
@@ -234,7 +240,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     i, DelimiterLen: integer;
   begin
     SetLength(TermInfo, Count);
-    DraftPrinter := TFormatterPrinter.Create(APrinter.Settings, true, [poAbove, poBelow, poFarAbove, poFarBelow], false);
+    DraftPrinter := TFormatterPrinter.Create(APrinter.Settings, true, [poAbove, poBelow, poBelowBOL, poFarAbove, poFarBelow], false);
     try
       DraftPrinter.BeginPrint;
       for i := 0 to Count - 1 do
@@ -249,6 +255,8 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         DraftPrinter.PrintItem(Item(i));
         TermInfo[i].SingleLineLen := DraftPrinter.CurrentMaxWidth;
         DraftPrinter.SupressNextLine(false);
+        { Если при печати были строчные коммментарии - в одну строку не уложимся и не будем пытаться }
+        if DraftPrinter.CurrentLine > 1 then TermInfo[i].SingleLineLen := MaxInt;
         { Померяем ширину разделителя }
         DraftPrinter.Clear;
         DraftPrinter.PrintItem(Delimiter(i));
@@ -513,7 +521,7 @@ var
 begin
   T := NextToken;
   if T is TEpithet then TEpithet(T).IsKeyword := true;
-  if HasOperation(T, D) and ((T.Value <> ',') or (Self.Parent is TBracketedStatement<TExpression>)) then AResult := T;
+  if HasOperation(T, D) and ((T.Value <> ',') or (Self.Parent is TBracketedExpression)) then AResult := T;
   Result := Assigned(AResult);
   if AResult is TTerminal then TTerminal(AResult).OpType := otBinary;
 end;
@@ -640,6 +648,13 @@ end;
 procedure TCast.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Cast, _OpenBracket, _Expression, _As, _TypeRef, _CloseBracket]);
+end;
+
+{ TBracketedExpression }
+
+function TBracketedExpression.MultiLine: boolean;
+begin
+  Result := (InnerStatement is TExpression) and TExpression(InnerStatement).IsMultiLine;
 end;
 
 initialization
