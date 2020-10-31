@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                       Синтаксические конструкции DDL                       //
+//                       РЎРёРЅС‚Р°РєСЃРёС‡РµСЃРєРёРµ РєРѕРЅСЃС‚СЂСѓРєС†РёРё DDL                       //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -16,13 +16,13 @@ uses SysUtils, Tokens, Statements, Printer, Streams, Commons, PLSQL;
 
 type
 
-  { Парсер DDL }
+  { РџР°СЂСЃРµСЂ DDL }
   DDLParser = class
   public
     class function Parse(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
   end;
 
-  { Команда drop }
+  { РљРѕРјР°РЅРґР° drop }
   TDrop = class(TSemicolonStatement)
   strict private
     _Drop, _Type, _Force, _CascadeConstraints: TEpithet;
@@ -38,7 +38,7 @@ type
     function Grouping: TStatementClass; override;
   end;
 
-  { Объект view }
+  { РћР±СЉРµРєС‚ view }
   TView = class(TStatement)
   strict private
     _View, _As: TEpithet;
@@ -50,7 +50,7 @@ type
     function StatementName: string; override;
   end;
 
-  { Объект index }
+  { РћР±СЉРµРєС‚ index }
   TIndex = class(TSemicolonStatement)
   strict private
     _Unique, _Index, _On: TEpithet;
@@ -60,13 +60,13 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Объект type body }
+  { РћР±СЉРµРєС‚ type body }
   TTypeBody = class(TProgramBlock)
   strict protected
     function GetHeaderClass: TStatementClass; override;
   end;
 
-  { Заголовок type body }
+  { Р—Р°РіРѕР»РѕРІРѕРє type body }
   TTypeBodyHeader = class(TStatement)
   strict private
     _TypeBody, _AsIs: TEpithet;
@@ -76,7 +76,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Объект table }
+  { РћР±СЉРµРєС‚ table }
   TTable = class(TSemicolonStatement)
   strict private
     _Global, _Temporary, _Table: TEpithet;
@@ -93,19 +93,19 @@ type
     function StatementName: string; override;
   end;
 
-  { Общий класс для составных частей таблицы }
+  { РћР±С‰РёР№ РєР»Р°СЃСЃ РґР»СЏ СЃРѕСЃС‚Р°РІРЅС‹С… С‡Р°СЃС‚РµР№ С‚Р°Р±Р»РёС†С‹ }
   TTableItem = class(TStatement)
   public
     class function Candidates(AParent: TStatement): TArray<TStatementClass>; override;
   end;
 
-  { Список полей и ограничений таблицы }
+  { РЎРїРёСЃРѕРє РїРѕР»РµР№ Рё РѕРіСЂР°РЅРёС‡РµРЅРёР№ С‚Р°Р±Р»РёС†С‹ }
   TTableItems = class(TCommaList<TTableItem>)
   strict protected
     function Aligned: TAlignMode; override;
   end;
 
-  { Описание поля таблицы }
+  { РћРїРёСЃР°РЅРёРµ РїРѕР»СЏ С‚Р°Р±Р»РёС†С‹ }
   TTableField = class(TTableItem)
   strict private
     _Name: TEpithet;
@@ -118,7 +118,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Описание constraint-а }
+  { РћРїРёСЃР°РЅРёРµ constraint-Р° }
   TConstraint = class(TTableItem)
   strict private
     _Constraint, _ConstraintName: TEpithet;
@@ -129,7 +129,7 @@ type
     class function Candidates(AParent: TStatement): TArray<TStatementClass>; override;
   end;
 
-  { Описание primary key }
+  { РћРїРёСЃР°РЅРёРµ primary key }
   TPrimaryKey = class(TConstraint)
   strict private
     _Primary, _Key: TEpithet;
@@ -139,7 +139,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Описание unique }
+  { РћРїРёСЃР°РЅРёРµ unique }
   TUnique = class(TConstraint)
   strict private
     _Unique: TEpithet;
@@ -149,7 +149,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Описание foreign key }
+  { РћРїРёСЃР°РЅРёРµ foreign key }
   TForeignKey = class(TConstraint)
   strict private
     _Foreign, _Key, _References: TEpithet;
@@ -159,7 +159,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Описание check }
+  { РћРїРёСЃР°РЅРёРµ check }
   TCheck = class(TConstraint)
   strict private
     _Check : TEpithet;
@@ -169,7 +169,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Выражение tablespace }
+  { Р’С‹СЂР°Р¶РµРЅРёРµ tablespace }
   TTablespace = class(TStatement)
   strict private
     _Tablespace: TEpithet;
@@ -179,7 +179,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Выражение using index }
+  { Р’С‹СЂР°Р¶РµРЅРёРµ using index }
   TUsingIndex = class(TStatement)
   strict private
     _Using, _Index: TEpithet;
@@ -189,7 +189,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Выражение lob store as }
+  { Р’С‹СЂР°Р¶РµРЅРёРµ lob store as }
   TLobStore = class(TStatement)
   strict private
     _Lob, _Store, _As: TEpithet;
@@ -199,13 +199,13 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Список lob store-ов }
+  { РЎРїРёСЃРѕРє lob store-РѕРІ }
   TLobStores = class(TStatementList<TLobStore>)
   strict protected
     function ParseBreak: boolean; override;
   end;
 
-  { Выражение partition by }
+  { Р’С‹СЂР°Р¶РµРЅРёРµ partition by }
   TPartitions = class(TStatement)
   strict private
     _PartitionBy, _SubpartitionBy: TEpithet;
@@ -215,7 +215,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Условие range partition }
+  { РЈСЃР»РѕРІРёРµ range partition }
   TPartitionRange = class(TStatement)
   strict private
     _Range: TEpithet;
@@ -225,7 +225,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Условие list partition }
+  { РЈСЃР»РѕРІРёРµ list partition }
   TPartitionList = class(TStatement)
   strict private
     _List: TEpithet;
@@ -235,7 +235,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Описание партиции }
+  { РћРїРёСЃР°РЅРёРµ РїР°СЂС‚РёС†РёРё }
   TPartition = class(TStatement)
   strict private
     _Partition, _Name, _Values, _Less, _Than: TEpithet;
@@ -245,7 +245,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Команда comment }
+  { РљРѕРјР°РЅРґР° comment }
   TComment = class(TSemicolonStatement)
   strict private
     _Comment, _On, _TableOrColumn: TEpithet;
@@ -260,7 +260,7 @@ type
     function SameTypeAligned: TAlignMode; override;
   end;
 
-  { Конструкция sharing }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ sharing }
   TSharing = class(TStatement)
     _Sharing, _What: TEpithet;
     _Eq: TTerminal;
@@ -269,7 +269,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Пользователь }
+  { РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ }
   TUser = class(TStatement)
   strict private
     _User: TEpithet;
@@ -279,7 +279,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Параметры пользователя }
+  { РџР°СЂР°РјРµС‚СЂС‹ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ }
   TUserParam = class(TStatement)
   strict private
     _Name: TEpithet;

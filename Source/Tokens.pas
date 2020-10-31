@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор  исходников                         //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ  РёСЃС…РѕРґРЅРёРєРѕРІ                         //
 //                                                                            //
-//                           Классы символов и лексем                         //
+//                           РљР»Р°СЃСЃС‹ СЃРёРјРІРѕР»РѕРІ Рё Р»РµРєСЃРµРј                         //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -10,17 +10,17 @@
 
 unit Tokens;
 
-{ ----- Примечания -------------------------------------------------------------
+{ ----- РџСЂРёРјРµС‡Р°РЅРёСЏ -------------------------------------------------------------
 
-  Понятие ключевого слова в Oracle крайне контекстно-зависимо. Например, слова
-  loop и while являются ключевыми в PL/SQL, но отлично сойдут как имена таблиц
-  или полей в SQL. Более того, внутри самого PL/SQL можно встретить конструкции
-  типа my_variable char(1 char). На уровне лексического анализа невозможно
-  определить, в каком смысле используется встреченное слово, поэтому классы
-  TIdent и TKeyword в конце концов пришлось слить воедино, в общий класс TEpithet
-  с признаком IsKeyword. Этот признак проставляется в ходе синтаксического
-  анализа и служит больше для человека, которому удобнее мыслить в таких
-  терминах.
+  РџРѕРЅСЏС‚РёРµ РєР»СЋС‡РµРІРѕРіРѕ СЃР»РѕРІР° РІ Oracle РєСЂР°Р№РЅРµ РєРѕРЅС‚РµРєСЃС‚РЅРѕ-Р·Р°РІРёСЃРёРјРѕ. РќР°РїСЂРёРјРµСЂ, СЃР»РѕРІР°
+  loop Рё while СЏРІР»СЏСЋС‚СЃСЏ РєР»СЋС‡РµРІС‹РјРё РІ PL/SQL, РЅРѕ РѕС‚Р»РёС‡РЅРѕ СЃРѕР№РґСѓС‚ РєР°Рє РёРјРµРЅР° С‚Р°Р±Р»РёС†
+  РёР»Рё РїРѕР»РµР№ РІ SQL. Р‘РѕР»РµРµ С‚РѕРіРѕ, РІРЅСѓС‚СЂРё СЃР°РјРѕРіРѕ PL/SQL РјРѕР¶РЅРѕ РІСЃС‚СЂРµС‚РёС‚СЊ РєРѕРЅСЃС‚СЂСѓРєС†РёРё
+  С‚РёРїР° my_variable char(1 char). РќР° СѓСЂРѕРІРЅРµ Р»РµРєСЃРёС‡РµСЃРєРѕРіРѕ Р°РЅР°Р»РёР·Р° РЅРµРІРѕР·РјРѕР¶РЅРѕ
+  РѕРїСЂРµРґРµР»РёС‚СЊ, РІ РєР°РєРѕРј СЃРјС‹СЃР»Рµ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РІСЃС‚СЂРµС‡РµРЅРЅРѕРµ СЃР»РѕРІРѕ, РїРѕСЌС‚РѕРјСѓ РєР»Р°СЃСЃС‹
+  TIdent Рё TKeyword РІ РєРѕРЅС†Рµ РєРѕРЅС†РѕРІ РїСЂРёС€Р»РѕСЃСЊ СЃР»РёС‚СЊ РІРѕРµРґРёРЅРѕ, РІ РѕР±С‰РёР№ РєР»Р°СЃСЃ TEpithet
+  СЃ РїСЂРёР·РЅР°РєРѕРј IsKeyword. Р­С‚РѕС‚ РїСЂРёР·РЅР°Рє РїСЂРѕСЃС‚Р°РІР»СЏРµС‚СЃСЏ РІ С…РѕРґРµ СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєРѕРіРѕ
+  Р°РЅР°Р»РёР·Р° Рё СЃР»СѓР¶РёС‚ Р±РѕР»СЊС€Рµ РґР»СЏ С‡РµР»РѕРІРµРєР°, РєРѕС‚РѕСЂРѕРјСѓ СѓРґРѕР±РЅРµРµ РјС‹СЃР»РёС‚СЊ РІ С‚Р°РєРёС…
+  С‚РµСЂРјРёРЅР°С….
 
 ------------------------------------------------------------------------------ }
 
@@ -30,24 +30,24 @@ uses System.SysUtils, System.Generics.Collections, TypInfo;
 
 type
 
-  { Возможные расположения комментария }
-  TCommentPosition = (poSpecial,  { спецкомментарий }
-                      poAfter,    { комментарий справа }
-                      poFarAbove, { комментарий сверху через строку }
-                      poAbove,    { комментарий сверху }
-                      poBelow,    { комментарий снизу на уровне лексемы }
-                      poBelowBOL, { комментарий снизу ближе к началу строки }
-                      poFarBelow  { комментарий снизу через строку });
+  { Р’РѕР·РјРѕР¶РЅС‹Рµ СЂР°СЃРїРѕР»РѕР¶РµРЅРёСЏ РєРѕРјРјРµРЅС‚Р°СЂРёСЏ }
+  TCommentPosition = (poSpecial,  { СЃРїРµС†РєРѕРјРјРµРЅС‚Р°СЂРёР№ }
+                      poAfter,    { РєРѕРјРјРµРЅС‚Р°СЂРёР№ СЃРїСЂР°РІР° }
+                      poFarAbove, { РєРѕРјРјРµРЅС‚Р°СЂРёР№ СЃРІРµСЂС…Сѓ С‡РµСЂРµР· СЃС‚СЂРѕРєСѓ }
+                      poAbove,    { РєРѕРјРјРµРЅС‚Р°СЂРёР№ СЃРІРµСЂС…Сѓ }
+                      poBelow,    { РєРѕРјРјРµРЅС‚Р°СЂРёР№ СЃРЅРёР·Сѓ РЅР° СѓСЂРѕРІРЅРµ Р»РµРєСЃРµРјС‹ }
+                      poBelowBOL, { РєРѕРјРјРµРЅС‚Р°СЂРёР№ СЃРЅРёР·Сѓ Р±Р»РёР¶Рµ Рє РЅР°С‡Р°Р»Сѓ СЃС‚СЂРѕРєРё }
+                      poFarBelow  { РєРѕРјРјРµРЅС‚Р°СЂРёР№ СЃРЅРёР·Сѓ С‡РµСЂРµР· СЃС‚СЂРѕРєСѓ });
   TCommentPositions = set of TCommentPosition;
 
-  { Предварительное объявление типов }
+  { РџСЂРµРґРІР°СЂРёС‚РµР»СЊРЅРѕРµ РѕР±СЉСЏРІР»РµРЅРёРµ С‚РёРїРѕРІ }
   TComment = class;
 
-  { Базовый класс лексем }
+  { Р‘Р°Р·РѕРІС‹Р№ РєР»Р°СЃСЃ Р»РµРєСЃРµРј }
   TBaseToken = class
   end;
 
-  { Просто прочитанный символ }
+  { РџСЂРѕСЃС‚Рѕ РїСЂРѕС‡РёС‚Р°РЅРЅС‹Р№ СЃРёРјРІРѕР» }
   TChar = class(TBaseToken)
   strict private
     FValue: char;
@@ -56,7 +56,7 @@ type
     property Value: char read FValue;
   end;
 
-  { Прочитанный символ, дополненный положением в тексте }
+  { РџСЂРѕС‡РёС‚Р°РЅРЅС‹Р№ СЃРёРјРІРѕР», РґРѕРїРѕР»РЅРµРЅРЅС‹Р№ РїРѕР»РѕР¶РµРЅРёРµРј РІ С‚РµРєСЃС‚Рµ }
   TPositionedChar = class(TChar)
   strict private
     FLine, FCol: integer;
@@ -66,7 +66,7 @@ type
     property Col: integer read FCol;
   end;
 
-  { Лексема }
+  { Р›РµРєСЃРµРјР° }
   TToken = class(TBaseToken)
   strict private
     FInitialValue, FValue: string;
@@ -98,22 +98,22 @@ type
     property CommentFarBelow: TComment index poFarBelow read GetComment write SetComment;
   end;
 
-  { Неожиданная или неизвестная лексема - встретился символ, с которого не может начинаться лексема }
+  { РќРµРѕР¶РёРґР°РЅРЅР°СЏ РёР»Рё РЅРµРёР·РІРµСЃС‚РЅР°СЏ Р»РµРєСЃРµРјР° - РІСЃС‚СЂРµС‚РёР»СЃСЏ СЃРёРјРІРѕР», СЃ РєРѕС‚РѕСЂРѕРіРѕ РЅРµ РјРѕР¶РµС‚ РЅР°С‡РёРЅР°С‚СЊСЃСЏ Р»РµРєСЃРµРјР° }
   TUnknownToken = class(TToken)
   public
     function TokenType: string; override;
   end;
 
-  { Незначащие символы }
+  { РќРµР·РЅР°С‡Р°С‰РёРµ СЃРёРјРІРѕР»С‹ }
   TWhitespace = class(TToken)
   public
     function TokenType: string; override;
   end;
 
-  { Различие между унарными и бинарными операциями }
+  { Р Р°Р·Р»РёС‡РёРµ РјРµР¶РґСѓ СѓРЅР°СЂРЅС‹РјРё Рё Р±РёРЅР°СЂРЅС‹РјРё РѕРїРµСЂР°С†РёСЏРјРё }
   TOpType = (otNone, otUnary, otBinary);
 
-  { Символьная лексема }
+  { РЎРёРјРІРѕР»СЊРЅР°СЏ Р»РµРєСЃРµРјР° }
   TTerminal = class(TToken)
   strict private
     FOpType: TOpType;
@@ -122,11 +122,11 @@ type
     function ModifyValue(const AValue: string): string; override;
   public
     function TokenType: string; override;
-    property OpType: TOpType read FOpType write FOpType; { позволяет отличить унарные плюсы-минусы от бинарных }
-    property WithoutSpace: boolean read FWithoutSpace write FWithoutSpace; { позволяет отличить запятую в number(5,2) и подобные ситуации }
+    property OpType: TOpType read FOpType write FOpType; { РїРѕР·РІРѕР»СЏРµС‚ РѕС‚Р»РёС‡РёС‚СЊ СѓРЅР°СЂРЅС‹Рµ РїР»СЋСЃС‹-РјРёРЅСѓСЃС‹ РѕС‚ Р±РёРЅР°СЂРЅС‹С… }
+    property WithoutSpace: boolean read FWithoutSpace write FWithoutSpace; { РїРѕР·РІРѕР»СЏРµС‚ РѕС‚Р»РёС‡РёС‚СЊ Р·Р°РїСЏС‚СѓСЋ РІ number(5,2) Рё РїРѕРґРѕР±РЅС‹Рµ СЃРёС‚СѓР°С†РёРё }
   end;
 
-  { Идентификатор либо ключевое слово }
+  { РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ Р»РёР±Рѕ РєР»СЋС‡РµРІРѕРµ СЃР»РѕРІРѕ }
   TEpithet = class(TToken)
   strict private
     FIsKeyword, FIsIdent: boolean;
@@ -138,7 +138,7 @@ type
     property IsKeyword: boolean read FIsKeyword write FIsKeyword;
   end;
 
-  { Метка }
+  { РњРµС‚РєР° }
   TLabel = class(TToken)
   strict protected
     function ModifyValue(const AValue: string): string; override;
@@ -146,7 +146,7 @@ type
     function TokenType: string; override;
   end;
 
-  { Комментарий }
+  { РљРѕРјРјРµРЅС‚Р°СЂРёР№ }
   TComment = class(TToken)
   public
     Position: TCommentPosition;
@@ -160,32 +160,32 @@ type
     function DebugInfo: string; override;
   end;
 
-  { Число }
+  { Р§РёСЃР»Рѕ }
   TNumber = class(TToken)
   public
     function TokenType: string; override;
   end;
 
-  { Литерал }
+  { Р›РёС‚РµСЂР°Р» }
   TLiteral = class(TToken)
   public
     function TokenType: string; override;
   end;
 
-  { Неожиданный конец входного файла }
+  { РќРµРѕР¶РёРґР°РЅРЅС‹Р№ РєРѕРЅРµС† РІС…РѕРґРЅРѕРіРѕ С„Р°Р№Р»Р° }
   TUnexpectedEOF = class(TToken)
   public
     function TokenType: string; override;
   end;
 
-  { Пустая лексема - технический объект, который иногда нужен }
+  { РџСѓСЃС‚Р°СЏ Р»РµРєСЃРµРјР° - С‚РµС…РЅРёС‡РµСЃРєРёР№ РѕР±СЉРµРєС‚, РєРѕС‚РѕСЂС‹Р№ РёРЅРѕРіРґР° РЅСѓР¶РµРЅ }
   TEmptyToken = class(TToken)
   public
     function TokenType: string; override;
     constructor Create;
   end;
 
-  { Тип лексемы для вывода специальных комментариев }
+  { РўРёРї Р»РµРєСЃРµРјС‹ РґР»СЏ РІС‹РІРѕРґР° СЃРїРµС†РёР°Р»СЊРЅС‹С… РєРѕРјРјРµРЅС‚Р°СЂРёРµРІ }
   TSpecialComment = class(TComment)
   public
     function TokenType: string; override;
@@ -240,7 +240,7 @@ end;
 
 function TToken.DebugInfo: string;
 begin
-  Result := Format('Лексема: %s'#13#13'Значение: %s'#13#13'Позиция: [%d, %d]', [TokenType, Value, Line, Col]);
+  Result := Format('Р›РµРєСЃРµРјР°: %s'#13#13'Р—РЅР°С‡РµРЅРёРµ: %s'#13#13'РџРѕР·РёС†РёСЏ: [%d, %d]', [TokenType, Value, Line, Col]);
 end;
 
 function TToken.ModifyValue(const AValue: string): string;
@@ -272,14 +272,14 @@ end;
 
 function TUnknownToken.TokenType: string;
 begin
-  Result := '*** НЕОЖИДАННЫЙ СИМВОЛ ***';
+  Result := '*** РќР•РћР–РР”РђРќРќР«Р™ РЎРРњР’РћР› ***';
 end;
 
 { TWhitespace }
 
 function TWhitespace.TokenType: string;
 begin
-  Result := 'Пробел';
+  Result := 'РџСЂРѕР±РµР»';
 end;
 
 { TEpithet }
@@ -287,11 +287,11 @@ end;
 function TEpithet.TokenType: string;
 begin
   if IsKeyword then
-    Result := 'Ключевое слово'
+    Result := 'РљР»СЋС‡РµРІРѕРµ СЃР»РѕРІРѕ'
   else if FIsIdent then
-    Result := 'Идентификатор'
+    Result := 'РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ'
   else
-    Result := 'Неидентифицированное слово';
+    Result := 'РќРµРёРґРµРЅС‚РёС„РёС†РёСЂРѕРІР°РЅРЅРѕРµ СЃР»РѕРІРѕ';
 end;
 
 function TEpithet.ModifyValue(const AValue: string): string;
@@ -305,16 +305,16 @@ end;
 
 function TComment.TokenType: string;
 begin
-  Result := 'Комментарий';
+  Result := 'РљРѕРјРјРµРЅС‚Р°СЂРёР№';
 end;
 
-{ Признак строчного (до перевода строки) комментария }
+{ РџСЂРёР·РЅР°Рє СЃС‚СЂРѕС‡РЅРѕРіРѕ (РґРѕ РїРµСЂРµРІРѕРґР° СЃС‚СЂРѕРєРё) РєРѕРјРјРµРЅС‚Р°СЂРёСЏ }
 function TComment.LineComment: boolean;
 begin
   Result := Value.StartsWith('--');
 end;
 
-{ Высота комментария в строках }
+{ Р’С‹СЃРѕС‚Р° РєРѕРјРјРµРЅС‚Р°СЂРёСЏ РІ СЃС‚СЂРѕРєР°С… }
 function TComment.Height: integer;
 var i: integer;
 begin
@@ -322,8 +322,8 @@ begin
   for i := Length(Value) downto 1 do if Value[i] = #13 then Inc(Result);
 end;
 
-{ Внесение в текст многострочного комментария поправки на разницу между тем,
-  в какой позиции он будет выведен, и той, в которой был в оригинале }
+{ Р’РЅРµСЃРµРЅРёРµ РІ С‚РµРєСЃС‚ РјРЅРѕРіРѕСЃС‚СЂРѕС‡РЅРѕРіРѕ РєРѕРјРјРµРЅС‚Р°СЂРёСЏ РїРѕРїСЂР°РІРєРё РЅР° СЂР°Р·РЅРёС†Сѓ РјРµР¶РґСѓ С‚РµРј,
+  РІ РєР°РєРѕР№ РїРѕР·РёС†РёРё РѕРЅ Р±СѓРґРµС‚ РІС‹РІРµРґРµРЅ, Рё С‚РѕР№, РІ РєРѕС‚РѕСЂРѕР№ Р±С‹Р» РІ РѕСЂРёРіРёРЅР°Р»Рµ }
 procedure TComment.ShiftTo(ACol: integer);
 var
   D, i, j: integer;
@@ -363,7 +363,7 @@ end;
 
 function TComment.DebugInfo: string;
 begin
-  Result := inherited + #13#13 + Format('Расположение: %s', [GetEnumName(TypeInfo(TCommentPosition), Ord(Position))]);
+  Result := inherited + #13#13 + Format('Р Р°СЃРїРѕР»РѕР¶РµРЅРёРµ: %s', [GetEnumName(TypeInfo(TCommentPosition), Ord(Position))]);
 end;
 
 function TComment.LeadComment: TComment;
@@ -376,21 +376,21 @@ end;
 
 function TNumber.TokenType: string;
 begin
-  Result := 'Число';
+  Result := 'Р§РёСЃР»Рѕ';
 end;
 
 { TLiteral }
 
 function TLiteral.TokenType: string;
 begin
-  Result := 'Литерал';
+  Result := 'Р›РёС‚РµСЂР°Р»';
 end;
 
 { TTerminal }
 
 function TTerminal.TokenType: string;
 begin
-  Result := 'Символ';
+  Result := 'РЎРёРјРІРѕР»';
 end;
 
 function TTerminal.ModifyValue(const AValue: string): string;
@@ -402,14 +402,14 @@ end;
 
 function TUnexpectedEOF.TokenType: string;
 begin
-  Result := 'Конец входного файла';
+  Result := 'РљРѕРЅРµС† РІС…РѕРґРЅРѕРіРѕ С„Р°Р№Р»Р°';
 end;
 
 { TLabel }
 
 function TLabel.TokenType: string;
 begin
-  Result := 'Метка';
+  Result := 'РњРµС‚РєР°';
 end;
 
 function TLabel.ModifyValue(const AValue: string): string;
@@ -426,7 +426,7 @@ end;
 
 function TEmptyToken.TokenType: string;
 begin
-  Result := 'Пустая лексема';
+  Result := 'РџСѓСЃС‚Р°СЏ Р»РµРєСЃРµРјР°';
 end;
 
 { TSpecialComment }
@@ -438,7 +438,7 @@ end;
 
 function TSpecialComment.TokenType: string;
 begin
-  Result := 'Комментарий форматизатора';
+  Result := 'РљРѕРјРјРµРЅС‚Р°СЂРёР№ С„РѕСЂРјР°С‚РёР·Р°С‚РѕСЂР°';
 end;
 
 initialization

@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                Вывод форматированного текста в GUI-интерфейс               //
+//                Р’С‹РІРѕРґ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРЅРѕРіРѕ С‚РµРєСЃС‚Р° РІ GUI-РёРЅС‚РµСЂС„РµР№СЃ               //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -16,7 +16,7 @@ uses
   SysUtils, StdCtrls, ExtCtrls, ComCtrls, System.Generics.Collections,
   Printer, Tokens;
 
-{ Функции создания принтеров различных типов }
+{ Р¤СѓРЅРєС†РёРё СЃРѕР·РґР°РЅРёСЏ РїСЂРёРЅС‚РµСЂРѕРІ СЂР°Р·Р»РёС‡РЅС‹С… С‚РёРїРѕРІ }
 function CreateTokenizerPrinter(AListBox: TListBox): TPrinter;
 function CreateSyntaxTreePrinter(ATreeView: TTreeView; AShowTransparentCheckBox: TCheckBox): TPrinter;
 function CreateFormatterPrinter(ASettings: TFormatSettings; AMemo: TMemo): TPrinter;
@@ -29,7 +29,7 @@ uses BasePrinter, FormatterPrinter, Statements;
 
 type
 
-  { Принтер для вывода форматированного текста }
+  { РџСЂРёРЅС‚РµСЂ РґР»СЏ РІС‹РІРѕРґР° С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРЅРѕРіРѕ С‚РµРєСЃС‚Р° }
   TGUIFormatterPrinter = class(TFormatterPrinter)
   strict private
     Memo: TMemo;
@@ -41,7 +41,7 @@ type
     procedure SyncNotification(AObject: TObject; ALine, ACol, ALen: integer); override;
   end;
 
-  { Принтер для вывода последовательности лексем }
+  { РџСЂРёРЅС‚РµСЂ РґР»СЏ РІС‹РІРѕРґР° РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚Рё Р»РµРєСЃРµРј }
   TTokenizerPrinter = class(TBasePrinter)
   private
     ListBox: TListBox;
@@ -58,7 +58,7 @@ type
     procedure SyncNotification(AObject: TObject; ALine, ACol, ALen: integer); override;
   end;
 
-  { Принтер для построения синтаксического дерева }
+  { РџСЂРёРЅС‚РµСЂ РґР»СЏ РїРѕСЃС‚СЂРѕРµРЅРёСЏ СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєРѕРіРѕ РґРµСЂРµРІР° }
   TSyntaxTreePrinter = class(TBasePrinter)
   private
     TreeView: TTreeView;
@@ -78,7 +78,7 @@ type
     procedure SyncNotification(AObject: TObject; ALine, ACol, ALen: integer); override;
   end;
 
-  { Отладочный принтер для вывода пропущенных лексем }
+  { РћС‚Р»Р°РґРѕС‡РЅС‹Р№ РїСЂРёРЅС‚РµСЂ РґР»СЏ РІС‹РІРѕРґР° РїСЂРѕРїСѓС‰РµРЅРЅС‹С… Р»РµРєСЃРµРј }
   TAlarmTokenPrinter = class(TTokenizerPrinter)
   private
     TabSheet: TTabSheet;
@@ -90,7 +90,7 @@ type
     constructor Create(AListBox: TListBox; ATabSheet: TTabSheet);
   end;
 
-  { Отладочный принтер для вывода неожиданных конструкций }
+  { РћС‚Р»Р°РґРѕС‡РЅС‹Р№ РїСЂРёРЅС‚РµСЂ РґР»СЏ РІС‹РІРѕРґР° РЅРµРѕР¶РёРґР°РЅРЅС‹С… РєРѕРЅСЃС‚СЂСѓРєС†РёР№ }
   TAlarmStatementPrinter = class(TAlarmTokenPrinter)
   private
     Unexpected: boolean;
@@ -126,7 +126,7 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//               Принтер для печати форматированного текста в GUI             //
+//               РџСЂРёРЅС‚РµСЂ РґР»СЏ РїРµС‡Р°С‚Рё С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРЅРѕРіРѕ С‚РµРєСЃС‚Р° РІ GUI             //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -138,15 +138,15 @@ begin
   Assert(Assigned(TokenPos) and Assigned(TokenLen));
 end;
 
-{ При завершении печати выведем сформированный текст в Memo }
+{ РџСЂРё Р·Р°РІРµСЂС€РµРЅРёРё РїРµС‡Р°С‚Рё РІС‹РІРµРґРµРј СЃС„РѕСЂРјРёСЂРѕРІР°РЅРЅС‹Р№ С‚РµРєСЃС‚ РІ Memo }
 procedure TGUIFormatterPrinter.EndPrint;
 begin
   inherited;
   Memo.Text := GetText;
 end;
 
-{ При действиях пользователя в Memo найдём текущую лексему и оповестим о ней
-  другие элементы интерфейса }
+{ РџСЂРё РґРµР№СЃС‚РІРёСЏС… РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РІ Memo РЅР°Р№РґС‘Рј С‚РµРєСѓС‰СѓСЋ Р»РµРєСЃРµРјСѓ Рё РѕРїРѕРІРµСЃС‚РёРј Рѕ РЅРµР№
+  РґСЂСѓРіРёРµ СЌР»РµРјРµРЅС‚С‹ РёРЅС‚РµСЂС„РµР№СЃР° }
 procedure TGUIFormatterPrinter.ControlChanged;
 var
   P: integer;
@@ -164,26 +164,26 @@ begin
   end;
 end;
 
-{ При оповещении от других элементов интерфейса выделим указанную лексему }
+{ РџСЂРё РѕРїРѕРІРµС‰РµРЅРёРё РѕС‚ РґСЂСѓРіРёС… СЌР»РµРјРµРЅС‚РѕРІ РёРЅС‚РµСЂС„РµР№СЃР° РІС‹РґРµР»РёРј СѓРєР°Р·Р°РЅРЅСѓСЋ Р»РµРєСЃРµРјСѓ }
 procedure TGUIFormatterPrinter.SyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
 var T: TToken;
 begin
   if IntoSync then exit;
   try
     IntoSync := true;
-    { Если лексема не указана - найдём подходящую по позиции }
+    { Р•СЃР»Рё Р»РµРєСЃРµРјР° РЅРµ СѓРєР°Р·Р°РЅР° - РЅР°Р№РґС‘Рј РїРѕРґС…РѕРґСЏС‰СѓСЋ РїРѕ РїРѕР·РёС†РёРё }
     if not Assigned(AObject) then
       for T in TokenPos.Keys do
         if (T.Line = ALine) and (T.Col <= ACol) and (T.Col + Length(T.Value) > ACol) then
           AObject := T;
-    { Если лексема не передана и не найдена - ничего не делаем }
+    { Р•СЃР»Рё Р»РµРєСЃРµРјР° РЅРµ РїРµСЂРµРґР°РЅР° Рё РЅРµ РЅР°Р№РґРµРЅР° - РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
     if AObject is TToken
       then T := TToken(AObject)
       else exit;
-    { И выделим её в тексте }
+    { Р РІС‹РґРµР»РёРј РµС‘ РІ С‚РµРєСЃС‚Рµ }
     if not TokenPos.ContainsKey(T) then exit;
     Memo.SelStart := TokenPos[T] + TokenLen[T];
-    Memo.SelLength := -TokenLen[T]; { благодаря выделению в обратную сторону для длинных лексем скроллбар мотается к началу, а не к концу }
+    Memo.SelLength := -TokenLen[T]; { Р±Р»Р°РіРѕРґР°СЂСЏ РІС‹РґРµР»РµРЅРёСЋ РІ РѕР±СЂР°С‚РЅСѓСЋ СЃС‚РѕСЂРѕРЅСѓ РґР»СЏ РґР»РёРЅРЅС‹С… Р»РµРєСЃРµРј СЃРєСЂРѕР»Р»Р±Р°СЂ РјРѕС‚Р°РµС‚СЃСЏ Рє РЅР°С‡Р°Р»Сѓ, Р° РЅРµ Рє РєРѕРЅС†Сѓ }
   finally
     IntoSync := false;
   end;
@@ -191,7 +191,7 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//              Принтер для печати вывода лексического анализатора            //
+//              РџСЂРёРЅС‚РµСЂ РґР»СЏ РїРµС‡Р°С‚Рё РІС‹РІРѕРґР° Р»РµРєСЃРёС‡РµСЃРєРѕРіРѕ Р°РЅР°Р»РёР·Р°С‚РѕСЂР°            //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -211,14 +211,14 @@ begin
   inherited;
 end;
 
-{ Подготовка к печати }
+{ РџРѕРґРіРѕС‚РѕРІРєР° Рє РїРµС‡Р°С‚Рё }
 procedure TTokenizerPrinter.BeginPrint;
 begin
   inherited;
   ListBox.Items.BeginUpdate;
 end;
 
-{ Инициализация принтера }
+{ РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїСЂРёРЅС‚РµСЂР° }
 procedure TTokenizerPrinter.Clear;
 begin
   ListBox.Items.Clear;
@@ -226,61 +226,61 @@ begin
   LineNumbers.Clear;
 end;
 
-{ Вывод очередной лексемы }
+{ Р’С‹РІРѕРґ РѕС‡РµСЂРµРґРЅРѕР№ Р»РµРєСЃРµРјС‹ }
 procedure TTokenizerPrinter.PrintToken(AToken: TToken);
 var
   Str: string;
   i: integer;
 begin
-  { Выдадим лексему в листбокс }
+  { Р’С‹РґР°РґРёРј Р»РµРєСЃРµРјСѓ РІ Р»РёСЃС‚Р±РѕРєСЃ }
   with AToken do
   begin
-    Str := Format('%s "%s", строка %d, позиция %d', [TokenType, Value, Line, Col]);
+    Str := Format('%s "%s", СЃС‚СЂРѕРєР° %d, РїРѕР·РёС†РёСЏ %d', [TokenType, Value, Line, Col]);
     if not Printed then Str := '>>>>> NOT PRINTED >>>>> ' + Str + ' <<<<< NOT PRINTED <<<<<';
   end;
   i := ListBox.Items.Add(Str);
-  { Запомним размещение лексемы }
+  { Р—Р°РїРѕРјРЅРёРј СЂР°Р·РјРµС‰РµРЅРёРµ Р»РµРєСЃРµРјС‹ }
   Tokens.Add(i, AToken);
   LineNumbers.Add(AToken, i);
 end;
 
-{ Завершение печати }
+{ Р—Р°РІРµСЂС€РµРЅРёРµ РїРµС‡Р°С‚Рё }
 procedure TTokenizerPrinter.EndPrint;
 begin
   ListBox.Items.EndUpdate;
   inherited;
 end;
 
-{ Реакция на изменения в привязанном листбоксе }
+{ Р РµР°РєС†РёСЏ РЅР° РёР·РјРµРЅРµРЅРёСЏ РІ РїСЂРёРІСЏР·Р°РЅРЅРѕРј Р»РёСЃС‚Р±РѕРєСЃРµ }
 procedure TTokenizerPrinter.ControlChanged;
 begin
   if ListBox.ItemIndex < 0 then exit;
   SendSyncNotification(Tokens[ListBox.ItemIndex], 0, 0, 0);
 end;
 
-{ Реакция на оповещения от других элементов интерфейса }
+{ Р РµР°РєС†РёСЏ РЅР° РѕРїРѕРІРµС‰РµРЅРёСЏ РѕС‚ РґСЂСѓРіРёС… СЌР»РµРјРµРЅС‚РѕРІ РёРЅС‚РµСЂС„РµР№СЃР° }
 procedure TTokenizerPrinter.SyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
 var T: TToken;
 begin
-  { Если не указана лексема, найдём подходящую по позиции в тексте }
+  { Р•СЃР»Рё РЅРµ СѓРєР°Р·Р°РЅР° Р»РµРєСЃРµРјР°, РЅР°Р№РґС‘Рј РїРѕРґС…РѕРґСЏС‰СѓСЋ РїРѕ РїРѕР·РёС†РёРё РІ С‚РµРєСЃС‚Рµ }
   if not Assigned(AObject) then
     for T in LineNumbers.Keys do
       if (T.Line = ALine) and (T.Col <= ACol) and (T.Col + T.Value.Length > ACol) then
         AObject := T;
-  { Если лексема не передана и не найдена - делать нечего }
+  { Р•СЃР»Рё Р»РµРєСЃРµРјР° РЅРµ РїРµСЂРµРґР°РЅР° Рё РЅРµ РЅР°Р№РґРµРЅР° - РґРµР»Р°С‚СЊ РЅРµС‡РµРіРѕ }
   if AObject is TToken
     then T := TToken(AObject)
     else exit;
-  { Сфокусируемся на неё }
+  { РЎС„РѕРєСѓСЃРёСЂСѓРµРјСЃСЏ РЅР° РЅРµС‘ }
   if LineNumbers.ContainsKey(T) then ListBox.ItemIndex := LineNumbers[T];
-  { Для того, чтобы отладочная панель корректно обновилась при движении по
-    исходнику, пошлём отсюда сигнал }
+  { Р”Р»СЏ С‚РѕРіРѕ, С‡С‚РѕР±С‹ РѕС‚Р»Р°РґРѕС‡РЅР°СЏ РїР°РЅРµР»СЊ РєРѕСЂСЂРµРєС‚РЅРѕ РѕР±РЅРѕРІРёР»Р°СЃСЊ РїСЂРё РґРІРёР¶РµРЅРёРё РїРѕ
+    РёСЃС…РѕРґРЅРёРєСѓ, РїРѕС€Р»С‘Рј РѕС‚СЃСЋРґР° СЃРёРіРЅР°Р» }
   ControlChanged;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                   Принтер для выдачи синтаксического дерева                //
+//                   РџСЂРёРЅС‚РµСЂ РґР»СЏ РІС‹РґР°С‡Рё СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєРѕРіРѕ РґРµСЂРµРІР°                //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -301,7 +301,7 @@ begin
   inherited;
 end;
 
-{ Инициализация и подготовка к печати }
+{ РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ Рё РїРѕРґРіРѕС‚РѕРІРєР° Рє РїРµС‡Р°С‚Рё }
 procedure TSyntaxTreePrinter.BeginPrint;
 begin
   inherited;
@@ -316,14 +316,14 @@ begin
   Parents.Push(nil);
 end;
 
-{ Завершение печати и вывод результата }
+{ Р—Р°РІРµСЂС€РµРЅРёРµ РїРµС‡Р°С‚Рё Рё РІС‹РІРѕРґ СЂРµР·СѓР»СЊС‚Р°С‚Р° }
 procedure TSyntaxTreePrinter.EndPrint;
 begin
   TreeView.Items.EndUpdate;
   inherited;
 end;
 
-{ Печать выражения - делаем каждый объект TStatement узлом дерева и привязываем к нему дочерние }
+{ РџРµС‡Р°С‚СЊ РІС‹СЂР°Р¶РµРЅРёСЏ - РґРµР»Р°РµРј РєР°Р¶РґС‹Р№ РѕР±СЉРµРєС‚ TStatement СѓР·Р»РѕРј РґРµСЂРµРІР° Рё РїСЂРёРІСЏР·С‹РІР°РµРј Рє РЅРµРјСѓ РґРѕС‡РµСЂРЅРёРµ }
 procedure TSyntaxTreePrinter.PrintStatement(AStatement: TStatement);
 var Transparent: boolean;
 begin
@@ -336,13 +336,13 @@ begin
   end;
 end;
 
-{ Печать лексемы - делаем каждый объект TToken листом дерева }
+{ РџРµС‡Р°С‚СЊ Р»РµРєСЃРµРјС‹ - РґРµР»Р°РµРј РєР°Р¶РґС‹Р№ РѕР±СЉРµРєС‚ TToken Р»РёСЃС‚РѕРј РґРµСЂРµРІР° }
 procedure TSyntaxTreePrinter.PrintToken(AToken: TToken);
 begin
   Tokens.Add(AToken, TreeView.Items.AddChildObject(Parents.Peek, Format('%s [ %s ]', [AToken.TokenType, AToken.Value]), AToken));
 end;
 
-{ Реакция на действия пользователя в дереве }
+{ Р РµР°РєС†РёСЏ РЅР° РґРµР№СЃС‚РІРёСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РІ РґРµСЂРµРІРµ }
 procedure TSyntaxTreePrinter.ControlChanged;
 var Ptr: pointer;
 begin
@@ -356,14 +356,14 @@ begin
   end;
 end;
 
-{ Обработка оповещений от других элементов интерфейса }
+{ РћР±СЂР°Р±РѕС‚РєР° РѕРїРѕРІРµС‰РµРЅРёР№ РѕС‚ РґСЂСѓРіРёС… СЌР»РµРјРµРЅС‚РѕРІ РёРЅС‚РµСЂС„РµР№СЃР° }
 procedure TSyntaxTreePrinter.SyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
 var T: TToken;
 begin
   if IntoSync then exit;
   try
     IntoSync := true;
-    { Найдём подходящую лексему и сфокусируемся на соответствующем ей узле дерева }
+    { РќР°Р№РґС‘Рј РїРѕРґС…РѕРґСЏС‰СѓСЋ Р»РµРєСЃРµРјСѓ Рё СЃС„РѕРєСѓСЃРёСЂСѓРµРјСЃСЏ РЅР° СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµРј РµР№ СѓР·Р»Рµ РґРµСЂРµРІР° }
     for T in Tokens.Keys do
     begin
       if (T = AObject) or (T.Line = ALine) and (T.Col <= ACol) and (T.Col + T.Value.Length > ACol) then
@@ -383,7 +383,7 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                Принтеры для вывода отладочных предупреждений               //
+//                РџСЂРёРЅС‚РµСЂС‹ РґР»СЏ РІС‹РІРѕРґР° РѕС‚Р»Р°РґРѕС‡РЅС‹С… РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёР№               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 

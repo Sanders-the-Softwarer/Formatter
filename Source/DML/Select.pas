@@ -1,8 +1,8 @@
-///////////////////////////////////////////////////////////////////////////////
+п»ї///////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                                Команда SELECT                              //
+//                                РљРѕРјР°РЅРґР° SELECT                              //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -16,7 +16,7 @@ uses Statements, Tokens, Printer, DML;
 
 type
 
-  { Собственно, SQL-запрос }
+  { РЎРѕР±СЃС‚РІРµРЅРЅРѕ, SQL-Р·Р°РїСЂРѕСЃ }
   TSelect = class(TDML)
   strict private
     _SubQuery, _ForUpdate: TStatement;
@@ -32,7 +32,7 @@ uses Commons, Parser, PLSQL, Expressions;
 
 type
 
-  { Встраиваемый запрос }
+  { Р’СЃС‚СЂР°РёРІР°РµРјС‹Р№ Р·Р°РїСЂРѕСЃ }
   TSubQuery = class(TStatement)
   strict private
     _Main, _OrderBy, _RowLimit, _NextQuery: TStatement;
@@ -43,7 +43,7 @@ type
     function InternalGetMatchSource: TBaseStatementList; override;
   end;
 
-  { Блок запроса данных }
+  { Р‘Р»РѕРє Р·Р°РїСЂРѕСЃР° РґР°РЅРЅС‹С… }
   TQueryBlock = class(TStatement)
   strict private
     _With, _Select, _Distinct, _From: TEpithet;
@@ -56,7 +56,7 @@ type
     function InternalGetMatchSource: TBaseStatementList; override;
   end;
 
-  { Выражение for update }
+  { Р’С‹СЂР°Р¶РµРЅРёРµ for update }
   TForUpdate = class(TStatement)
   strict private
     _For, _Update, _Of, _Mode: TEpithet;
@@ -67,7 +67,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Выражение order by }
+  { Р’С‹СЂР°Р¶РµРЅРёРµ order by }
   TOrderBy = class(TStatement)
   strict private
     _OrderBy: TEpithet;
@@ -77,7 +77,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Элемент списка order by }
+  { Р­Р»РµРјРµРЅС‚ СЃРїРёСЃРєР° order by }
   TOrderByItem = class(TStatement)
   strict private
     _Expr: TStatement;
@@ -87,7 +87,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Выражение row limit }
+  { Р’С‹СЂР°Р¶РµРЅРёРµ row limit }
   TRowLimit = class(TStatement)
   strict private
     _Offset, _OffsetRows, _Fetch, _First, _Percent, _FetchRows,
@@ -98,7 +98,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Элемент списка with }
+  { Р­Р»РµРјРµРЅС‚ СЃРїРёСЃРєР° with }
   TWithItem = class(TStatement)
   strict private
     _Body: TStatement;
@@ -117,7 +117,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { search clause в factoring }
+  { search clause РІ factoring }
   TFactoringSearch = class(TStatement)
   strict private
     _Search, _Depth, _First, _By, _Set: TEpithet;
@@ -127,7 +127,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { cycle clause в factoring }
+  { cycle clause РІ factoring }
   TFactoringCycle = class(TStatement)
   strict private
     _Cycle, _Set, _Alias, _To, _Default: TEpithet;
@@ -138,7 +138,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Поле в select или аналогичное выражение с алиасом }
+  { РџРѕР»Рµ РІ select РёР»Рё Р°РЅР°Р»РѕРіРёС‡РЅРѕРµ РІС‹СЂР°Р¶РµРЅРёРµ СЃ Р°Р»РёР°СЃРѕРј }
   TAliasedExpression = class(TStatement)
   strict private
     _Expression: TStatement;
@@ -148,13 +148,13 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Список полей в select }
+  { РЎРїРёСЃРѕРє РїРѕР»РµР№ РІ select }
   TAliasedExpressions = class(TCommaList<TAliasedExpression>)
   strict protected
     function Aligned: TAlignMode; override;
   end;
 
-  { Ссылка на таблицу во from }
+  { РЎСЃС‹Р»РєР° РЅР° С‚Р°Р±Р»РёС†Сѓ РІРѕ from }
   TTableReference = class(TStatement)
   strict private
     _Only, _Alias: TEpithet;
@@ -165,7 +165,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция where }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ where }
   TWhere = class(TStatement)
   strict private
     _Where: TEpithet;
@@ -175,7 +175,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция start with / connect by }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ start with / connect by }
   TConnectBy = class(TStatement)
   strict private
     _StartWith, _ConnectBy: TEpithet;
@@ -185,7 +185,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция group by / having }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ group by / having }
   TGroupBy = class(TStatement)
   strict private
     _GroupBy, _Having: TEpithet;
@@ -195,7 +195,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Элемент группировки }
+  { Р­Р»РµРјРµРЅС‚ РіСЂСѓРїРїРёСЂРѕРІРєРё }
   TGroupItem = class(TStatement)
   strict private
     _Expr: TStatement;
@@ -204,7 +204,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция cube либо rollup }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ cube Р»РёР±Рѕ rollup }
   TCubeRollup = class(TStatement)
   strict private
     _Name: TEpithet;
@@ -214,7 +214,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция grouping sets }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ grouping sets }
   TGroupingSets = class(TStatement)
   strict private
     _GroupingSets: TEpithet;
@@ -224,7 +224,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция model }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ model }
   TModel = class(TStatement)
   strict private
     _Model: TEpithet;
@@ -234,7 +234,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция query table expression }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ query table expression }
   TQueryTableExpression = class(TStatement)
   strict private
     _Body: TStatement;
@@ -243,7 +243,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция table collection expression }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ table collection expression }
   TTableCollectionExpression = class(TStatement)
   strict private
     _Table: TEpithet;
@@ -254,7 +254,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция containers }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ containers }
   TContainers = class(TStatement)
   strict private
     _Containers: TEpithet;
@@ -264,7 +264,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция lateral }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ lateral }
   TLateral = class(TStatement)
   strict private
     _Lateral: TEpithet;
@@ -275,7 +275,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция subquery restrictions }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ subquery restrictions }
   TSubqueryRestrictions = class(TStatement)
   strict private
     _With, _Constraint, _Name: TEpithet;
@@ -284,7 +284,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция flashback }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ flashback }
   TFlashback = class(TStatement)
   strict private
     _Versions, _Between, _Scn, _Timestamp, _And, _Period, _For, _ValidTimeColumn,
@@ -295,7 +295,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция pivot }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ pivot }
   TPivot = class(TStatement)
   strict private
     _Pivot, _Xml: TEpithet;
@@ -305,7 +305,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Внутренняя часть конструкции pivot }
+  { Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ С‡Р°СЃС‚СЊ РєРѕРЅСЃС‚СЂСѓРєС†РёРё pivot }
   TPivotRest = class(TStatement)
   strict private
     _Aggregates, _PivotFor, _PivotIn: TStatement;
@@ -314,7 +314,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция pivot for }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ pivot for }
   TPivotFor = class(TStatement)
   strict private
     _For: TEpithet;
@@ -324,7 +324,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция pivot in }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ pivot in }
   TPivotIn = class(TStatement)
   strict private
     _In: TEpithet;
@@ -334,7 +334,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Внутренняя часть конструкции pivot in }
+  { Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ С‡Р°СЃС‚СЊ РєРѕРЅСЃС‚СЂСѓРєС†РёРё pivot in }
   TPivotInRest = class(TStatement)
   strict private
     _Body: TStatement;
@@ -343,7 +343,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция unpivot }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ unpivot }
   TUnpivot = class(TStatement)
   strict private
     _Unpivot, _Include, _Nulls: TEpithet;
@@ -353,7 +353,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Внутренняя часть конструкции unpivot }
+  { Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ С‡Р°СЃС‚СЊ РєРѕРЅСЃС‚СЂСѓРєС†РёРё unpivot }
   TUnpivotRest = class(TStatement)
   strict private
     _Expr, _For, _In: TStatement;
@@ -362,7 +362,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Упоминание таблицы во from }
+  { РЈРїРѕРјРёРЅР°РЅРёРµ С‚Р°Р±Р»РёС†С‹ РІРѕ from }
   TTableViewExpression = class(TStatement)
   strict private
     _Name, _PartitionExtension, _Sample, _Hierarchies: TStatement;
@@ -371,7 +371,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Вторая и последующие таблицы в выражении join }
+  { Р’С‚РѕСЂР°СЏ Рё РїРѕСЃР»РµРґСѓСЋС‰РёРµ С‚Р°Р±Р»РёС†С‹ РІ РІС‹СЂР°Р¶РµРЅРёРё join }
   TJoinedTable = class(TStatement)
   strict private
     _Partition1, _Partition2, _Natural, _Join, _On, _Using: TEpithet;
@@ -381,7 +381,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция row pattern }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ row pattern }
   TRowPattern = class(TStatement)
   strict private
     _MatchRecognize: TEpithet;
@@ -391,7 +391,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция HIERARCHIES }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ HIERARCHIES }
   THierarchies = class(TStatement)
   strict private
     _Hierarchies: TEpithet;
@@ -401,7 +401,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция partition extension }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ partition extension }
   TPartitionExtension = class(TStatement)
   strict private
     _Partition: TEpithet;
@@ -411,7 +411,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция sample }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ sample }
   TSample = class(TStatement)
   strict private
     _Sample, _Block, _Seed: TEpithet;
@@ -421,7 +421,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция into }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ into }
   TInto = class(TStatement)
   strict private
     _Into: TEpithet;
@@ -433,7 +433,7 @@ type
   end;
 
 (*
-  { Внутренняя часть конструкции row pattern }
+  { Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ С‡Р°СЃС‚СЊ РєРѕРЅСЃС‚СЂСѓРєС†РёРё row pattern }
   TRowPatternInternal = class(TStatement)
   strict private
     _Pattern, _Define: TEpithet;
@@ -444,7 +444,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция cell reference в model }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ cell reference РІ model }
   TCellReference = class(TStatement)
   strict private
   strict protected
@@ -452,7 +452,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция return rows в model }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ return rows РІ model }
   TReturnRows = class(TStatement)
   strict private
   strict protected
@@ -460,7 +460,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция reference model в model }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ reference model РІ model }
   TReferenceModel = class(TStatement)
   strict private
   strict protected
@@ -468,7 +468,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция main model в model }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ main model РІ model }
   TMainModel = class(TStatement)
   strict private
   strict protected
@@ -478,7 +478,7 @@ type
 
 (*
 
-  { Конструкция  }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ  }
   T = class(TStatement)
   strict private
   strict protected
@@ -733,14 +733,14 @@ end;
 function TConnectBy.InternalParse: boolean;
 begin
   Result := true;
-  { start with может быть до connect by }
+  { start with РјРѕР¶РµС‚ Р±С‹С‚СЊ РґРѕ connect by }
   _StartWith := Keyword('start with');
   if Assigned(_StartWith) then TExpression.Parse(Self, Source, _StartCondition);
-  { Теперь сам connect by }
+  { РўРµРїРµСЂСЊ СЃР°Рј connect by }
   _ConnectBy := Keyword(['connect by', 'connect by nocycle']);
   if not Assigned(_ConnectBy) then exit(false);
   TExpression.Parse(Self, Source, _ConnectCondition);
-  { И start with может быть после connect by }
+  { Р start with РјРѕР¶РµС‚ Р±С‹С‚СЊ РїРѕСЃР»Рµ connect by }
   if Assigned(_StartWith) then exit;
   _StartWith := Keyword('start with');
   if Assigned(_StartWith) then TExpression.Parse(Self, Source, _StartCondition);

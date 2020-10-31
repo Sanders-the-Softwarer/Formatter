@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                         Базовая реализация принтера                        //
+//                         Р‘Р°Р·РѕРІР°СЏ СЂРµР°Р»РёР·Р°С†РёСЏ РїСЂРёРЅС‚РµСЂР°                        //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -10,10 +10,10 @@
 
 unit BasePrinter;
 
-{ ----- Примечания -------------------------------------------------------------
+{ ----- РџСЂРёРјРµС‡Р°РЅРёСЏ -------------------------------------------------------------
 
-  Этот модуль необходимо отделить от Printers_ для того, чтобы разрушить
-  циклическую ссылку между ним и Statements.
+  Р­С‚РѕС‚ РјРѕРґСѓР»СЊ РЅРµРѕР±С…РѕРґРёРјРѕ РѕС‚РґРµР»РёС‚СЊ РѕС‚ Printers_ РґР»СЏ С‚РѕРіРѕ, С‡С‚РѕР±С‹ СЂР°Р·СЂСѓС€РёС‚СЊ
+  С†РёРєР»РёС‡РµСЃРєСѓСЋ СЃСЃС‹Р»РєСѓ РјРµР¶РґСѓ РЅРёРј Рё Statements.
 
 ------------------------------------------------------------------------------ }
 
@@ -22,7 +22,7 @@ interface
 uses SysUtils, Printer, Statements, Tokens, System.Generics.Collections;
 
 type
-  { Базовая (пустая) реализация принтера }
+  { Р‘Р°Р·РѕРІР°СЏ (РїСѓСЃС‚Р°СЏ) СЂРµР°Р»РёР·Р°С†РёСЏ РїСЂРёРЅС‚РµСЂР° }
   TBasePrinter = class(TPrinter)
   public
     procedure BeginPrint; override;
@@ -49,27 +49,27 @@ implementation
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                   Дефолтовая (пустая) реализация принтера                  //
+//                   Р”РµС„РѕР»С‚РѕРІР°СЏ (РїСѓСЃС‚Р°СЏ) СЂРµР°Р»РёР·Р°С†РёСЏ РїСЂРёРЅС‚РµСЂР°                  //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
 procedure TBasePrinter.BeginPrint;
 begin
-  { Вызываем Clear и больше ничего не делаем }
+  { Р’С‹Р·С‹РІР°РµРј Clear Рё Р±РѕР»СЊС€Рµ РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
   Clear;
 end;
 
 procedure TBasePrinter.Clear;
 begin
-  { ничего не делаем }
+  { РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
 end;
 
 procedure TBasePrinter.EndPrint;
 begin
-  { ничего не делаем }
+  { РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
 end;
 
-{ Разбиваем PrintItem на PrintToken и PrintStatement }
+{ Р Р°Р·Р±РёРІР°РµРј PrintItem РЅР° PrintToken Рё PrintStatement }
 procedure TBasePrinter.PrintItem(AItem: TObject);
 begin
   if AItem is TToken then
@@ -80,22 +80,22 @@ end;
 
 procedure TBasePrinter.PrintToken(AToken: TToken);
 begin
-  { ничего не делаем }
+  { РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
 end;
 
 procedure TBasePrinter.PrintSpecialComment(AValue: string);
 begin
-  { ничего не делаем }
+  { РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
 end;
 
 procedure TBasePrinter.ControlChanged;
 begin
-  { ничего не делаем }
+  { РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
 end;
 
 procedure TBasePrinter.SyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
 begin
-  { ничего не делаем }
+  { РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
 end;
 
 procedure TBasePrinter.PrintStatement(AStatement: TStatement);
@@ -105,37 +105,37 @@ end;
 
 procedure TBasePrinter.Indent;
 begin
-  { ничего не делаем }
+  { РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
 end;
 
 procedure TBasePrinter.Undent;
 begin
-  { ничего не делаем }
+  { РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
 end;
 
 procedure TBasePrinter.PushIndent;
 begin
-  { ничего не делаем }
+  { РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
 end;
 
 procedure TBasePrinter.PopIndent;
 begin
-  { ничего не делаем }
+  { РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
 end;
 
 procedure TBasePrinter.NextLine;
 begin
-  { ничего не делаем }
+  { РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
 end;
 
 procedure TBasePrinter.CancelNextLine;
 begin
-  { ничего не делаем }
+  { РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
 end;
 
 procedure TBasePrinter.SupressNextLine;
 begin
-  { ничего не делаем }
+  { РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
 end;
 
 function TBasePrinter.GetText: string;

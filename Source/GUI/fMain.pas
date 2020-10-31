@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//              Главная и единственная форма тестового приложения             //
+//              Р“Р»Р°РІРЅР°СЏ Рё РµРґРёРЅСЃС‚РІРµРЅРЅР°СЏ С„РѕСЂРјР° С‚РµСЃС‚РѕРІРѕРіРѕ РїСЂРёР»РѕР¶РµРЅРёСЏ             //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -10,23 +10,23 @@
 
 unit fMain;
 
-{ ----- Примечания -------------------------------------------------------------
+{ ----- РџСЂРёРјРµС‡Р°РЅРёСЏ -------------------------------------------------------------
 
-  Форма синхронизирует положение курсора в полях входного текста и визуальных
-  представлениях различных принтеров так, чтобы они по возможности указывали
-  на одну и ту же лексему. Для этого форму и принтеры связывает механизм
+  Р¤РѕСЂРјР° СЃРёРЅС…СЂРѕРЅРёР·РёСЂСѓРµС‚ РїРѕР»РѕР¶РµРЅРёРµ РєСѓСЂСЃРѕСЂР° РІ РїРѕР»СЏС… РІС…РѕРґРЅРѕРіРѕ С‚РµРєСЃС‚Р° Рё РІРёР·СѓР°Р»СЊРЅС‹С…
+  РїСЂРµРґСЃС‚Р°РІР»РµРЅРёСЏС… СЂР°Р·Р»РёС‡РЅС‹С… РїСЂРёРЅС‚РµСЂРѕРІ С‚Р°Рє, С‡С‚РѕР±С‹ РѕРЅРё РїРѕ РІРѕР·РјРѕР¶РЅРѕСЃС‚Рё СѓРєР°Р·С‹РІР°Р»Рё
+  РЅР° РѕРґРЅСѓ Рё С‚Сѓ Р¶Рµ Р»РµРєСЃРµРјСѓ. Р”Р»СЏ СЌС‚РѕРіРѕ С„РѕСЂРјСѓ Рё РїСЂРёРЅС‚РµСЂС‹ СЃРІСЏР·С‹РІР°РµС‚ РјРµС…Р°РЅРёР·Рј
   SyncNotification.
 
-  Компонент TMemo не умеет оповещать о навигации по тексту, поэтому форма
-  в таймере проверяет положение каретки, и если оно изменилось - инициирует
-  синхронизацию.
+  РљРѕРјРїРѕРЅРµРЅС‚ TMemo РЅРµ СѓРјРµРµС‚ РѕРїРѕРІРµС‰Р°С‚СЊ Рѕ РЅР°РІРёРіР°С†РёРё РїРѕ С‚РµРєСЃС‚Сѓ, РїРѕСЌС‚РѕРјСѓ С„РѕСЂРјР°
+  РІ С‚Р°Р№РјРµСЂРµ РїСЂРѕРІРµСЂСЏРµС‚ РїРѕР»РѕР¶РµРЅРёРµ РєР°СЂРµС‚РєРё, Рё РµСЃР»Рё РѕРЅРѕ РёР·РјРµРЅРёР»РѕСЃСЊ - РёРЅРёС†РёРёСЂСѓРµС‚
+  СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёСЋ.
 
 ------------------------------------------------------------------------------ }
 
 interface
 
 uses
-  Tokens { должен идти до StdCtrls, чтобы TLabel не мешала загрузке формы },
+  Tokens { РґРѕР»Р¶РµРЅ РёРґС‚Рё РґРѕ StdCtrls, С‡С‚РѕР±С‹ TLabel РЅРµ РјРµС€Р°Р»Р° Р·Р°РіСЂСѓР·РєРµ С„РѕСЂРјС‹ },
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, Printer,
   Vcl.ExtCtrls, Vcl.Samples.Spin, Controller, Streams, Statements, Tokenizer;
@@ -126,7 +126,7 @@ implementation
 
 uses GUIPrinters;
 
-{ Приведение переносов строк к стандартному виду }
+{ РџСЂРёРІРµРґРµРЅРёРµ РїРµСЂРµРЅРѕСЃРѕРІ СЃС‚СЂРѕРє Рє СЃС‚Р°РЅРґР°СЂС‚РЅРѕРјСѓ РІРёРґСѓ }
 function TFormMain.CorrectCRLF: boolean;
 var Src, Dest: string;
 begin
@@ -138,11 +138,11 @@ begin
   if Result then edSrc.Text := Dest;
 end;
 
-{ Подготовка и распечатка форматированного текста }
+{ РџРѕРґРіРѕС‚РѕРІРєР° Рё СЂР°СЃРїРµС‡Р°С‚РєР° С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРЅРѕРіРѕ С‚РµРєСЃС‚Р° }
 procedure TFormMain.UpdateData;
 begin
   FreeAndNil(StatementStream);
-  { Скопируем настройки }
+  { РЎРєРѕРїРёСЂСѓРµРј РЅР°СЃС‚СЂРѕР№РєРё }
   if not IntoUpdateSettings then
   begin
     Settings.DeclarationSingleLineParamLimit := edDeclarationSingleLineParamLimit.Value;
@@ -164,17 +164,17 @@ begin
     Settings.BeautifyLongOperands            := checkLongOperands.Checked;
     Settings.PreferredExpressionLength       := edPreferredExpressionLength.Value;
   end;
-  { Создадим потоки }
+  { РЎРѕР·РґР°РґРёРј РїРѕС‚РѕРєРё }
   MinTokenStream  := Controller.MakeMinimalTokenStream(edSrc.Text);
   AdvTokenStream  := Controller.MakeAdvancedTokenStream(MinTokenStream);
   StatementStream := Controller.MakeStatementStream(AdvTokenStream, Settings);
-  { Напечатаем данные }
+  { РќР°РїРµС‡Р°С‚Р°РµРј РґР°РЅРЅС‹Рµ }
   try
     StatementStream.PrintAll(ResultPrinter);
   except
     on E: Exception do Application.ShowException(E);
   end;
-  { Даже если разбор завершается ошибкой, выведем сформированные части данных в другие принтеры }
+  { Р”Р°Р¶Рµ РµСЃР»Рё СЂР°Р·Р±РѕСЂ Р·Р°РІРµСЂС€Р°РµС‚СЃСЏ РѕС€РёР±РєРѕР№, РІС‹РІРµРґРµРј СЃС„РѕСЂРјРёСЂРѕРІР°РЅРЅС‹Рµ С‡Р°СЃС‚Рё РґР°РЅРЅС‹С… РІ РґСЂСѓРіРёРµ РїСЂРёРЅС‚РµСЂС‹ }
   try
     StatementStream.PrintAll(SyntaxTreePrinter);
   except
@@ -183,32 +183,32 @@ begin
     StatementStream.PrintAll(AlarmStatementPrinter);
   except
   end;
-  { Сюда печатаем из MinTokenStream, чтобы увидеть лексемы, выпавшие при печати из синтаксического анализа }
+  { РЎСЋРґР° РїРµС‡Р°С‚Р°РµРј РёР· MinTokenStream, С‡С‚РѕР±С‹ СѓРІРёРґРµС‚СЊ Р»РµРєСЃРµРјС‹, РІС‹РїР°РІС€РёРµ РїСЂРё РїРµС‡Р°С‚Рё РёР· СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєРѕРіРѕ Р°РЅР°Р»РёР·Р° }
   MinTokenStream.PrintAll(TokenizerPrinter);
   MinTokenStream.PrintAll(AlarmTokenPrinter);
-  { Толкнём синхронизацию }
+  { РўРѕР»РєРЅС‘Рј СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёСЋ }
   PrevSrcCaret := -1;
 end;
 
-{ Рассылка оповещений для синхронизации движения по различным представлениям текста }
+{ Р Р°СЃСЃС‹Р»РєР° РѕРїРѕРІРµС‰РµРЅРёР№ РґР»СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё РґРІРёР¶РµРЅРёСЏ РїРѕ СЂР°Р·Р»РёС‡РЅС‹Рј РїСЂРµРґСЃС‚Р°РІР»РµРЅРёСЏРј С‚РµРєСЃС‚Р° }
 procedure TFormMain.SyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
 var
   Caret: integer;
   Token: TToken absolute AObject;
   Statement: TStatement absolute AObject;
 begin
-  { Обновим панель отладочной информации }
+  { РћР±РЅРѕРІРёРј РїР°РЅРµР»СЊ РѕС‚Р»Р°РґРѕС‡РЅРѕР№ РёРЅС„РѕСЂРјР°С†РёРё }
   if AObject is TToken then
     UpdateDebugInfo(Token)
   else if AObject is TStatement then
     UpdateDebugInfo(Statement)
   else
     edDebugInfo.Text := '';
-  { Заблокируем возможность зацикливания на оповещениях }
+  { Р—Р°Р±Р»РѕРєРёСЂСѓРµРј РІРѕР·РјРѕР¶РЅРѕСЃС‚СЊ Р·Р°С†РёРєР»РёРІР°РЅРёСЏ РЅР° РѕРїРѕРІРµС‰РµРЅРёСЏС… }
   if IntoSync then exit;
   try
     IntoSync := true;
-    { Если указана лексема - сигнал от принтера, синхронизируем исходник }
+    { Р•СЃР»Рё СѓРєР°Р·Р°РЅР° Р»РµРєСЃРµРјР° - СЃРёРіРЅР°Р» РѕС‚ РїСЂРёРЅС‚РµСЂР°, СЃРёРЅС…СЂРѕРЅРёР·РёСЂСѓРµРј РёСЃС…РѕРґРЅРёРє }
     if AObject is TToken then
     begin
       CoordsToCaret(edSrc, Token.Line, Token.Col, Caret);
@@ -216,9 +216,9 @@ begin
       edSrc.SelLength := Token.Value.Length;
       PrevSrcCaret := Caret;
     end;
-    { Принтер лексем известим всегда - для срабатывания обновления отладочной информации }
+    { РџСЂРёРЅС‚РµСЂ Р»РµРєСЃРµРј РёР·РІРµСЃС‚РёРј РІСЃРµРіРґР° - РґР»СЏ СЃСЂР°Р±Р°С‚С‹РІР°РЅРёСЏ РѕР±РЅРѕРІР»РµРЅРёСЏ РѕС‚Р»Р°РґРѕС‡РЅРѕР№ РёРЅС„РѕСЂРјР°С†РёРё }
     TokenizerPrinter.SyncNotification(AObject, ALine, ACol, ALen);
-    { Известим активный принтер, прочие для скорости оставим }
+    { РР·РІРµСЃС‚РёРј Р°РєС‚РёРІРЅС‹Р№ РїСЂРёРЅС‚РµСЂ, РїСЂРѕС‡РёРµ РґР»СЏ СЃРєРѕСЂРѕСЃС‚Рё РѕСЃС‚Р°РІРёРј }
     if pgDest.ActivePage = tabParser then SyntaxTreePrinter.SyncNotification(AObject, ALine, ACol, ALen);
     if pgDest.ActivePage = tabResult then ResultPrinter.SyncNotification(AObject, ALine, ACol, ALen);
     if pgDest.ActivePage = tabAlarmToken then AlarmTokenPrinter.SyncNotification(AObject, ALine, ACol, ALen);
@@ -228,7 +228,7 @@ begin
   end;
 end;
 
-{ При создании формы создаются принтеры и настройки, а также настраиваются оповещения }
+{ РџСЂРё СЃРѕР·РґР°РЅРёРё С„РѕСЂРјС‹ СЃРѕР·РґР°СЋС‚СЃСЏ РїСЂРёРЅС‚РµСЂС‹ Рё РЅР°СЃС‚СЂРѕР№РєРё, Р° С‚Р°РєР¶Рµ РЅР°СЃС‚СЂР°РёРІР°СЋС‚СЃСЏ РѕРїРѕРІРµС‰РµРЅРёСЏ }
 procedure TFormMain.FormShow(Sender: TObject);
 begin
   Self.WindowState  := wsMaximized;
@@ -264,20 +264,20 @@ begin
   end;
 end;
 
-{ При синхронизации обновляется только активная страница, поэтому при смене страницы
-  принудительно инициируем синхронизацию }
+{ РџСЂРё СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё РѕР±РЅРѕРІР»СЏРµС‚СЃСЏ С‚РѕР»СЊРєРѕ Р°РєС‚РёРІРЅР°СЏ СЃС‚СЂР°РЅРёС†Р°, РїРѕСЌС‚РѕРјСѓ РїСЂРё СЃРјРµРЅРµ СЃС‚СЂР°РЅРёС†С‹
+  РїСЂРёРЅСѓРґРёС‚РµР»СЊРЅРѕ РёРЅРёС†РёРёСЂСѓРµРј СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёСЋ }
 procedure TFormMain.pgDestChange(Sender: TObject);
 begin
   PrevSrcCaret := -1;
 end;
 
-{ Реакция на действия, требующие заново напечатать текст }
+{ Р РµР°РєС†РёСЏ РЅР° РґРµР№СЃС‚РІРёСЏ, С‚СЂРµР±СѓСЋС‰РёРµ Р·Р°РЅРѕРІРѕ РЅР°РїРµС‡Р°С‚Р°С‚СЊ С‚РµРєСЃС‚ }
 procedure TFormMain.UpdateRequired(Sender: TObject);
 begin
   if not CorrectCRLF then UpdateData;
 end;
 
-{ Оповещение принтера о движении пользователя по списку непропечатанных лексем }
+{ РћРїРѕРІРµС‰РµРЅРёРµ РїСЂРёРЅС‚РµСЂР° Рѕ РґРІРёР¶РµРЅРёРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РїРѕ СЃРїРёСЃРєСѓ РЅРµРїСЂРѕРїРµС‡Р°С‚Р°РЅРЅС‹С… Р»РµРєСЃРµРј }
 procedure TFormMain.edAlarmTokenClick(Sender: TObject);
 begin
   AlarmTokenPrinter.ControlChanged;
@@ -288,25 +288,25 @@ begin
   CheckReformatAutoTestResult;
 end;
 
-{ Оповещение принтера о движении пользователя по списку непропечатанных лексем }
+{ РћРїРѕРІРµС‰РµРЅРёРµ РїСЂРёРЅС‚РµСЂР° Рѕ РґРІРёР¶РµРЅРёРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РїРѕ СЃРїРёСЃРєСѓ РЅРµРїСЂРѕРїРµС‡Р°С‚Р°РЅРЅС‹С… Р»РµРєСЃРµРј }
 procedure TFormMain.edAlarmStatementClick(Sender: TObject);
 begin
   AlarmStatementPrinter.ControlChanged;
 end;
 
-{ Оповещение принтера о движении пользователя по списку лексем }
+{ РћРїРѕРІРµС‰РµРЅРёРµ РїСЂРёРЅС‚РµСЂР° Рѕ РґРІРёР¶РµРЅРёРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РїРѕ СЃРїРёСЃРєСѓ Р»РµРєСЃРµРј }
 procedure TFormMain.edTokenizerClick(Sender: TObject);
 begin
   TokenizerPrinter.ControlChanged;
 end;
 
-{ Оповещение принтера о движении пользователя по синтаксическому дереву }
+{ РћРїРѕРІРµС‰РµРЅРёРµ РїСЂРёРЅС‚РµСЂР° Рѕ РґРІРёР¶РµРЅРёРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РїРѕ СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєРѕРјСѓ РґРµСЂРµРІСѓ }
 procedure TFormMain.treeParserChange(Sender: TObject; Node: TTreeNode);
 begin
   SyntaxTreePrinter.ControlChanged;
 end;
 
-{ Оповещение о движении пользователя по исходникам либо форматированному выводу }
+{ РћРїРѕРІРµС‰РµРЅРёРµ Рѕ РґРІРёР¶РµРЅРёРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РїРѕ РёСЃС…РѕРґРЅРёРєР°Рј Р»РёР±Рѕ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРЅРѕРјСѓ РІС‹РІРѕРґСѓ }
 procedure TFormMain.tmMemoTimer(Sender: TObject);
 var
   Line, Col: integer;
@@ -326,7 +326,7 @@ begin
   end;
 end;
 
-{ Уничтожение объектов, созданных формой, при завершении приложения }
+{ РЈРЅРёС‡С‚РѕР¶РµРЅРёРµ РѕР±СЉРµРєС‚РѕРІ, СЃРѕР·РґР°РЅРЅС‹С… С„РѕСЂРјРѕР№, РїСЂРё Р·Р°РІРµСЂС€РµРЅРёРё РїСЂРёР»РѕР¶РµРЅРёСЏ }
 procedure TFormMain.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(TokenizerPrinter);
@@ -338,13 +338,13 @@ begin
   FreeAndNil(Settings);
 end;
 
-{ Настройка размеров при ресайзе окна }
+{ РќР°СЃС‚СЂРѕР№РєР° СЂР°Р·РјРµСЂРѕРІ РїСЂРё СЂРµСЃР°Р№Р·Рµ РѕРєРЅР° }
 procedure TFormMain.FormResize(Sender: TObject);
 begin
   panSrc.Width := (Self.ClientWidth - spVert.Width) div 2;
 end;
 
-{ Пересчёт координат строка-колонка в положение каретки }
+{ РџРµСЂРµСЃС‡С‘С‚ РєРѕРѕСЂРґРёРЅР°С‚ СЃС‚СЂРѕРєР°-РєРѕР»РѕРЅРєР° РІ РїРѕР»РѕР¶РµРЅРёРµ РєР°СЂРµС‚РєРё }
 procedure TFormMain.CoordsToCaret(Memo: TMemo; const Line, Col: integer; out Pos: integer);
 var i: integer;
 begin
@@ -353,7 +353,7 @@ begin
   Inc(Pos, Col - 1);
 end;
 
-{ Пересчёт положения каретки в координаты строка-колонка }
+{ РџРµСЂРµСЃС‡С‘С‚ РїРѕР»РѕР¶РµРЅРёСЏ РєР°СЂРµС‚РєРё РІ РєРѕРѕСЂРґРёРЅР°С‚С‹ СЃС‚СЂРѕРєР°-РєРѕР»РѕРЅРєР° }
 procedure TFormMain.CaretToCoords(Memo: TMemo; out Line, Col: integer; Pos: integer);
 begin
   Line := 1;
@@ -365,32 +365,32 @@ begin
   Col := Pos + 1;
 end;
 
-{ Обновление дерева как реакция на перещёлкивание чекбокса }
+{ РћР±РЅРѕРІР»РµРЅРёРµ РґРµСЂРµРІР° РєР°Рє СЂРµР°РєС†РёСЏ РЅР° РїРµСЂРµС‰С‘Р»РєРёРІР°РЅРёРµ С‡РµРєР±РѕРєСЃР° }
 procedure TFormMain.checkShowTransparentClick(Sender: TObject);
 begin
   UpdateData;
 end;
 
-{ Показ панели отладочной информации }
+{ РџРѕРєР°Р· РїР°РЅРµР»Рё РѕС‚Р»Р°РґРѕС‡РЅРѕР№ РёРЅС„РѕСЂРјР°С†РёРё }
 procedure TFormMain.checkShowDebugInfoClick(Sender: TObject);
 begin
   edDebugInfo.Visible := checkShowDebugInfo.Checked;
   spDebugInfo.Visible := checkShowDebugInfo.Checked;
 end;
 
-{ Вывод отладочной информации по лексеме }
+{ Р’С‹РІРѕРґ РѕС‚Р»Р°РґРѕС‡РЅРѕР№ РёРЅС„РѕСЂРјР°С†РёРё РїРѕ Р»РµРєСЃРµРјРµ }
 procedure TFormMain.UpdateDebugInfo(AToken: TToken);
 begin
   edDebugInfo.Text := StringReplace(AToken.DebugInfo, #13, #13#10, [rfReplaceAll]);
 end;
 
-{ Вывод отладочной информации по синтаксической конструкции }
+{ Р’С‹РІРѕРґ РѕС‚Р»Р°РґРѕС‡РЅРѕР№ РёРЅС„РѕСЂРјР°С†РёРё РїРѕ СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєРѕР№ РєРѕРЅСЃС‚СЂСѓРєС†РёРё }
 procedure TFormMain.UpdateDebugInfo(AStatement: TStatement);
 begin
   edDebugInfo.Text := StringReplace(AStatement.DebugInfo, #13, #13#10, [rfReplaceAll]);
 end;
 
-{ Переформатирование результата автотеста, вставленного в поле редактирования }
+{ РџРµСЂРµС„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёРµ СЂРµР·СѓР»СЊС‚Р°С‚Р° Р°РІС‚РѕС‚РµСЃС‚Р°, РІСЃС‚Р°РІР»РµРЅРЅРѕРіРѕ РІ РїРѕР»Рµ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ }
 procedure TFormMain.CheckReformatAutoTestResult;
 var
   Expected, Actual, i: integer;
@@ -398,11 +398,11 @@ begin
   with TStringList.Create do
   try
     Text := edCompareAutoTestResult.Text;
-    { Найдём опорные строки вывода (и среди прочего, спасёмся от зацикливания)}
+    { РќР°Р№РґС‘Рј РѕРїРѕСЂРЅС‹Рµ СЃС‚СЂРѕРєРё РІС‹РІРѕРґР° (Рё СЃСЂРµРґРё РїСЂРѕС‡РµРіРѕ, СЃРїР°СЃС‘РјСЃСЏ РѕС‚ Р·Р°С†РёРєР»РёРІР°РЅРёСЏ)}
     Expected := IndexOf('expected: <');
     Actual := IndexOf('> but was: <');
     if (Expected < 0) or (Actual < 0) then exit;
-    { Грохнем ненужные строки }
+    { Р“СЂРѕС…РЅРµРј РЅРµРЅСѓР¶РЅС‹Рµ СЃС‚СЂРѕРєРё }
     for i := Expected downto 0 do Delete(0);
     Dec(Actual, Expected + 1);
     repeat
@@ -415,9 +415,9 @@ begin
     until i < 0;
     Delete(Count - 1);
     Delete(Actual);
-    { И наконец, перемешаем их }
+    { Р РЅР°РєРѕРЅРµС†, РїРµСЂРµРјРµС€Р°РµРј РёС… }
     for i := 0 to Actual - 1 do Move(Actual + i, 2 * i + 1);
-    { Результат вернём обратно }
+    { Р РµР·СѓР»СЊС‚Р°С‚ РІРµСЂРЅС‘Рј РѕР±СЂР°С‚РЅРѕ }
     edCompareAutoTestResult.Text := Text;
   finally
     Free;

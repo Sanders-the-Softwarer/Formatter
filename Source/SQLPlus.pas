@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                    Синтаксические конструкции SQL*Plus                     //
+//                    РЎРёРЅС‚Р°РєСЃРёС‡РµСЃРєРёРµ РєРѕРЅСЃС‚СЂСѓРєС†РёРё SQL*Plus                     //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -17,22 +17,22 @@ uses SysUtils, Statements, Streams, Tokens, Printer, Utils, Contnrs,
 
 type
 
-  { Парсер команд SQL*Plus }
+  { РџР°СЂСЃРµСЂ РєРѕРјР°РЅРґ SQL*Plus }
   SQLPlusParser = class
   public
     class function Parse(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
   end;
 
-  { Базовый класс команд SQL*Plus }
+  { Р‘Р°Р·РѕРІС‹Р№ РєР»Р°СЃСЃ РєРѕРјР°РЅРґ SQL*Plus }
   TSQLPlusStatement = class(TSemicolonStatement)
   strict protected
-    { Считывание лексемы "символы до конца строки" }
+    { РЎС‡РёС‚С‹РІР°РЅРёРµ Р»РµРєСЃРµРјС‹ "СЃРёРјРІРѕР»С‹ РґРѕ РєРѕРЅС†Р° СЃС‚СЂРѕРєРё" }
     function SqlPlusString: TTerminal;
   public
     function SameTypeAligned: TAlignMode; override;
   end;
 
-  { Команда clear }
+  { РљРѕРјР°РЅРґР° clear }
   TClear = class(TSQLPlusStatement)
   strict private
     _Clear: TEpithet;
@@ -41,7 +41,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Команда whenever }
+  { РљРѕРјР°РЅРґР° whenever }
   TWhenever = class(TSQLPlusStatement)
   strict private
     _Whenever, _Condition, _Action, _Param1, _Param2: TEpithet;
@@ -53,7 +53,7 @@ type
     function Grouping: TStatementClass; override;
   end;
 
-  { Команда define }
+  { РљРѕРјР°РЅРґР° define }
   TDefine = class(TSQLPlusStatement)
   strict private
     _Define, _Target: TEpithet;
@@ -66,7 +66,7 @@ type
     function Grouping: TStatementClass; override;
   end;
 
-  { Команда @ }
+  { РљРѕРјР°РЅРґР° @ }
   TAt = class(TSQLPlusStatement)
   strict private
     _At, _FileName: TTerminal;
@@ -77,7 +77,7 @@ type
     function Grouping: TStatementClass; override;
   end;
 
-  { Команда spool }
+  { РљРѕРјР°РЅРґР° spool }
   TSpool = class(TSQLPlusStatement)
   strict private
     _Spool: TEpithet;
@@ -87,7 +87,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Команда call }
+  { РљРѕРјР°РЅРґР° call }
   TCall = class(TSQLPlusStatement)
   strict private
     _Call: TEpithet;
@@ -99,7 +99,7 @@ type
     function Grouping: TStatementClass; override;
   end;
 
-  { Анонимный блок в SQL*Plus }
+  { РђРЅРѕРЅРёРјРЅС‹Р№ Р±Р»РѕРє РІ SQL*Plus }
   TStandaloneAnonymousBlock = class(TStatement)
   strict private
     _Block: TStatement;
@@ -109,7 +109,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Команда CHCP }
+  { РљРѕРјР°РЅРґР° CHCP }
   TChcp = class(TSQLPlusStatement)
   strict private
     _Chcp: TEpithet;
@@ -119,7 +119,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Команда connect }
+  { РљРѕРјР°РЅРґР° connect }
   TConnect = class(TSQLPlusStatement)
   strict private
     _Connect: TEpithet;
@@ -157,10 +157,10 @@ begin
   _Whenever := Keyword('whenever');
   if not Assigned(_Whenever) then exit(false);
   _Condition := Keyword(['sqlerror', 'oserror']);
-  { В случае continue }
+  { Р’ СЃР»СѓС‡Р°Рµ continue }
   _Action := Keyword('continue');
   if Assigned(_Action) then _Param1 := Keyword(['commit', 'rollback', 'none']);
-  { В случае exit }
+  { Р’ СЃР»СѓС‡Р°Рµ exit }
   if not Assigned(_Action) then
   begin
     _Action := Keyword('exit');
@@ -359,7 +359,7 @@ var
   P: TMark;
 begin
   Comment := nil;
-  { Выделим лексемы до конца строки и сложим их в текстовую строку }
+  { Р’С‹РґРµР»РёРј Р»РµРєСЃРµРјС‹ РґРѕ РєРѕРЅС†Р° СЃС‚СЂРѕРєРё Рё СЃР»РѕР¶РёРј РёС… РІ С‚РµРєСЃС‚РѕРІСѓСЋ СЃС‚СЂРѕРєСѓ }
   P := Source.Mark;
   FirstToken := NextToken;
   CurToken := FirstToken;
@@ -368,8 +368,8 @@ begin
   begin
     Text := Text + StringOfChar(' ', CurToken.Col - FirstToken.Col - Length(Text)) + CurToken.InitialValue;
     P := Source.Mark;
-    CurToken.Printed := true; { лексема печатается в составе другой, поэтому гасим предупреждение }
-    { Лексема не печатается, поэтому перепривязываем комментарии }
+    CurToken.Printed := true; { Р»РµРєСЃРµРјР° РїРµС‡Р°С‚Р°РµС‚СЃСЏ РІ СЃРѕСЃС‚Р°РІРµ РґСЂСѓРіРѕР№, РїРѕСЌС‚РѕРјСѓ РіР°СЃРёРј РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ }
+    { Р›РµРєСЃРµРјР° РЅРµ РїРµС‡Р°С‚Р°РµС‚СЃСЏ, РїРѕСЌС‚РѕРјСѓ РїРµСЂРµРїСЂРёРІСЏР·С‹РІР°РµРј РєРѕРјРјРµРЅС‚Р°СЂРёРё }
     if Assigned(CurToken.CommentAfter) then
     begin
       if Assigned(Comment)
@@ -377,22 +377,22 @@ begin
         else Comment := CurToken.CommentAfter;
       CurToken.CommentAfter := nil;
     end;
-    { Идём дальше }
+    { РРґС‘Рј РґР°Р»СЊС€Рµ }
     CurToken := NextToken;
   end;
   Source.Restore(P);
-  { Теперь сформируем лексему из этой строки, она и будет результатом }
+  { РўРµРїРµСЂСЊ СЃС„РѕСЂРјРёСЂСѓРµРј Р»РµРєСЃРµРјСѓ РёР· СЌС‚РѕР№ СЃС‚СЂРѕРєРё, РѕРЅР° Рё Р±СѓРґРµС‚ СЂРµР·СѓР»СЊС‚Р°С‚РѕРј }
   Result := TTerminal.Create(Text, FirstToken.Line, FirstToken.Col);
   ReplaceToken(FirstToken, Result);
   Result.CommentAfter := Comment;
 end;
 
 initialization
-  { Команды SQL*Plus не разделяются точками с запятой, поэтому нужно явно
-    назвать их ключевыми словами, в противном случае легко случится так,
-    что начало следующей команды будет распознано как аргумент предыдущей
-    whenever или подобной. По этой же причине здесь нужны стартовые
-    ключевые слова основных SQL-комад }
+  { РљРѕРјР°РЅРґС‹ SQL*Plus РЅРµ СЂР°Р·РґРµР»СЏСЋС‚СЃСЏ С‚РѕС‡РєР°РјРё СЃ Р·Р°РїСЏС‚РѕР№, РїРѕСЌС‚РѕРјСѓ РЅСѓР¶РЅРѕ СЏРІРЅРѕ
+    РЅР°Р·РІР°С‚СЊ РёС… РєР»СЋС‡РµРІС‹РјРё СЃР»РѕРІР°РјРё, РІ РїСЂРѕС‚РёРІРЅРѕРј СЃР»СѓС‡Р°Рµ Р»РµРіРєРѕ СЃР»СѓС‡РёС‚СЃСЏ С‚Р°Рє,
+    С‡С‚Рѕ РЅР°С‡Р°Р»Рѕ СЃР»РµРґСѓСЋС‰РµР№ РєРѕРјР°РЅРґС‹ Р±СѓРґРµС‚ СЂР°СЃРїРѕР·РЅР°РЅРѕ РєР°Рє Р°СЂРіСѓРјРµРЅС‚ РїСЂРµРґС‹РґСѓС‰РµР№
+    whenever РёР»Рё РїРѕРґРѕР±РЅРѕР№. РџРѕ СЌС‚РѕР№ Р¶Рµ РїСЂРёС‡РёРЅРµ Р·РґРµСЃСЊ РЅСѓР¶РЅС‹ СЃС‚Р°СЂС‚РѕРІС‹Рµ
+    РєР»СЋС‡РµРІС‹Рµ СЃР»РѕРІР° РѕСЃРЅРѕРІРЅС‹С… SQL-РєРѕРјР°Рґ }
   RegisterOrphan(TSQLPlusStatement);
   RegisterKeywords(TSQLPlusStatement, ['alter', 'begin', 'call', 'chcp',
     'connect', 'clear', 'create', 'declare', 'exec', 'set', 'define', 'spool',
