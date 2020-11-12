@@ -54,7 +54,8 @@ uses
   Utils in 'Source\Utils.pas',
   UnderConstruction in 'Test\UnderConstruction.pas',
   Session in 'Source\DDL\Session.pas',
-  Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas';
+  Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas',
+  Stats in 'Source\Core\Stats.pas';
 
 {$R *.RES}
 

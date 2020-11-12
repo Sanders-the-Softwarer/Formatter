@@ -147,6 +147,7 @@
         <DCCReference Include="Source\DDL\AlterPackageProcedureFunction.pas"/>
         <DCCReference Include="Source\SQL_Plus\Exit_SQLPlus.pas"/>
         <DCCReference Include="Source\DDL\Grant.pas"/>
+        <DCCReference Include="Source\Core\Stats.pas"/>
         <None Include="Profiling\AQtimeModule2.aqt"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>

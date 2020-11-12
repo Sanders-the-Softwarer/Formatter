@@ -237,7 +237,7 @@ function AlignMode(ASetting: boolean): TAlignMode;
 
 implementation
 
-uses Keywords;
+uses Keywords, Stats;
 
 { Конвертация настройки в TAlignMode }
 function AlignMode(ASetting: boolean): TAlignMode;
@@ -269,6 +269,7 @@ var
   Candidate: TStatementClass;
   Candidates: TArray<TStatementClass>;
 begin
+  if GetIsDebug then Statistics.Increase(Format('Parse(%s)', [ClassName]));
   AResult := nil;
   SavedPosition := Tokens.Mark;
   Candidates := Self.Candidates(AParent);

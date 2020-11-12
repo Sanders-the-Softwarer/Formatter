@@ -37,7 +37,8 @@ uses
   Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas',
   Exit_SQLPlus in 'Source\SQL_Plus\Exit_SQLPlus.pas',
   AlterPackageProcedureFunction in 'Source\DDL\AlterPackageProcedureFunction.pas',
-  Grant in 'Source\DDL\Grant.pas';
+  Grant in 'Source\DDL\Grant.pas',
+  Stats in 'Source\Core\Stats.pas';
 
 const
   Desc  = 'Formatter';

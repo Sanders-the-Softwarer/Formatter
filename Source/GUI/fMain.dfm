@@ -155,13 +155,38 @@ object FormMain: TFormMain
         OnClick = edAlarmStatementClick
       end
     end
+    object tabStats: TTabSheet
+      Caption = #1057#1090#1072#1090#1080#1089#1090#1080#1082#1072
+      ImageIndex = 6
+      ExplicitLeft = 3
+      object edStats: TMemo
+        AlignWithMargins = True
+        Left = 5
+        Top = 5
+        Width = 610
+        Height = 458
+        Margins.Left = 5
+        Margins.Top = 5
+        Margins.Right = 5
+        Margins.Bottom = 5
+        Align = alClient
+        Font.Charset = RUSSIAN_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Courier New'
+        Font.Style = []
+        HideSelection = False
+        ParentFont = False
+        ReadOnly = True
+        ScrollBars = ssBoth
+        TabOrder = 0
+        ExplicitLeft = 10
+        ExplicitTop = 10
+      end
+    end
     object tabCompareAutoTestResult: TTabSheet
       Caption = #1055#1088#1086#1089#1084#1086#1090#1088' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074' '#1072#1074#1090#1086#1090#1077#1089#1090#1072
       ImageIndex = 5
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object edCompareAutoTestResult: TMemo
         Left = 0
         Top = 0

@@ -402,7 +402,6 @@ end;
 
 procedure _Выравнивание.Конкатенаций_По_Одинаковым_Символам;
 begin
-  PostponeTill(2020, 11, 5);
   Settings.PreferredExpressionLength := 80;
 end;
 
@@ -438,7 +437,6 @@ end;
 
 procedure _Выравнивание.Пустота_Не_Должна_Сдвигать_Выравнивание_Вправо;
 begin
-  PostponeTill(2020, 11, 5);
   Settings.AlignVariables := true;
   Settings.AlignFields    := true;
   Settings.AlignUseSpace  := true;
@@ -446,7 +444,6 @@ end;
 
 procedure _Выравнивание.Условий_В_Where;
 begin
-  PostponeTill(2020, 11, 10);
   Settings.AlignExpressions := true;
 end;
 
@@ -815,7 +812,6 @@ end;
 
 procedure _Форматирование_Выражений.Перенос_При_Присвоении_Многострочного_Выражения;
 begin
-  PostponeTill(2020, 11, 5);
   Settings.PreferredExpressionLength := 100;
 end;
 
@@ -862,7 +858,6 @@ end;
 
 procedure _Контрольные_Примеры.fm_pc_triggers;
 begin
-  PostponeTill(2020, 11, 10);
 end;
 
 procedure _Контрольные_Примеры.fm_pc_user;
@@ -871,7 +866,6 @@ end;
 
 procedure _Контрольные_Примеры.fm_pc_v_pcgi_link;
 begin
-  PostponeTill(2020, 11, 10);
 end;
 
 procedure _Контрольные_Примеры.fm_cc_user;
@@ -880,22 +874,18 @@ end;
 
 procedure _Контрольные_Примеры.top_dev_style_sop_link_api;
 begin
-  PostponeTill(2020, 11, 10);
 end;
 
 procedure _Контрольные_Примеры.top_lc_calc_utils;
 begin
-  PostponeTill(2020, 11, 10);
 end;
 
 procedure _Контрольные_Примеры.top_ref_api;
 begin
-  PostponeTill(2020, 11, 10);
 end;
 
 procedure _Контрольные_Примеры.top_report_api;
 begin
-  PostponeTill(2020, 11, 10);
 end;
 
 { _Сопоставление_Полей }

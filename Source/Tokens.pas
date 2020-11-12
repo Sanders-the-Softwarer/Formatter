@@ -71,7 +71,7 @@ type
   strict private
     FInitialValue, FValue: string;
     FLine, FCol: integer;
-    FPrinted, FCanReplace: boolean;
+    FPrinted, FCanReplace, FSkipChangeLineComment: boolean;
     FComments: array[TCommentPosition] of TComment;
   strict protected
     function ModifyValue(const AValue: string): string; virtual;
@@ -90,6 +90,7 @@ type
     property Col: integer read FCol;
     property Printed: boolean read FPrinted write FPrinted;
     property CanReplace: boolean read FCanReplace write FCanReplace;
+    property SkipChangeLineComment: boolean read FSkipChangeLineComment write FSkipChangeLineComment;
     property CommentFarAbove: TComment index poFarAbove read GetComment write SetComment;
     property CommentAbove: TComment    index poAbove    read GetComment write SetComment;
     property CommentAfter: TComment    index poAfter    read GetComment write SetComment;
@@ -151,12 +152,12 @@ type
   public
     Position: TCommentPosition;
     Lead: TToken;
+    ChangeTypeToBrackets: boolean;
     function TokenType: string; override;
     function LineComment: boolean;
     function Height: integer;
     function LeadComment: TComment;
     procedure ShiftTo(ACol: integer);
-    procedure ChangeTypeToBrackets;
     function DebugInfo: string; override;
   end;
 
@@ -355,15 +356,11 @@ begin
   Value := S;
 end;
 
-procedure TComment.ChangeTypeToBrackets;
-begin
-  if not LineComment then exit;
-  Value := '/* ' + Trim(Value.Substring(2)) + ' */';
-end;
-
 function TComment.DebugInfo: string;
 begin
   Result := inherited + #13#13 + Format('Расположение: %s', [GetEnumName(TypeInfo(TCommentPosition), Ord(Position))]);
+  if SkipChangeLineComment then
+    Result := Result + #13#13 + '<< Последняя лексема в однострочном блоке >>';
 end;
 
 function TComment.LeadComment: TComment;

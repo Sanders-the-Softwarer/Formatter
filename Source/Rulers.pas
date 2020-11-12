@@ -79,6 +79,8 @@ type
     FFull: boolean;
     { Итоговые позиции линеек }
     Rulers: TDictionary<string, integer>;
+    { Индекс для добавления следующей линейки }
+    NextRulerIndex: integer;
   protected
     function GetCell(ALine, ACol, AIndex: integer): integer;
     procedure SetCell(ALine, ACol, AIndex, AValue: integer);
@@ -103,13 +105,13 @@ type
 
 implementation
 
-const
-  LEFT_RULER = '$left$';
-
 constructor TRulers.Create;
 begin
   Names := TStringList.Create;
   Names.Add(LEFT_RULER);
+  NextRulerIndex := Names.Add(RIGHT_COMMENT);
+  Names.Add(SPECIAL_COMMENT_START);
+  Names.Add(SPECIAL_COMMENT_FINISH);
   FOwner := AOwner;
 end;
 
@@ -123,8 +125,9 @@ end;
 procedure TRulers.AddRuler(const ARuler: string);
 begin
   if Names.IndexOf(ARuler) >= 0 then exit;
-  Names.Add(ARuler);
   if FirstRuler = '' then FirstRuler := ARuler;
+  Names.Insert(NextRulerIndex, ARuler);
+  Inc(NextRulerIndex);
 end;
 
 procedure TRulers.Start(const ARuler: string; ALine, ACol: integer);
@@ -141,7 +144,7 @@ procedure TRulers.Measure(ALine, ACol: integer; AFromStart: boolean = false);
 var ColIndex: integer;
 begin
   { При смене строки запоминаем левый отступ }
-  if AFromStart and (ALine <> StartLine) and (CurrentRuler = '') then
+  if AFromStart and (ALine <> StartLine) and (CurrentRuler = '') {and UseSpaces} then
   begin
     CurrentRuler := LEFT_RULER;
     StartLine := ALine;

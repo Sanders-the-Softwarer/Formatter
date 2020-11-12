@@ -59,6 +59,10 @@ type
     CurrentStatement: TStatement;
     { Принтер для отлова спецкомментариев }
     SpecCommentDraftPrinter: TFormatterPrinter;
+    { Последняя лексема, прошедшая через очередь печати }
+    LastToken: TToken;
+    { Разрешение принтеру на подмену типа комментариев }
+    CanChangeLineCommentsToBrackets: boolean;
   strict protected
     TokenPos, TokenLen: TDictionary<TToken, integer>;
     function SpaceRequired(ALeft, ARight: TToken): boolean;
@@ -69,7 +73,8 @@ type
     constructor Create(ASettings: TFormatSettings;
                        AWithoutText: boolean = false;
                        ASkipComments: TCommentPositions = [];
-                       ASaveTokenPositions: boolean = false);
+                       ASaveTokenPositions: boolean = true;
+                       ACanChangeLineCommentsToBrackets: boolean = true);
     destructor Destroy; override;
     procedure Clear; override;
     procedure EndPrint; override;
@@ -111,13 +116,15 @@ uses Utils, SQLPlus, PLSQL;
 constructor TFormatterPrinter.Create(ASettings: TFormatSettings;
                                      AWithoutText: boolean = false;
                                      ASkipComments: TCommentPositions = [];
-                                     ASaveTokenPositions: boolean = false);
+                                     ASaveTokenPositions: boolean = true;
+                                     ACanChangeLineCommentsToBrackets: boolean = true);
 begin
   Assert(ASettings <> nil);
   inherited Create;
   Settings := ASettings;
   SkipComments := ASkipComments;
   SaveTokenPositions := ASaveTokenPositions;
+  CanChangeLineCommentsToBrackets := ACanChangeLineCommentsToBrackets and Settings.ChangeCommentType;
   TextBuilder := TTextBuilder.Create(AWithoutText);
   if SaveTokenPositions then
   begin
@@ -246,6 +253,7 @@ begin
   if HasActiveRulers and (Mode = fpmGetRulers) then Rulers.Measure(TextBuilder.Line, TextBuilder.Col);
 end;
 
+{ Проверка режима выравнивания }
 function TFormatterPrinter.HasActiveRulers: boolean;
 begin
   Result := Assigned(Rulers);
@@ -260,6 +268,7 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     if not Assigned(AToken) then exit;
     AddToken(AToken.CommentFarAbove);
     AddToken(AToken.CommentAbove);
+    LastToken := AToken;
     if (AToken is TComment) and (TComment(AToken).Position in SkipComments)
       then { пропускаем }
       else TokenQueue.Enqueue(AToken);
@@ -278,10 +287,10 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     IsComment, LineComment, SpecComment, FakeToken, EmptyToken, OriginalFormat: boolean;
     EOLLimit, ActualShift: integer;
   begin
+    { Определим статус комментариев }
     IsComment := AToken is TComment;
     LineComment := IsComment and AComment.LineComment;
     SpecComment := AToken is TSpecialComment;
-    ActualShift := Shift;
     { Если это команда начала исходного форматирования, скорректируем режим до печати лексемы }
     if IsComment and AComment.Value.StartsWith(C_UNFORMAT_START) then
     begin
@@ -299,11 +308,12 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     OriginalFormat := (OriginalFormatCount > 0);
     EmptyLine := EmptyLine and not OriginalFormat;
     ForceNextLine := ForceNextLine and not OriginalFormat;
+    ActualShift := Shift;
     { В режиме исходного форматирования не печатаем "добавленных" лексем }
     if OriginalFormat and FakeToken then exit;
     { Для комментариев справа от текста приготовим выравнивающую линейку }
     if IsComment and not SpecComment and (AComment.Position = poAfter) then
-      Ruler('right-comment');
+      Ruler(RIGHT_COMMENT);
     { Если это комментарий под предыдущей лексемой, надо урегулировать переводы строк }
     if IsComment and not OriginalFormat and not (FarPrevToken is TComment) then
     begin
@@ -372,9 +382,9 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
         else AComment.ShiftTo(TextBuilder.Col);
     { В режиме подавления переводов строки заменим строчный комментарий справа от лексемы скобочным }
     if IsComment and LineComment and (SupNextLine > 0) and (AComment.Position = poAfter) and
-       Settings.ChangeCommentType and not OriginalFormat then
+       CanChangeLineCommentsToBrackets and not OriginalFormat and not AComment.SkipChangeLineComment then
     begin
-      AComment.ChangeTypeToBrackets;
+      AComment.ChangeTypeToBrackets := true;
       LineComment := false;
     end;
     { Получим значение выводимого текста }
@@ -388,6 +398,9 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and not OriginalFormat and
        SameText(AToken.Value, 'as') and Settings.ReplaceAsIs and AToken.CanReplace
       then Value := 'is';
+    { Учтём замену строчных комментариев на скобочные }
+    if IsComment and AComment.ChangeTypeToBrackets and not AComment.SkipChangeLineComment then
+      Value := '/* ' + Trim(Value.Substring(2)) + ' */';
     { Выполним отступ }
     if (EOLLimit > 0) and (TextBuilder.Col = 1) and not OriginalFormat then TextBuilder.AppendSpace(ActualShift);
     { Если нужно сохранить текущий отступ - сделаем это }
@@ -463,7 +476,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   var DraftPrinter: TFormatterPrinter;
   begin
     if AStatement.Rulers.Full then exit;
-    DraftPrinter := TFormatterPrinter.Create(Self.Settings, false, [poFarAbove..poFarBelow], false);
+    DraftPrinter := TFormatterPrinter.Create(Self.Settings, false, [poFarAbove..poFarBelow], false, false);
     try
       DraftPrinter.Rulers := AStatement.Rulers;
       DraftPrinter.Rulers.UseSpaces := Settings.AlignUseSpace;
@@ -503,7 +516,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   begin
     if not Assigned(SpecCommentDraftPrinter) then
     begin
-      SpecCommentDraftPrinter := TFormatterPrinter.Create(Self.Settings, true, [poFarAbove..poFarBelow]);
+      SpecCommentDraftPrinter := TFormatterPrinter.Create(Self.Settings, true, [poFarAbove..poFarBelow], false);
       SpecCommentDraftPrinter.BeginPrint;
       SpecCommentDraftPrinter.Mode := fpmCheckSpecialComments;
     end;
@@ -576,6 +589,8 @@ begin
   if ASupress
     then Inc(SupNextLine)
     else Dec(SupNextLine);
+  if (SupNextLine = 0) and Assigned(LastToken) then
+    LastToken.SkipChangeLineComment := true;
 end;
 
 { Вывод на принтер специального комментария (отсутствующего в исходном тексте)}
@@ -588,8 +603,8 @@ begin
   try
     if Settings.AlignSpecialComments then
       begin
-        PrintRulerItems('special-comment-start', [T1]);
-        PrintRulerItems('special-comment-finish', [T2]);
+        PrintRulerItems(SPECIAL_COMMENT_START, [T1]);
+        PrintRulerItems(SPECIAL_COMMENT_FINISH, [T2]);
       end
     else
       PrintItems([T1, T2]);

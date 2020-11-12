@@ -86,6 +86,8 @@ type
     edDebugInfo: TMemo;
     spDebugInfo: TSplitter;
     checkShowDebugInfo: TCheckBox;
+    tabStats: TTabSheet;
+    edStats: TMemo;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -124,7 +126,7 @@ implementation
 
 {$R *.dfm}
 
-uses GUIPrinters;
+uses GUIPrinters, Stats;
 
 { Приведение переносов строк к стандартному виду }
 function TFormMain.CorrectCRLF: boolean;
@@ -169,8 +171,11 @@ begin
   AdvTokenStream  := Controller.MakeAdvancedTokenStream(MinTokenStream);
   StatementStream := Controller.MakeStatementStream(AdvTokenStream, Settings);
   { Напечатаем данные }
+  edStats.Clear;
+  Statistics.Clear;
   try
     StatementStream.PrintAll(ResultPrinter);
+    edStats.Text := Statistics.Output;
   except
     on E: Exception do Application.ShowException(E);
   end;

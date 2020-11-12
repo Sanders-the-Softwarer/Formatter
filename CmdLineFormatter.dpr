@@ -33,7 +33,8 @@ uses
   Sequence in 'Source\DDL\Sequence.pas',
   Synonym in 'Source\DDL\Synonym.pas',
   Trigger in 'Source\PLSQL\Trigger.pas',
-  Set_ in 'Source\DDL\Set_.pas';
+  Set_ in 'Source\DDL\Set_.pas',
+  Stats in 'Source\Core\Stats.pas';
 
 var
   InFileName, OutFileName, InText, OutText: string;

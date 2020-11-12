@@ -240,7 +240,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     i, DelimiterLen: integer;
   begin
     SetLength(TermInfo, Count);
-    DraftPrinter := TFormatterPrinter.Create(APrinter.Settings, true, [poAbove, poBelow, poBelowBOL, poFarAbove, poFarBelow], false);
+    DraftPrinter := TFormatterPrinter.Create(APrinter.Settings, true, [poAbove, poBelow, poBelowBOL, poFarAbove, poFarBelow], false, false);
     try
       DraftPrinter.BeginPrint;
       for i := 0 to Count - 1 do
@@ -553,7 +553,7 @@ function TExpression.GetMultiLine: boolean;
 var Printer: TFormatterPrinter;
 begin
   if LineCount > 0 then exit(LineCount > 1);
-  Printer := TFormatterPrinter.Create(Settings, true, [], false);
+  Printer := TFormatterPrinter.Create(Settings, true, [], false, false);
   try
     Printer.BeginPrint;
     PrintSelf(Printer);

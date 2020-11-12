@@ -107,6 +107,8 @@ type
     function  NextLineIf(AItem: TObject): boolean; overload;
     function  NextLineIf(AItems: array of TObject): boolean; overload;
   public
+    procedure AfterConstruction; override;
+  public
     property Settings: TFormatSettings read FSettings write FSettings;
   end;
 
@@ -135,7 +137,7 @@ function _UndentNextLine: TObject;
 
 implementation
 
-uses SQLPlus, FormatterPrinter;
+uses SQLPlus, FormatterPrinter, Stats;
 
 { Отправка извещения о необходимости синхронизации интерфейса }
 procedure SendSyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
@@ -275,6 +277,12 @@ begin
   if not Result then exit;
   NextLine;
   PrintItems(AItems);
+end;
+
+procedure TPrinter.AfterConstruction;
+begin
+  inherited;
+  if GetIsDebug then Statistics.Increase(Format('Create(%s)', [ClassName]));
 end;
 
 function TPrinter.HasItems(AItems: array of TObject): boolean;
