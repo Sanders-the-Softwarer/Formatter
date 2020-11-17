@@ -256,7 +256,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         TermInfo[i].SingleLineLen := DraftPrinter.CurrentMaxWidth;
         DraftPrinter.SupressNextLine(false);
         { Если при печати были строчные коммментарии - в одну строку не уложимся и не будем пытаться }
-        if DraftPrinter.CurrentLine > 1 then TermInfo[i].SingleLineLen := MaxInt;
+        if (DraftPrinter.CurrentLine > 1) and not Settings.ChangeCommentType then TermInfo[i].SingleLineLen := MaxInt;
         { Померяем ширину разделителя }
         DraftPrinter.Clear;
         DraftPrinter.PrintItem(Delimiter(i));

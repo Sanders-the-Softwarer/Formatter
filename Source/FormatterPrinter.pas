@@ -311,6 +311,9 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     ActualShift := Shift;
     { В режиме исходного форматирования не печатаем "добавленных" лексем }
     if OriginalFormat and FakeToken then exit;
+    { Если печатаем в одну строку - отметим это в лексеме }
+    if (SupNextLine > 0) and (Mode <> fpmCheckSpecialComments) then
+      AToken.IntoSupNextLine := AToken.IntoSupNextLine + 1;
     { Для комментариев справа от текста приготовим выравнивающую линейку }
     if IsComment and not SpecComment and (AComment.Position = poAfter) then
       Ruler(RIGHT_COMMENT);
@@ -516,7 +519,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   begin
     if not Assigned(SpecCommentDraftPrinter) then
     begin
-      SpecCommentDraftPrinter := TFormatterPrinter.Create(Self.Settings, true, [poFarAbove..poFarBelow], false);
+      SpecCommentDraftPrinter := TFormatterPrinter.Create(Self.Settings, true, [poFarAbove..poFarBelow], false, false);
       SpecCommentDraftPrinter.BeginPrint;
       SpecCommentDraftPrinter.Mode := fpmCheckSpecialComments;
     end;
@@ -590,7 +593,7 @@ begin
     then Inc(SupNextLine)
     else Dec(SupNextLine);
   if (SupNextLine = 0) and Assigned(LastToken) then
-    LastToken.SkipChangeLineComment := true;
+    LastToken.LastIntoSupNextLine := LastToken.LastIntoSupNextLine + 1;
 end;
 
 { Вывод на принтер специального комментария (отсутствующего в исходном тексте)}

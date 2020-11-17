@@ -71,8 +71,10 @@ type
   strict private
     FInitialValue, FValue: string;
     FLine, FCol: integer;
-    FPrinted, FCanReplace, FSkipChangeLineComment: boolean;
+    FPrinted, FCanReplace: boolean;
+    FIntoSupNextLine, FLastIntoSupNextLine: integer;
     FComments: array[TCommentPosition] of TComment;
+    function GetSkipChangeLineComment: boolean;
   strict protected
     function ModifyValue(const AValue: string): string; virtual;
   public
@@ -90,13 +92,15 @@ type
     property Col: integer read FCol;
     property Printed: boolean read FPrinted write FPrinted;
     property CanReplace: boolean read FCanReplace write FCanReplace;
-    property SkipChangeLineComment: boolean read FSkipChangeLineComment write FSkipChangeLineComment;
+    property SkipChangeLineComment: boolean read GetSkipChangeLineComment;
     property CommentFarAbove: TComment index poFarAbove read GetComment write SetComment;
     property CommentAbove: TComment    index poAbove    read GetComment write SetComment;
     property CommentAfter: TComment    index poAfter    read GetComment write SetComment;
     property CommentBelow: TComment    index poBelow    read GetComment write SetComment;
     property CommentBelowBOL: TComment index poBelowBOL read GetComment write SetComment;
     property CommentFarBelow: TComment index poFarBelow read GetComment write SetComment;
+    property IntoSupNextLine: integer read FIntoSupNextLine write FIntoSupNextLine;
+    property LastIntoSupNextLine: integer read FLastIntoSupNextLine write FLastIntoSupNextLine;
   end;
 
   { Неожиданная или неизвестная лексема - встретился символ, с которого не может начинаться лексема }
@@ -247,6 +251,11 @@ end;
 function TToken.ModifyValue(const AValue: string): string;
 begin
   Result := AValue;
+end;
+
+function TToken.GetSkipChangeLineComment: boolean;
+begin
+  Result := (IntoSupNextLine = LastIntoSupNextLine);
 end;
 
 function TToken.GetComment(Index: TCommentPosition): TComment;
