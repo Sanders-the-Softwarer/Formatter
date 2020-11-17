@@ -100,10 +100,10 @@ type
     procedure SyncNotification(AObject: TObject; ALine, ACol, ALen: integer); virtual; abstract;
     function  GetText: string; virtual; abstract;
   public
-    procedure PrintItems(AItems: array of TObject);
+    function PrintItems(AItems: array of TObject): boolean;
     procedure PrintRulerItems(const ARuler: string; AItems: array of TObject); virtual;
     procedure PrintIndented(AItem: TObject); overload;
-    procedure PrintIndented(AItems: array of TObject); overload;
+    function PrintIndented(AItems: array of TObject): boolean; overload;
     function  NextLineIf(AItem: TObject): boolean; overload;
     function  NextLineIf(AItems: array of TObject): boolean; overload;
   public
@@ -237,9 +237,10 @@ end;
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-procedure TPrinter.PrintItems(AItems: array of TObject);
+function TPrinter.PrintItems(AItems: array of TObject): boolean;
 var i: integer;
 begin
+  Result := HasItems(AItems);
   for i := Low(AItems) to High(AItems) do PrintItem(AItems[i]);
 end;
 
@@ -257,9 +258,10 @@ begin
   Undent;
 end;
 
-procedure TPrinter.PrintIndented(AItems: array of TObject);
+function TPrinter.PrintIndented(AItems: array of TObject): boolean;
 begin
-  if not HasItems(AItems) then exit;
+  Result := HasItems(AItems);
+  if not Result then exit;
   NextLine;
   Indent;
   PrintItems(AItems);
@@ -324,7 +326,7 @@ end;
 
 constructor TFormatSettings.ForTest;
 begin
-  DeclarationSingleLineParamLimit        := 99;
+  DeclarationSingleLineParamLimit        := 0;
   NamedArgumentSingleLineParamLimit      := 99;
   PositionalArgumentSingleLineParamLimit := 999;
   PreferredExpressionLength              := 9999;

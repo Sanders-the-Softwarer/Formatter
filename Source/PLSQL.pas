@@ -166,10 +166,14 @@ type
     function Aligned: TAlignMode; override;
   public
     function Transparent: boolean; override;
+    function OnePerLine: boolean; override;
   end;
 
   { Блок параметров подпрограммы в скобках }
-  TParamsDeclaration = class(TBracketedStatement<TAlignedParamsDeclaration>);
+  TParamsDeclaration = class(TBracketedStatement<TAlignedParamsDeclaration>)
+  protected
+    function MultiLine: boolean; override;
+  end;
 
   { Блок деклараций }
   TDeclarations = class(TStatementList<TStatement>)
@@ -729,9 +733,13 @@ procedure TSubroutineHeaderBase.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Map, _FunctionType, _ProcedureOrFunction, _Name]);
   APrinter.Indent;
+  if not Assigned(_Params) or (_Params is TParamsDeclaration) and TParamsDeclaration(_Params).MultiLine then
   {$B+}
-  FIndentedBeforeIs := APrinter.NextLineIf([_Params]) or
-                       APrinter.NextLineIf([_Return, _SelfAsResult, _ReturnType]) or
+    FIndentedBeforeIs := APrinter.NextLineIf([_Params]) or
+                         APrinter.NextLineIf([_Return, _SelfAsResult, _ReturnType])
+  else
+    FIndentedBeforeIs := APrinter.PrintItems([_Params, _Return, _SelfAsResult, _ReturnType]);
+  FIndentedBeforeIs := FIndentedBeforeIs or
                        APrinter.NextLineIf([_Deterministic]) or
                        APrinter.NextLineIf([_Pipelined]);
   {$B-}
@@ -1702,11 +1710,23 @@ begin
   Result := true;
 end;
 
+function TAlignedParamsDeclaration.OnePerLine: boolean;
+begin
+  Result := (Self.Count > Settings.DeclarationSingleLineParamLimit);
+end;
+
 { TRecordFields }
 
 function TRecordFields.Aligned: TAlignMode;
 begin
   Result := AlignMode(Settings.AlignVariables);
+end;
+
+{ TParamsDeclaration }
+
+function TParamsDeclaration.MultiLine: boolean;
+begin
+  Result := (InnerStatement is TAlignedParamsDeclaration) and TAlignedParamsDeclaration(InnerStatement).OnePerLine;
 end;
 
 initialization

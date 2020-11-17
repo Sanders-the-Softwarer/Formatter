@@ -2,12 +2,7 @@ procedure p1(p1 integer);
 
 procedure p2(p1 integer, p2 integer);
 
-procedure p3
-    (
-        p1 integer,
-        p2 integer,
-        p3 integer
-    );
+procedure p3(p1 integer, p2 integer, p3 integer);
 
 procedure p4
     (
@@ -15,4 +10,13 @@ procedure p4
         p2 integer,
         p3 integer,
         p4 integer
+    );
+
+procedure p5
+    (
+        p1 integer,
+        p2 integer,
+        p3 integer,
+        p4 integer,
+        p5 integer
     );
