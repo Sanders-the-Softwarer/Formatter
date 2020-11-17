@@ -1,0 +1,2 @@
+delete dual;
+delete from dual;

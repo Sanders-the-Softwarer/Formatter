@@ -1,0 +1,6 @@
+procedure p (param integer default 0) is
+    var integer default 1;
+begin
+    null;
+end;
+

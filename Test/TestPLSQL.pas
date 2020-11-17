@@ -62,11 +62,9 @@ type
   published
     procedure Комментарий_Разрывает_Выравнивание_В_Блоке_Переменных;
     procedure Комментариев_Справа_От_Деклараций;
-    procedure Колонок_В_Таблице;
     procedure В_Comment;
     procedure Полей_В_Update;
     procedure Полей_В_Запросе;
-    procedure Переменных;
     procedure Параметров_Подпрограмм;
     procedure Аргументов_В_Вызовах_Подпрограмм;
     procedure Условий_В_Where;
@@ -80,7 +78,6 @@ type
     procedure Спецкомментариев_В_Select_Into;
     procedure Спецкомментариев_В_Insert_Values;
     procedure Спецкомментариев_В_Insert_Select;
-    procedure Пустота_Не_Должна_Сдвигать_Выравнивание_Вправо;
     procedure Конкатенаций_По_Одинаковым_Символам;
   end;
 
@@ -152,15 +149,6 @@ type
     function GetDir: string; override;
   published
     procedure С_Указанием_AuthId;
-  end;
-
-  { Тесты на удаление паролей }
-  _Удаление_Паролей = class(TFileBasedTest)
-  protected
-    function GetDir: string; override;
-  published
-    procedure С_Опцией_Удаления_Паролей;
-    procedure Без_Опции_Удаления_Паролей;
   end;
 
   { Тесты на расстановку пустых строк }
@@ -420,11 +408,6 @@ begin
   Settings.AlignVariables := true;
 end;
 
-procedure _Выравнивание.Переменных;
-begin
-  Settings.AlignVariables := true;
-end;
-
 procedure _Выравнивание.Полей_В_Update;
 begin
   Settings.AlignFields := true;
@@ -433,13 +416,6 @@ end;
 procedure _Выравнивание.Полей_В_Запросе;
 begin
   Settings.AlignFields := true;
-end;
-
-procedure _Выравнивание.Пустота_Не_Должна_Сдвигать_Выравнивание_Вправо;
-begin
-  Settings.AlignVariables := true;
-  Settings.AlignFields    := true;
-  Settings.AlignUseSpace  := true;
 end;
 
 procedure _Выравнивание.Условий_В_Where;
@@ -484,11 +460,6 @@ procedure _Выравнивание.Спецкомментариев_В_Select_I
 begin
   Settings.MatchParamLimit := 1;
   Settings.AlignSpecialComments := true;
-end;
-
-procedure _Выравнивание.Колонок_В_Таблице;
-begin
-  Settings.AlignColumns := true;
 end;
 
 procedure _Выравнивание.Команд_Define;
@@ -910,22 +881,6 @@ begin
   Settings.MatchParamLimit := 5;
 end;
 
-{ _Удаление_Паролей }
-
-function _Удаление_Паролей.GetDir: string;
-begin
-  Result := inherited GetDir + '\Удаление паролей из Connect';
-end;
-
-procedure _Удаление_Паролей.Без_Опции_Удаления_Паролей;
-begin
-end;
-
-procedure _Удаление_Паролей.С_Опцией_Удаления_Паролей;
-begin
-  Settings.RemoveConnectPasswords := true;
-end;
-
 initialization
   RegisterTest(_PLSQL.Suite);
   RegisterTest(_Выравнивание.Suite);
@@ -936,7 +891,6 @@ initialization
   RegisterTest(_Операторы.Suite);
   RegisterTest(_Пакеты.Suite);
   RegisterTest(_Пустые_Строки.Suite);
-  RegisterTest(_Удаление_Паролей.Suite);
   RegisterTest(_SQL_Типы.Suite);
   RegisterTest(_PLSQL_Типы.Suite);
   RegisterTest(_Команды_SQLPLUS.Suite);

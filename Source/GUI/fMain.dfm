@@ -158,7 +158,6 @@ object FormMain: TFormMain
     object tabStats: TTabSheet
       Caption = #1057#1090#1072#1090#1080#1089#1090#1080#1082#1072
       ImageIndex = 6
-      ExplicitLeft = 3
       object edStats: TMemo
         AlignWithMargins = True
         Left = 5
@@ -180,8 +179,6 @@ object FormMain: TFormMain
         ReadOnly = True
         ScrollBars = ssBoth
         TabOrder = 0
-        ExplicitLeft = 10
-        ExplicitTop = 10
       end
     end
     object tabCompareAutoTestResult: TTabSheet

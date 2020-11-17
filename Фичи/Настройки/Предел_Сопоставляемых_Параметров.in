@@ -1,0 +1,54 @@
+select
+    a
+into
+    x
+from
+    dual;
+
+select
+    a,
+    bb
+into
+    x,
+    y
+from
+    dual;
+
+select
+    a, /*/ => x /*/
+    bb, /*/ => y /*/
+    c /*/ => z /*/
+into
+    x,
+    y,
+    z
+from
+    dual;
+
+select
+    a, /*/ => x /*/
+    bb, /*/ => y /*/
+    c, /*/ => z /*/
+    ddd /*/ => ttttt /*/
+into
+    x,
+    y,
+    z,
+    ttttt
+from
+    dual;
+
+select
+    a, /*/ => x /*/
+    bb, /*/ => y /*/
+    c, /*/ => z /*/
+    ddd, /*/ => ttttt /*/
+    e /*/ => w /*/
+into
+    x,
+    y,
+    z,
+    ttttt,
+    w
+from
+    dual;

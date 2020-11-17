@@ -37,6 +37,7 @@ type
     Settings: TFormatSettings;
     Skip: boolean;
   protected
+    procedure UnderConstruction;
     { Настройки каталога размещения и расширений входного-выходного файлов }
     function GetDir: string; virtual;
     function GetExtIn: string; virtual;
@@ -74,6 +75,14 @@ end;
 procedure TFileBasedTest.TearDown;
 begin
   FreeAndNil(Settings);
+end;
+
+{ Оповещение о том, что тест не реализован }
+procedure TFileBasedTest.UnderConstruction;
+begin
+  if Now < EncodeDate(2020, 11, 21)
+    then Skip := true
+    else Fail('Пока не сделано!');
 end;
 
 { Настройки каталога размещения и расширений входного-выходного файлов }

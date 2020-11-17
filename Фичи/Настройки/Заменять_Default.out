@@ -1,0 +1,10 @@
+procedure p 
+    (
+        param integer := 0
+    ) 
+is
+    var integer := 1;
+begin
+    null;
+end;
+

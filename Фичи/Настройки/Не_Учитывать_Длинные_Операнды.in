@@ -1,0 +1,7 @@
+select
+    some_very_long_and_strange_function_call(1, 2, 3, 4, 5) +
+    other_very_long_and_strange_function_call(1, 2, 3, 4, 5),
+    some_very_long_and_strange_function_call(1, 2, 3, 4, 5) 
+    or other_very_long_and_strange_function_call(1, 2, 3, 4, 5)
+from
+    dual;
