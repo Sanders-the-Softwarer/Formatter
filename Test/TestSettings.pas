@@ -110,6 +110,7 @@ end;
 
 procedure _Settings.Заполнять_Пустоты;
 begin
+  PostponeTill(2020, 11, 20);
   Settings.AlignUseSpace := true;
   Settings.AlignVariables := true;
   Settings.AlignFields := true;
@@ -174,6 +175,7 @@ end;
 
 procedure _Settings.Не_Заполнять_Пустоты;
 begin
+  PostponeTill(2020, 11, 20);
   Settings.AlignUseSpace := false;
   Settings.AlignVariables := true;
   Settings.AlignFields := true;

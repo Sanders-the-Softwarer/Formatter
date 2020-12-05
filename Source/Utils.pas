@@ -20,6 +20,7 @@ const
   RIGHT_COMMENT          = '$right-comment$';
   SPECIAL_COMMENT_START  = '$spec-comment-start$';
   SPECIAL_COMMENT_FINISH = '$spec-comment-finish$';
+  CONCAT_DELIM_RULER     = '$concat-delim$';
 
 { Индикация отладочного режима }
 function GetIsDebug: boolean;

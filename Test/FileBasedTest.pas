@@ -177,7 +177,7 @@ end;
 { Отложить тест до указанной даты }
 procedure TFileBasedTest.PostponeTill(AYear, AMonth, ADay: integer);
 begin
-  Skip := false; //Date < EncodeDate(AYear, AMonth, ADay);
+  Skip := Date < EncodeDate(AYear, AMonth, ADay);
 end;
 
 end.

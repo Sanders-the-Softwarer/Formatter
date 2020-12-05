@@ -202,12 +202,14 @@ end;
 
 procedure _Bugs._37;
 begin
+  PostponeTill(2020, 11, 20);
   Settings.AlignFields := true;
   Settings.PreferredExpressionLength := 100;
 end;
 
 procedure _Bugs._38;
 begin
+  PostponeTill(2020, 11, 20);
   Settings.PreferredExpressionLength := 120;
   Settings.BeautifyLongOperands := true;
 end;
@@ -317,6 +319,7 @@ end;
 
 procedure _Bugs._58;
 begin
+  PostponeTill(2020, 11, 20);
   Settings.PreferredExpressionLength := 80;
   Settings.BeautifyLongOperands := true;
 end;
@@ -338,6 +341,7 @@ end;
 
 procedure _Bugs._61;
 begin
+  PostponeTill(2020, 11, 20);
   Settings.AlignFields := true;
   Settings.AlignUseSpace := false;
   Settings.PreferredExpressionLength := 100;

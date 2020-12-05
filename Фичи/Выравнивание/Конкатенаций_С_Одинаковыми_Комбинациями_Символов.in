@@ -1,0 +1,8 @@
+-- Хитрость примера в том, что выравниваться должно по chr(13),
+-- а переноситься - по chr(10)
+
+begin
+    v := 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' || chr(13) || chr(10) ||
+         'bbbbbb'                                     || chr(13) || chr(10) || 
+         'ccccccccccccccccccccccc'                    || chr(13) || chr(10);
+end;

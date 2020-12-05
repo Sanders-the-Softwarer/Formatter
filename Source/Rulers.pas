@@ -144,7 +144,7 @@ procedure TRulers.Measure(ALine, ACol: integer; AFromStart: boolean = false);
 var ColIndex: integer;
 begin
   { При смене строки запоминаем левый отступ }
-  if AFromStart and (ALine <> StartLine) and (CurrentRuler = '') {and UseSpaces} then
+  if AFromStart and (ALine <> StartLine) and (CurrentRuler = '') then
   begin
     CurrentRuler := LEFT_RULER;
     StartLine := ALine;
