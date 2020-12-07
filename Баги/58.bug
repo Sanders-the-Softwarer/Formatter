@@ -5,6 +5,7 @@
 -- delivery_country_code
 
 begin
-    v_key_dev_sc := g_agg_text_tbl(i).dev_style_color_coll_code || chr(1) ||
+    v_key_dev_sc := g_agg_text_tbl(i).dev_style_color_coll_code 
+                    || chr(1) ||
                     g_agg_text_tbl(i).delivery_country_code;
 end;

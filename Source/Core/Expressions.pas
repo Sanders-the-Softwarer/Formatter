@@ -347,9 +347,9 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     DraftPrinter := nil;
     try
       { Пробежим по элементам выражения }
-      for i := Start to Finish - 1 do
+      for i := Start + 1 to Finish do
       begin
-        D := Delimiter(i);
+        D := Delimiter(i - 1);
         { Если это не конкатенация, просто выйдем }
         if not (D is TToken) or (TToken(D).Value <> '||') then exit(false);
         { В противном случае возьмём текст выражения }
@@ -441,6 +441,26 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     if Prev > Start then CheckForBreaks(Prev, Finish);
   end;
 
+  { Проверка на одиночный длинный операнд }
+  function IsLongTerm(Index: integer): boolean;
+  var First, Last: boolean;
+  begin
+    First := (Index = 0);
+    Last  := (Index = Count - 1);
+    Result := { разделитель в конце }
+              (Last or TermInfo[Index].BreakAfterDelimiter) and
+              { перенос перед этим операндом }
+              (First or TermInfo[Index - 1].LineBreak) and
+              { перенос после этого операнда }
+              (Last or TermInfo[Index].LineBreak) and
+              { операнд достаточно длинный }
+              (not TermInfo[Index].SingleLine or
+              (TermInfo[Index].SingleLineLen > Settings.PreferredExpressionLength div 2)) and
+              { и операция не запятая }
+              (Last or
+               (Delimiter(Index) is TToken) and (TToken(Delimiter(Index)).Value <> ','));
+  end;
+
   { Улучшение читаемости выражений с длинными операндами }
   procedure BeautifyLongTerms;
   var i: integer;
@@ -449,14 +469,13 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     for i := 0 to Count - 1 do
       { Если у нас в строке один длинный операнд, для читаемости
         перенесём знак операции на следующую строку }
-      if TermInfo[i].LineBreak and
-         ((i = 0) or (TermInfo[i - 1].LineBreak)) and
-         TermInfo[i].BreakAfterDelimiter and
-         (not TermInfo[i].SingleLine or
-          (TermInfo[i].SingleLineLen > Settings.PreferredExpressionLength div 2))
-         and (Delimiter(i) is TToken)
-         and (TToken(Delimiter(i)).Value <> ',')
-        then TermInfo[i].BreakBeforeDelimiter := true;
+      if IsLongTerm(i) then
+      begin
+        TermInfo[i].BreakBeforeDelimiter := true;
+        { Если следующий операнд короткий, уберём перенос перед ним }
+        if (i < Count - 1) and not IsLongTerm(i + 1) then
+          TermInfo[i].BreakAfterDelimiter := false;
+      end;
   end;
 
   { Печать получившегося выражения }
@@ -478,9 +497,9 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
       if TermInfo[i].SingleLine then
         APrinter.SupressNextLine(false);
       if TermInfo[i].LineBreak and TermInfo[i].BreakBeforeDelimiter then APrinter.NextLine;
-      if TermInfo[i].DelimRulerName <> '' then
-        APrinter.PrintRulerItems(TermInfo[i].DelimRulerName, []);
-      APrinter.PrintItem(Delimiter(i));
+      if TermInfo[i].DelimRulerName <> ''
+        then APrinter.PrintRulerItems(TermInfo[i].DelimRulerName, [Delimiter(i)])
+        else APrinter.PrintItem(Delimiter(i));
       if TermInfo[i].LineBreak and TermInfo[i].BreakAfterDelimiter then APrinter.NextLine;
     end;
     APrinter.PopIndent;
