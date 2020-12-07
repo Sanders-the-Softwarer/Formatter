@@ -478,6 +478,20 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
       end;
   end;
 
+  { Расстановка выравниваний для операций типа условий в where }
+  procedure PlaceExprDelimRulers;
+  var i: integer;
+  begin
+    { В коротких выражениях нечего выравнивать }
+    if Count < 4 then exit;
+    { Расстановка разрешена, если перенос идёт на каждой второй операции }
+    for i := 0 to Count - 2 do
+      if TermInfo[i].LineBreak xor (i mod 2 = 1) then exit;
+    { Расставим линейки }
+    for i := 0 to Count - 2 do
+      if i mod 2 = 0 then TermInfo[i].DelimRulerName := EXPR_DELIM_RULER;
+  end;
+
   { Печать получившегося выражения }
   procedure PrintExpression;
   var i: integer;
@@ -511,6 +525,7 @@ begin
     CollectInfo;
     CheckForBreaks;
     BeautifyLongTerms;
+    PlaceExprDelimRulers;
   end;
   PrintExpression;
 end;

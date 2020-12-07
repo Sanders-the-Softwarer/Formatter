@@ -21,6 +21,7 @@ const
   SPECIAL_COMMENT_START  = '$spec-comment-start$';
   SPECIAL_COMMENT_FINISH = '$spec-comment-finish$';
   CONCAT_DELIM_RULER     = '$concat-delim$';
+  EXPR_DELIM_RULER       = '$expr-delim$';
 
 { Индикация отладочного режима }
 function GetIsDebug: boolean;
