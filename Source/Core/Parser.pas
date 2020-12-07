@@ -48,7 +48,6 @@ type
     function InternalNext: TStatement; override;
   public
     constructor Create(AStream: TBufferedStream<TToken>; ASettings: TFormatSettings);
-    class function ParsePLSQL(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseDeclaration(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseType(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
     class function ParseAny(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
@@ -93,33 +92,6 @@ begin
   Settings := ASettings;
 end;
 
-{ Разбор операторов PL/SQL }
-class function TParser.ParsePLSQL(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-begin
-  Result := TPragma.Parse(AParent, ASource, AResult) or
-            TReturn.Parse(AParent, ASource, AResult) or
-            TNull.Parse(AParent, ASource, AResult) or
-            TRaise.Parse(AParent, ASource, AResult) or
-            TIf.Parse(AParent, ASource, AResult) or
-            TCase.Parse(AParent, ASource, AResult) or
-            TLoop.Parse(AParent, ASource, AResult) or
-            TFor.Parse(AParent, ASource, AResult) or
-            TWhile.Parse(AParent, ASource, AResult) or
-            TForAll.Parse(AParent,ASource, AResult) or
-            TOpenFor.Parse(AParent, ASource, AResult) or
-            TFetch.Parse(AParent, ASource, AResult) or
-            TExit.Parse(AParent, ASource, AResult) or
-            TPipeRow.Parse(AParent, ASource, AResult) or
-            TClose.Parse(AParent, ASource, AResult) or
-            TExecuteImmediate.Parse(AParent, ASource, AResult) or
-            TAnonymousBlock.Parse(AParent, ASource, AResult) or
-            TAssignment.Parse(AParent, ASource, AResult) or
-            TProcedureCall.Parse(AParent, ASource, AResult) or
-            TLabel.Parse(AParent, ASource, AResult) or
-            TGoto.Parse(AParent, ASource, AResult) or
-            TStandaloneComment.Parse(AParent, ASource, AResult);
-end;
-
 { Разбор деклараций (переменных, процедур, типов, курсоров, прагм и т. п. }
 class function TParser.ParseDeclaration(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
 begin
@@ -147,7 +119,7 @@ begin
   Result := DDLParser.Parse(AParent, ASource, AResult) or
             DMLParser.Parse(AParent, ASource, AResult) or
             TStandaloneAnonymousBlock.Parse(AParent, ASource, AResult) { нужно до PLSQL } or
-            ParsePLSQL(AParent, ASource, AResult) or
+            PLSQLParser.Parse(AParent, ASource, AResult) or
             SQLPlusParser.Parse(AParent, ASource, AResult) or
             ParseDeclaration(AParent, ASource, AResult) { должно быть в конце из-за variable declaration } or
             ParseType(AParent, ASource, AResult) or

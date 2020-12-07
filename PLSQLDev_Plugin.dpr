@@ -40,6 +40,11 @@ uses
   Grant in 'Source\DDL\Grant.pas',
   Stats in 'Source\Core\Stats.pas',
   Drop in 'Source\DDL\Drop.pas',
+  Goto_ in 'Source\PLSQL\Goto_.pas',
+  Exit_ in 'Source\PLSQL\Exit_.pas',
+  OpenFor in 'Source\PLSQL\OpenFor.pas',
+  ForAll in 'Source\PLSQL\ForAll.pas',
+  Assignment in 'Source\PLSQL\Assignment.pas',
   Label_ in 'Source\PLSQL\Label_.pas';
 
 const

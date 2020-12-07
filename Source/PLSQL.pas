@@ -31,6 +31,12 @@ uses Classes, Windows, SysUtils, Math, Streams, Tokens, Statements, Commons,
 
 type
 
+  { Парсер PL/SQL }
+  PLSQLParser = class
+  public
+    class function Parse(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+  end;
+
   { Базовый класс для операторов PL/SQL }
   TPLSQLStatement = class(TSemicolonStatement);
 
@@ -236,17 +242,6 @@ type
     function AllowWhen: boolean; virtual;
   end;
 
-  { Присваивание }
-  TAssignment = class(TPLSQLStatement)
-  strict private
-    _Target: TStatement;
-    _Assignment: TTerminal;
-    _Expression: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
   { Вызов процедуры }
   TProcedureCall = class(TPLSQLStatement)
   strict private
@@ -379,41 +374,11 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Оператор forall }
-  TForAll = class(TPLSQLStatement)
-  strict private
-    _ForAll: TEpithet;
-    _Variable: TEpithet;
-    _In: TEpithet;
-    _Low: TStatement;
-    _To: TTerminal;
-    _High: TStatement;
-    _IndicesOrValues: TEpithet;
-    _Of: TEpithet;
-    _TableName: TStatement;
-    _Save: TEpithet;
-    _Exceptions: TEpithet;
-    _DML: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
   { Оператор pipe row }
   TPipeRow = class(TPLSQLStatement)
   strict private
     _Pipe, _Row: TEpithet;
     _Arguments: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Оператор open for }
-  TOpenFor = class(TPLSQLStatement)
-  strict private
-    _Open, _For: TEpithet;
-    _Cursor, _Select, _Using: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -460,25 +425,6 @@ type
   strict private
     _Close: TEpithet;
     _Cursor: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Оператор exit }
-  TExit = class(TPLSQLStatement)
-  strict private
-    _Exit, _When: TEpithet;
-    _Condition: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Оператор goto }
-  TGoto = class(TPLSQLStatement)
-  strict private
-    _Goto, _Address: TEpithet;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -605,7 +551,8 @@ type
 
 implementation
 
-uses Parser, Expressions, DML, DDL, Keywords, Select;
+uses Parser, Expressions, DML, DDL, Keywords, Select, Label_, Goto_, Exit_,
+  OpenFor, ForAll, Assignment;
 
 { TProgramBlock }
 
@@ -903,24 +850,6 @@ begin
   inherited;
 end;
 
-{ TAssignment }
-
-function TAssignment.InternalParse: boolean;
-begin
-  TQualifiedIndexedIdent.Parse(Self, Source, _Target);
-  _Assignment := Terminal(':=');
-  Result := Assigned(_Target) and Assigned(_Assignment);
-  if not Result then exit;
-  TExpression.Parse(Self, Source, _Expression);
-  inherited;
-end;
-
-procedure TAssignment.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Target, _Assignment, _Expression]);
-  inherited;
-end;
-
 { TReturn }
 
 function TReturn.InternalParse: boolean;
@@ -994,7 +923,7 @@ end;
 function TStatements.ParseStatement(out AResult: TStatement): boolean;
 begin
   Result := DMLParser.Parse(Self, Source, AResult) or
-            TParser.ParsePLSQL(Self, Source, AResult);
+            PLSQLParser.Parse(Self, Source, AResult);
 end;
 
 function TStatements.ParseBreak: boolean;
@@ -1165,30 +1094,6 @@ end;
 function TIfSections.ParseBreak: boolean;
 begin
   Result := Any([Keyword(['end if', 'end'])]);
-end;
-
-{ TOpenFor }
-
-function TOpenFor.InternalParse: boolean;
-begin
-  _Open := Keyword('open');
-  if not Assigned(_Open) then exit(false);
-  TQualifiedIdent.Parse(Self, Source, _Cursor);
-  _For := Keyword('for');
-  if not TSelect.Parse(Self, Source, _Select) then TExpression.Parse(Self, Source, _Select);
-  TUsing.Parse(Self, Source, _Using);
-  inherited;
-  Result := true;
-end;
-
-procedure TOpenFor.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Open,  _IndentNextLine,
-                               _Cursor, _UndentNextLine,
-                       _For,   _IndentNextLine,
-                               _Select, _UndentNextLine,
-                       _Using]);
-  inherited;
 end;
 
 { TUsing }
@@ -1433,40 +1338,6 @@ begin
   Result := Any([Terminal([';', ')'])]);
 end;
 
-{ TForall }
-
-function TForAll.InternalParse: boolean;
-begin
-  _ForAll := Keyword('forall');
-  if not Assigned(_ForAll) then exit(false);
-  _Variable := Identifier;
-  _In := Keyword('in');
-  _IndicesOrValues := Keyword(['indices', 'values']);
-  if Assigned(_IndicesOrValues) then
-    begin
-      _Of := Keyword('of');
-      TQualifiedIndexedIdent.Parse(Self, Source, _TableName);
-    end
-  else
-    begin
-      TExpression.Parse(Self, Source, _Low);
-      _To := Terminal('..');
-      TExpression.Parse(Self, Source, _High);
-    end;
-  _Save := Keyword('save');
-  _Exceptions := Keyword('exceptions');
-  if not DMLParser.Parse(Self, Source, _DML) then TParser.ParsePLSQL(Self, Source, _DML);
-  inherited;
-  Result := true;
-end;
-
-procedure TForall.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_ForAll, _Variable, _In, _IndicesOrValues, _Low, _Of, _To, _TableName, _High, _Save, _Exceptions]);
-  APrinter.PrintIndented(_DML);
-  inherited;
-end;
-
 { TCaseSection }
 
 function TCaseSection.InternalParse: boolean;
@@ -1599,25 +1470,6 @@ begin
   inherited;
 end;
 
-{ TExit }
-
-function TExit.InternalParse: boolean;
-begin
-  Result := true;
-  _Exit := Keyword('exit');
-  if not Assigned(_Exit) then exit(false);
-  _When := Keyword('when');
-  if Assigned(_When) then TExpression.Parse(Self, Source, _Condition);
-  { Чтобы не путать с sqlplus-ным when, потребуем либо when, либо точку с запятой }
-  if not inherited and not Assigned(_When) then exit(false);
-end;
-
-procedure TExit.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Exit, _When, _Condition]);
-  inherited;
-end;
-
 { TExecuteImmediate }
 
 function TExecuteImmediate.InternalParse: boolean;
@@ -1658,22 +1510,6 @@ begin
   APrinter.PrintItems([_NextLine, _NextLine, _Comment, _NextLine, _NextLine]);
 end;
 
-{ TGoto }
-
-function TGoto.InternalParse: boolean;
-begin
-  _Goto := Keyword('goto');
-  Result := Assigned(_Goto);
-  if Result then _Address := Identifier;
-  inherited;
-end;
-
-procedure TGoto.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Goto, _Address]);
-  inherited;
-end;
-
 { TAlignedParamsDeclaration }
 
 function TAlignedParamsDeclaration.Aligned: TAlignMode;
@@ -1703,6 +1539,35 @@ end;
 function TParamsDeclaration.MultiLine: boolean;
 begin
   Result := (InnerStatement is TAlignedParamsDeclaration) and TAlignedParamsDeclaration(InnerStatement).OnePerLine;
+end;
+
+{ PLSQLParser }
+
+class function PLSQLParser.Parse(AParent: TStatement;
+  ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+begin
+  Result := TPragma.Parse(AParent, ASource, AResult) or
+            TReturn.Parse(AParent, ASource, AResult) or
+            TNull.Parse(AParent, ASource, AResult) or
+            TRaise.Parse(AParent, ASource, AResult) or
+            TIf.Parse(AParent, ASource, AResult) or
+            TCase.Parse(AParent, ASource, AResult) or
+            TLoop.Parse(AParent, ASource, AResult) or
+            TFor.Parse(AParent, ASource, AResult) or
+            TWhile.Parse(AParent, ASource, AResult) or
+            TForAll.Parse(AParent,ASource, AResult) or
+            TOpenFor.Parse(AParent, ASource, AResult) or
+            TFetch.Parse(AParent, ASource, AResult) or
+            TExit.Parse(AParent, ASource, AResult) or
+            TPipeRow.Parse(AParent, ASource, AResult) or
+            TClose.Parse(AParent, ASource, AResult) or
+            TExecuteImmediate.Parse(AParent, ASource, AResult) or
+            TAnonymousBlock.Parse(AParent, ASource, AResult) or
+            TAssignment.Parse(AParent, ASource, AResult) or
+            TProcedureCall.Parse(AParent, ASource, AResult) or
+            TLabel.Parse(AParent, ASource, AResult) or
+            TGoto.Parse(AParent, ASource, AResult) or
+            TStandaloneComment.Parse(AParent, ASource, AResult);
 end;
 
 initialization
