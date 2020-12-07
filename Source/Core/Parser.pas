@@ -76,7 +76,7 @@ type
 
 implementation
 
-uses DDL, DML, PLSQL, SQLPlus, Expressions, Select;
+uses DDL, DML, PLSQL, SQLPlus, Expressions, Select, Label_;
 
 type
   { "Пустое" выражение }

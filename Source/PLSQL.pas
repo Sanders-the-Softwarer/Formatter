@@ -31,15 +31,6 @@ uses Classes, Windows, SysUtils, Math, Streams, Tokens, Statements, Commons,
 
 type
 
-  { Метка }
-  TLabel = class(TStatement)
-  strict private
-    _Name: TToken;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
   { Базовый класс для операторов PL/SQL }
   TPLSQLStatement = class(TSemicolonStatement);
 
@@ -1665,21 +1656,6 @@ end;
 procedure TStandaloneComment.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_NextLine, _NextLine, _Comment, _NextLine, _NextLine]);
-end;
-
-{ TLabel }
-
-function TLabel.InternalParse: boolean;
-begin
-  Source.Mark;
-  _Name := NextToken;
-  Result := _Name is Tokens.TLabel;
-  if not Result then Source.Restore;
-end;
-
-procedure TLabel.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItem(_Name);
 end;
 
 { TGoto }

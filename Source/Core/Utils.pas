@@ -12,7 +12,7 @@ unit Utils;
 
 interface
 
-uses Classes, SysUtils, Windows, Forms;
+uses Classes, SysUtils, Windows, Vcl.Forms;
 
 const
   { Названия стандартных линеек для выравнивания }

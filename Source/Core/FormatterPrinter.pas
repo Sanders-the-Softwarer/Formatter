@@ -22,7 +22,7 @@ type
   TFormatterPrinterMode = (fpmNormal, fpmGetRulers, fpmSetRulers, fpmCheckSpecialComments);
 
   { Принтер для вывода форматированного текста }
-  TFormatterPrinter = class(TBasePrinter)
+  TFormatterPrinter = class (TBasePrinter)
   strict private
     { Очередь печати }
     TokenQueue: TQueue<TToken>;
@@ -96,6 +96,20 @@ type
     function CurrentCol: integer;
     function CurrentMaxWidth: integer;
     procedure Ruler(const ARuler: string);
+  public
+    procedure AbstractForWarning; virtual; abstract;
+  end;
+
+  { Принтер для черновиков }
+  TDraftPrinter = class(TFormatterPrinter)
+  public
+    procedure AbstractForWarning; override;
+  end;
+
+  { Принтер для итогового результата }
+  TFineCopyPrinter = class(TFormatterPrinter)
+  public
+    procedure AbstractForWarning; override;
   end;
 
 const
@@ -483,7 +497,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   var DraftPrinter: TFormatterPrinter;
   begin
     if AStatement.Rulers.Full then exit;
-    DraftPrinter := TFormatterPrinter.Create(Self.Settings, false, [poFarAbove..poFarBelow], false, false);
+    DraftPrinter := TDraftPrinter.Create(Self.Settings, false, [poFarAbove..poFarBelow], false, false);
     try
       DraftPrinter.Rulers := AStatement.Rulers;
       DraftPrinter.Rulers.UseSpaces := Settings.AlignUseSpace;
@@ -523,7 +537,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   begin
     if not Assigned(SpecCommentDraftPrinter) then
     begin
-      SpecCommentDraftPrinter := TFormatterPrinter.Create(Self.Settings, true, [poFarAbove..poFarBelow], false, false);
+      SpecCommentDraftPrinter := TDraftPrinter.Create(Self.Settings, true, [poFarAbove..poFarBelow], false, false);
       SpecCommentDraftPrinter.BeginPrint;
       SpecCommentDraftPrinter.Mode := fpmCheckSpecialComments;
     end;
@@ -657,6 +671,22 @@ end;
 function TFormatterPrinter.CurrentCol: integer;
 begin
   Result := TextBuilder.Col;
+end;
+
+{ TDraftPrinter }
+
+procedure TDraftPrinter.AbstractForWarning;
+begin
+  { тело не нужно, метод используется только для warning-а при попытке
+    создания TFormatterPrinter }
+end;
+
+{ TFineCopyPrinter }
+
+procedure TFineCopyPrinter.AbstractForWarning;
+begin
+  { тело не нужно, метод используется только для warning-а при попытке
+    создания TFormatterPrinter }
 end;
 
 end.

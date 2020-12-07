@@ -30,7 +30,7 @@ uses BasePrinter, FormatterPrinter, Statements;
 type
 
   { Принтер для вывода форматированного текста }
-  TGUIFormatterPrinter = class(TFormatterPrinter)
+  TGUIFormatterPrinter = class(TFineCopyPrinter)
   strict private
     Memo: TMemo;
     IntoSync: boolean;

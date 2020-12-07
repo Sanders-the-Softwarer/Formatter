@@ -109,25 +109,25 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Source\BasePrinter.pas"/>
-        <DCCReference Include="Source\Commons.pas"/>
-        <DCCReference Include="Source\Controller.pas"/>
+        <DCCReference Include="Source\Core\BasePrinter.pas"/>
+        <DCCReference Include="Source\Core\Commons.pas"/>
+        <DCCReference Include="Source\Core\Controller.pas"/>
         <DCCReference Include="Source\DDL.pas"/>
         <DCCReference Include="Source\DML.pas"/>
-        <DCCReference Include="Source\Expressions.pas"/>
-        <DCCReference Include="Source\FormatterPrinter.pas"/>
-        <DCCReference Include="Source\Keywords.pas"/>
-        <DCCReference Include="Source\Parser.pas"/>
+        <DCCReference Include="Source\Core\Expressions.pas"/>
+        <DCCReference Include="Source\Core\FormatterPrinter.pas"/>
+        <DCCReference Include="Source\Core\Keywords.pas"/>
+        <DCCReference Include="Source\Core\Parser.pas"/>
         <DCCReference Include="Source\PLSQL.pas"/>
-        <DCCReference Include="Source\Printer.pas"/>
-        <DCCReference Include="Source\Rulers.pas"/>
+        <DCCReference Include="Source\Core\Printer.pas"/>
+        <DCCReference Include="Source\Core\Rulers.pas"/>
         <DCCReference Include="Source\SQLPlus.pas"/>
-        <DCCReference Include="Source\Statements.pas"/>
-        <DCCReference Include="Source\Streams.pas"/>
-        <DCCReference Include="Source\TextBuilder.pas"/>
-        <DCCReference Include="Source\Tokenizer.pas"/>
-        <DCCReference Include="Source\Tokens.pas"/>
-        <DCCReference Include="Source\Utils.pas"/>
+        <DCCReference Include="Source\Core\Statements.pas"/>
+        <DCCReference Include="Source\Core\Streams.pas"/>
+        <DCCReference Include="Source\Core\TextBuilder.pas"/>
+        <DCCReference Include="Source\Core\Tokenizer.pas"/>
+        <DCCReference Include="Source\Core\Tokens.pas"/>
+        <DCCReference Include="Source\Core\Utils.pas"/>
         <DCCReference Include="Source\DDL\Alter.pas"/>
         <DCCReference Include="Source\DDL\Create.pas"/>
         <DCCReference Include="Source\DDL\DatabaseLink.pas"/>
@@ -224,16 +224,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployClass Name="DependencyModule">
-                    <Platform Name="Win32">
-                        <Operation>0</Operation>
-                        <Extensions>.dll;.bpl</Extensions>
-                    </Platform>
-                    <Platform Name="OSX32">
-                        <Operation>1</Operation>
-                        <Extensions>.dylib</Extensions>
-                    </Platform>
-                </DeployClass>
+                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
                 <DeployClass Name="ProjectOSXResource">
                     <Platform Name="OSX32">
                         <RemoteDir>Contents\Resources</RemoteDir>
@@ -572,7 +563,16 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
+                <DeployClass Name="DependencyModule">
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                        <Extensions>.dll;.bpl</Extensions>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                </DeployClass>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>

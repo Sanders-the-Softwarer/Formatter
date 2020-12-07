@@ -244,7 +244,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     LastToken: TToken;
   begin
     SetLength(TermInfo, Count);
-    DraftPrinter := TFormatterPrinter.Create(APrinter.Settings, true, [poAbove, poBelow, poBelowBOL, poFarAbove, poFarBelow], false, false);
+    DraftPrinter := TDraftPrinter.Create(APrinter.Settings, true, [poAbove, poBelow, poBelowBOL, poFarAbove, poFarBelow], false, false);
     try
       DraftPrinter.BeginPrint;
       for i := 0 to Count - 1 do
@@ -353,7 +353,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         { Если это не конкатенация, просто выйдем }
         if not (D is TToken) or (TToken(D).Value <> '||') then exit(false);
         { В противном случае возьмём текст выражения }
-        if not Assigned(DraftPrinter) then DraftPrinter := TFormatterPrinter.Create(APrinter.Settings);
+        if not Assigned(DraftPrinter) then DraftPrinter := TDraftPrinter.Create(APrinter.Settings);
         DraftPrinter.BeginPrint;
         DraftPrinter.PrintItem(Item(i));
         Text := DraftPrinter.GetText;
@@ -540,7 +540,7 @@ function TExpression.GetMultiLine: boolean;
 var Printer: TFormatterPrinter;
 begin
   if LineCount > 0 then exit(LineCount > 1);
-  Printer := TFormatterPrinter.Create(Settings, true, [], false, false);
+  Printer := TDraftPrinter.Create(Settings, true, [], false, false);
   try
     Printer.BeginPrint;
     PrintSelf(Printer);

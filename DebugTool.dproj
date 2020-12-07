@@ -112,26 +112,26 @@
         <DCCReference Include="Source\GUI\fMain.pas">
             <Form>FormMain</Form>
         </DCCReference>
-        <DCCReference Include="Source\Streams.pas"/>
-        <DCCReference Include="Source\Tokens.pas"/>
-        <DCCReference Include="Source\Tokenizer.pas"/>
-        <DCCReference Include="Source\Parser.pas"/>
-        <DCCReference Include="Source\Printer.pas"/>
+        <DCCReference Include="Source\Core\Streams.pas"/>
+        <DCCReference Include="Source\Core\Tokens.pas"/>
+        <DCCReference Include="Source\Core\Tokenizer.pas"/>
+        <DCCReference Include="Source\Core\Parser.pas"/>
+        <DCCReference Include="Source\Core\Printer.pas"/>
         <DCCReference Include="Source\PLSQL.pas"/>
-        <DCCReference Include="Source\Expressions.pas"/>
+        <DCCReference Include="Source\Core\Expressions.pas"/>
         <DCCReference Include="Source\DML.pas"/>
         <DCCReference Include="Source\DDL.pas"/>
         <DCCReference Include="Source\SQLPlus.pas"/>
-        <DCCReference Include="Source\Utils.pas"/>
-        <DCCReference Include="Source\Controller.pas"/>
+        <DCCReference Include="Source\Core\Utils.pas"/>
+        <DCCReference Include="Source\Core\Controller.pas"/>
         <DCCReference Include="Source\GUI\GUIPrinters.pas"/>
-        <DCCReference Include="Source\FormatterPrinter.pas"/>
-        <DCCReference Include="Source\Commons.pas"/>
-        <DCCReference Include="Source\BasePrinter.pas"/>
-        <DCCReference Include="Source\TextBuilder.pas"/>
-        <DCCReference Include="Source\Rulers.pas"/>
+        <DCCReference Include="Source\Core\FormatterPrinter.pas"/>
+        <DCCReference Include="Source\Core\Commons.pas"/>
+        <DCCReference Include="Source\Core\BasePrinter.pas"/>
+        <DCCReference Include="Source\Core\TextBuilder.pas"/>
+        <DCCReference Include="Source\Core\Rulers.pas"/>
         <DCCReference Include="Source\PLSQL\Trigger.pas"/>
-        <DCCReference Include="Source\Keywords.pas"/>
+        <DCCReference Include="Source\Core\Keywords.pas"/>
         <DCCReference Include="Source\DDL\Role.pas"/>
         <DCCReference Include="Source\DDL\Sequence.pas"/>
         <DCCReference Include="Source\DDL\Alter.pas"/>
@@ -139,7 +139,7 @@
         <DCCReference Include="Source\DDL\Create.pas"/>
         <DCCReference Include="Source\DDL\DatabaseLink.pas"/>
         <DCCReference Include="Source\DML\Select.pas"/>
-        <DCCReference Include="Source\Statements.pas"/>
+        <DCCReference Include="Source\Core\Statements.pas"/>
         <DCCReference Include="Source\DDL\Set_.pas"/>
         <DCCReference Include="Source\DML\Insert.pas"/>
         <DCCReference Include="Source\DDL\Session.pas"/>
@@ -148,6 +148,8 @@
         <DCCReference Include="Source\SQL_Plus\Exit_SQLPlus.pas"/>
         <DCCReference Include="Source\DDL\Grant.pas"/>
         <DCCReference Include="Source\Core\Stats.pas"/>
+        <DCCReference Include="Source\DDL\Drop.pas"/>
+        <DCCReference Include="Source\PLSQL\Label_.pas"/>
         <None Include="Profiling\AQtimeModule2.aqt"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
