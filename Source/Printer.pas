@@ -64,6 +64,7 @@ type
     AlignCommands: boolean;
     AlignSpecialComments: boolean;
     AlignUseSpace: boolean;
+    AlignRightComments: boolean;
     ReplaceDefault: boolean;
     ReplaceAsIs: boolean;
     ChangeCommentType: boolean;
@@ -310,10 +311,11 @@ begin
   AlignVariables            := true;
   AlignFields               := true;
   AlignColumns              := true;
-  AlignExpressions          := false;
+  AlignExpressions          := true;
   AlignCommands             := true;
   AlignSpecialComments      := true;
   AlignUseSpace             := true;
+  AlignRightComments        := true;
   ReplaceDefault            := true;
   ReplaceAsIs               := true;
   AddInAccessSpecificator   := true;

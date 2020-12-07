@@ -240,6 +240,8 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   var
     DraftPrinter: TFormatterPrinter;
     i, DelimiterLen: integer;
+    LastTerm: TTerm;
+    LastToken: TToken;
   begin
     SetLength(TermInfo, Count);
     DraftPrinter := TFormatterPrinter.Create(APrinter.Settings, true, [poAbove, poBelow, poBelowBOL, poFarAbove, poFarBelow], false, false);
@@ -292,6 +294,13 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
       DraftPrinter.EndPrint;
       DraftPrinter.Free;
     end;
+    { Если выражение завершается строчным комментарием, отметим его флагом }
+    LastTerm := TTerm(Item(Count - 1));
+    if not Assigned(LastTerm) then exit;
+    LastToken := LastTerm.LastToken;
+    if not Assigned(LastToken) then exit;
+    if not Assigned(LastToken.CommentAfter) then exit;
+    LastToken.CommentAfter.FixBug71 := true;
   end;
 
   procedure PutLineBreaks(Start, Finish: integer); forward;

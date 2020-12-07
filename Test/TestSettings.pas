@@ -58,13 +58,15 @@ end;
 
 procedure _Settings.Выравнивать_Выражения;
 begin
+  PostponeTill(2020, 12, 6);
   Settings.AlignExpressions := true;
-  UnderConstruction;
+  //UnderConstruction;
 end;
 
 procedure _Settings.Выравнивать_Колонки;
 begin
   Settings.AlignColumns := true;
+  Settings.AlignRightComments := true;
 end;
 
 procedure _Settings.Выравнивать_Команды;
@@ -110,7 +112,7 @@ end;
 
 procedure _Settings.Заполнять_Пустоты;
 begin
-  PostponeTill(2020, 11, 20);
+  PostponeTill(2020, 12, 6);
   Settings.AlignUseSpace := true;
   Settings.AlignVariables := true;
   Settings.AlignFields := true;
@@ -123,8 +125,9 @@ end;
 
 procedure _Settings.Не_Выравнивать_Выражения;
 begin
+  PostponeTill(2020, 12, 6);
   Settings.AlignExpressions := false;
-  UnderConstruction;
+//  UnderConstruction;
 end;
 
 procedure _Settings.Не_Выравнивать_Колонки;
@@ -175,7 +178,7 @@ end;
 
 procedure _Settings.Не_Заполнять_Пустоты;
 begin
-  PostponeTill(2020, 11, 20);
+  PostponeTill(2020, 12, 6);
   Settings.AlignUseSpace := false;
   Settings.AlignVariables := true;
   Settings.AlignFields := true;

@@ -369,7 +369,7 @@ object FormMain: TFormMain
           Left = 3
           Top = 147
           Width = 153
-          Height = 194
+          Height = 219
           Caption = '  '#1042#1099#1088#1072#1074#1085#1080#1074#1072#1090#1100'  '
           TabOrder = 2
           object checkAlignFields: TCheckBox
@@ -440,13 +440,24 @@ object FormMain: TFormMain
           end
           object checkUseSpace: TCheckBox
             Left = 13
-            Top = 166
+            Top = 189
             Width = 128
             Height = 17
             Caption = #1047#1072#1087#1086#1083#1085#1103#1103' '#1087#1091#1089#1090#1086#1090#1099
             Checked = True
             State = cbChecked
             TabOrder = 6
+            OnClick = UpdateRequired
+          end
+          object checkAlignRightComments: TCheckBox
+            Left = 13
+            Top = 166
+            Width = 140
+            Height = 17
+            Caption = #1057#1090#1088#1086#1095#1085#1099#1077' '#1082#1086#1084#1084#1077#1085#1090#1072#1088#1080#1080
+            Checked = True
+            State = cbChecked
+            TabOrder = 7
             OnClick = UpdateRequired
           end
         end
@@ -572,7 +583,7 @@ object FormMain: TFormMain
         end
         object checkLongOperands: TCheckBox
           Left = 16
-          Top = 364
+          Top = 372
           Width = 128
           Height = 28
           Caption = #1059#1095#1080#1090#1099#1074#1072#1090#1100' '#1076#1083#1080#1085#1085#1099#1077' '#1086#1087#1077#1088#1072#1085#1076#1099

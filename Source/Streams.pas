@@ -80,6 +80,7 @@ type
     destructor Destroy; override;
     function Eof: boolean; override; final;
     function Next: T; override; final;
+    function Last: T;
     procedure First;
     procedure PrintAll(APrinter: TPrinter);
   end;
@@ -175,6 +176,13 @@ begin
     then Result := Output[RepeatMark]
     else Result := PutIntoOutput(inherited Next);
   Inc(RepeatMark);
+end;
+
+function TBufferedStream<T>.Last: T;
+begin
+  if Assigned(Output) and (RepeatMark > 0)
+    then Result := Output[RepeatMark - 1]
+    else Result := nil; { ¬озникает, например, в TAnonymousHeader, который может быть пустым }
 end;
 
 procedure TBufferedStream<T>.First;

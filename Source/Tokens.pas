@@ -156,6 +156,7 @@ type
   public
     Position: TCommentPosition;
     Lead: TToken;
+    FixBug71: boolean;
     ChangeTypeToBrackets: boolean;
     function TokenType: string; override;
     function LineComment: boolean;

@@ -302,6 +302,9 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
         if Assigned(FarPrevToken) then Inc(OriginalFormatStartLine, AToken.Line - FarPrevToken.Line);
       end;
     end;
+    { Если попали в ситуацию бага №71, скорректируем сдвиг }
+    if LineComment and AComment.FixBug71 and (Indents.Count > 0) then
+      Shift := Indents.Peek;
     { Выставим флаги }
     FakeToken := (AToken.Col <= 0);
     EmptyToken := FakeToken and (AToken.Value = '');
@@ -315,7 +318,7 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     if (SupNextLine > 0) and (Mode <> fpmCheckSpecialComments) then
       AToken.IntoSupNextLine := AToken.IntoSupNextLine + 1;
     { Для комментариев справа от текста приготовим выравнивающую линейку }
-    if IsComment and not SpecComment and (AComment.Position = poAfter) then
+    if IsComment and not SpecComment and (AComment.Position = poAfter) and Settings.AlignRightComments then
       Ruler(RIGHT_COMMENT);
     { Если это комментарий под предыдущей лексемой, надо урегулировать переводы строк }
     if IsComment and not OriginalFormat and not (FarPrevToken is TComment) then
@@ -405,7 +408,8 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     if IsComment and AComment.ChangeTypeToBrackets and not AComment.SkipChangeLineComment then
       Value := '/* ' + Trim(Value.Substring(2)) + ' */';
     { Выполним отступ }
-    if (EOLLimit > 0) and (TextBuilder.Col = 1) and not OriginalFormat then TextBuilder.AppendSpace(ActualShift);
+    if (EOLLimit > 0) and (TextBuilder.Col = 1) and not OriginalFormat then
+      TextBuilder.AppendSpace(ActualShift);
     { Если нужно сохранить текущий отступ - сделаем это }
     if FixShift and not IsComment then
     begin
@@ -444,9 +448,9 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
   end;
 
 begin
-  { Добавим лексему в очередь и рекурсивно развернём все связанные с ней комментарии }
+  { Добавим лексему в очередь и рекурсивно развернём связанные с ней комментарии }
   AddToken(AToken);
-  { Ну а теперь напечатаем очередь }
+  { Напечатаем очередь }
   while TokenQueue.Count > 0 do InternalPrint(TokenQueue.Dequeue);
 end;
 
@@ -505,7 +509,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     try
       Self.Rulers  := AStatement.Rulers;
       Self.Mode    := fpmSetRulers;
-      Rulers.Shift := Self.Shift;
+      Rulers.Shift := @Self.Shift;
       SimplePrintStatement;
       // иногда будем включать для отладки {$IfDef DEBUG_OUTPUT} Rulers.Print(Self); {$EndIf}
     finally

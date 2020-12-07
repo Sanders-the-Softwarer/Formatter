@@ -91,6 +91,7 @@ type
     procedure _68;
     procedure _69;
     procedure _70;
+    procedure _71;
   end;
 
 implementation
@@ -125,6 +126,7 @@ end;
 procedure _Bugs._21;
 begin
   Settings.AlignVariables := true;
+  Settings.AlignRightComments := true;
 end;
 
 procedure _Bugs._22;
@@ -202,14 +204,14 @@ end;
 
 procedure _Bugs._37;
 begin
-  PostponeTill(2020, 11, 20);
+  PostponeTill(2020, 12, 6);
   Settings.AlignFields := true;
   Settings.PreferredExpressionLength := 100;
 end;
 
 procedure _Bugs._38;
 begin
-  PostponeTill(2020, 11, 20);
+  PostponeTill(2020, 12, 6);
   Settings.PreferredExpressionLength := 120;
   Settings.BeautifyLongOperands := true;
 end;
@@ -288,6 +290,7 @@ procedure _Bugs._51;
 begin
   Settings.AlignVariables := true;
   Settings.ChangeCommentType := true;
+  Settings.AlignRightComments := true;
 end;
 
 procedure _Bugs._52;
@@ -319,7 +322,7 @@ end;
 
 procedure _Bugs._58;
 begin
-  PostponeTill(2020, 11, 20);
+  PostponeTill(2020, 12, 6);
   Settings.PreferredExpressionLength := 80;
   Settings.BeautifyLongOperands := true;
 end;
@@ -341,7 +344,7 @@ end;
 
 procedure _Bugs._61;
 begin
-  PostponeTill(2020, 11, 20);
+  PostponeTill(2020, 12, 6);
   Settings.AlignFields := true;
   Settings.AlignUseSpace := false;
   Settings.PreferredExpressionLength := 100;
@@ -410,6 +413,12 @@ begin
   Settings.AlignUseSpace := true;
 end;
 
+procedure _Bugs._71;
+begin
+  Settings.AlignVariables := true;
+  Settings.AlignRightComments := true;
+end;
+
 procedure _Bugs._8;
 begin
   Settings.AlignVariables := true;
@@ -422,6 +431,7 @@ end;
 procedure _Bugs._10;
 begin
   Settings.AlignVariables := true;
+  Settings.AlignRightComments := true;
 end;
 
 procedure _Bugs._11;

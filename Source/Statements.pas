@@ -72,13 +72,14 @@ type
   strict private
     FParent: TStatement;
     FSettings: TFormatSettings;
-    FFirstToken: TToken;
+    FFirstToken, FLastToken: TToken;
     FMatchedTo: TStatement;
     FreeList: TObjectList;
     FRulers: TRulers;
     FHasSpecialComments: THasSpecialComments;
     function GetSettings: TFormatSettings;
     procedure SetHasSpecialComments(AHasSpecialComments: THasSpecialComments);
+    procedure FixLastToken;
   strict protected
     function InternalParse: boolean; virtual;
     procedure InternalPrintSelf(APrinter: TPrinter); virtual;
@@ -116,6 +117,7 @@ type
     property Parent: TStatement read FParent write FParent;
     property Settings: TFormatSettings read GetSettings write FSettings;
     property FirstToken: TToken read FFirstToken;
+    property LastToken: TToken read FLastToken;
     property Rulers: TRulers read GetRulers;
     property MatchedTo: TStatement read FMatchedTo write FMatchedTo;
     property HasSpecialComments: THasSpecialComments read FHasSpecialComments write SetHasSpecialComments;
@@ -277,9 +279,16 @@ begin
     if Candidate = Self then
       begin
         AResult := Candidate.Create(AParent, Tokens);
-        if AResult.InternalParse then exit(true);
-        Tokens.Restore(SavedPosition);
-        FreeAndNil(AResult);
+        if AResult.InternalParse then
+          begin
+            AResult.FixLastToken;
+            exit(true);
+          end
+        else
+          begin
+            Tokens.Restore(SavedPosition);
+            FreeAndNil(AResult);
+          end;
       end
     else
       begin
@@ -662,6 +671,11 @@ begin
   S := Self.Parent;
   while Assigned(S) and (S.Aligned = amNever) do S := S.Parent;
   if Assigned(S) then S.HasSpecialComments := hscYes;
+end;
+
+procedure TStatement.FixLastToken;
+begin
+  FLastToken := Source.Last;
 end;
 
 function TStatement.GetRulers: TRulers;

@@ -72,7 +72,7 @@ type
     { Прочие параметры измерения ширин }
     MinLine, MaxLine, MaxColIndex: integer;
     { Отступ конструкции, относительно которого нормируем Take и Fix }
-    FShift: integer;
+    FShift: PInteger;
     { Настройка заполнения пустот }
     FUseSpaces: boolean;
     { Флаг заполненности информации }
@@ -95,7 +95,7 @@ type
     procedure Measure(ALine, ACol: integer; AFromStart: boolean = false);
     function Fix(const ARuler: string): integer;
     function Empty: boolean;
-    property Shift: integer read FShift write FShift;
+    property Shift: PInteger read FShift write FShift;
     property UseSpaces: boolean read FUseSpaces write FUseSpaces;
     property Full: boolean read FFull write FFull;
   public
@@ -105,6 +105,9 @@ type
 
 implementation
 
+const
+  Zero: integer = 0;
+
 constructor TRulers.Create;
 begin
   Names := TStringList.Create;
@@ -113,6 +116,7 @@ begin
   Names.Add(SPECIAL_COMMENT_START);
   Names.Add(SPECIAL_COMMENT_FINISH);
   FOwner := AOwner;
+  FShift := @Zero;
 end;
 
 destructor TRulers.Destroy;
@@ -164,7 +168,7 @@ begin
   ColIndex := Names.IndexOf(CurrentRuler);
   CurrentRuler := '';
   { Сохраним ширину текущей ячейки }
-  Width[ALine, ColIndex] := ACol - StartCol - Shift;
+  Width[ALine, ColIndex] := ACol - StartCol - Shift^;
   Utils._Debug('[%p] Measure %s (%d, %d) => index = %d, width = %d', [pointer(Self), CurrentRuler, ALine, ACol, ColIndex, Width[ALine, ColIndex]]);
   MaxColIndex := Math.Max(MaxColIndex, ColIndex);
 end;
@@ -173,10 +177,10 @@ function TRulers.Fix(const ARuler: string): integer;
 begin
   if not Assigned(Rulers) then CalcRulers;
   if Rulers.ContainsKey(ARuler)
-    then Utils._Debug('[%p] Fix %s, shift = %d, offset = %d', [pointer(Self), ARuler, Shift, Rulers[ARuler]])
-    else Utils._Debug('[%p] Fix %s, shift = %d, - no ruler -', [pointer(Self), ARuler, Shift]);
+    then Utils._Debug('[%p] Fix %s, shift = %d, offset = %d', [pointer(Self), ARuler, Shift^, Rulers[ARuler]])
+    else Utils._Debug('[%p] Fix %s, shift = %d, - no ruler -', [pointer(Self), ARuler, Shift^]);
   if Rulers.ContainsKey(ARuler)
-    then Result := Shift + Rulers[ARuler]
+    then Result := Rulers[ARuler] + Shift^
     else Result := 0;
 end;
 
