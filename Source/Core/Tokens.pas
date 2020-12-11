@@ -26,7 +26,7 @@ unit Tokens;
 
 interface
 
-uses System.SysUtils, System.Generics.Collections, TypInfo;
+uses System.SysUtils, System.Generics.Collections, System.Character, TypInfo;
 
 type
 
@@ -163,6 +163,7 @@ type
     function Height: integer;
     function LeadComment: TComment;
     procedure ShiftTo(ACol: integer);
+    function CorrectSpaces: string;
     function DebugInfo: string; override;
   end;
 
@@ -364,6 +365,28 @@ begin
         end;
       end;
   Value := S;
+end;
+
+function TComment.CorrectSpaces: string;
+
+  var L: integer;
+
+  function Correct(S, SE: string): string;
+  begin
+    Result := S;
+    S := Trim(S);
+    if (S <> '') and S[1].IsLetterOrDigit then
+      Result := ' ' + S + SE;
+  end;
+
+begin
+  L := Length(Value);
+  if Value.StartsWith('--') then
+    Result := '--' + Correct(Value.Substring(2), '')
+  else if Value.StartsWith('/*') and Value.EndsWith('*/') then
+    Result := '/*' + Correct(Value.Substring(2, L - 4), ' ') + '*/'
+  else
+    Exception.CreateFmt('Неверный комментарий: [%s]', [Value]);
 end;
 
 function TComment.DebugInfo: string;

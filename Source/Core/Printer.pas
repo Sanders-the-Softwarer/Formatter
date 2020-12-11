@@ -68,6 +68,7 @@ type
     ReplaceDefault: boolean;
     ReplaceAsIs: boolean;
     ChangeCommentType: boolean;
+    CorrectCommentSpaces: boolean;
     AddInAccessSpecificator: boolean;
     AddFromToDelete: boolean;
     PreferredExpressionLength: integer;
@@ -321,6 +322,7 @@ begin
   AddInAccessSpecificator   := true;
   AddFromToDelete           := true;
   ChangeCommentType         := false;
+  CorrectCommentSpaces      := true;
   RemoveConnectPasswords    := false;
   BeautifyLongOperands      := true;
   PreferredExpressionLength := 100;

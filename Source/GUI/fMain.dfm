@@ -2,7 +2,7 @@ object FormMain: TFormMain
   Left = 0
   Top = 0
   Caption = 'Formatter'
-  ClientHeight = 501
+  ClientHeight = 629
   ClientWidth = 986
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,15 +20,16 @@ object FormMain: TFormMain
   object spVert: TSplitter
     Left = 350
     Top = 0
-    Height = 501
+    Height = 629
     ExplicitLeft = 349
+    ExplicitHeight = 501
   end
   object pgDest: TPageControl
     AlignWithMargins = True
     Left = 353
     Top = 0
     Width = 628
-    Height = 496
+    Height = 624
     Margins.Left = 0
     Margins.Top = 0
     Margins.Right = 5
@@ -44,7 +45,7 @@ object FormMain: TFormMain
         Left = 5
         Top = 5
         Width = 610
-        Height = 458
+        Height = 586
         Margins.Left = 5
         Margins.Top = 5
         Margins.Right = 5
@@ -63,7 +64,7 @@ object FormMain: TFormMain
         Left = 5
         Top = 27
         Width = 610
-        Height = 436
+        Height = 564
         Margins.Left = 5
         Margins.Top = 5
         Margins.Right = 5
@@ -99,7 +100,7 @@ object FormMain: TFormMain
         Left = 5
         Top = 5
         Width = 610
-        Height = 458
+        Height = 586
         Margins.Left = 5
         Margins.Top = 5
         Margins.Right = 5
@@ -125,7 +126,7 @@ object FormMain: TFormMain
         Left = 5
         Top = 5
         Width = 610
-        Height = 458
+        Height = 586
         Margins.Left = 5
         Margins.Top = 5
         Margins.Right = 5
@@ -144,7 +145,7 @@ object FormMain: TFormMain
         Left = 5
         Top = 5
         Width = 610
-        Height = 458
+        Height = 586
         Margins.Left = 5
         Margins.Top = 5
         Margins.Right = 5
@@ -163,7 +164,7 @@ object FormMain: TFormMain
         Left = 5
         Top = 5
         Width = 610
-        Height = 458
+        Height = 586
         Margins.Left = 5
         Margins.Top = 5
         Margins.Right = 5
@@ -188,7 +189,7 @@ object FormMain: TFormMain
         Left = 0
         Top = 0
         Width = 620
-        Height = 468
+        Height = 596
         Align = alClient
         Font.Charset = RUSSIAN_CHARSET
         Font.Color = clWindowText
@@ -207,7 +208,7 @@ object FormMain: TFormMain
     Left = 0
     Top = 0
     Width = 350
-    Height = 501
+    Height = 629
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 1
@@ -216,7 +217,7 @@ object FormMain: TFormMain
       Left = 5
       Top = 0
       Width = 345
-      Height = 496
+      Height = 624
       Margins.Left = 5
       Margins.Top = 0
       Margins.Right = 0
@@ -228,7 +229,7 @@ object FormMain: TFormMain
         Caption = #1048#1089#1093#1086#1076#1085#1080#1082
         object spDebugInfo: TSplitter
           Left = 0
-          Top = 277
+          Top = 405
           Width = 337
           Height = 4
           Cursor = crVSplit
@@ -239,9 +240,9 @@ object FormMain: TFormMain
         object edSrc: TMemo
           AlignWithMargins = True
           Left = 5
-          Top = 27
+          Top = 5
           Width = 327
-          Height = 245
+          Height = 373
           Margins.Left = 5
           Margins.Top = 5
           Margins.Right = 5
@@ -261,7 +262,7 @@ object FormMain: TFormMain
         object edDebugInfo: TMemo
           AlignWithMargins = True
           Left = 5
-          Top = 286
+          Top = 414
           Width = 327
           Height = 177
           Margins.Left = 5
@@ -284,14 +285,14 @@ object FormMain: TFormMain
         object checkShowDebugInfo: TCheckBox
           AlignWithMargins = True
           Left = 5
-          Top = 5
+          Top = 388
           Width = 327
           Height = 17
           Margins.Left = 5
           Margins.Top = 5
           Margins.Right = 5
           Margins.Bottom = 0
-          Align = alTop
+          Align = alBottom
           Caption = #1054#1090#1082#1088#1099#1090#1100' '#1087#1072#1085#1077#1083#1100' '#1086#1090#1083#1072#1076#1086#1095#1085#1086#1081' '#1080#1085#1092#1086#1088#1084#1072#1094#1080#1080
           TabOrder = 2
           OnClick = checkShowDebugInfoClick
@@ -321,8 +322,8 @@ object FormMain: TFormMain
           Caption = #1057#1086#1087#1086#1089#1090#1072#1074#1083#1103#1090#1100' '#1087#1086#1083#1103' '#1074#1099#1088#1072#1078#1077#1085#1080#1103#1084' '#1085#1072#1095#1080#1085#1072#1103' '#1089
         end
         object Label4: TLabel
-          Left = 5
-          Top = 413
+          Left = 3
+          Top = 453
           Width = 233
           Height = 13
           Caption = #1064#1080#1088#1080#1085#1072' '#1074#1099#1088#1072#1078#1077#1085#1080#1081' '#1087#1086' '#1074#1086#1079#1084#1086#1078#1085#1086#1089#1090#1080' '#1085#1077' '#1073#1086#1083#1077#1077
@@ -503,8 +504,8 @@ object FormMain: TFormMain
           OnChange = UpdateRequired
         end
         object edPreferredExpressionLength: TSpinEdit
-          Left = 269
-          Top = 410
+          Left = 267
+          Top = 450
           Width = 46
           Height = 22
           MaxValue = 1000
@@ -545,26 +546,39 @@ object FormMain: TFormMain
         end
         object GroupBox4: TGroupBox
           Left = 162
-          Top = 290
+          Top = 347
           Width = 153
-          Height = 51
-          Caption = ' '#1056#1072#1079#1088#1077#1096#1080#1090#1100' '
+          Height = 91
+          Caption = ' '#1042' '#1082#1086#1084#1084#1077#1085#1090#1072#1088#1080#1103#1093' '
           TabOrder = 8
           object checkChangeCommentType: TCheckBox
             Left = 13
-            Top = 22
+            Top = 26
             Width = 128
-            Height = 17
-            Caption = #1084#1077#1085#1103#1090#1100' '#1082#1086#1084#1084#1077#1085#1090#1072#1088#1080#1080
+            Height = 26
+            Caption = #1052#1077#1085#1103#1090#1100' '#1090#1080#1087
             Checked = True
             State = cbChecked
             TabOrder = 0
+            WordWrap = True
+            OnClick = UpdateRequired
+          end
+          object checkCommentCorrectSpaces: TCheckBox
+            Left = 13
+            Top = 49
+            Width = 128
+            Height = 26
+            Caption = #1048#1089#1087#1088#1072#1074#1083#1103#1090#1100' '#1087#1088#1086#1073#1077#1083#1099
+            Checked = True
+            State = cbChecked
+            TabOrder = 1
+            WordWrap = True
             OnClick = UpdateRequired
           end
         end
         object GroupBox5: TGroupBox
           Left = 162
-          Top = 347
+          Top = 290
           Width = 153
           Height = 51
           Caption = #1059#1073#1080#1088#1072#1090#1100
@@ -583,7 +597,7 @@ object FormMain: TFormMain
         end
         object checkLongOperands: TCheckBox
           Left = 16
-          Top = 372
+          Top = 387
           Width = 128
           Height = 28
           Caption = #1059#1095#1080#1090#1099#1074#1072#1090#1100' '#1076#1083#1080#1085#1085#1099#1077' '#1086#1087#1077#1088#1072#1085#1076#1099

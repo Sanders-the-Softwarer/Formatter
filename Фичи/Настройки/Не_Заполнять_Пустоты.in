@@ -1,6 +1,6 @@
 declare
-    x  integer        := 1;
-    yy integer        := 22;
+    x  integer       := 1;
+    yy integer       := 22;
     t  t_number_table;
 begin
     select

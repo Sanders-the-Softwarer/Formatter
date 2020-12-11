@@ -408,9 +408,12 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
       LineComment := false;
     end;
     { Получим значение выводимого текста }
-    if OriginalFormat
-      then Value := AToken.InitialValue
-      else Value := Trim(AToken.Value);
+    if OriginalFormat then
+      Value := AToken.InitialValue
+    else if IsComment and not SpecComment and Settings.CorrectCommentSpaces then
+      Value := AComment.CorrectSpaces
+    else
+      Value := Trim(AToken.Value);
     { Учтём настройки замены лексем на синонимы и вывод в нижнем регистре }
     if (AToken is TEpithet) and TEpithet(AToken).IsKeyword and not OriginalFormat and
        SameText(AToken.Value, 'default') and Settings.ReplaceDefault and AToken.CanReplace

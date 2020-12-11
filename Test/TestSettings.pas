@@ -22,6 +22,7 @@ type
     procedure Заменять_Default;
     procedure Заменять_As_На_Is;
     procedure Менять_Типы_Комментариев;
+    procedure Исправлять_Пробелы_В_Комментариях;
     procedure Добавлять_In;
     procedure Добавлять_From_В_Delete;
     procedure Удалять_Пароли_Из_Connect;
@@ -36,6 +37,7 @@ type
     procedure Не_Заменять_Default;
     procedure Не_Заменять_As_На_Is;
     procedure Не_Менять_Типы_Комментариев;
+    procedure Не_Исправлять_Пробелы_В_Комментариях;
     procedure Не_Добавлять_In;
     procedure Не_Добавлять_From_В_Delete;
     procedure Не_Удалять_Пароли_Из_Connect;
@@ -58,9 +60,8 @@ end;
 
 procedure _Settings.Выравнивать_Выражения;
 begin
-  PostponeTill(2020, 12, 6);
   Settings.AlignExpressions := true;
-  //UnderConstruction;
+  UnderConstruction;
 end;
 
 procedure _Settings.Выравнивать_Колонки;
@@ -112,10 +113,14 @@ end;
 
 procedure _Settings.Заполнять_Пустоты;
 begin
-  PostponeTill(2020, 12, 6);
   Settings.AlignUseSpace := true;
   Settings.AlignVariables := true;
   Settings.AlignFields := true;
+end;
+
+procedure _Settings.Исправлять_Пробелы_В_Комментариях;
+begin
+  Settings.CorrectCommentSpaces := true;
 end;
 
 procedure _Settings.Менять_Типы_Комментариев;
@@ -125,9 +130,8 @@ end;
 
 procedure _Settings.Не_Выравнивать_Выражения;
 begin
-  PostponeTill(2020, 12, 6);
   Settings.AlignExpressions := false;
-//  UnderConstruction;
+  UnderConstruction;
 end;
 
 procedure _Settings.Не_Выравнивать_Колонки;
@@ -178,10 +182,14 @@ end;
 
 procedure _Settings.Не_Заполнять_Пустоты;
 begin
-  PostponeTill(2020, 12, 6);
   Settings.AlignUseSpace := false;
   Settings.AlignVariables := true;
   Settings.AlignFields := true;
+end;
+
+procedure _Settings.Не_Исправлять_Пробелы_В_Комментариях;
+begin
+  Settings.CorrectCommentSpaces := false;
 end;
 
 procedure _Settings.Не_Менять_Типы_Комментариев;

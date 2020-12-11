@@ -89,6 +89,7 @@ type
     tabStats: TTabSheet;
     edStats: TMemo;
     checkAlignRightComments: TCheckBox;
+    checkCommentCorrectSpaces: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -164,6 +165,7 @@ begin
     Settings.ReplaceAsIs                     := checkReplaceAsIs.Checked;
     Settings.AddInAccessSpecificator         := checkAddInAccessSpecificator.Checked;
     Settings.ChangeCommentType               := checkChangeCommentType.Checked;
+    Settings.CorrectCommentSpaces            := checkCommentCorrectSpaces.Checked;
     Settings.RemoveConnectPasswords          := checkRemovePasswords.Checked;
     Settings.BeautifyLongOperands            := checkLongOperands.Checked;
     Settings.PreferredExpressionLength       := edPreferredExpressionLength.Value;
@@ -265,6 +267,7 @@ begin
     checkReplaceAsIs.Checked             := Settings.ReplaceAsIs;
     checkAddInAccessSpecificator.Checked := Settings.AddInAccessSpecificator;
     checkChangeCommentType.Checked       := Settings.ChangeCommentType;
+    checkCommentCorrectSpaces.Checked    := Settings.CorrectCommentSpaces;
     checkRemovePasswords.Checked         := Settings.RemoveConnectPasswords;
     checkLongOperands.Checked            := Settings.BeautifyLongOperands;
   finally

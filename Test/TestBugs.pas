@@ -92,6 +92,7 @@ type
     procedure _69;
     procedure _70;
     procedure _71;
+    procedure _72;
   end;
 
 implementation
@@ -204,14 +205,14 @@ end;
 
 procedure _Bugs._37;
 begin
-  PostponeTill(2020, 12, 6);
   Settings.AlignFields := true;
+  Settings.AlignUseSpace := true;
+  Settings.AlignExpressions := true;
   Settings.PreferredExpressionLength := 100;
 end;
 
 procedure _Bugs._38;
 begin
-  PostponeTill(2020, 12, 6);
   Settings.PreferredExpressionLength := 120;
   Settings.BeautifyLongOperands := true;
 end;
@@ -322,7 +323,6 @@ end;
 
 procedure _Bugs._58;
 begin
-  PostponeTill(2020, 12, 6);
   Settings.PreferredExpressionLength := 80;
   Settings.BeautifyLongOperands := true;
 end;
@@ -344,7 +344,6 @@ end;
 
 procedure _Bugs._61;
 begin
-  PostponeTill(2020, 12, 6);
   Settings.AlignFields := true;
   Settings.AlignUseSpace := false;
   Settings.PreferredExpressionLength := 100;
@@ -416,6 +415,13 @@ end;
 procedure _Bugs._71;
 begin
   Settings.AlignVariables := true;
+  Settings.AlignRightComments := true;
+end;
+
+procedure _Bugs._72;
+begin
+  Settings.PreferredExpressionLength := 100;
+  Settings.AlignExpressions := true;
   Settings.AlignRightComments := true;
 end;
 
