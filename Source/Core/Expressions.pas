@@ -279,7 +279,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
           if TermInfo[i].Priority < 0 then
             begin
               TermInfo[i].BreakBeforeDelimiter := true;
-              if i < Count - 1 then TermInfo[i + 1].PostDelimiterLen := DelimiterLen;
+              if i < Count - 1 then TermInfo[i + 1].PrevDelimiterLen := DelimiterLen;
             end
           else
             begin
@@ -466,16 +466,20 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
   var i: integer;
   begin
     if not Settings.BeautifyLongOperands then exit;
+    { Если у нас в строке один длинный операнд, для читаемости перенесём знак операции на следующую строку }
     for i := 0 to Count - 1 do
-      { Если у нас в строке один длинный операнд, для читаемости
-        перенесём знак операции на следующую строку }
       if IsLongTerm(i) then
-      begin
         TermInfo[i].BreakBeforeDelimiter := true;
-        { Если следующий операнд короткий, уберём перенос перед ним }
-        if (i < Count - 1) and not IsLongTerm(i + 1) then
-          TermInfo[i].BreakAfterDelimiter := false;
-      end;
+    { Теперь у нас могли образоваться знаки операций, расположенные на отдельных строках.
+      Уберём у них перенос перед следующими строками, где это оправдано }
+    for i := 0 to Count - 2 do
+      if TermInfo[i].BreakBeforeDelimiter and
+         TermInfo[i].BreakAfterDelimiter and
+         not IsLongTerm(i + 1) and
+         not TermInfo[i + 1].BreakBeforeDelimiter and
+         (TermInfo[i + 1].PostDelimiterLen > 0)
+      then
+        TermInfo[i].BreakAfterDelimiter := false;
   end;
 
   { Расстановка выравниваний для операций типа условий в where }

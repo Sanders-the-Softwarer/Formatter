@@ -374,9 +374,10 @@ function TComment.CorrectSpaces: string;
   function Correct(S, SE: string): string;
   begin
     Result := S;
-    S := Trim(S);
     if (S <> '') and S[1].IsLetterOrDigit then
-      Result := ' ' + S + SE;
+      Result := ' ' + Result;
+    if (S <> '') and S[Length(S)].IsLetterOrDigit then
+      Result := Result + SE;
   end;
 
 begin

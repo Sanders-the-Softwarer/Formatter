@@ -26,7 +26,6 @@ uses
   TestPLSQL in 'Test\TestPLSQL.pas',
   TestBugs in 'Test\TestBugs.pas',
   TestSQLPLUS in 'Test\TestSQLPLUS.pas',
-  Select in 'Source\DML\Select.pas',
   Alter in 'Source\DDL\Alter.pas',
   Create in 'Source\DDL\Create.pas',
   DatabaseLink in 'Source\DDL\DatabaseLink.pas',
@@ -57,7 +56,9 @@ uses
   Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas',
   Stats in 'Source\Core\Stats.pas',
   TestSettings in 'Test\TestSettings.pas',
-  Drop in 'Source\DDL\Drop.pas';
+  Drop in 'Source\DDL\Drop.pas',
+  Insert in 'Source\DML\Insert.pas',
+  Select in 'Source\DML\Select.pas';
 
 {$R *.RES}
 
