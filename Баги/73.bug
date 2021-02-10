@@ -1,0 +1,44 @@
+-- На запросе не должна вылетать куча левых shit happens-ов
+
+with 
+    client_with_merge as
+    (
+        -- этот клиент
+        select
+            code as client_reg_code
+        from
+            ls.mk_client_reg
+        where
+            code &CLIENT_FILTER
+        union all
+        -- объединения
+        select distinct
+            l.source_client_reg_code as client_reg_code
+        from
+            ls.mk_v_client_merge_list l
+        start with
+            l.dest_client_reg_code &CLIENT_FILTER
+            and l.is_archive = 0
+        connect by nocycle
+            prior l.source_client_reg_code = l.dest_client_reg_code
+            and prior l.source_client_code = l.dest_client_code
+            and l.is_move_reg = 0
+            and l.is_archive = 0
+    )
+select
+    c.*,
+    ct.name card_type_name,
+    to_char(sum(c.summa*decode(c.kind,0,1,-1)) over(),'FM9999999999999999999990.00') as summa_all,
+    case
+        when c.client_reg_code &CLIENT_FILTER then
+            0
+        else
+            1
+    end as is_merged_client
+from
+    ls.mk_v_check c left outer join ls.mk_card cr on (c.ident = cr.barcode and c.client_reg_code = cr.client_reg_code and c.ident_type = 0)
+    left outer join ls.tu_ref_card_type ct on (cr.type = ct.code)
+where
+    c.client_reg_code in (select client_reg_code from client_with_merge)
+order by
+    c.dat desc

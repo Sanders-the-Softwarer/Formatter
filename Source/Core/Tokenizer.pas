@@ -219,7 +219,7 @@ function TTokenizer.InternalNext: TToken;
   function ParseNumber: boolean;
   begin
     Restore;
-    { Число должно начинаться с цифры }
+    { Число должно начинаться с цифры. Унарные плюс-минус рассматриваем как операцию в выражении }
     Result := NextChar.IsDigit;
     if not Result then exit;
     { Прочитаем целую часть числа }
@@ -230,6 +230,11 @@ function TTokenizer.InternalNext: TToken;
       if not NextChar.IsDigit then Restore;
       repeat until not NextChar.IsDigit;
     end;
+    { Если за ней следует буква e, прочитаем порядок }
+    if LastChar.ToLower = 'e' then
+      if NextChar.IsDigit or (LastChar = '+') or (LastChar = '-') then
+        repeat until not NextChar.IsDigit;
+    { Всё }
     RefuseLastChar;
   end;
 

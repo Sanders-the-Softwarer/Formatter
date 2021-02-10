@@ -691,6 +691,7 @@ initialization
   Operations := TDictionary<String, integer>.Create;
   Operations.Add('or', -2);
   Operations.Add('and', -1);
+  Operations.Add('&', 0); // хак для бага 73
   Operations.Add('between', 2);
   Operations.Add('not between', 2);
   Operations.Add('like', 3);

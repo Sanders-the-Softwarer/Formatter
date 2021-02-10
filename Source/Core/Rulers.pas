@@ -71,7 +71,7 @@ type
     StartLine, StartCol: integer;
     { Прочие параметры измерения ширин }
     MinLine, MaxLine, MaxColIndex: integer;
-    { Отступ конструкции, относительно которого нормируем Take и Fix }
+    { Отступы конструкции, относительно которых нормируем Take и Fix }
     FShift: PInteger;
     { Настройка заполнения пустот }
     FUseSpaces: boolean;
@@ -141,7 +141,7 @@ begin
   CurrentRuler := ARuler;
   StartLine := ALine;
   StartCol := ACol;
-  Utils._Debug('[%p] Start, ruler = %s, line = %d, col = %d', [pointer(Self), ARuler, ALine, ACol]);
+  Utils._Debug('[%p] Start, ruler = %s, line = %d, col = %d, shift = %d', [pointer(Self), ARuler, ALine, ACol, Shift^]);
 end;
 
 procedure TRulers.Measure(ALine, ACol: integer; AFromStart: boolean = false);
@@ -176,12 +176,16 @@ end;
 function TRulers.Fix(const ARuler: string): integer;
 begin
   if not Assigned(Rulers) then CalcRulers;
-  if Rulers.ContainsKey(ARuler)
-    then Utils._Debug('[%p] Fix %s, shift = %d, offset = %d', [pointer(Self), ARuler, Shift^, Rulers[ARuler]])
-    else Utils._Debug('[%p] Fix %s, shift = %d, - no ruler -', [pointer(Self), ARuler, Shift^]);
-  if Rulers.ContainsKey(ARuler)
-    then Result := Rulers[ARuler] + Shift^
-    else Result := 0;
+  if Rulers.ContainsKey(ARuler) then
+    begin
+      Result := Rulers[ARuler] + Shift^;
+      Utils._Debug('[%p] Fix %s, shift = %d, offset = %d, RESULT = %d', [pointer(Self), ARuler, Shift^, Rulers[ARuler], Result]);
+    end
+  else
+    begin
+      Result := 0;
+      Utils._Debug('[%p] Fix %s, shift = %d, - no ruler, result = 0 -', [pointer(Self), ARuler, Shift^]);
+    end;
 end;
 
 function TRulers.Empty: boolean;
@@ -253,7 +257,8 @@ begin
       Max := Math.Max(Max, Width[Line, Col]);
     { Сохраним позицию очередной направляющей }
     Rulers.Add(Names[Col], Ruler);
-    Inc(Ruler, Max);
+//    if UseSpaces or (Names[Col] <> LEFT_RULER) then
+      Inc(Ruler, Max);
     { И, наконец, учтём хвосты, перелезающие в следующие ячейки }
     for Line := MinLine to MaxLine do
       if Carry[Line, Col] > Max then

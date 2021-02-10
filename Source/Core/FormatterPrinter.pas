@@ -299,7 +299,7 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     LeadComment: TComment;
     Value: string;
     IsComment, LineComment, SpecComment, FakeToken, EmptyToken, OriginalFormat: boolean;
-    EOLLimit, ActualShift: integer;
+    EOLLimit, ActualShift, Fix: integer;
   begin
     { Определим статус комментариев }
     IsComment := AToken is TComment;
@@ -391,7 +391,11 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
           { В режиме вставим необходимое количество пробелов }
           fpmSetRulers:
             if not OriginalFormat then
-              TextBuilder.AppendSpace(Rulers.Fix(RulerName) - TextBuilder.Col);
+            begin
+              Fix := Rulers.Fix(RulerName);
+              if Utils.GetIsDebug and (Self is TFineCopyPrinter) then Utils._Debug('<-> Fixing <-> target = %d, col = %d', [Fix, TextBuilder.Col]);
+              TextBuilder.AppendSpace(Fix - TextBuilder.Col);
+            end;
         end;
       RulerName := '';
     end;
@@ -432,6 +436,7 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     begin
       if not OriginalFormat then Shift := TextBuilder.Col - 1;
       FixShift := false;
+      if Utils.GetIsDebug and (Self is TFineCopyPrinter) then Utils._Debug('[>] Indent changed, new shift = %d, depth = %d', [Shift, Indents.Count]);
     end;
     { В режиме исходного форматирования подгоним позицию к нужной строке и колонке }
     if OriginalFormat then
@@ -573,11 +578,13 @@ end;
 procedure TFormatterPrinter.Indent;
 begin
   Inc(Shift, 4);
+  if Utils.GetIsDebug and (Self is TFineCopyPrinter) then Utils._Debug('>>> Indent, new shift = %d', [Shift]);
 end;
 
 procedure TFormatterPrinter.Undent;
 begin
   if Shift >= 4 then Dec(Shift, 4);
+  if Utils.GetIsDebug and (Self is TFineCopyPrinter) then Utils._Debug('<<< Undent, new shift = %d', [Shift]);
 end;
 
 procedure TFormatterPrinter.PushIndent;
@@ -589,6 +596,7 @@ end;
 procedure TFormatterPrinter.PopIndent;
 begin
   Shift := Indents.Pop;
+  if Utils.GetIsDebug and (Self is TFineCopyPrinter) then Utils._Debug('[<] Indent restored, new shift = %d, depth = %d', [Shift, Indents.Count]);
 end;
 
 { Переход на следующую строку }
