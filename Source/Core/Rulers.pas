@@ -98,6 +98,7 @@ type
     property Shift: PInteger read FShift write FShift;
     property UseSpaces: boolean read FUseSpaces write FUseSpaces;
     property Full: boolean read FFull write FFull;
+    property Owner: TObject read FOwner;
   public
     function DebugInfo: string;
     procedure Print(APrinter: TPrinter);
@@ -136,7 +137,7 @@ end;
 
 procedure TRulers.Start(const ARuler: string; ALine, ACol: integer);
 begin
-  if ARuler = FirstRuler then CurrentRuler := '';
+  if (ARuler = FirstRuler) or ((FirstRuler = '') and (ARuler = SPECIAL_COMMENT_START)) then CurrentRuler := '';
   Measure(ALine, ACol, true);
   CurrentRuler := ARuler;
   StartLine := ALine;
@@ -166,7 +167,6 @@ begin
   if not AFromStart and (ALine <> StartLine) then exit;
   { Найдём её номер }
   ColIndex := Names.IndexOf(CurrentRuler);
-  CurrentRuler := '';
   { Сохраним ширину текущей ячейки }
   Width[ALine, ColIndex] := ACol - StartCol - Shift^;
   Utils._Debug('[%p] Measure %s (%d, %d) => index = %d, width = %d', [pointer(Self), CurrentRuler, ALine, ACol, ColIndex, Width[ALine, ColIndex]]);
@@ -257,8 +257,8 @@ begin
       Max := Math.Max(Max, Width[Line, Col]);
     { Сохраним позицию очередной направляющей }
     Rulers.Add(Names[Col], Ruler);
-//    if UseSpaces or (Names[Col] <> LEFT_RULER) then
-      Inc(Ruler, Max);
+//////////    if (Names[Col] <> LEFT_RULER) or (FirstRuler = '') then Inc(Ruler, Max);
+    Inc(Ruler, Max);
     { И, наконец, учтём хвосты, перелезающие в следующие ячейки }
     for Line := MinLine to MaxLine do
       if Carry[Line, Col] > Max then
