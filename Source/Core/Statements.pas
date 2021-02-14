@@ -132,8 +132,11 @@ type
     function GetMatchSource: TBaseStatementList;
     function GetMatchTarget: TBaseStatementList;
     function IsAligned: boolean;
+    {$IFDEF DEBUG}
     function DebugInfo: string;
+    {$ENDIF}
   end;
+
   {$TypeInfo Off}
 
   { Базовый класс для списков однотипных конструкций (переменные, операторы и т. п.) }
@@ -474,6 +477,8 @@ begin
   Result := (HasSpecialComments = hscYes) or (Aligned = amYes);
 end;
 
+{$IFDEF DEBUG}
+
 function TStatement.DebugInfo: string;
 begin
   Result := Format('Конструкция: %s (%s)'#13#13, [Name, ClassName]);
@@ -484,6 +489,8 @@ begin
   if IsAligned then
     Result := Result + Format('Информация выравнивания:'#13#13'%s'#13#13, [Rulers.DebugInfo]);
 end;
+
+{$ENDIF}
 
 function TStatement.HasCommentsAbove: boolean;
 begin

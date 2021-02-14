@@ -153,7 +153,7 @@ begin
   begin
     CurrentRuler := LEFT_RULER;
     StartLine := ALine;
-    StartCol := 1;
+    StartCol := Shift^ + 1;
   end;
   { Если вызваны без CurrentRuler - это технический вызов после перевода строки }
   if CurrentRuler = '' then exit;
@@ -168,7 +168,7 @@ begin
   { Найдём её номер }
   ColIndex := Names.IndexOf(CurrentRuler);
   { Сохраним ширину текущей ячейки }
-  Width[ALine, ColIndex] := ACol - StartCol - Shift^;
+  Width[ALine, ColIndex] := ACol - StartCol;
   Utils._Debug('[%p] Measure %s (%d, %d) => index = %d, width = %d', [pointer(Self), CurrentRuler, ALine, ACol, ColIndex, Width[ALine, ColIndex]]);
   MaxColIndex := Math.Max(MaxColIndex, ColIndex);
 end;
@@ -257,7 +257,6 @@ begin
       Max := Math.Max(Max, Width[Line, Col]);
     { Сохраним позицию очередной направляющей }
     Rulers.Add(Names[Col], Ruler);
-//////////    if (Names[Col] <> LEFT_RULER) or (FirstRuler = '') then Inc(Ruler, Max);
     Inc(Ruler, Max);
     { И, наконец, учтём хвосты, перелезающие в следующие ячейки }
     for Line := MinLine to MaxLine do

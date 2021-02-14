@@ -1,19 +1,21 @@
--- Ни комментарий (@todo), ни выровненные операторы like
--- не должны съезжать вправо
+-- Выровненные операторы like не должны съезжать вправо
+-- на отступ тем больший, чем больше вложенность скобок
 
 begin
-    l_modified := l_modified
-                  or (inserting and (:new.op_type like 'op_h_td_out_opt%' or :new.op_type like 'op_h_td_vn_opt%'))
-                  or -- @todo зашивки нужно убрать
-                  (deleting and (:old.op_type like 'op_h_td_out_opt%' or :old.op_type like 'op_h_td_vn_opt%'))
-                  or
-                  (
-                      updating and
+    l_modified := (
                       (
-                          :old.op_type    like 'op_h_td_out_opt%'
-                          or :old.op_type like 'op_h_td_vn_opt%'
-                          or :new.op_type like 'op_h_td_out_opt%'
-                          or :new.op_type like 'op_h_td_vn_opt%'
+                          (
+                              (
+                                  (
+                                      (
+                                          :old.op_type    like 'op_h_td_out_opt%'
+                                          or :old.op_type like 'op_h_td_vn_opt%'
+                                          or :new.op_type like 'op_h_td_out_opt%'
+                                          or :new.op_type like 'op_h_td_vn_opt%'
+                                      )
+                                  )
+                              )
+                          )
                       )
                   );
 end;

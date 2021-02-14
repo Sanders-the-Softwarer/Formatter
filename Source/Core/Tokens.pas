@@ -74,6 +74,10 @@ type
     FPrinted, FCanReplace: boolean;
     FIntoSupNextLine, FLastIntoSupNextLine: integer;
     FComments: array[TCommentPosition] of TComment;
+    {$IFDEF DEBUG}
+    FDebugInfo: string;
+    FPrintCount: integer;
+    {$ENDIF}
     function GetSkipChangeLineComment: boolean;
   strict protected
     function ModifyValue(const AValue: string): string; virtual;
@@ -81,7 +85,12 @@ type
     function TokenType: string; virtual; abstract;
     function GetComment(Index: TCommentPosition): TComment;
     procedure SetComment(Index: TCommentPosition; AComment: TComment);
-    function DebugInfo: string; virtual;
+    {$IFDEF DEBUG}
+    function TokenDebugInfo: string; virtual;
+    function DebugInfo: string;
+    procedure AddDebugInfo(const Msg: string; Params: array of const);
+    property PrintCount: integer read FPrintCount write FPrintCount;
+    {$ENDIF}
   public
     constructor Create(const AValue: string; AChar: TPositionedChar); overload;
     constructor Create(AChar: TPositionedChar); overload;
@@ -164,7 +173,9 @@ type
     function LeadComment: TComment;
     procedure ShiftTo(ACol: integer);
     function CorrectSpaces: string;
-    function DebugInfo: string; override;
+    {$IFDEF DEBUG}
+    function TokenDebugInfo: string; override;
+    {$ENDIF}
   end;
 
   { Число }
@@ -245,10 +256,28 @@ begin
   FCol  := ACol;
 end;
 
+{$IFDEF DEBUG}
+
+function TToken.TokenDebugInfo: string;
+begin
+  Result := Format('Лексема: %s'#13#13'Значение: %s'#13#13'Исходная позиция: [%d, %d]'#13#13'Напечатана: %d раз', [TokenType, Value, Line, Col, PrintCount]);
+end;
+
 function TToken.DebugInfo: string;
 begin
-  Result := Format('Лексема: %s'#13#13'Значение: %s'#13#13'Позиция: [%d, %d]', [TokenType, Value, Line, Col]);
+  Result := TokenDebugInfo;
+  if (Result <> '') and (FDebugInfo <> '') then Result := Result + #13#13;
+  Result := Result + FDebugInfo;
 end;
+
+procedure TToken.AddDebugInfo(const Msg: string; Params: array of const);
+begin
+  if FDebugInfo = ''
+    then FDebugInfo := Format(Msg, Params)
+    else FDebugInfo := FDebugInfo + #13#13 + Format(Msg, Params);
+end;
+
+{$ENDIF}
 
 function TToken.ModifyValue(const AValue: string): string;
 begin
@@ -390,12 +419,16 @@ begin
     Exception.CreateFmt('Неверный комментарий: [%s]', [Value]);
 end;
 
-function TComment.DebugInfo: string;
+{$IFDEF DEBUG}
+
+function TComment.TokenDebugInfo: string;
 begin
   Result := inherited + #13#13 + Format('Расположение: %s', [GetEnumName(TypeInfo(TCommentPosition), Ord(Position))]);
   if SkipChangeLineComment then
     Result := Result + #13#13 + '<< Последняя лексема в однострочном блоке >>';
 end;
+
+{$ENDIF}
 
 function TComment.LeadComment: TComment;
 begin

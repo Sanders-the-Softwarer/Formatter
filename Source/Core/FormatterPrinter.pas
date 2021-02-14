@@ -301,6 +301,9 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     IsComment, LineComment, SpecComment, FakeToken, EmptyToken, OriginalFormat: boolean;
     EOLLimit, ActualShift, Fix: integer;
   begin
+    {$IFDEF DEBUG}
+    AToken.PrintCount := AToken.PrintCount + 1;
+    {$ENDIF}
     { Определим статус комментариев }
     IsComment := AToken is TComment;
     LineComment := IsComment and AComment.LineComment;
@@ -393,6 +396,10 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
             if not OriginalFormat then
             begin
               Fix := Rulers.Fix(RulerName);
+              {$IFDEF DEBUG}
+              if Self is TFineCopyPrinter then
+                AToken.AddDebugInfo('Fix :: ruler = {%s}, current col = %d, target col = %d, shift = %d', [RulerName, TextBuilder.Col, Fix, Rulers.Shift^]);
+              {$ENDIF}
               if Utils.GetIsDebug and (Self is TFineCopyPrinter) then Utils._Debug('<-> Fixing <-> target = %d, col = %d', [Fix, TextBuilder.Col]);
               TextBuilder.AppendSpace(Fix - TextBuilder.Col);
             end;
@@ -448,6 +455,9 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     end;
     { Напечатаем лексему и запомним её позицию }
     if SaveTokenPositions and not FakeToken then TokenPos.Add(AToken, TextBuilder.Length);
+    {$IFDEF DEBUG}
+    if SaveTokenPositions then AToken.AddDebugInfo('Позиция в тексте: [%d, %d]', [TextBuilder.Line, TextBuilder.Col]);
+    {$ENDIF}
     TextBuilder.AppendText(Value);
     if SaveTokenPositions then AToken.Printed := true;
     if SaveTokenPositions and not FakeToken then TokenLen.Add(AToken, TextBuilder.Length - TokenPos[AToken]);
@@ -533,7 +543,6 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
       Self.Mode    := fpmSetRulers;
       Rulers.Shift := @Self.Shift;
       SimplePrintStatement;
-      // иногда будем включать для отладки {$IfDef DEBUG_OUTPUT} Rulers.Print(Self); {$EndIf}
     finally
       Self.Rulers := _Rulers;
       Self.Mode   := _Mode;
