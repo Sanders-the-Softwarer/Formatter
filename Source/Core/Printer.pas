@@ -106,10 +106,8 @@ type
     procedure PrintRulerItems(const ARuler: string; AItems: array of TObject); virtual;
     procedure PrintIndented(AItem: TObject); overload;
     function PrintIndented(AItems: array of TObject): boolean; overload;
-    function  NextLineIf(AItem: TObject): boolean; overload;
-    function  NextLineIf(AItems: array of TObject): boolean; overload;
-  public
-    procedure AfterConstruction; override;
+    function NextLineIf(AItem: TObject): boolean; overload;
+    function NextLineIf(AItems: array of TObject): boolean; overload;
   public
     property Settings: TFormatSettings read FSettings write FSettings;
   end;
@@ -281,12 +279,6 @@ begin
   if not Result then exit;
   NextLine;
   PrintItems(AItems);
-end;
-
-procedure TPrinter.AfterConstruction;
-begin
-  inherited;
-  if GetIsDebug then Statistics.Increase(Format('Create(%s)', [ClassName]));
 end;
 
 function TPrinter.HasItems(AItems: array of TObject): boolean;

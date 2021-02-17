@@ -76,7 +76,6 @@ type
     FComments: array[TCommentPosition] of TComment;
     {$IFDEF DEBUG}
     FDebugInfo: string;
-    FPrintCount: integer;
     {$ENDIF}
     function GetSkipChangeLineComment: boolean;
   strict protected
@@ -89,7 +88,6 @@ type
     function TokenDebugInfo: string; virtual;
     function DebugInfo: string;
     procedure AddDebugInfo(const Msg: string; Params: array of const);
-    property PrintCount: integer read FPrintCount write FPrintCount;
     {$ENDIF}
   public
     constructor Create(const AValue: string; AChar: TPositionedChar); overload;
@@ -260,7 +258,7 @@ end;
 
 function TToken.TokenDebugInfo: string;
 begin
-  Result := Format('Лексема: %s'#13#13'Значение: %s'#13#13'Исходная позиция: [%d, %d]'#13#13'Напечатана: %d раз', [TokenType, Value, Line, Col, PrintCount]);
+  Result := Format('Лексема: %s'#13#13'Значение: %s'#13#13'Исходная позиция: [%d, %d]', [TokenType, Value, Line, Col]);
 end;
 
 function TToken.DebugInfo: string;

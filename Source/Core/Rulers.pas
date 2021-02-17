@@ -142,7 +142,6 @@ begin
   CurrentRuler := ARuler;
   StartLine := ALine;
   StartCol := ACol;
-  Utils._Debug('[%p] Start, ruler = %s, line = %d, col = %d, shift = %d', [pointer(Self), ARuler, ALine, ACol, Shift^]);
 end;
 
 procedure TRulers.Measure(ALine, ACol: integer; AFromStart: boolean = false);
@@ -157,7 +156,6 @@ begin
   end;
   { Если вызваны без CurrentRuler - это технический вызов после перевода строки }
   if CurrentRuler = '' then exit;
-  Utils._Debug('[%p] Measure, ruler = %s, line = %d, col = %d', [pointer(Self), CurrentRuler, ALine, ACol]);
   { Скорректируем данные о диапазоне строк, в которых идёт выравнивание }
   if MinLine = 0 then MinLine := ALine;
   if MaxLine < ALine then MaxLine := ALine;
@@ -169,23 +167,15 @@ begin
   ColIndex := Names.IndexOf(CurrentRuler);
   { Сохраним ширину текущей ячейки }
   Width[ALine, ColIndex] := ACol - StartCol;
-  Utils._Debug('[%p] Measure %s (%d, %d) => index = %d, width = %d', [pointer(Self), CurrentRuler, ALine, ACol, ColIndex, Width[ALine, ColIndex]]);
   MaxColIndex := Math.Max(MaxColIndex, ColIndex);
 end;
 
 function TRulers.Fix(const ARuler: string): integer;
 begin
   if not Assigned(Rulers) then CalcRulers;
-  if Rulers.ContainsKey(ARuler) then
-    begin
-      Result := Rulers[ARuler] + Shift^;
-      Utils._Debug('[%p] Fix %s, shift = %d, offset = %d, RESULT = %d', [pointer(Self), ARuler, Shift^, Rulers[ARuler], Result]);
-    end
-  else
-    begin
-      Result := 0;
-      Utils._Debug('[%p] Fix %s, shift = %d, - no ruler, result = 0 -', [pointer(Self), ARuler, Shift^]);
-    end;
+  if Rulers.ContainsKey(ARuler)
+    then Result := Rulers[ARuler] + Shift^
+    else Result := 0;
 end;
 
 function TRulers.Empty: boolean;

@@ -54,7 +54,6 @@ uses
   UnderConstruction in 'Test\UnderConstruction.pas',
   Session in 'Source\DDL\Session.pas',
   Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas',
-  Stats in 'Source\Core\Stats.pas',
   TestSettings in 'Test\TestSettings.pas',
   Drop in 'Source\DDL\Drop.pas',
   Insert in 'Source\DML\Insert.pas',

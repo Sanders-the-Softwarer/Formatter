@@ -37,7 +37,7 @@ type
     { Флаг вставки пустой строки }
     EmptyLine: boolean;
     { Блок информации о выравниваниях }
-    Rulers: TRulers;
+    FRulers: TRulers;
     { Предыдущие напечатанные лексемы - в текущей строке и вообще по тексту }
     PrevToken, FarPrevToken: TToken;
     { Блокировка вставки перехода на следующую строку }
@@ -69,6 +69,8 @@ type
     procedure PrintEmptyToken;
     procedure MeasureRuler;
     function HasActiveRulers: boolean;
+    function GetRulers: TRulers;
+    property Rulers: TRulers read GetRulers write FRulers;
   public
     constructor Create(ASettings: TFormatSettings;
                        AWithoutText: boolean = false;
@@ -273,6 +275,14 @@ begin
   Result := Assigned(Rulers);
 end;
 
+function TFormatterPrinter.GetRulers: TRulers;
+begin
+  Result := FRulers;
+{  if Assigned(CurrentStatement)
+    then Result := CurrentStatement.Rulers
+    else Result := nil;}
+end;
+
 { Вывод очередной лексемы с навешиванием всех наворотов по форматированию }
 procedure TFormatterPrinter.PrintToken(AToken: TToken);
 
@@ -301,9 +311,6 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     IsComment, LineComment, SpecComment, FakeToken, EmptyToken, OriginalFormat: boolean;
     EOLLimit, ActualShift, Fix: integer;
   begin
-    {$IFDEF DEBUG}
-    AToken.PrintCount := AToken.PrintCount + 1;
-    {$ENDIF}
     { Определим статус комментариев }
     IsComment := AToken is TComment;
     LineComment := IsComment and AComment.LineComment;
@@ -390,7 +397,13 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
         case Mode of
           { В режиме примерки запомним ширину фрагмента }
           fpmGetRulers:
-            Rulers.Start(RulerName, TextBuilder.Line, TextBuilder.Col);
+            begin
+              Rulers.Start(RulerName, TextBuilder.Line, TextBuilder.Col);
+              {$IFDEF DEBUG}
+              //if Self is TFineCopyPrinter then
+                AToken.AddDebugInfo('[%p] Start :: ruler = {%s}, current col = %d, indent = %d', [pointer(Rulers), RulerName, TextBuilder.Col, Rulers.Shift^]);
+              {$ENDIF}
+            end;
           { В режиме вставим необходимое количество пробелов }
           fpmSetRulers:
             if not OriginalFormat then
@@ -398,9 +411,8 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
               Fix := Rulers.Fix(RulerName);
               {$IFDEF DEBUG}
               if Self is TFineCopyPrinter then
-                AToken.AddDebugInfo('Fix :: ruler = {%s}, current col = %d, target col = %d, shift = %d', [RulerName, TextBuilder.Col, Fix, Rulers.Shift^]);
+                AToken.AddDebugInfo('[%p] Fix :: ruler = {%s}, current col = %d, target col = %d, indent = %d', [pointer(Rulers), RulerName, TextBuilder.Col, Fix, Rulers.Shift^]);
               {$ENDIF}
-              if Utils.GetIsDebug and (Self is TFineCopyPrinter) then Utils._Debug('<-> Fixing <-> target = %d, col = %d', [Fix, TextBuilder.Col]);
               TextBuilder.AppendSpace(Fix - TextBuilder.Col);
             end;
         end;
@@ -443,7 +455,6 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     begin
       if not OriginalFormat then Shift := TextBuilder.Col - 1;
       FixShift := false;
-      if Utils.GetIsDebug and (Self is TFineCopyPrinter) then Utils._Debug('[>] Indent changed, new shift = %d, depth = %d', [Shift, Indents.Count]);
     end;
     { В режиме исходного форматирования подгоним позицию к нужной строке и колонке }
     if OriginalFormat then
@@ -494,6 +505,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   var
     _Shift: integer;
     _EmptyBefore, _EmptyInside, _EmptyAfter: boolean;
+    _PrevStatement: TStatement;
   begin
     { Соберём указания по расстановке пустых строк }
     _EmptyBefore := AStatement.EmptyLineBefore;
@@ -503,7 +515,13 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     EmptyLine := EmptyLine or _EmptyBefore or _EmptyInside;
     { Печать и проверка отступа }
     _Shift := Shift;
-    inherited PrintStatement(AStatement);
+    _PrevStatement := CurrentStatement;
+    try
+      CurrentStatement := AStatement;
+      inherited PrintStatement(AStatement);
+    finally
+      CurrentStatement := _PrevStatement;
+    end;
     if (Shift <> _Shift) and (Indents.Count = 0) then
       raise Exception.CreateFmt('Invalid indents into %s - was %d but %d now', [AStatement.ClassName, _Shift, Shift]);
     { Пустая строка после конструкции }
@@ -517,8 +535,8 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     if AStatement.Rulers.Full then exit;
     DraftPrinter := TDraftPrinter.Create(Self.Settings, false, [poFarAbove..poFarBelow], false, false);
     try
+      AStatement.Rulers.UseSpaces := Settings.AlignUseSpace;
       DraftPrinter.Rulers := AStatement.Rulers;
-      DraftPrinter.Rulers.UseSpaces := Settings.AlignUseSpace;
       DraftPrinter.Mode   := fpmGetRulers;
       DraftPrinter.BeginPrint;
       DraftPrinter.PrintItem(AStatement);
@@ -541,7 +559,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     try
       Self.Rulers  := AStatement.Rulers;
       Self.Mode    := fpmSetRulers;
-      Rulers.Shift := @Self.Shift;
+      AStatement.Rulers.Shift := @Self.Shift;
       SimplePrintStatement;
     finally
       Self.Rulers := _Rulers;
@@ -565,7 +583,7 @@ begin
   { Проверим наличие спецкомментариев - это может повлиять на выравнивание }
   if (Mode = fpmNormal) and (AStatement.HasSpecialComments = hscUnknown) then
     CheckSpecialComments;
-  { Запомним конструкцию для проставления признака спецкомментариев }
+  { Сначала предположим, что спецкомментариев нет }
   if Mode = fpmCheckSpecialComments then
   begin
     CurrentStatement := AStatement;
@@ -587,13 +605,11 @@ end;
 procedure TFormatterPrinter.Indent;
 begin
   Inc(Shift, 4);
-  if Utils.GetIsDebug and (Self is TFineCopyPrinter) then Utils._Debug('>>> Indent, new shift = %d', [Shift]);
 end;
 
 procedure TFormatterPrinter.Undent;
 begin
   if Shift >= 4 then Dec(Shift, 4);
-  if Utils.GetIsDebug and (Self is TFineCopyPrinter) then Utils._Debug('<<< Undent, new shift = %d', [Shift]);
 end;
 
 procedure TFormatterPrinter.PushIndent;
@@ -605,7 +621,6 @@ end;
 procedure TFormatterPrinter.PopIndent;
 begin
   Shift := Indents.Pop;
-  if Utils.GetIsDebug and (Self is TFineCopyPrinter) then Utils._Debug('[<] Indent restored, new shift = %d, depth = %d', [Shift, Indents.Count]);
 end;
 
 { Переход на следующую строку }

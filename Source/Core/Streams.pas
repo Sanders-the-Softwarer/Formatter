@@ -120,8 +120,6 @@ type
 
 implementation
 
-uses Stats, Utils;
-
 /////////////////////////////////////////////////////////////////////////////////
 //                                                                             //
 // Класс владельца запоминает созданные объекты и уничтожает их вместе с собой //
@@ -136,7 +134,6 @@ end;
 
 function TObjectStream<T>.Next: T;
 begin
-  if GetIsDebug then Statistics.Increase(Format('Next(%s)', [ClassName]));
   if Eof then raise Exception.Create('End of the text had been reached');
   Result := InternalNext;
   if Result = InTransit then exit;
@@ -146,7 +143,6 @@ end;
 
 function TObjectStream<T>.Transit(AValue: T): T;
 begin
-  if GetIsDebug then Statistics.Increase(Format('Transit(%s)', [ClassName]));
   InTransit := AValue;
   Result := AValue;
 end;
@@ -165,13 +161,11 @@ end;
 
 function TBufferedStream<T>.Eof: boolean;
 begin
-  if GetIsDebug then Statistics.Increase(Format('Eof(%s)', [ClassName]));
   Result := InternalEof and (not Assigned(Output) or (RepeatMark >= Output.Count));
 end;
 
 function TBufferedStream<T>.Next: T;
 begin
-  if GetIsDebug then Statistics.Increase(Format('Next(%s)', [ClassName]));
   if Assigned(Output) and (RepeatMark < Output.Count)
     then Result := Output[RepeatMark]
     else Result := PutIntoOutput(inherited Next);
@@ -215,7 +209,6 @@ end;
 
 procedure TBufferedStream<T>.Restore(AMark: TMark);
 begin
-  if GetIsDebug then Statistics.Increase(Format('Restore(%s)', [ClassName]));
   if Assigned(Output) and (AMark > Output.Count) or not Assigned(Output) and (AMark > 0)
     then raise Exception.Create('Invalid stream mark')
     else RepeatMark := AMark;
