@@ -32,6 +32,8 @@ type
     Mode: TFormatterPrinterMode;
     { Текущий отступ }
     Shift: integer;
+    { Доп. отступ только по скобкам }
+    SpecialShift: integer;
     { Флаг перехода на следующую строку }
     ForceNextLine: boolean;
     { Флаг вставки пустой строки }
@@ -168,6 +170,7 @@ begin
   inherited;
   TextBuilder.Clear;
   Shift := 0;
+  SpecialShift := 0;
   ForceNextLine := false;
   OriginalFormatCount := 0;
   OriginalFormatToken := nil;
@@ -278,7 +281,7 @@ end;
 function TFormatterPrinter.GetRulers: TRulers;
 begin
   Result := FRulers;
-{  if Assigned(CurrentStatement)
+  {if Assigned(CurrentStatement)
     then Result := CurrentStatement.Rulers
     else Result := nil;}
 end;
@@ -408,7 +411,7 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
           fpmSetRulers:
             if not OriginalFormat then
             begin
-              Fix := Rulers.Fix(RulerName);
+              Fix := Rulers.Fix(RulerName) - SpecialShift;
               {$IFDEF DEBUG}
               if Self is TFineCopyPrinter then
                 AToken.AddDebugInfo('[%p] Fix :: ruler = {%s}, current col = %d, target col = %d, indent = %d', [pointer(Rulers), RulerName, TextBuilder.Col, Fix, Rulers.Shift^]);

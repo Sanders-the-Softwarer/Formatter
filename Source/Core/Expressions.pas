@@ -571,7 +571,7 @@ end;
 
 function TExpression.Aligned: TAlignMode;
 begin
-  Result := AlignMode(Settings.AlignExpressions);
+  Result := AlignMode(Settings.AlignExpressions and (Self.Count > 1));
 end;
 
 function TExpression.GetMultiLine: boolean;
