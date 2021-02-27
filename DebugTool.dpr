@@ -38,7 +38,6 @@ uses
   AlterPackageProcedureFunction in 'Source\DDL\AlterPackageProcedureFunction.pas',
   Exit_SQLPlus in 'Source\SQL_Plus\Exit_SQLPlus.pas',
   Grant in 'Source\DDL\Grant.pas',
-  Stats in 'Source\Core\Stats.pas',
   Drop in 'Source\DDL\Drop.pas',
   Label_ in 'Source\PLSQL\Label_.pas',
   Goto_ in 'Source\PLSQL\Goto_.pas',

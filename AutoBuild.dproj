@@ -3,7 +3,7 @@
 
         <MSBuild Projects="DebugTool.dproj"
             Targets="Build"
-            Properties="Config=Release"/>
+            Properties="Config=Debug"/>
 
         <MSBuild Projects="Test.dproj"
             Targets="Build"

@@ -25,6 +25,10 @@ unit fMain;
 
 interface
 
+{$IFNDEF DEBUG}
+  {$MESSAGE Fatal 'DebugTool.exe нужно компилировать в режиме Debug' }
+{$ENDIF}
+
 uses
   Tokens { должен идти до StdCtrls, чтобы TLabel не мешала загрузке формы },
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
@@ -86,8 +90,6 @@ type
     edDebugInfo: TMemo;
     spDebugInfo: TSplitter;
     checkShowDebugInfo: TCheckBox;
-    tabStats: TTabSheet;
-    edStats: TMemo;
     checkAlignRightComments: TCheckBox;
     checkCommentCorrectSpaces: TCheckBox;
     procedure FormResize(Sender: TObject);
@@ -128,7 +130,7 @@ implementation
 
 {$R *.dfm}
 
-uses GUIPrinters, Stats;
+uses GUIPrinters;
 
 { Приведение переносов строк к стандартному виду }
 function TFormMain.CorrectCRLF: boolean;
@@ -175,11 +177,8 @@ begin
   AdvTokenStream  := Controller.MakeAdvancedTokenStream(MinTokenStream);
   StatementStream := Controller.MakeStatementStream(AdvTokenStream, Settings);
   { Напечатаем данные }
-  edStats.Clear;
-  Statistics.Clear;
   try
     StatementStream.PrintAll(ResultPrinter);
-    edStats.Text := Statistics.Output;
   except
     on E: Exception do Application.ShowException(E);
   end;

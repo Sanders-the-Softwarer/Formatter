@@ -137,7 +137,7 @@ function _UndentNextLine: TObject;
 
 implementation
 
-uses SQLPlus, FormatterPrinter, Stats;
+uses SQLPlus, FormatterPrinter;
 
 { Отправка извещения о необходимости синхронизации интерфейса }
 procedure SendSyncNotification(AObject: TObject; ALine, ACol, ALen: integer);

@@ -34,7 +34,7 @@ object FormMain: TFormMain
     Margins.Top = 0
     Margins.Right = 5
     Margins.Bottom = 5
-    ActivePage = tabResult
+    ActivePage = tabTokenizer
     Align = alClient
     TabOrder = 0
     OnChange = pgDestChange
@@ -154,32 +154,6 @@ object FormMain: TFormMain
         ItemHeight = 13
         TabOrder = 0
         OnClick = edAlarmStatementClick
-      end
-    end
-    object tabStats: TTabSheet
-      Caption = #1057#1090#1072#1090#1080#1089#1090#1080#1082#1072
-      ImageIndex = 6
-      object edStats: TMemo
-        AlignWithMargins = True
-        Left = 5
-        Top = 5
-        Width = 610
-        Height = 586
-        Margins.Left = 5
-        Margins.Top = 5
-        Margins.Right = 5
-        Margins.Bottom = 5
-        Align = alClient
-        Font.Charset = RUSSIAN_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'Courier New'
-        Font.Style = []
-        HideSelection = False
-        ParentFont = False
-        ReadOnly = True
-        ScrollBars = ssBoth
-        TabOrder = 0
       end
     end
     object tabCompareAutoTestResult: TTabSheet
