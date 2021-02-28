@@ -26,14 +26,28 @@ uses
   Tokenizer in 'Source\Core\Tokenizer.pas',
   Tokens in 'Source\Core\Tokens.pas',
   Utils in 'Source\Core\Utils.pas',
+  Insert in 'Source\DML\Insert.pas',
+  Select in 'Source\DML\Select.pas',
   Alter in 'Source\DDL\Alter.pas',
+  AlterPackageProcedureFunction in 'Source\DDL\AlterPackageProcedureFunction.pas',
   Create in 'Source\DDL\Create.pas',
   DatabaseLink in 'Source\DDL\DatabaseLink.pas',
+  Drop in 'Source\DDL\Drop.pas',
+  Grant in 'Source\DDL\Grant.pas',
   Role in 'Source\DDL\Role.pas',
   Sequence in 'Source\DDL\Sequence.pas',
+  Session in 'Source\DDL\Session.pas',
+  Set_ in 'Source\DDL\Set_.pas',
   Synonym in 'Source\DDL\Synonym.pas',
+  Assignment in 'Source\PLSQL\Assignment.pas',
+  Exit_ in 'Source\PLSQL\Exit_.pas',
+  ForAll in 'Source\PLSQL\ForAll.pas',
+  Goto_ in 'Source\PLSQL\Goto_.pas',
+  Label_ in 'Source\PLSQL\Label_.pas',
+  OpenFor in 'Source\PLSQL\OpenFor.pas',
   Trigger in 'Source\PLSQL\Trigger.pas',
-  Set_ in 'Source\DDL\Set_.pas';
+  Exit_SQLPlus in 'Source\SQL_Plus\Exit_SQLPlus.pas',
+  Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas';
 
 var
   InFileName, OutFileName, InText, OutText: string;

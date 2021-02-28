@@ -7,7 +7,7 @@
 
         <MSBuild Projects="Test.dproj"
             Targets="Build"
-            Properties="Config=Release"/>
+            Properties="Config=Debug"/>
 
         <MSBuild Projects="CmdLineFormatter.dproj"
             Targets="Build"

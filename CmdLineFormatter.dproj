@@ -128,14 +128,28 @@
         <DCCReference Include="Source\Core\Tokenizer.pas"/>
         <DCCReference Include="Source\Core\Tokens.pas"/>
         <DCCReference Include="Source\Core\Utils.pas"/>
+        <DCCReference Include="Source\DML\Insert.pas"/>
+        <DCCReference Include="Source\DML\Select.pas"/>
         <DCCReference Include="Source\DDL\Alter.pas"/>
+        <DCCReference Include="Source\DDL\AlterPackageProcedureFunction.pas"/>
         <DCCReference Include="Source\DDL\Create.pas"/>
         <DCCReference Include="Source\DDL\DatabaseLink.pas"/>
+        <DCCReference Include="Source\DDL\Drop.pas"/>
+        <DCCReference Include="Source\DDL\Grant.pas"/>
         <DCCReference Include="Source\DDL\Role.pas"/>
         <DCCReference Include="Source\DDL\Sequence.pas"/>
-        <DCCReference Include="Source\DDL\Synonym.pas"/>
-        <DCCReference Include="Source\PLSQL\Trigger.pas"/>
+        <DCCReference Include="Source\DDL\Session.pas"/>
         <DCCReference Include="Source\DDL\Set_.pas"/>
+        <DCCReference Include="Source\DDL\Synonym.pas"/>
+        <DCCReference Include="Source\PLSQL\Assignment.pas"/>
+        <DCCReference Include="Source\PLSQL\Exit_.pas"/>
+        <DCCReference Include="Source\PLSQL\ForAll.pas"/>
+        <DCCReference Include="Source\PLSQL\Goto_.pas"/>
+        <DCCReference Include="Source\PLSQL\Label_.pas"/>
+        <DCCReference Include="Source\PLSQL\OpenFor.pas"/>
+        <DCCReference Include="Source\PLSQL\Trigger.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Exit_SQLPlus.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Set_SQLPlus.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
