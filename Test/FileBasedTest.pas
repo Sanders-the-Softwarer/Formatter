@@ -80,7 +80,7 @@ end;
 { Оповещение о том, что тест не реализован }
 procedure TFileBasedTest.UnderConstruction;
 begin
-  if Now < EncodeDate(2021, 2, 20)
+  if Now < EncodeDate(2021, 3, 20)
     then Skip := true
     else Fail('Пока не сделано!');
 end;
