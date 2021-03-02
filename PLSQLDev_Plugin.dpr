@@ -4,6 +4,7 @@
 
 uses
   Windows,
+  SysUtils,
   Alter in 'Source\DDL\Alter.pas',
   Create in 'Source\DDL\Create.pas',
   DatabaseLink in 'Source\DDL\DatabaseLink.pas',
@@ -76,18 +77,31 @@ begin
 end;
 
 procedure OnMenuClick(Index: integer); cdecl;
-var Text, Result: string;
+var SelectedText, FullText, Text, Formatted, Result: string;
 begin
-  Text := String(IDE_GetSelectedText);
-  if Text = '' then Text := String(IDE_GetText);
-  if Text = '' then exit;
-  Controller.MakeFormatted(Text, nil, Result);
-  if Result = '' then exit;
-  TextForOutput := AnsiString(Result);
+  { Найдём обрабатываемый текст }
+  SelectedText := String(IDE_GetSelectedText);
+  FullText := String(IDE_GetText);
+  if SelectedText <> ''
+    then Text := SelectedText
+    else Text := FullText;
+  { Отформатируем его }
+  Controller.MakeFormatted(Text, nil, Formatted);
+  if Formatted = '' then exit;
+  { И выдадим обратно в PL/SQL Developer }
   case Index of
-    1: IDE_SetText(PAnsiChar(TextForOutput));
-    2: IDE_CreateWindow(wtSQL, PAnsiChar(TextForOutput), false);
+    1: begin
+         Result := StringReplace(FullText, SelectedText, Formatted, [rfReplaceAll]);
+         TextForOutput := AnsiString(Result);
+         IDE_SetText(PAnsiChar(TextForOutput));
+       end;
+    2: begin
+         TextForOutput := AnsiString(Formatted);
+         IDE_CreateWindow(wtSQL, PAnsiChar(TextForOutput), false);
+       end;
   end;
+
+
 end;
 
 procedure RegisterCallback(Index: Integer; Addr: Pointer); cdecl;
