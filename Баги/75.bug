@@ -1,0 +1,11 @@
+-- Литерал date '2021-01-01' должен распознаваться и не сбивать форматирование
+
+declare
+    c_from constant date := date '2021-01-01';
+    c_to constant date := sysdate;
+begin
+    p_pcards.load_pc_events_period(p_dt_from => c_from, p_dt_till => c_to);
+    commit;
+    p_pcards.replica_pc_events_period(p_dt_from => c_from, p_dt_till => c_to);
+    commit;
+end;

@@ -95,6 +95,7 @@ type
     procedure _72;
     procedure _73;
     procedure _74;
+    procedure _75;
   end;
 
 implementation
@@ -432,6 +433,10 @@ begin
 end;
 
 procedure _Bugs._74;
+begin
+end;
+
+procedure _Bugs._75;
 begin
 end;
 

@@ -41,6 +41,7 @@ type
   strict private
     _Prefix: TToken;
     _Number: TNumber;
+    _LiteralPrefix: TEpithet;
     _Literal: TLiteral;
     _SQLStatement: TStatement;
     _Ident: TStatement;
@@ -181,6 +182,13 @@ begin
     { Ключевым словом null, true или false }
     _KeywordValue := Keyword(['null', 'false', 'true']);
     if Assigned(_KeywordValue) then exit(true);
+    { date/timestamp литералом }
+    _LiteralPrefix := Keyword(['date', 'timestamp']);
+    if Assigned(_LiteralPrefix) then
+    begin
+      _Literal := Literal;
+      exit(true);
+    end;
     { SQL-выражением }
     _SQLStatement := ParseSQLStatement;
     if Assigned(_SQLStatement) then exit(true);
@@ -212,7 +220,7 @@ end;
 
 procedure TTerm.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Prefix, _Number, _Literal, _SQLStatement, _Ident,
+  APrinter.PrintItems([_Prefix, _Number, _LiteralPrefix, _Literal, _SQLStatement, _Ident,
     _Suffix, _KeywordValue, _Case, _Cast, _Select, _Expression, _OuterJoin, _Postfix]);
 end;
 

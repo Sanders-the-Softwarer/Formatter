@@ -34,7 +34,7 @@ object FormMain: TFormMain
     Margins.Top = 0
     Margins.Right = 5
     Margins.Bottom = 5
-    ActivePage = tabTokenizer
+    ActivePage = tabResult
     Align = alClient
     TabOrder = 0
     OnChange = pgDestChange
@@ -159,6 +159,10 @@ object FormMain: TFormMain
     object tabCompareAutoTestResult: TTabSheet
       Caption = #1055#1088#1086#1089#1084#1086#1090#1088' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074' '#1072#1074#1090#1086#1090#1077#1089#1090#1072
       ImageIndex = 5
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object edCompareAutoTestResult: TMemo
         Left = 0
         Top = 0
