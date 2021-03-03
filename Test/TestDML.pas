@@ -13,9 +13,13 @@ unit TestDML;
 interface
 
 uses
-  TestFramework, FileBasedTest;
+  SysUtils, TestFramework, FileBasedTest;
 
 type
+
+  { Тесты команд DML }
+  _Команды_DML = class(TFileBasedTest)
+  end;
 
   { Тесты на select }
   _Select = class(TFileBasedTest)
@@ -70,6 +74,8 @@ type
 
   { Тесты на update }
   _Update = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
   published
     procedure Простой_Update;
     procedure Update_С_Алиасом;
@@ -77,16 +83,20 @@ type
     procedure Update_С_Множественными_Присваиваниями;
     procedure Update_С_Where;
     procedure Update_С_Returning;
+    procedure Update_С_Returning_Bulk_Collect_Into;
     procedure Update_С_Сопоставлением_В_Returning;
   end;
 
   { Тесты на delete }
   _Delete = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
   published
     procedure Простой_Delete;
     procedure Delete_С_Алиасом;
     procedure Delete_С_Where;
     procedure Delete_С_Returning;
+    procedure Delete_С_Returning_Bulk_Collect;
   end;
 
   { Тесты на merge }
@@ -275,7 +285,16 @@ end;
 
 { _Update }
 
+function _Update.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды DML\Update';
+end;
+
 procedure _Update.Update_С_Returning;
+begin
+end;
+
+procedure _Update.Update_С_Returning_Bulk_Collect_Into;
 begin
 end;
 
@@ -310,6 +329,10 @@ procedure _Delete.Delete_С_Returning;
 begin
 end;
 
+procedure _Delete.Delete_С_Returning_Bulk_Collect;
+begin
+end;
+
 procedure _Delete.Delete_С_Where;
 begin
 end;
@@ -320,6 +343,11 @@ end;
 
 procedure _Delete.Простой_Delete;
 begin
+end;
+
+function _Delete.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды DML\Delete';
 end;
 
 { _Merge }
@@ -345,10 +373,11 @@ begin
 end;
 
 initialization
-  RegisterTest(_Select.Suite);
-  RegisterTest(_Insert.Suite);
-  RegisterTest(_Update.Suite);
-  RegisterTest(_Delete.Suite);
-  RegisterTest(_Merge.Suite);
+  RegisterTest(_Команды_DML.Suite);
+  RegisterTest('_Команды_DML', _Select.Suite);
+  RegisterTest('_Команды_DML', _Insert.Suite);
+  RegisterTest('_Команды_DML', _Update.Suite);
+  RegisterTest('_Команды_DML', _Delete.Suite);
+  RegisterTest('_Команды_DML', _Merge.Suite);
 end.
 

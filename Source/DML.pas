@@ -565,7 +565,7 @@ begin
   _Returning := Keyword('returning');
   if not Assigned(_Returning) then exit(false);
   TExpressionFields.Parse(Self, Source, _ReturningFields);
-  _Into := Keyword('into');
+  _Into := Keyword(['into', 'bulk collect into']);
   TIdentFields.Parse(Self, Source, _Targets);
   Result := true;
 end;

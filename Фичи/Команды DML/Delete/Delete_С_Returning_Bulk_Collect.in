@@ -1,0 +1,10 @@
+delete
+from
+    table1 t
+where
+    t.id in (1, 2, 3)
+returning
+    t.code,
+    t.mnemo
+bulk collect into
+    v_deleted;

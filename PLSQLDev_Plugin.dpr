@@ -91,7 +91,7 @@ begin
   { И выдадим обратно в PL/SQL Developer }
   case Index of
     1: begin
-         Result := StringReplace(FullText, SelectedText, Formatted, [rfReplaceAll]);
+         Result := StringReplace(FullText, Text, Formatted, [rfReplaceAll]);
          TextForOutput := AnsiString(Result);
          IDE_SetText(PAnsiChar(TextForOutput));
        end;
