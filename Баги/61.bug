@@ -2,11 +2,11 @@
 
 select
     coalesce
-        (
-            -- по спецификациям, если есть
-            (sum(pd.quantity * sd.price_without_vat) / nullif(sum(pd.quantity), 0)),
-            -- по PO, если нет спецификаций
-            (sum(pd.quantity * pd.purchase_price) / nullif(sum(pd.quantity), 0))
-        )
+    (
+        -- по спецификациям, если есть
+        (sum(pd.quantity * sd.price_without_vat) / nullif(sum(pd.quantity), 0)),
+        -- по PO, если нет спецификаций
+        (sum(pd.quantity * pd.purchase_price) / nullif(sum(pd.quantity), 0))
+    )
 from
     top_lc_calc_goods_gtt t

@@ -2,8 +2,8 @@
 
 begin
     proc
-        (
-            param1 => 1,
-            param2 => 2
-        );
+    (
+        param1 => 1,
+        param2 => 2
+    );
 end;

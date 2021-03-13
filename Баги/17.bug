@@ -2,16 +2,16 @@
 
 begin
     top_log_calc.add_log
-        (
-            p_param_names => t_varchar_table('key'),
-            p_param_values => t_varchar_table
-                                  (
-                                      v_rec.sup_sku_code || chr(1) ||
-                                      v_rec.sup_style_color_code || chr(1) ||
-                                      v_rec.po_code || chr(1) ||
-                                      v_rec.specification_code
-                                  )
-        );
+    (
+        p_param_names => t_varchar_table('key'),
+        p_param_values => t_varchar_table
+                          (
+                              v_rec.sup_sku_code || chr(1) ||
+                              v_rec.sup_style_color_code || chr(1) ||
+                              v_rec.po_code || chr(1) ||
+                              v_rec.specification_code
+                          )
+    );
     v_key_sup_sku := g_agg_text_tbl(i).sup_sku_code || chr(1) ||
                      g_agg_text_tbl(i).delivery_country_code || chr(1) ||
                      g_agg_text_tbl(i).po_code || chr(1) ||

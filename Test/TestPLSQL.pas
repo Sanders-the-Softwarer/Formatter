@@ -838,7 +838,7 @@ end;
 
 procedure _Контрольные_Примеры.fm_pc_triggers;
 begin
-  PostponeTill(2021, 3, 9);
+  PostponeTill(2021, 3, 19);
 end;
 
 procedure _Контрольные_Примеры.fm_pc_user;
@@ -847,7 +847,7 @@ end;
 
 procedure _Контрольные_Примеры.fm_pc_v_pcgi_link;
 begin
-  PostponeTill(2021, 3, 9);
+  PostponeTill(2021, 3, 19);
 end;
 
 procedure _Контрольные_Примеры.fm_cc_user;
@@ -856,22 +856,22 @@ end;
 
 procedure _Контрольные_Примеры.top_dev_style_sop_link_api;
 begin
-  PostponeTill(2021, 3, 9);
+  PostponeTill(2021, 3, 19);
 end;
 
 procedure _Контрольные_Примеры.top_lc_calc_utils;
 begin
-  PostponeTill(2021, 3, 9);
+  PostponeTill(2021, 3, 19);
 end;
 
 procedure _Контрольные_Примеры.top_ref_api;
 begin
-  PostponeTill(2021, 3, 9);
+  PostponeTill(2021, 3, 19);
 end;
 
 procedure _Контрольные_Примеры.top_report_api;
 begin
-  PostponeTill(2021, 3, 9);
+  PostponeTill(2021, 3, 19);
 end;
 
 { _Сопоставление_Полей }

@@ -17,12 +17,12 @@ select /*+ leading(t) use_nl(t pd ph)*/
     max(t.priority_manual)                                                         priority_manual,
     max(t.priority_base)                                                           priority_base,
     coalesce
-        (
-            -- по спецификациям, если есть
-            (sum(pd.quantity * sd.price_without_vat) / nullif(sum(pd.quantity), 0)),
-            -- по PO, если нет спецификаций
-            (sum(pd.quantity * pd.purchase_price) / nullif(sum(pd.quantity), 0))
-        )                                                                          purchase_price,
+    (
+        -- по спецификациям, если есть
+        (sum(pd.quantity * sd.price_without_vat) / nullif(sum(pd.quantity), 0)),
+        -- по PO, если нет спецификаций
+        (sum(pd.quantity * pd.purchase_price) / nullif(sum(pd.quantity), 0))
+    )                                                                              purchase_price,
     max(coalesce(sd.currency_code, pd.currency_code))                              purchase_price_currency_code,
     decode(sd.specification_code, null, max(c.use_vat * (vt.vat_type - 1) + 1), 1) vat_type --(1 - w/o VAT, 2 - incl VAT)
 bulk collect into
