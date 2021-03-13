@@ -24,8 +24,6 @@ type
     procedure Блок_Declare_End;
     procedure Серии_Переменных_И_Операторов;
     procedure Обработчики_Исключений;
-    procedure Заголовок_Пакета;
-    procedure Тело_Пакета;
     procedure Процедура;
     procedure Функция;
     procedure Процедура_С_Параметрами;
@@ -40,16 +38,8 @@ type
     procedure Параметризированный_Курсор;
     procedure Курсор_С_Типом_Результата;
     procedure Объявление_Исключений;
-    procedure Прагмы;
-    procedure Записи;
     procedure Оператор_Присваивания;
     procedure Вызовы_Процедур;
-    procedure Возврат_Из_Подпрограммы;
-    procedure Оператор_If;
-    procedure Оператор_Case;
-    procedure Оператор_For;
-    procedure Оператор_While;
-    procedure Оператор_ForAll;
     procedure Анонимный_Блок_С_Bind_Переменными;
     procedure Анонимный_Блок_С_Подстановками;
     procedure Добавление_In;
@@ -112,11 +102,14 @@ type
   protected
     function GetDir: string; override;
   published
+    procedure Case_;
     procedure Close;
     procedure Execute_Immediate;
     procedure Exit;
     procedure Fetch_Into;
     procedure Fetch_Bulk_Collect_Limit;
+    procedure For_;
+    procedure ForAll;
     procedure Goto_;
     procedure If_;
     procedure Loop;
@@ -125,23 +118,10 @@ type
     procedure Open_For_Using;
     procedure Pipe_Row;
     procedure Raise_;
+    procedure Return;
+    procedure While_;
     procedure Прагма_Inline_В_Коде;
-  end;
-
-  { Тесты на SELECT }
-  _Запросы = class(TFileBasedTest)
-  protected
-    function GetDir: string; override;
-  published
-    procedure Ansi_Синтаксис;
-    procedure Database_Links;
-    procedure For_Update;
-    procedure Group_By;
-    procedure Lateral;
-    procedure Left_Right_Full_Join;
-    procedure Using;
-    procedure Из_Подзапроса;
-    procedure Лишние_Слова_В_Joinах;
+    procedure Прагмы;
   end;
 
   { Тесты на пакеты }
@@ -150,6 +130,8 @@ type
     function GetDir: string; override;
   published
     procedure С_Указанием_AuthId;
+    procedure Заголовок_Пакета;
+    procedure Тело_Пакета;
   end;
 
   { Тесты на расстановку пустых строк }
@@ -186,17 +168,7 @@ type
     procedure Ref_Cursor;
     procedure Ref_Cursor_Returning;
     procedure Табличные_Типы;
-  end;
-
-  { Тесты на команды SQL*Plus }
-  _Команды_SQLPLUS = class(TFileBasedTest)
-  protected
-    function GetDir: string; override;
-  published
-    procedure Chcp;
-    procedure Define;
-    procedure Set_;
-    procedure Whenever;
+    procedure Записи;
   end;
 
   { Тесты на форматирование выражений }
@@ -268,10 +240,6 @@ procedure _PLSQL.Блок_Declare_End;
 begin
 end;
 
-procedure _PLSQL.Возврат_Из_Подпрограммы;
-begin
-end;
-
 procedure _PLSQL.Вызовы_Процедур;
 begin
 end;
@@ -279,14 +247,6 @@ end;
 procedure _PLSQL.Добавление_In;
 begin
   Settings.AddInAccessSpecificator := true;
-end;
-
-procedure _PLSQL.Заголовок_Пакета;
-begin
-end;
-
-procedure _PLSQL.Записи;
-begin
 end;
 
 procedure _PLSQL.Константы_И_Значения_По_Умолчанию;
@@ -313,26 +273,6 @@ procedure _PLSQL.Объявление_Переменных_В_Процедуре
 begin
 end;
 
-procedure _PLSQL.Оператор_Case;
-begin
-end;
-
-procedure _PLSQL.Оператор_For;
-begin
-end;
-
-procedure _PLSQL.Оператор_ForAll;
-begin
-end;
-
-procedure _PLSQL.Оператор_If;
-begin
-end;
-
-procedure _PLSQL.Оператор_While;
-begin
-end;
-
 procedure _PLSQL.Оператор_Присваивания;
 begin
 end;
@@ -349,10 +289,6 @@ procedure _PLSQL.Параметры_Значения_По_Умолчанию;
 begin
 end;
 
-procedure _PLSQL.Прагмы;
-begin
-end;
-
 procedure _PLSQL.Процедура;
 begin
 end;
@@ -362,10 +298,6 @@ begin
 end;
 
 procedure _PLSQL.Серии_Переменных_И_Операторов;
-begin
-end;
-
-procedure _PLSQL.Тело_Пакета;
 begin
 end;
 
@@ -591,6 +523,10 @@ procedure _PLSQL_Типы.Ref_Cursor_Returning;
 begin
 end;
 
+procedure _PLSQL_Типы.Записи;
+begin
+end;
+
 procedure _PLSQL_Типы.Табличные_Типы;
 begin
 end;
@@ -636,11 +572,27 @@ procedure _Операторы.Raise_;
 begin
 end;
 
+procedure _Операторы.Return;
+begin
+end;
+
+procedure _Операторы.While_;
+begin
+end;
+
 procedure _Операторы.Прагма_Inline_В_Коде;
 begin
 end;
 
+procedure _Операторы.Прагмы;
+begin
+end;
+
 procedure _Операторы.Fetch_Into;
+begin
+end;
+
+procedure _Операторы.Case_;
 begin
 end;
 
@@ -660,6 +612,14 @@ procedure _Операторы.Fetch_Bulk_Collect_Limit;
 begin
 end;
 
+procedure _Операторы.For_;
+begin
+end;
+
+procedure _Операторы.ForAll;
+begin
+end;
+
 { _Пакеты }
 
 function _Пакеты.GetDir: string;
@@ -668,6 +628,14 @@ begin
 end;
 
 procedure _Пакеты.С_Указанием_AuthId;
+begin
+end;
+
+procedure _Пакеты.Заголовок_Пакета;
+begin
+end;
+
+procedure _Пакеты.Тело_Пакета;
 begin
 end;
 
@@ -683,72 +651,6 @@ begin
 end;
 
 procedure _SQL_Типы.Timestamp_With_Time_Zone;
-begin
-end;
-
-{ _Запросы }
-
-function _Запросы.GetDir: string;
-begin
-  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Запросы';
-end;
-
-procedure _Запросы.Ansi_Синтаксис;
-begin
-end;
-
-procedure _Запросы.Lateral;
-begin
-end;
-
-procedure _Запросы.Left_Right_Full_Join;
-begin
-end;
-
-procedure _Запросы.Using;
-begin
-end;
-
-procedure _Запросы.Из_Подзапроса;
-begin
-end;
-
-procedure _Запросы.Лишние_Слова_В_Joinах;
-begin
-end;
-
-procedure _Запросы.Database_Links;
-begin
-end;
-
-procedure _Запросы.For_Update;
-begin
-end;
-
-procedure _Запросы.Group_By;
-begin
-end;
-
-{ _Команды_SQLPLUS }
-
-function _Команды_SQLPLUS.GetDir: string;
-begin
-  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды SQLPLUS';
-end;
-
-procedure _Команды_SQLPLUS.Define;
-begin
-end;
-
-procedure _Команды_SQLPLUS.Set_;
-begin
-end;
-
-procedure _Команды_SQLPLUS.Whenever;
-begin
-end;
-
-procedure _Команды_SQLPLUS.Chcp;
 begin
 end;
 
@@ -901,14 +803,12 @@ initialization
   RegisterTest(_Выравнивание.Suite);
   RegisterTest(_Комментарии.Suite);
   RegisterTest(_Отмена_Форматирования.Suite);
-  RegisterTest(_Запросы.Suite);
   RegisterTest(_Сопоставление_Полей.Suite);
   RegisterTest(_Операторы.Suite);
   RegisterTest(_Пакеты.Suite);
   RegisterTest(_Пустые_Строки.Suite);
   RegisterTest(_SQL_Типы.Suite);
   RegisterTest(_PLSQL_Типы.Suite);
-  RegisterTest(_Команды_SQLPLUS.Suite);
   RegisterTest(_Форматирование_Выражений.Suite);
   RegisterTest(_Контрольные_Примеры.Suite);
 

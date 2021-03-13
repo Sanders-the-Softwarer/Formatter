@@ -24,40 +24,56 @@ type
   { Тесты на select }
   _Select = class(TFileBasedTest)
   published
-    procedure Простейший_Запрос;
-    procedure Запрос_С_With;
     procedure Запрос_С_Алиасом;
-    procedure Запрос_С_Несколькими_Полями;
     procedure Запрос_С_Алиасами_В_Полях;
     procedure Запрос_С_Выражениями_В_Полях;
     procedure Запрос_С_Выражениями_И_Алиасами;
-    procedure Запрос_С_Into;
-    procedure Запрос_С_Bulk_Collect_Into;
-    procedure Запрос_Из_Нескольких_Таблиц;
-    procedure Запрос_Из_Табличной_Функции;
-    procedure Запрос_Из_Вложенных_Структур_И_Табличных_Типов;
-    procedure Запрос_С_Where;
-    procedure Запрос_С_Having;
-    procedure Запрос_Со_Start_With_И_Connect_By;
-    procedure Запрос_С_Order_By;
-    procedure Запрос_С_Bind_Переменными;
-    procedure Запрос_С_Подстановками;
-    procedure Указание_Направления_Сортировки_И_Расположения_Null_В_Order_By;
     procedure Связывание_Запросов_Через_Операции_Над_Множествами;
-    procedure Запрос_С_Оракловым_Синтаксисом_Внешних_Соединений;
-    procedure Запрос_С_Outer_Cross_Apply;
-    procedure Запрос_С_Distinct_Unique_All;
-    procedure Distinct_Unique_All_В_Count;
-    procedure Подзапрос_В_Select;
-    procedure Подзапрос_В_Where;
-    procedure В_Запросе_Можно_Употреблять_Аналитические_Функции;
-    procedure В_Запросе_Можно_Употреблять_Функцию_Listagg;
-    procedure В_Запросе_Можно_Употреблять_Функцию_Listagg_С_Переносом;
-    procedure В_Запросе_Можно_Употреблять_Конструкцию_Keep;
-    procedure В_Запросе_Можно_Употреблять_Конструкцию_Keep_С_Переносом;
     procedure Форматирование_Подзапросов_В_Select;
     procedure Переносы_По_And_В_Where;
     procedure Commit_Rollback_Savepoint;
+  end;
+
+  { Тесты на SELECT }
+  _Запросы = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure Ansi_Синтаксис;
+    procedure Bind_Переменные;
+    procedure Bulk_Collect_Into;
+    procedure Database_Links;
+    procedure Distinct_Unique_All;
+    procedure Distinct_Unique_All_В_Count;
+    procedure For_Update;
+    procedure Group_By;
+    procedure Having;
+    procedure Into;
+    procedure Keep;
+    procedure Keep_С_Переносом;
+    procedure Lateral;
+    procedure Left_Right_Full_Join;
+    procedure ListAgg;
+    procedure ListAgg_С_Переносом;
+    procedure Order_By;
+    procedure Outer_Cross_Apply;
+    procedure Start_With_И_Connect_By;
+    procedure Using;
+    procedure Where;
+    procedure With_;
+    procedure Из_Подзапроса;
+    procedure Лишние_Слова_В_Joinах;
+    procedure Аналитические_Функции;
+    procedure Подзапрос_В_Select;
+    procedure Подзапрос_В_Where;
+    procedure Простейший;
+    procedure С_Несколькими_Полями;
+    procedure Направление_Сортировки;
+    procedure Оракловый_Синтаксис_Внешних_Соединений;
+    procedure Из_Вложенных_Структур_И_Табличных_Типов;
+    procedure С_Подстановками;
+    procedure Из_Нескольких_Таблиц;
+    procedure Из_Табличной_Функции;
   end;
 
   { Тесты на insert }
@@ -113,51 +129,11 @@ implementation
 
 { _Select }
 
-procedure _Select.Подзапрос_В_Select;
-begin
-end;
-
-procedure _Select.Подзапрос_В_Where;
-begin
-end;
-
-procedure _Select.Простейший_Запрос;
-begin
-end;
-
 procedure _Select.Связывание_Запросов_Через_Операции_Над_Множествами;
 begin
 end;
 
-procedure _Select.Указание_Направления_Сортировки_И_Расположения_Null_В_Order_By;
-begin
-end;
-
-procedure _Select.Запрос_С_Where;
-begin
-end;
-
-procedure _Select.Запрос_С_With;
-begin
-end;
-
 procedure _Select.Запрос_С_Алиасом;
-begin
-end;
-
-procedure _Select.Запрос_С_Несколькими_Полями;
-begin
-end;
-
-procedure _Select.Запрос_С_Оракловым_Синтаксисом_Внешних_Соединений;
-begin
-end;
-
-procedure _Select.Запрос_С_Подстановками;
-begin
-end;
-
-procedure _Select.Запрос_Со_Start_With_И_Connect_By;
 begin
 end;
 
@@ -173,27 +149,6 @@ procedure _Select.Запрос_С_Выражениями_И_Алиасами;
 begin
 end;
 
-procedure _Select.Запрос_С_Into;
-begin
-end;
-
-procedure _Select.Distinct_Unique_All_В_Count;
-begin
-end;
-
-procedure _Select.В_Запросе_Можно_Употреблять_Аналитические_Функции;
-begin
-end;
-
-procedure _Select.В_Запросе_Можно_Употреблять_Конструкцию_Keep;
-begin
-end;
-
-procedure _Select.В_Запросе_Можно_Употреблять_Конструкцию_Keep_С_Переносом;
-begin
-  Settings.PreferredExpressionLength := 60;
-end;
-
 procedure _Select.Форматирование_Подзапросов_В_Select;
 begin
   Settings.PreferredExpressionLength := 80;
@@ -204,51 +159,6 @@ begin
 end;
 
 procedure _Select.Commit_Rollback_Savepoint;
-begin
-end;
-
-procedure _Select.В_Запросе_Можно_Употреблять_Функцию_Listagg;
-begin
-end;
-
-procedure _Select.В_Запросе_Можно_Употреблять_Функцию_Listagg_С_Переносом;
-begin
-  Settings.PreferredExpressionLength := 60;
-end;
-
-procedure _Select.Запрос_Из_Вложенных_Структур_И_Табличных_Типов;
-begin
-end;
-
-procedure _Select.Запрос_С_Order_By;
-begin
-end;
-
-procedure _Select.Запрос_С_Outer_Cross_Apply;
-begin
-end;
-
-procedure _Select.Запрос_Из_Нескольких_Таблиц;
-begin
-end;
-
-procedure _Select.Запрос_Из_Табличной_Функции;
-begin
-end;
-
-procedure _Select.Запрос_С_Bind_Переменными;
-begin
-end;
-
-procedure _Select.Запрос_С_Bulk_Collect_Into;
-begin
-end;
-
-procedure _Select.Запрос_С_Distinct_Unique_All;
-begin
-end;
-
-procedure _Select.Запрос_С_Having;
 begin
 end;
 
@@ -372,8 +282,159 @@ procedure _Merge.Простой_Merge;
 begin
 end;
 
+{ _Запросы }
+
+function _Запросы.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Запросы';
+end;
+
+procedure _Запросы.Ansi_Синтаксис;
+begin
+end;
+
+procedure _Запросы.Lateral;
+begin
+end;
+
+procedure _Запросы.Left_Right_Full_Join;
+begin
+end;
+
+procedure _Запросы.ListAgg;
+begin
+end;
+
+procedure _Запросы.ListAgg_С_Переносом;
+begin
+  Settings.PreferredExpressionLength := 60;
+end;
+
+procedure _Запросы.Order_By;
+begin
+end;
+
+procedure _Запросы.Outer_Cross_Apply;
+begin
+end;
+
+procedure _Запросы.Start_With_И_Connect_By;
+begin
+end;
+
+procedure _Запросы.Using;
+begin
+end;
+
+procedure _Запросы.Where;
+begin
+end;
+
+procedure _Запросы.With_;
+begin
+end;
+
+procedure _Запросы.Аналитические_Функции;
+begin
+end;
+
+procedure _Запросы.Из_Вложенных_Структур_И_Табличных_Типов;
+begin
+end;
+
+procedure _Запросы.Из_Нескольких_Таблиц;
+begin
+end;
+
+procedure _Запросы.Из_Подзапроса;
+begin
+end;
+
+procedure _Запросы.Из_Табличной_Функции;
+begin
+
+end;
+
+procedure _Запросы.Лишние_Слова_В_Joinах;
+begin
+end;
+
+procedure _Запросы.Направление_Сортировки;
+begin
+end;
+
+procedure _Запросы.Оракловый_Синтаксис_Внешних_Соединений;
+begin
+end;
+
+procedure _Запросы.Подзапрос_В_Select;
+begin
+end;
+
+procedure _Запросы.Подзапрос_В_Where;
+begin
+end;
+
+procedure _Запросы.Простейший;
+begin
+end;
+
+procedure _Запросы.С_Несколькими_Полями;
+begin
+end;
+
+procedure _Запросы.С_Подстановками;
+begin
+end;
+
+procedure _Запросы.Bind_Переменные;
+begin
+end;
+
+procedure _Запросы.Bulk_Collect_Into;
+begin
+end;
+
+procedure _Запросы.Database_Links;
+begin
+end;
+
+procedure _Запросы.Distinct_Unique_All;
+begin
+end;
+
+procedure _Запросы.Distinct_Unique_All_В_Count;
+begin
+end;
+
+procedure _Запросы.For_Update;
+begin
+end;
+
+procedure _Запросы.Group_By;
+begin
+end;
+
+procedure _Запросы.Having;
+begin
+end;
+
+procedure _Запросы.Into;
+begin
+end;
+
+procedure _Запросы.Keep;
+begin
+end;
+
+procedure _Запросы.Keep_С_Переносом;
+begin
+  Settings.PreferredExpressionLength := 60;
+end;
+
 initialization
   RegisterTest(_Команды_DML.Suite);
+  RegisterTest('_Команды_DML', _Запросы.Suite);
   RegisterTest('_Команды_DML', _Select.Suite);
   RegisterTest('_Команды_DML', _Insert.Suite);
   RegisterTest('_Команды_DML', _Update.Suite);

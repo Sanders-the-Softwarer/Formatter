@@ -198,10 +198,8 @@ begin
   APrinter.PrintItems([_Dot, _Ident]);
   if Assigned(_Indexes) then
   begin
-    //if MultiLineIndexes then APrinter.PrintItem(_IndentNextLine);
     if MultiLineIndexes then APrinter.PrintItem(_NextLine);
     APrinter.PrintItem(_Indexes);
-    //if MultiLineIndexes then APrinter.PrintItem(_Undent);
   end;
   APrinter.PrintItem(_Next);
 end;

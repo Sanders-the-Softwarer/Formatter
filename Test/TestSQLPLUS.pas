@@ -13,26 +13,53 @@ unit TestSQLPLUS;
 interface
 
 uses
-  TestFramework, FileBasedTest;
+  SysUtils, TestFramework, FileBasedTest;
 
 type
 
-  { Тесты на SQL*Plus }
-  _SQLPlus = class(TFileBasedTest)
+  { Тесты на команды SQL*Plus }
+  _Команды_SQLPLUS = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
   published
+    procedure Chcp;
+    procedure Define;
     procedure Exec;
+    procedure Set_;
+    procedure Whenever;
   end;
 
 implementation
 
 { _SQLPlus }
 
-procedure _SQLPlus.Exec;
+function _Команды_SQLPLUS.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды SQLPLUS';
+end;
+
+procedure _Команды_SQLPLUS.Define;
+begin
+end;
+
+procedure _Команды_SQLPLUS.Set_;
+begin
+end;
+
+procedure _Команды_SQLPLUS.Whenever;
+begin
+end;
+
+procedure _Команды_SQLPLUS.Chcp;
+begin
+end;
+
+procedure _Команды_SQLPLUS.Exec;
 begin
 end;
 
 initialization
-  RegisterTest(_SQLPlus.Suite);
+  RegisterTest(_Команды_SQLPLUS.Suite);
 
 end.
 

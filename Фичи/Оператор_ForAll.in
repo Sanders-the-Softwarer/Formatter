@@ -1,6 +1,0 @@
-begin
-  forall i in 1..10 insert into t values (i);
-  forall i in 1..10 save exceptions insert into t values (i);
-  forall i in indices of my.tablet(1) save exceptions insert into t values (i);
-  forall i in values of your.tablet save exceptions insert into t values (i);
-end;

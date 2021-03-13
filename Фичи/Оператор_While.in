@@ -1,3 +1,0 @@
-begin
-  while a > b loop null; end loop;
-end;
