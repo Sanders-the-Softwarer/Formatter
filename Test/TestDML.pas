@@ -50,11 +50,8 @@ type
     procedure Having;
     procedure Into;
     procedure Keep;
-    procedure Keep_С_Переносом;
     procedure Lateral;
     procedure Left_Right_Full_Join;
-    procedure ListAgg;
-    procedure ListAgg_С_Переносом;
     procedure Order_By;
     procedure Outer_Cross_Apply;
     procedure Start_With_И_Connect_By;
@@ -123,6 +120,16 @@ type
     procedure Merge_С_Подзапросом;
     procedure Merge_С_Insert_Where_Update_Delete_Where;
     procedure Merge_С_Последующим_Delete;
+  end;
+
+  { Функции с особым синтаксисом }
+  _Функции_С_Особым_Синтаксисом = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure ListAgg;
+    procedure Trim;
+    procedure Extract;
   end;
 
 implementation
@@ -301,15 +308,6 @@ procedure _Запросы.Left_Right_Full_Join;
 begin
 end;
 
-procedure _Запросы.ListAgg;
-begin
-end;
-
-procedure _Запросы.ListAgg_С_Переносом;
-begin
-  Settings.PreferredExpressionLength := 60;
-end;
-
 procedure _Запросы.Order_By;
 begin
 end;
@@ -425,11 +423,27 @@ end;
 
 procedure _Запросы.Keep;
 begin
+  Settings.PreferredExpressionLength := 60;
 end;
 
-procedure _Запросы.Keep_С_Переносом;
+{ _Функции_С_Особым_Синтаксисом }
+
+procedure _Функции_С_Особым_Синтаксисом.Extract;
+begin
+end;
+
+function _Функции_С_Особым_Синтаксисом.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Функции с особым синтаксисом';
+end;
+
+procedure _Функции_С_Особым_Синтаксисом.ListAgg;
 begin
   Settings.PreferredExpressionLength := 60;
+end;
+
+procedure _Функции_С_Особым_Синтаксисом.Trim;
+begin
 end;
 
 initialization
@@ -440,5 +454,6 @@ initialization
   RegisterTest('_Команды_DML', _Update.Suite);
   RegisterTest('_Команды_DML', _Delete.Suite);
   RegisterTest('_Команды_DML', _Merge.Suite);
+  RegisterTest('_Команды_DML\_Запросы', _Функции_С_Особым_Синтаксисом.Suite);
 end.
 

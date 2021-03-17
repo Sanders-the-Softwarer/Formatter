@@ -1,0 +1,13 @@
+select
+    extract(year from sysdate),
+    extract(month from sysdate),
+    extract(day from sysdate),
+    extract(hour from sysdate),
+    extract(minute from sysdate),
+    extract(second from sysdate),
+    extract(timezone_hour from sysdate),
+    extract(timezone_minute from sysdate),
+    extract(timezone_region from sysdate),
+    extract(timezone_abbr from sysdate)
+from
+    source_table

@@ -1,0 +1,11 @@
+select
+    trim('abc'),
+    trim('a' from 'abc'),
+    trim(leading from 'abc'),
+    trim(leading 'a' from 'abc'),
+    trim(trailing from 'abc'),
+    trim(trailing 'a' from 'abc'),
+    trim(both from 'abc'),
+    trim(both 'a' from 'abc')
+from
+    source_table

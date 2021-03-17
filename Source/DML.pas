@@ -265,6 +265,28 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+  { Специальный синтаксис функции trim }
+  TTrim = class(TStatement)
+  strict private
+    _Trim, _Sides, _From: TEpithet;
+    _TrimCharacter, _TrimSource: TStatement;
+    _OpenBracket, _CloseBracket: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Специальный синтаксис функции extract }
+  TExtract = class(TStatement)
+  strict private
+    _Extract, _What, _From: TEpithet;
+    _Expr: TStatement;
+    _OpenBracket, _CloseBracket: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
   { Строка выражения order by }
   TOrderByItem = class(TStatement)
   strict private
@@ -302,6 +324,8 @@ begin
   Result := nil;
   if not Assigned(Result) then TAsterisk.Parse(Self, Source, Result);
   if not Assigned(Result) then TExists.Parse(Self, Source, Result);
+  if not Assigned(Result) then TTrim.Parse(Self, Source, Result);
+  if not Assigned(Result) then TExtract.Parse(Self, Source, Result);
   if not Assigned(Result) then TSelectFunctionCall.Parse(Self, Source, Result);
   if not Assigned(Result) then TListagg.Parse(Self, Source, Result);
 end;
@@ -903,6 +927,47 @@ begin
             TCommit.Parse(AParent, ASource, AResult) or
             TRollback.Parse(AParent, ASource, AResult) or
             TSavepoint.Parse(AParent, ASource, AResult);
+end;
+
+{ TTrim }
+
+function TTrim.InternalParse: boolean;
+begin
+  Result := false;
+  _Trim := Identifier;
+  if not Assigned(_Trim) or not SameText(_Trim.Value, 'trim') then exit;
+  _OpenBracket := Terminal('(');
+  _Sides := Keyword(['leading', 'trailing', 'both']);
+  TExpression.Parse(Self, Source, _TrimCharacter);
+  _From := Keyword('from');
+  TExpression.Parse(Self, Source, _TrimSource);
+  _CloseBracket := Terminal(')');
+  Result := Assigned(_Sides) or Assigned(_From);
+end;
+
+procedure TTrim.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Trim, _OpenBracket, _Sides, _TrimCharacter, _From, _TrimSource, _CloseBracket]);
+end;
+
+{ TExtract }
+
+function TExtract.InternalParse: boolean;
+begin
+  Result := false;
+  _Extract := Identifier;
+  if not Assigned(_Extract) or not SameText(_Extract.Value, 'extract') then exit;
+  _OpenBracket := Terminal('(');
+  _What := Identifier;
+  _From := Keyword('from');
+  TExpression.Parse(Self, Source, _Expr);
+  _CloseBracket := Terminal(')');
+  Result := Assigned(_From);
+end;
+
+procedure TExtract.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Extract, _OpenBracket, _What, _From, _Expr, _CloseBracket]);
 end;
 
 initialization

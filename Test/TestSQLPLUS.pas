@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                         Автотесты на модуль SQL*Plus                       //
+//                         РђРІС‚РѕС‚РµСЃС‚С‹ РЅР° РјРѕРґСѓР»СЊ SQL*Plus                       //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -17,8 +17,8 @@ uses
 
 type
 
-  { Тесты на команды SQL*Plus }
-  _Команды_SQLPLUS = class(TFileBasedTest)
+  { РўРµСЃС‚С‹ РЅР° РєРѕРјР°РЅРґС‹ SQL*Plus }
+  _РљРѕРјР°РЅРґС‹_SQLPLUS = class(TFileBasedTest)
   protected
     function GetDir: string; override;
   published
@@ -33,33 +33,33 @@ implementation
 
 { _SQLPlus }
 
-function _Команды_SQLPLUS.GetDir: string;
+function _РљРѕРјР°РЅРґС‹_SQLPLUS.GetDir: string;
 begin
-  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды SQLPLUS';
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\РљРѕРјР°РЅРґС‹ SQLPLUS';
 end;
 
-procedure _Команды_SQLPLUS.Define;
-begin
-end;
-
-procedure _Команды_SQLPLUS.Set_;
+procedure _РљРѕРјР°РЅРґС‹_SQLPLUS.Define;
 begin
 end;
 
-procedure _Команды_SQLPLUS.Whenever;
+procedure _РљРѕРјР°РЅРґС‹_SQLPLUS.Set_;
 begin
 end;
 
-procedure _Команды_SQLPLUS.Chcp;
+procedure _РљРѕРјР°РЅРґС‹_SQLPLUS.Whenever;
 begin
 end;
 
-procedure _Команды_SQLPLUS.Exec;
+procedure _РљРѕРјР°РЅРґС‹_SQLPLUS.Chcp;
+begin
+end;
+
+procedure _РљРѕРјР°РЅРґС‹_SQLPLUS.Exec;
 begin
 end;
 
 initialization
-  RegisterTest(_Команды_SQLPLUS.Suite);
+  RegisterTest(_РљРѕРјР°РЅРґС‹_SQLPLUS.Suite);
 
 end.
 
