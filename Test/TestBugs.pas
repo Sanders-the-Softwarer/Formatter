@@ -96,6 +96,7 @@ type
     procedure _73;
     procedure _74;
     procedure _75;
+    procedure _76;
   end;
 
 implementation
@@ -438,6 +439,12 @@ end;
 
 procedure _Bugs._75;
 begin
+end;
+
+procedure _Bugs._76;
+begin
+  Settings.AlignFields := true;
+  Settings.AlignExpressions := true;
 end;
 
 procedure _Bugs._8;

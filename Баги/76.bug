@@ -1,0 +1,8 @@
+-- Между dummy и = 'X' не должна возникать куча пробелов
+
+select
+    case when dummy = 'X' or dummy != 'Y' then 1 else 0 end
+from
+    dual
+where
+    1 = case when dummy = 'X' or dummy != 'Y' then 1 else 0 end;

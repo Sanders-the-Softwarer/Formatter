@@ -721,6 +721,7 @@ begin
   _Where := Keyword('where');
   Result := Assigned(_Where);
   if Result then TExpression.Parse(Self, Source, _Condition);
+  if _Condition is TExpression then TExpression(_Condition).IsWhereExpression := true;
 end;
 
 procedure TWhere.InternalPrintSelf(APrinter: TPrinter);

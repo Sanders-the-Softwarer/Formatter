@@ -67,13 +67,14 @@ type
   TTermInfo = record
     Priority, SingleLineLen, MultiLineLen, PrevDelimiterLen, PostDelimiterLen: integer;
     HasOp, SingleLine, LineBreak, BreakBeforeDelimiter, BreakAfterDelimiter: boolean;
-    TermRulerName, DelimRulerName: string;
+    DelimRulerName: string;
   end;
 
   { Выражение }
   TExpression = class(TStatementList<TTerm>)
   strict private
     LineCount: integer;
+    FIsWhereExpression: boolean;
     function GetMultiLine: boolean;
   strict protected
     TermInfo: array of TTermInfo;
@@ -83,10 +84,12 @@ type
     function ParseBreak: boolean; override;
     function OnePerLine: boolean; override;
     function ForcedLineBreaks: boolean; virtual;
+    procedure PlaceWhereDelimRulers; virtual;
   public
     class function Candidates(AParent: TStatement): TArray<TStatementClass>; override;
     function Aligned: TAlignMode; override;
     property IsMultiLine: boolean read GetMultiLine;
+    property IsWhereExpression: boolean read FIsWhereExpression write FIsWhereExpression;
   end;
 
 implementation
@@ -490,20 +493,6 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         TermInfo[i].BreakAfterDelimiter := false;
   end;
 
-  { Расстановка выравниваний для операций типа условий в where }
-  procedure PlaceExprDelimRulers;
-  var i: integer;
-  begin
-    { В коротких выражениях нечего выравнивать }
-    if Count < 4 then exit;
-    { Расстановка разрешена, если перенос идёт на каждой второй операции }
-    for i := 0 to Count - 2 do
-      if TermInfo[i].LineBreak xor (i mod 2 = 1) then exit;
-    { Расставим линейки }
-    for i := 0 to Count - 2 do
-      if i mod 2 = 0 then TermInfo[i].DelimRulerName := EXPR_DELIM_RULER;
-  end;
-
   { Печать получившегося выражения }
   procedure PrintExpression;
   var i: integer;
@@ -517,8 +506,6 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         APrinter.NextLine;
       if Item(i) is TTerm then
         TTerm(Item(i)).MultiLine := not TermInfo[i].SingleLine;
-      if TermInfo[i].TermRulerName <> '' then
-        APrinter.PrintRulerItems(TermInfo[i].TermRulerName, []);
       APrinter.PrintItem(Item(i));
       if TermInfo[i].SingleLine then
         APrinter.SupressNextLine(false);
@@ -531,13 +518,27 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     APrinter.PopIndent;
   end;
 
+  { Расстановка выравниваний для условий в where }
+  procedure PlaceWhereDelimRulers;
+  var i: integer;
+  begin
+    { В коротких выражениях нечего выравнивать }
+    if Count < 4 then exit;
+    { Расстановка разрешена, если перенос идёт на каждой второй операции }
+    for i := 0 to Count - 2 do
+      if TermInfo[i].LineBreak xor (i mod 2 = 1) then exit;
+    { Расставим линейки }
+    for i := 0 to Count - 2 do
+      if i mod 2 = 0 then TermInfo[i].DelimRulerName := WHERE_DELIM_RULER;
+  end;
+
 begin
   if not Assigned(TermInfo) then
   begin
     CollectInfo;
     CheckForBreaks;
     BeautifyLongTerms;
-    PlaceExprDelimRulers;
+    if IsWhereExpression then PlaceWhereDelimRulers;
   end;
   PrintExpression;
 end;
@@ -567,6 +568,10 @@ end;
 function TExpression.ForcedLineBreaks: boolean;
 begin
   Result := false;
+end;
+
+procedure TExpression.PlaceWhereDelimRulers;
+begin
 end;
 
 class function TExpression.Candidates(AParent: TStatement): TArray<TStatementClass>;
@@ -689,6 +694,8 @@ function TBracketedExpression.MultiLine: boolean;
 begin
   Result := (InnerStatement is TExpression) and TExpression(InnerStatement).IsMultiLine;
 end;
+
+{ TWhereExpression }
 
 initialization
   { Заполняем список ключевых слов для выражений }
