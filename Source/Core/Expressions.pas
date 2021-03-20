@@ -40,6 +40,7 @@ type
   TTerm = class(TStatement)
   strict private
     _Prefix: TToken;
+    _Interval: TStatement;
     _Number: TNumber;
     _LiteralPrefix: TEpithet;
     _Literal: TLiteral;
@@ -92,9 +93,15 @@ type
     property IsWhereExpression: boolean read FIsWhereExpression write FIsWhereExpression;
   end;
 
+  { Выражение в скобках }
+  TBracketedExpression = class(TBracketedStatement<TExpression>)
+  public
+    function MultiLine: boolean; override;
+  end;
+
 implementation
 
-uses Parser, Commons, DML, PLSQL, Keywords, FormatterPrinter, Select;
+uses Parser, Commons, DML, PLSQL, Keywords, FormatterPrinter, Select, Intervals;
 
 var
   Operations: TDictionary<String, integer>;
@@ -109,12 +116,6 @@ begin
 end;
 
 type
-
-  { Выражение в скобках }
-  TBracketedExpression = class(TBracketedStatement<TExpression>)
-  public
-    function MultiLine: boolean; override;
-  end;
 
   { Выражение case }
   TCase = class(TStatement)
@@ -192,6 +193,8 @@ begin
       _Literal := Literal;
       exit(true);
     end;
+    { Интервальным литералом }
+    if TIntervalLiteral.Parse(Self, Source, _Interval) then exit(true);
     { SQL-выражением }
     _SQLStatement := ParseSQLStatement;
     if Assigned(_SQLStatement) then exit(true);
@@ -207,6 +210,8 @@ begin
     end;
     { Вложенным запросом }
     if TBracketedStatement<TSelect>.Parse(Self, Source, _Select) then exit(true);
+    { Интервальным выражением }
+    if TIntervalExpression.Parse(Self, Source, _Expression) then exit(true);
     { Выражением в скобках }
     if TBracketedExpression.Parse(Self, Source, _Expression) then exit(true);
   finally
@@ -223,7 +228,7 @@ end;
 
 procedure TTerm.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Prefix, _Number, _LiteralPrefix, _Literal, _SQLStatement, _Ident,
+  APrinter.PrintItems([_Prefix, _Interval, _Number, _LiteralPrefix, _Literal, _SQLStatement, _Ident,
     _Suffix, _KeywordValue, _Case, _Cast, _Select, _Expression, _OuterJoin, _Postfix]);
 end;
 

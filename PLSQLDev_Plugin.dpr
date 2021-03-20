@@ -45,7 +45,8 @@ uses
   OpenFor in 'Source\PLSQL\OpenFor.pas',
   ForAll in 'Source\PLSQL\ForAll.pas',
   Assignment in 'Source\PLSQL\Assignment.pas',
-  Label_ in 'Source\PLSQL\Label_.pas';
+  Label_ in 'Source\PLSQL\Label_.pas',
+  Intervals in 'Source\Core\Intervals.pas';
 
 const
   Desc  = 'Formatter';

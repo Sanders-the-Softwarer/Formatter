@@ -44,7 +44,8 @@ uses
   Exit_ in 'Source\PLSQL\Exit_.pas',
   OpenFor in 'Source\PLSQL\OpenFor.pas',
   ForAll in 'Source\PLSQL\ForAll.pas',
-  Assignment in 'Source\PLSQL\Assignment.pas';
+  Assignment in 'Source\PLSQL\Assignment.pas',
+  Intervals in 'Source\Core\Intervals.pas';
 
 {$R *.res}
 

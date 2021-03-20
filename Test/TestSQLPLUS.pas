@@ -62,5 +62,3 @@ initialization
   RegisterTest(_Команды_SQLPLUS.Suite);
 
 end.
-
-

@@ -158,6 +158,7 @@ type
   published
     procedure Object_;
     procedure Timestamp_With_Time_Zone;
+    procedure Interval;
   end;
 
   { Тесты на PL/SQL типы }
@@ -646,6 +647,10 @@ begin
   Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\SQL Типы';
 end;
 
+procedure _SQL_Типы.Interval;
+begin
+end;
+
 procedure _SQL_Типы.Object_;
 begin
 end;
@@ -740,7 +745,7 @@ end;
 
 procedure _Контрольные_Примеры.fm_pc_triggers;
 begin
-  PostponeTill(2021, 3, 19);
+  PostponeTill(2021, 3, 29);
 end;
 
 procedure _Контрольные_Примеры.fm_pc_user;
@@ -749,7 +754,7 @@ end;
 
 procedure _Контрольные_Примеры.fm_pc_v_pcgi_link;
 begin
-  PostponeTill(2021, 3, 19);
+  PostponeTill(2021, 3, 29);
 end;
 
 procedure _Контрольные_Примеры.fm_cc_user;
@@ -758,22 +763,22 @@ end;
 
 procedure _Контрольные_Примеры.top_dev_style_sop_link_api;
 begin
-  PostponeTill(2021, 3, 19);
+  PostponeTill(2021, 3, 29);
 end;
 
 procedure _Контрольные_Примеры.top_lc_calc_utils;
 begin
-  PostponeTill(2021, 3, 19);
+  PostponeTill(2021, 3, 29);
 end;
 
 procedure _Контрольные_Примеры.top_ref_api;
 begin
-  PostponeTill(2021, 3, 19);
+  PostponeTill(2021, 3, 29);
 end;
 
 procedure _Контрольные_Примеры.top_report_api;
 begin
-  PostponeTill(2021, 3, 19);
+  PostponeTill(2021, 3, 29);
 end;
 
 { _Сопоставление_Полей }

@@ -1,0 +1,36 @@
+function x 
+    return interval day to second;
+
+create table x
+    (
+        p1 interval year to month,
+        p2 interval day to second,
+        p3 interval year(3) to month,
+        p4 interval day(4) to second(9),
+    );
+
+select
+    interval '21-2' year to month,
+    interval '100-5' year(3) to month,
+    interval '1' year,
+    interval '20' month,
+    interval '100' year(3),
+    interval '10000' month(5),
+    interval '2 3:04:11.333' day to second(3),
+    interval '2 3:04' day to minute,
+    interval '2 3' day to hour,
+    interval '2' day,
+    interval '03:04:11.333' hour to second,
+    interval '03:04' hour to minute,
+    interval '40' hour,
+    interval '04:11.333' minute to second,
+    interval '70' minute,
+    interval '70' second,
+    interval '03:70' hour to minute
+from
+    dual;
+
+select 
+    (systimestamp - order_date) day(9) to second 
+from 
+    dual;

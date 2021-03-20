@@ -96,6 +96,7 @@ type
     _Type, _OpenBracket, _Comma, _CloseBracket: TTerminal;
     _Size, _Precision: TNumber;
     _Unit, _WithTimeZone: TEpithet;
+    _Interval: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -125,7 +126,7 @@ type
 
 implementation
 
-uses Parser, Expressions;
+uses Parser, Expressions, Intervals;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -356,6 +357,8 @@ end;
 
 function TTypeRef.InternalParse: boolean;
 begin
+  { ≈сли распознали интервальный тип, больше делать нечего }
+  if TIntervalType.Parse(Self, Source, _Interval) then exit(true);
   { ≈сли распознали идентификатор, тип данных распознан }
   TQualifiedIdent.Parse(Self, Source, _Ident);
   if not Assigned(_Ident) then exit(false);
@@ -382,12 +385,12 @@ end;
 
 procedure TTypeRef.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Ident, _Type, _OpenBracket, _Size, _Comma, _Precision, _Unit, _CloseBracket, _WithTimeZone]);
+  APrinter.PrintItems([_Ident, _Type, _OpenBracket, _Size, _Comma, _Precision, _Unit, _CloseBracket, _WithTimeZone, _Interval]);
 end;
 
 function TTypeRef.IsSimpleIdent: boolean;
 begin
-  Result := not Assigned(_Type) and not Assigned(_OpenBracket);
+  Result := not Assigned(_Type) and not Assigned(_OpenBracket) and not Assigned(_WithTimeZone) and not Assigned(_Interval);
 end;
 
 { TNameValuePair }

@@ -47,7 +47,8 @@ uses
   OpenFor in 'Source\PLSQL\OpenFor.pas',
   Trigger in 'Source\PLSQL\Trigger.pas',
   Exit_SQLPlus in 'Source\SQL_Plus\Exit_SQLPlus.pas',
-  Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas';
+  Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas',
+  Intervals in 'Source\Core\Intervals.pas';
 
 var
   InFileName, OutFileName, InText, OutText: string;
