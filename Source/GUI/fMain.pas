@@ -205,6 +205,8 @@ var
   Token: TToken absolute AObject;
   Statement: TStatement absolute AObject;
 begin
+  { Заблокируем возможность зацикливания на оповещениях }
+  if IntoSync then exit;
   { Обновим панель отладочной информации }
   if AObject is TToken then
     UpdateDebugInfo(Token)
@@ -212,8 +214,6 @@ begin
     UpdateDebugInfo(Statement)
   else
     edDebugInfo.Text := '';
-  { Заблокируем возможность зацикливания на оповещениях }
-  if IntoSync then exit;
   try
     IntoSync := true;
     { Если указана лексема - сигнал от принтера, синхронизируем исходник }

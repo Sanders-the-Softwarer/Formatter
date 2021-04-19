@@ -1,0 +1,10 @@
+-- Условие в последней строке не должно разваливаться на две строки из-за комментария
+
+select
+    1
+from
+    top_ref_sop_calc_from_target_mup found,
+    top_ref_collection               new_stop
+where
+    found.code != coalesce(p_code, found.code + 1)
+    and new_stop.code (+) = coalesce(p_collection_stop_code, found.code /* да, так нужно, чтобы проверка правильно работала, это не бага */)

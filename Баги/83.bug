@@ -1,0 +1,3 @@
+-- Выражение return не должно отпадать и форматироваться как отдельный оператор
+
+type rep_compare_plan_block2_cur is ref cursor return rep_compare_plan_block2_rec;

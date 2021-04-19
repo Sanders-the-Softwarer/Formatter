@@ -512,7 +512,7 @@ type
   { Декларация ref cursor }
   TRefCursor = class(TStatement)
   strict private
-    _Ref, _Cursor, _Returning: TEpithet;
+    _Ref, _Cursor, _Return: TEpithet;
     _TypeRef: TStatement;
   strict protected
     function InternalParse: boolean; override;
@@ -1300,14 +1300,14 @@ begin
   _Ref := Keyword('ref');
   if not Assigned(_Ref) then exit(false);
   _Cursor := Keyword('cursor');
-  _Returning := Keyword('returning');
-  if Assigned(_Returning) then TTypeRef.Parse(Self, Source, _TypeRef);
+  _Return := Keyword('return');
+  if Assigned(_Return) then TTypeRef.Parse(Self, Source, _TypeRef);
   Result := true;
 end;
 
 procedure TRefCursor.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Ref, _Cursor, _Returning, _TypeRef]);
+  APrinter.PrintItems([_Ref, _Cursor, _Return, _TypeRef]);
 end;
 
 { TObject_ }

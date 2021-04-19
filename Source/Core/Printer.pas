@@ -297,7 +297,7 @@ end;
 
 constructor TFormatSettings.Default;
 begin
-  DeclarationSingleLineParamLimit := 1;
+  DeclarationSingleLineParamLimit := 0;
   NamedArgumentSingleLineParamLimit := 1;
   PositionalArgumentSingleLineParamLimit := 4;
   MatchParamLimit           := 3;

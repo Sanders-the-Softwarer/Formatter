@@ -85,7 +85,6 @@ type
     function ParseBreak: boolean; override;
     function OnePerLine: boolean; override;
     function ForcedLineBreaks: boolean; virtual;
-    procedure PlaceWhereDelimRulers; virtual;
   public
     class function Candidates(AParent: TStatement): TArray<TStatementClass>; override;
     function Aligned: TAlignMode; override;
@@ -575,10 +574,6 @@ begin
   Result := false;
 end;
 
-procedure TExpression.PlaceWhereDelimRulers;
-begin
-end;
-
 class function TExpression.Candidates(AParent: TStatement): TArray<TStatementClass>;
 begin
   while Assigned(AParent) and not (AParent is TDML) do AParent := AParent.Parent;
@@ -589,7 +584,7 @@ end;
 
 function TExpression.Aligned: TAlignMode;
 begin
-  Result := AlignMode(Settings.AlignExpressions and (Self.Count > 1));
+  Result := AlignMode(false {Settings.AlignExpressions});
 end;
 
 function TExpression.GetMultiLine: boolean;

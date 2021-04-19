@@ -1,0 +1,10 @@
+-- ЎестЄрка не должна съезжать вправо, равн€€сь под %rowtype
+
+procedure collect_calc_data
+    (
+        p_dev_sc_rec in out nocopy top_lc_calc_utils.t_agg_dev_sc_calc_rec
+    )
+is
+    c_ind constant number(1) := 6;
+    v_rec          top_lc_calc_gtt%rowtype;
+begin

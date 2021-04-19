@@ -1,0 +1,8 @@
+-- Поле в подзапросе не должно уезжать вправо из-за выравнивания
+
+select
+    *
+from
+    ls.mdm_v_entry_point
+where
+    id_entry_point not in (select id_entry_point from ls.tu_ref_entry_point_add_info)

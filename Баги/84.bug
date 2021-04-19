@@ -1,0 +1,347 @@
+-- Поля в select-ах не должны съезжать куда-то неимоверно вправо
+
+open
+    v_result
+for
+    with fixed as
+    (
+        select
+            dsf.collection_code,
+            dsf.dev_style_mnemocode,
+            dsf.dev_style_name,
+            'Fixed' calculation_state,
+            dsf.sop_code,
+            dsf.gom_code,
+            dsf.category_code,
+            dsf.subcategory_code,
+            dsf.class_code,
+            dsf.subclass_code,
+            dsf.gender_code,
+            dsf.age_code,
+            dsf.brand_manager_code,
+            dsf.calculation_method,
+            dsf.target_mup,
+            dsf.planned_mup,
+            dsf.lc_net_main_currency,
+            dsf.rrp_net,
+            coalesce(dsf.rrp_gross_manual, dsf.rrp_gross_plm) rrp_gross,
+            dsf.rrp_gross_plm,
+            dsf.rrp_gross_manual,
+            coalesce(dsf.quantity_manual, dsf.quantity_plm) quantity,
+            dsf.quantity_plm,
+            dsf.quantity_manual,
+            decode(p.code, dsf.production_region_code, 1, 0) priority_region,
+            p.code production_region_code,
+            dsfr.pp_net_production_currency purchase_price,
+            dsfr.purchase_price_currency_code,
+            dsfr.pp_net_default_currency purchase_price_alt,
+            dsf.vat_rate,
+            dsfr.delivery_percent_to_pp,
+            dsfr.custom_percent_to_pp,
+            dsfr.royalty_percent_to_pp,
+            dsfr.pp_net_main_currency,
+            dsfr.custom_cost_main_currency,
+            dsfr.delivery_cost_main_currency,
+            dsfr.royalty_cost_main_currency,
+            (
+                select
+                    e.value
+                from
+                    top_v_ref_exchange_rate e
+                where
+                    e.currency_type_code =
+                        (
+                            select
+                                t.code
+                            from
+                                top_v_ref_currency_type t
+                            where
+                                t.name = 'Курс ценообразования'
+                        )
+                    and dsf.exchange_rate_date >= e.relevant_from
+                    and dsf.exchange_rate_date < e.relevant_to
+                    and e.currency_code = dsfr.purchase_price_currency_code
+                    and e.collection_code = dsf.collection_code
+                    and e.state = 1
+            ) exchange_rate_value,
+            dsf.exchange_rate_date,
+    dsf.calculation_date,
+            dsf.calculation_author
+        from
+            top_dev_style_fix         dsf,
+            top_dev_style_calc        dsc,
+            top_dev_style_fix_region  dsfr,
+            top_ref_production_region p
+        where
+            dsc.dev_style_coll_code in
+                (
+                    select value(t) from table(v_dev_style_coll_code_tbl) t
+                )
+            and dsf.code = dsfr.dev_style_fix_code(+)
+            and dsf.date_to is null
+            and dsc.code = dsf.dev_style_calc_code
+            and dsc.use_in_mup = 1
+            and dsfr.production_region_code(+) = p.code
+            and p.state = 1
+    ),
+    ccurrent as
+    (
+        select
+            dscc.collection_code,
+            ds.style_char_code dev_style_mnemocode,
+            ds.development_name_eng dev_style_name,
+            'In work' calculation_state,
+            ds.sop_code,
+            ds.gom_code,
+            ds.category_code,
+            ds.subcategory_code,
+            ds.class_code,
+            ds.subclass_code,
+            ds.gender_code,
+            ds.age_code,
+            dscc.brand_manager_code,
+            dsc.method calculation_method,
+            dsc.target_mup,
+            dsc.planned_mup,
+            dsc.target_landed_cost,
+            dsc.rrp_net,
+            coalesce
+            (
+                dsc.rrp_gross_manual,
+                (
+                    select
+                        r.price_value
+                    from
+                        top_v_prices_rrp r
+                    where
+                        r.obj_code = dsc.dev_style_coll_code
+                        and r.price_type_mc = top_const.price_rrp_initial
+                        and r.country_code = dsc.delivery_country_code
+                )
+            ) rrp_gross,
+            (
+                select
+                    r.price_value
+                from
+                    top_v_prices_rrp r
+                where
+                    r.obj_code = dsc.dev_style_coll_code
+                    and r.price_type_mc = top_const.price_rrp_initial
+                    and r.country_code = dsc.delivery_country_code
+            ) rrp_gross_plm,
+            dsc.rrp_gross_manual,
+            coalesce(dsc.quantity_manual, dscc.initial_qty) quantity,
+            dscc.initial_qty quantity_plm,
+            dsc.quantity_manual quantity_manual,
+            decode(p.code, dsc.production_region_code, 1, 0) priority_region,
+            p.code production_region_code,
+            dscr.pp_net_production_currency purchase_price,
+            dscr.purchase_price_currency_code,
+            dscr.pp_net_default_currency purchase_price_alt,
+            dsc.vat_rate,
+            dscr.delivery_cost_ratio,
+            dscr.custom_cost_ratio,
+            dscr.royalty_cost_ratio,
+            dscr.pp_net_main_currency,
+            dscr.custom_cost_main_currency,
+            dscr.delivery_cost_main_currency,
+            dscr.royalty_cost_main_currency,
+            (
+                select
+                    e.value
+                from
+                    top_v_ref_exchange_rate e
+                where
+                    e.currency_type_code =
+                        (
+                            select
+                                t.code
+                            from
+                                top_v_ref_currency_type t
+                            where
+                                t.name = 'Курс ценообразования'
+                        )
+                    and dsc.exchange_rate_date >= e.relevant_from
+                    and dsc.exchange_rate_date < e.relevant_to
+                    and e.currency_code = dscr.purchase_price_currency_code
+                    and e.collection_code = dscc.collection_code
+                    and e.state = 1
+            ) exchange_rate_value,
+            dsc.exchange_rate_date,
+    dsc.modified_date,
+            u.usr modified_by
+        from
+            top_dev_style_calc        dsc,
+            top_dev_style_calc_region dscr,
+            top_dev_style             ds,
+            top_dev_style_coll        dscc,
+            top_ref_production_region p,
+    sm_user                   u
+        where
+            dscr.dev_style_calc_code(+) = dsc.code
+            and dscc.code = dsc.dev_style_coll_code
+            and ds.code = dscc.dev_style_code
+            and dsc.use_in_mup = 1
+            and dsc.dev_style_coll_code in
+                (
+                    select value(t) from table(v_dev_style_coll_code_tbl) t
+                )
+            and p.code = dscr.production_region_code(+)
+            and p.state = 1
+    and dsc.modified_user_code = u.code (+)
+
+    ),
+    merged as
+    (
+        select
+            f.*
+        from
+            fixed f
+        union all
+        select
+            c.*
+        from
+            ccurrent c
+    )
+    select
+        (
+            select
+                c.mnemocode
+            from
+                top_ref_collection c
+            where
+                c.code = m.collection_code
+        ) collection_code_hl,
+        m.dev_style_mnemocode,
+        m.dev_style_name,
+        m.calculation_state,
+        (
+            select
+                ln.value
+            from
+                sm_lang_name ln
+            where
+                ln.language_code = 'en'
+                and ln.obj_code = m.sop_code
+        ) sop_code_hl,
+        (
+            select
+                ln.value
+            from
+                sm_lang_name ln
+            where
+                ln.language_code = 'en'
+                and ln.obj_code = m.gom_code
+        ) gom_code_hl,
+        (
+            select
+                ln.value
+            from
+                sm_lang_name ln
+            where
+                ln.language_code = 'en'
+                and ln.obj_code = m.category_code
+        ) category_code_hl,
+        (
+            select
+                ln.value
+            from
+                sm_lang_name ln
+            where
+                ln.language_code = 'en'
+                and ln.obj_code = m.subcategory_code
+        ) subcategory_code_hl,
+        (
+            select
+                ln.value
+            from
+                sm_lang_name ln
+            where
+                ln.language_code = 'en'
+                and ln.obj_code = m.class_code
+        ) class_code_hl,
+        (
+            select
+                ln.value
+            from
+                sm_lang_name ln
+            where
+                ln.language_code = 'en'
+                and ln.obj_code = m.subclass_code
+        ) subclass_code_hl,
+        (
+            select
+                ln.value
+            from
+                sm_lang_name ln
+            where
+                ln.language_code = 'en'
+                and ln.obj_code = m.gender_code
+        ) gender_code_hl,
+        (
+            select
+                ln.value
+            from
+                sm_lang_name ln
+            where
+                ln.language_code = 'en'
+                and ln.obj_code = m.age_code
+        ) age_code_hl,
+        (
+            select
+                e.fio
+            from
+                top_ref_employee e
+            where
+                e.code = m.brand_manager_code
+        ) brand_manager_code_hl,
+        convert_calc_method_to_text(m.calculation_method) calculation_method,
+        m.target_mup,
+        m.planned_mup,
+        m.lc_net_main_currency,
+        m.rrp_net,
+        m.rrp_gross,
+        m.rrp_gross_plm,
+        m.rrp_gross_manual,
+        m.quantity,
+        m.quantity_plm,
+        m.quantity_manual,
+        (
+            select
+                ln.value
+            from
+                sm_lang_name ln
+            where
+                ln.language_code = 'en'
+                and ln.obj_code = m.production_region_code
+        ) production_region_code_hl,
+        decode(m.priority_region, 0, 'No', 1, 'Yes') priority_region,
+        trunc(m.purchase_price, 2) purchase_price,
+        (
+            select
+                cur.currency
+            from
+                top_ref_currency cur
+            where
+                cur.code = m.purchase_price_currency_code
+        ) purchase_price_curr_code_hl,
+        trunc(m.purchase_price_alt, 2) purchase_price_alt,
+        m.vat_rate,
+        m.delivery_percent_to_pp,
+        m.custom_percent_to_pp,
+        m.royalty_percent_to_pp,
+        m.pp_net_main_currency,
+        m.custom_cost_main_currency,
+        m.delivery_cost_main_currency,
+        m.royalty_cost_main_currency,
+        m.exchange_rate_value,
+        m.exchange_rate_date,
+        m.calculation_date,
+        m.calculation_author
+    from
+        merged m
+    order by
+        collection_code_hl,
+        sop_code_hl,
+        dev_style_mnemocode,
+        calculation_state;

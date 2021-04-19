@@ -167,7 +167,7 @@ type
     function GetDir: string; override;
   published
     procedure Ref_Cursor;
-    procedure Ref_Cursor_Returning;
+    procedure Ref_Cursor_Return;
     procedure Табличные_Типы;
     procedure Записи;
   end;
@@ -324,12 +324,14 @@ end;
 
 procedure _Выравнивание.Конкатенаций_С_Одинаковыми_Комбинациями_Символов;
 begin
+  PostponeTill(2021, 5, 1);
   Settings.AlignExpressions := true;
   Settings.PreferredExpressionLength := 100;
 end;
 
 procedure _Выравнивание.Конкатенаций_По_Одинаковым_Символам;
 begin
+  PostponeTill(2021, 5, 1);
   Settings.AlignExpressions := true;
   Settings.PreferredExpressionLength := 80;
 end;
@@ -361,6 +363,7 @@ end;
 
 procedure _Выравнивание.Условий_В_Where;
 begin
+  PostponeTill(2021, 5, 1);
   Settings.AlignExpressions := true;
 end;
 
@@ -520,7 +523,7 @@ procedure _PLSQL_Типы.Ref_Cursor;
 begin
 end;
 
-procedure _PLSQL_Типы.Ref_Cursor_Returning;
+procedure _PLSQL_Типы.Ref_Cursor_Return;
 begin
 end;
 
@@ -745,7 +748,6 @@ end;
 
 procedure _Контрольные_Примеры.fm_pc_triggers;
 begin
-  PostponeTill(2021, 3, 29);
 end;
 
 procedure _Контрольные_Примеры.fm_pc_user;
@@ -754,7 +756,7 @@ end;
 
 procedure _Контрольные_Примеры.fm_pc_v_pcgi_link;
 begin
-  PostponeTill(2021, 3, 29);
+  PostponeTill(2021, 5, 1);
 end;
 
 procedure _Контрольные_Примеры.fm_cc_user;
@@ -763,22 +765,20 @@ end;
 
 procedure _Контрольные_Примеры.top_dev_style_sop_link_api;
 begin
-  PostponeTill(2021, 3, 29);
 end;
 
 procedure _Контрольные_Примеры.top_lc_calc_utils;
 begin
-  PostponeTill(2021, 3, 29);
+  PostponeTill(2021, 5, 1);
 end;
 
 procedure _Контрольные_Примеры.top_ref_api;
 begin
-  PostponeTill(2021, 3, 29);
 end;
 
 procedure _Контрольные_Примеры.top_report_api;
 begin
-  PostponeTill(2021, 3, 29);
+  PostponeTill(2021, 5, 1);
 end;
 
 { _Сопоставление_Полей }

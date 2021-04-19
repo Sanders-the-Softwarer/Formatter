@@ -1,0 +1,13 @@
+-- Операции конкатенации не должны смещаться вправо 
+-- из-за наличия скобок и их внутреннего отступа
+
+begin
+    :new.code := cmn_get_string_hash
+                 (
+                     :new.table_name                || '.' ||
+                     :new.field_name                || '.' ||
+                     cmn_get_anydata_key(:new.key1) || '.' ||
+                     cmn_get_anydata_key(:new.key2) || '.' ||
+                     cmn_get_anydata_key(:new.key3)
+                 );
+end;

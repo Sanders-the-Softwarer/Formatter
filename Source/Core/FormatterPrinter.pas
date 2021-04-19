@@ -413,7 +413,7 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
             begin
               Fix := Rulers.Fix(RulerName) - SpecialShift;
               {$IFDEF DEBUG}
-              if Self is TFineCopyPrinter then
+              //if Self is TFineCopyPrinter then
                 AToken.AddDebugInfo('[%p] Fix :: ruler = {%s}, current col = %d, target col = %d, indent = %d', [pointer(Rulers), RulerName, TextBuilder.Col, Fix, Rulers.Shift^]);
               {$ENDIF}
               TextBuilder.AppendSpace(Fix - TextBuilder.Col);

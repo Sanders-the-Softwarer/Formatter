@@ -1,0 +1,43 @@
+-- Так как скобки начали форматировать под именем функции,
+-- конструкция keep не должна съезжать правее при многострочном
+-- выражении перед ней и должна - при однострочном
+
+select
+    max
+    (
+        case
+            when count(distinct l.purchase_department_code) = 1 then
+                max(l.purchase_department_code)
+            else
+                null
+        end
+    ) -- отбираем первую строчку - либо найдено совпадение по гом либо любой гом
+    keep
+    (
+        dense_rank
+        first
+        order by
+            l.gom_code nulls last
+    ),
+    max(null)
+        keep
+        (
+            dense_rank
+            first
+            order by
+                l.gom_code nulls last
+        )
+into
+    v_result
+from
+    top_ref_sop s,
+    top_ref_purchase_department_brand_link l
+where
+    s.code = p_sop_code
+    and l.plan_brand_code = s.plan_brand_code
+    and l.collection_code = p_collection_code
+    and l.country_code = p_country_code
+    and (l.gom_code = p_gom_code or l.gom_code is null)
+    and l.state = 1
+group by -- тут делим на две строчки - по совпадкнию гом и по любому гом
+    l.gom_code;

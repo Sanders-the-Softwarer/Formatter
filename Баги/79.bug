@@ -1,0 +1,45 @@
+-- Алиасы quantity_retail и quantity_total не должны
+-- съезжать вправо, отрываясь от end, несмотря на 
+-- более длинные поля без алиасов
+
+select
+    t.sup_sku_code,
+    t.sup_style_color_code,
+    t.po_code,
+    t.specification_code,
+    case when t.priority_final = 1 then nvl(trunc(t.quantity_fc / nullif(cnt, 0)), 0) else 0 end
+    +
+    case
+        when t.priority_final = 1
+             and t.sup_sku_code = t.first_sup_sku_code
+        then
+            nvl(t.rest, 0)
+        else
+            0
+    end quantity_total,
+    case when t.priority_final = 1 then nvl(trunc(t.quantity_fc / nullif(cnt, 0)), 0) else 0 end
+    +
+    case
+        when t.priority_final = 1
+             and t.sup_sku_code = t.first_sup_sku_code
+        then
+            nvl(t.rest, 0)
+        else
+            0
+    end quantity_retail,
+    t.quantity_retail_manual,
+    t.quantity_wholesale,
+    t.quantity_wholesale_manual,
+    t.quantity_on_hold,
+    t.data_source_code,
+    t.priority_final,
+    t.priority_manual,
+    t.priority_base,
+    t.purchase_price,
+    t.purchase_price_currency_code,
+    t.vat_type,
+    t.incoterms_code
+bulk collect into
+    v_result
+from
+    source;
