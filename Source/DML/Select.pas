@@ -250,6 +250,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function IsSimpleTable: boolean;
   end;
 
   { Конструкция table collection expression }
@@ -378,6 +380,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function IsSimpleTable: boolean;
   end;
 
   { Вторая и последующие таблицы в выражении join }
@@ -911,7 +915,9 @@ begin
   Result := not Assigned(_Only) and not Assigned(_Flashback) and
     not Assigned(_Pivot) and not Assigned(_Unpivot) and
     not Assigned(_RowPattern) and not Assigned(_JoinedTable) and
-    not Assigned(_Containers) and not Assigned(_SubQuery);
+    not Assigned(_Containers) and not Assigned(_SubQuery) and
+    (_QueryTableExpression is TQueryTableExpression) and
+    TQueryTableExpression(_QueryTableExpression).IsSimpleTable;
 end;
 
 { TQueryTableExpression }
@@ -926,6 +932,12 @@ end;
 procedure TQueryTableExpression.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Body]);
+end;
+
+function TQueryTableExpression.IsSimpleTable: boolean;
+begin
+  Result := (_Body is TTableCollectionExpression) or
+    (_Body is TTableViewExpression) and TTableViewExpression(_Body).IsSimpleTable;
 end;
 
 { TContainers }
@@ -1191,6 +1203,11 @@ end;
 procedure TTableViewExpression.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Name, _PartitionExtension, _Hierarchies, _Sample]);
+end;
+
+function TTableViewExpression.IsSimpleTable: boolean;
+begin
+  Result := not Assigned(_PartitionExtension) and not Assigned(_Hierarchies) and not Assigned(_Sample);
 end;
 
 { THierarchies }
