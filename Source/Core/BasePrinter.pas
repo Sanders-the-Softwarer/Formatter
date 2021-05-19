@@ -39,6 +39,8 @@ type
     procedure CancelNextLine; override;
     procedure SupressNextLine(ASupress: boolean); override;
     procedure PrintSpecialComment(AValue: string); override;
+    procedure BeforePrintDelimiter; override;
+    procedure AfterPrintDelimiter; override;
   public
     procedure ControlChanged; override;
     procedure SyncNotification(AObject: TObject; ALine, ACol, ALen: integer); override;
@@ -84,6 +86,16 @@ begin
 end;
 
 procedure TBasePrinter.PrintSpecialComment(AValue: string);
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.BeforePrintDelimiter;
+begin
+  { ничего не делаем }
+end;
+
+procedure TBasePrinter.AfterPrintDelimiter;
 begin
   { ничего не делаем }
 end;

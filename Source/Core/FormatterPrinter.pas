@@ -65,14 +65,15 @@ type
     LastToken: TToken;
     { Разрешение принтеру на подмену типа комментариев }
     CanChangeLineCommentsToBrackets: boolean;
+    { Служебная переменная для правильной обработки разделителей в выравниваемых списках }
+    DelimiterCol: integer;
   strict protected
     TokenPos, TokenLen: TDictionary<TToken, integer>;
     function SpaceRequired(ALeft, ARight: TToken): boolean;
     procedure PrintEmptyToken;
     procedure MeasureRuler;
     function HasActiveRulers: boolean;
-    function GetRulers: TRulers;
-    property Rulers: TRulers read GetRulers write FRulers;
+    property Rulers: TRulers read FRulers write FRulers;
   public
     constructor Create(ASettings: TFormatSettings;
                        AWithoutText: boolean = false;
@@ -93,6 +94,8 @@ type
     procedure CancelNextLine; override;
     procedure SupressNextLine(ASupress: boolean); override;
     procedure PrintSpecialComment(AValue: string); override;
+    procedure BeforePrintDelimiter; override;
+    procedure AfterPrintDelimiter; override;
   public
     procedure PrintRulerItems(const ARuler: string; AItems: array of TObject); override;
     function GetText: string; override;
@@ -276,14 +279,6 @@ end;
 function TFormatterPrinter.HasActiveRulers: boolean;
 begin
   Result := Assigned(Rulers);
-end;
-
-function TFormatterPrinter.GetRulers: TRulers;
-begin
-  Result := FRulers;
-  {if Assigned(CurrentStatement)
-    then Result := CurrentStatement.Rulers
-    else Result := nil;}
 end;
 
 { Вывод очередной лексемы с навешиванием всех наворотов по форматированию }
@@ -671,6 +666,18 @@ begin
     FreeAndNil(T1);
     FreeAndNil(T2);
   end;
+end;
+
+{ Перед печатью разделителя запомним позицию }
+procedure TFormatterPrinter.BeforePrintDelimiter;
+begin
+  DelimiterCol := TextBuilder.Col;
+end;
+
+{ После печати правильно учтём длину разделителя }
+procedure TFormatterPrinter.AfterPrintDelimiter;
+begin
+  if HasActiveRulers then Rulers.ConsiderDelimiter(TextBuilder.Col - DelimiterCol);
 end;
 
 { Установка "линейки" для выравнивания }

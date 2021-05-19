@@ -92,6 +92,7 @@ type
     checkShowDebugInfo: TCheckBox;
     checkAlignRightComments: TCheckBox;
     checkCommentCorrectSpaces: TCheckBox;
+    checkAlignFrom: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -163,6 +164,7 @@ begin
     Settings.AlignCommands                   := checkAlignCommands.Checked;
     Settings.AlignUseSpace                   := checkUseSpace.Checked;
     Settings.AlignRightComments              := checkAlignRightComments.Checked;
+    Settings.AlignFrom                       := checkAlignFrom.Checked;
     Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
     Settings.ReplaceAsIs                     := checkReplaceAsIs.Checked;
     Settings.AddInAccessSpecificator         := checkAddInAccessSpecificator.Checked;
@@ -262,6 +264,7 @@ begin
     checkAlignExpressions.Checked        := Settings.AlignExpressions;
     checkUseSpace.Checked                := Settings.AlignUseSpace;
     checkAlignRightComments.Checked      := Settings.AlignRightComments;
+    checkAlignFrom.Checked               := Settings.AlignFrom;
     checkReplaceDefault.Checked          := Settings.ReplaceDefault;
     checkReplaceAsIs.Checked             := Settings.ReplaceAsIs;
     checkAddInAccessSpecificator.Checked := Settings.AddInAccessSpecificator;

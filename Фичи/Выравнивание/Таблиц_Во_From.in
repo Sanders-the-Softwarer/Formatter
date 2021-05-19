@@ -1,0 +1,9 @@
+-- Алиасы таблиц должны выравниваться в простых случаях
+
+select
+    *
+from
+    amt_v_placeholder p,
+    pl_v_version      v
+where
+    p.amt_version_autonum = v.autonum

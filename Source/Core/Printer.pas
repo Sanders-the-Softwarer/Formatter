@@ -65,6 +65,7 @@ type
     AlignSpecialComments: boolean;
     AlignUseSpace: boolean;
     AlignRightComments: boolean;
+    AlignFrom: boolean;
     ReplaceDefault: boolean;
     ReplaceAsIs: boolean;
     ChangeCommentType: boolean;
@@ -97,6 +98,8 @@ type
     procedure CancelNextLine; virtual; abstract;
     procedure SupressNextLine(ASupress: boolean); virtual; abstract;
     procedure PrintSpecialComment(AValue: string); virtual; abstract;
+    procedure BeforePrintDelimiter; virtual; abstract;
+    procedure AfterPrintDelimiter; virtual; abstract;
   public
     procedure ControlChanged; virtual; abstract;
     procedure SyncNotification(AObject: TObject; ALine, ACol, ALen: integer); virtual; abstract;
@@ -130,6 +133,7 @@ procedure SendSyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
 
 { Конструкции, которые можно применять в TFormatterPrinter.PrintItems для форматирования }
 function _NextLine: TObject;
+function _NextLineIf(AItems: array of TObject): TObject;
 function _Indent: TObject;
 function _Undent: TObject;
 function _IndentNextLine: TObject;
@@ -159,6 +163,14 @@ type
     procedure PrintSelf(APrinter: TPrinter); override;
   end;
 
+  TNextLineIf = class(TFormatterCmd)
+  private
+    Items: array of TObject;
+  public
+    constructor Create(AItems: array of TObject);
+    procedure PrintSelf(APrinter: TPrinter); override;
+  end;
+
   TIndent = class(TFormatterCmd)
   public
     procedure PrintSelf(APrinter: TPrinter); override;
@@ -184,6 +196,11 @@ begin
   Result := TNextLine.Create;
 end;
 
+function _NextLineIf(AItems: array of TObject): TObject;
+begin
+  Result := TNextLineIf.Create(AItems);
+end;
+
 function _Indent: TObject;
 begin
   Result := TIndent.Create;
@@ -207,6 +224,18 @@ end;
 procedure TNextLine.PrintSelf(APrinter: TPrinter);
 begin
   APrinter.NextLine;
+end;
+
+constructor TNextLineIf.Create(AItems: array of TObject);
+var i: integer;
+begin
+  SetLength(Items, Length(AItems));
+  for i := Low(AItems) to High(AItems) do Items[i] := AItems[i];
+end;
+
+procedure TNextLineIf.PrintSelf(APrinter: TPrinter);
+begin
+  APrinter.NextLineIf(Items);
 end;
 
 procedure TIndent.PrintSelf(APrinter: TPrinter);
@@ -309,6 +338,7 @@ begin
   AlignSpecialComments      := true;
   AlignUseSpace             := true;
   AlignRightComments        := true;
+  AlignFrom                 := true;
   ReplaceDefault            := true;
   ReplaceAsIs               := true;
   AddInAccessSpecificator   := true;

@@ -47,6 +47,13 @@ unit Rulers;
   идёт в зачёт ширины следующей колонки (и следующей, если у той тоже пустота
   справа...)
 
+  Особенным образом приходится обрабатывать разделители (запятые как разделители
+  полей, точки с запятой как разделители деклараций и т. п.) Выравниваемая
+  конструкция состоит из нескольких "колонок", после которых идёт разделитель.
+  Для корректной работы функционала, в том числе выравнивания комментариев
+  справа и заполнения пустот, размер разделителя необходимо учитывать в составе
+  последней непустой колонки каждой строки.
+
 ------------------------------------------------------------------------------ }
 
 interface
@@ -87,12 +94,15 @@ type
     procedure CalcRulers;
     property Width[ALine, ACol: integer]: integer index 0 read GetCell write SetCell;
     property Carry[ALine, ACol: integer]: integer index 1 read GetCell write SetCell;
+    property Delim[ALine, ACol: integer]: integer index 2 read GetCell write SetCell;
   public
     constructor Create(AOwner: TObject);
     destructor Destroy; override;
     procedure AddRuler(const ARuler: string);
     procedure Start(const ARuler: string; ALine, ACol: integer);
     procedure Measure(ALine, ACol: integer; AFromStart: boolean = false);
+    { Учесть ширину разделителя в списках }
+    procedure ConsiderDelimiter(AWidth: integer);
     function Fix(const ARuler: string): integer;
     function Empty: boolean;
     property Shift: PInteger read FShift write FShift;
@@ -170,6 +180,18 @@ begin
   MaxColIndex := Math.Max(MaxColIndex, ColIndex);
 end;
 
+{ Учесть ширину разделителя в списках }
+procedure TRulers.ConsiderDelimiter(AWidth: integer);
+var i: integer;
+begin
+  for i := MaxColIndex downto 0 do
+    if Width[StartLine, i] > 0 then
+    begin
+      Delim[StartLine, i] := AWidth;
+      break;
+    end;
+end;
+
 function TRulers.Fix(const ARuler: string): integer;
 begin
   if not Assigned(Rulers) then CalcRulers;
@@ -199,7 +221,7 @@ begin
   end;
   for i := 0 to Names.Count - 1 do
     for j := MinLine to MaxLine do
-      Result := Result + Format('width[%d, %d] = %d, carry = %d (%s)', [j, i, Width[j, i], Carry[j, i], Names[i]]) + #13;
+      Result := Result + Format('width[%d, %d] = %d, carry = %d, delim = %d (%s)', [j, i, Width[j, i], Carry[j, i], Delim[j, i], Names[i]]) + #13;
 end;
 
 procedure TRulers.Print(APrinter: TPrinter);

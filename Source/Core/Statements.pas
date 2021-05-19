@@ -803,7 +803,9 @@ end;
 
 procedure TStatementList<S>.PrintDelimiter(APrinter: TPrinter; ADelimiter: TObject; ALast: boolean);
 begin
+  APrinter.BeforePrintDelimiter;
   APrinter.PrintItem(ADelimiter);
+  APrinter.AfterPrintDelimiter;
   if SpecialCommentAfterDelimiter <> '' then APrinter.PrintSpecialComment(SpecialCommentAfterDelimiter);
   SpecialCommentAfterDelimiter := '';
   if OnePerLine and not ALast then APrinter.NextLine;

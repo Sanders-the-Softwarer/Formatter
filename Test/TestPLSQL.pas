@@ -58,6 +58,7 @@ type
     procedure Параметров_Подпрограмм;
     procedure Аргументов_В_Вызовах_Подпрограмм;
     procedure Условий_В_Where;
+    procedure Таблиц_Во_From;
     procedure Параметров_В_Open_For;
     procedure Параметров_В_Execute_Immediate;
     procedure Команд_Set;
@@ -324,14 +325,14 @@ end;
 
 procedure _Выравнивание.Конкатенаций_С_Одинаковыми_Комбинациями_Символов;
 begin
-  PostponeTill(2021, 5, 1);
+  PostponeTill(2021, 6, 1);
   Settings.AlignExpressions := true;
   Settings.PreferredExpressionLength := 100;
 end;
 
 procedure _Выравнивание.Конкатенаций_По_Одинаковым_Символам;
 begin
-  PostponeTill(2021, 5, 1);
+  PostponeTill(2021, 6, 1);
   Settings.AlignExpressions := true;
   Settings.PreferredExpressionLength := 80;
 end;
@@ -363,8 +364,13 @@ end;
 
 procedure _Выравнивание.Условий_В_Where;
 begin
-  PostponeTill(2021, 5, 1);
+  PostponeTill(2021, 6, 1);
   Settings.AlignExpressions := true;
+end;
+
+procedure _Выравнивание.Таблиц_Во_From;
+begin
+  Settings.AlignFrom := true;
 end;
 
 procedure _Выравнивание.Аргументов_В_Вызовах_Подпрограмм;
@@ -756,7 +762,7 @@ end;
 
 procedure _Контрольные_Примеры.fm_pc_v_pcgi_link;
 begin
-  PostponeTill(2021, 5, 1);
+  PostponeTill(2021, 6, 1);
 end;
 
 procedure _Контрольные_Примеры.fm_cc_user;
@@ -769,7 +775,7 @@ end;
 
 procedure _Контрольные_Примеры.top_lc_calc_utils;
 begin
-  PostponeTill(2021, 5, 1);
+  PostponeTill(2021, 6, 1);
 end;
 
 procedure _Контрольные_Примеры.top_ref_api;
@@ -778,7 +784,7 @@ end;
 
 procedure _Контрольные_Примеры.top_report_api;
 begin
-  PostponeTill(2021, 5, 1);
+  PostponeTill(2021, 6, 1);
 end;
 
 { _Сопоставление_Полей }

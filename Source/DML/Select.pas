@@ -163,6 +163,15 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function IsSimpleReference: boolean;
+  end;
+
+  { Таблицы во from }
+  TTableReferences = class(TCommaList<TOptionalBracketedStatement<TTableReference>>)
+  strict protected
+    function Aligned: TAlignMode; override;
+    function IsSimpleReferences: boolean;
   end;
 
   { Конструкция where }
@@ -630,7 +639,7 @@ begin
   TAliasedExpressions.Parse(Self, Source, _SelectList);
   TInto.Parse(Self, Source, _Into);
   _From := Keyword('from');
-  TCommaList<TOptionalBracketedStatement<TTableReference>>.Parse(Self, Source, _FromList);
+  TTableReferences.Parse(Self, Source, _FromList);
   TWhere.Parse(Self, Source, _Where);
   TConnectBy.Parse(Self, Source, _ConnectBy);
   TGroupBy.Parse(Self, Source, _GroupBy);
@@ -888,12 +897,21 @@ end;
 
 procedure TTableReference.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Only, _QueryTableExpression, _Containers, _SubQuery, _Indent]);
-  APrinter.NextLineIf(_Flashback);
-  APrinter.NextLineIf([_Pivot, _Unpivot, _RowPattern]);
-  APrinter.PrintItem(_Alias);
-  APrinter.Undent;
+  APrinter.PrintRulerItems('expression',
+    [_Only, _QueryTableExpression, _Containers, _SubQuery, _Indent,
+    _NextLineIf([_Flashback]),
+    _NextLineIf([_Pivot, _Unpivot, _RowPattern]),
+    _Undent]);
+  APrinter.PrintRulerItems('alias', [_Alias]);
   APrinter.NextLineIf([_JoinedTable]);
+end;
+
+function TTableReference.IsSimpleReference: boolean;
+begin
+  Result := not Assigned(_Only) and not Assigned(_Flashback) and
+    not Assigned(_Pivot) and not Assigned(_Unpivot) and
+    not Assigned(_RowPattern) and not Assigned(_JoinedTable) and
+    not Assigned(_Containers) and not Assigned(_SubQuery);
 end;
 
 { TQueryTableExpression }
@@ -1280,6 +1298,21 @@ end;
 function TAliasedExpressions.Aligned: TAlignMode;
 begin
   Result := AlignMode(Settings.AlignFields);
+end;
+
+{ TTableReferences }
+
+function TTableReferences.Aligned: TAlignMode;
+begin
+  Result := AlignMode(Settings.AlignFrom and IsSimpleReferences);
+end;
+
+function TTableReferences.IsSimpleReferences: boolean;
+var i: integer;
+begin
+  Result := true;
+  for i := 0 to Count - 1 do
+    Result := Result and (Item(i) is TTableReference) and TTableReference(Item(i)).IsSimpleReference;
 end;
 
 end.
