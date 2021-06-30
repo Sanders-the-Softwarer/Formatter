@@ -28,7 +28,7 @@ type
 
 implementation
 
-uses Commons, Parser, PLSQL, Expressions;
+uses Commons, Parser, PLSQL, Expressions, DML_Commons;
 
 type
 
@@ -172,16 +172,6 @@ type
   strict protected
     function Aligned: TAlignMode; override;
     function IsSimpleReferences: boolean;
-  end;
-
-  { Конструкция where }
-  TWhere = class(TStatement)
-  strict private
-    _Where: TEpithet;
-    _Condition: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Конструкция start with / connect by }
@@ -728,21 +718,6 @@ begin
   APrinter.PrintRulerItems('alias', [_Alias]);
 end;
 
-{ TWhere }
-
-function TWhere.InternalParse: boolean;
-begin
-  _Where := Keyword('where');
-  Result := Assigned(_Where);
-  if Result then TExpression.Parse(Self, Source, _Condition);
-  if _Condition is TExpression then TExpression(_Condition).IsWhereExpression := true;
-end;
-
-procedure TWhere.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Where, _IndentNextLine, _Condition, _Undent]);
-end;
-
 { TConnectBy }
 
 function TConnectBy.InternalParse: boolean;
@@ -1268,8 +1243,7 @@ begin
   _Natural := Keyword('natural');
   _Join := Keyword(['join', 'inner join', 'cross join', 'cross apply', 'outer apply', 'full join', 'left join', 'right join', 'full outer join', 'left outer join', 'right outer join']);
   if not Assigned(_Join) then exit(false);
-  //if not TTableCollectionExpression.Parse(Self, Source, _TableRef) then
-    TTableReference.Parse(Self, Source, _TableRef);
+  TTableReference.Parse(Self, Source, _TableRef);
   _Partition2 := Keyword('partition by');
   if Assigned(_Partition2) then TExpression.Parse(Self, Source, _PartitionExpr2);
   _On := Keyword('on');

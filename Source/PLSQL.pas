@@ -555,7 +555,7 @@ type
 implementation
 
 uses Parser, Expressions, DML, DDL, Keywords, Select, Label_, Goto_, Exit_,
-  OpenFor, ForAll, Assignment;
+  OpenFor, ForAll, Assignment, DML_Commons;
 
 { TProgramBlock }
 

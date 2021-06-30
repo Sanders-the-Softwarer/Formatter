@@ -70,20 +70,6 @@ type
     function ForcedLineBreaks: boolean; override;
   end;
 
-  { Оператор update }
-  TUpdate = class(TDML)
-  strict private
-    _Update: TEpithet;
-    _Table: TStatement;
-    _Set: TEpithet;
-    _Assignments: TStatement;
-    _Where: TStatement;
-    _Returning: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
   { Оператор delete }
   TDelete = class(TDML)
   strict private
@@ -131,23 +117,6 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Идентификатор как поле в insert, select into итп }
-  TIdentField = class(TStatement)
-  strict private
-    _FieldName: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function StatementName: string; override;
-  end;
-
-  { Список идентификаторов }
-  TIdentFields = class(TCommaList<TIdentField>)
-  strict protected
-    function ParseBreak: boolean; override;
-  end;
-
   { Список выражений }
 
   TExpressionField = class(TStatement)
@@ -168,7 +137,7 @@ type
 
 implementation
 
-uses Parser, Keywords, Select, Insert;
+uses Parser, Keywords, Select, Insert, Update, DML_Commons;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -483,30 +452,6 @@ begin
     _On, _Overflow, _Truncate, _OverflowTag, _Without, _Count, _CloseBracket]);
 end;
 
-{ TIdentField }
-
-function TIdentField.InternalParse: boolean;
-begin
-  Result := TQualifiedIndexedIdent.Parse(Self, Source, _FieldName);
-end;
-
-function TIdentField.StatementName: string;
-begin
-  Result := _FieldName.StatementName;
-end;
-
-procedure TIdentField.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItem(_FieldName);
-end;
-
-{ TIdentFields }
-
-function TIdentFields.ParseBreak: boolean;
-begin
-  Result := Any([Terminal([')', ';']), Keyword('*')]);
-end;
-
 { TOrderByItem }
 
 function TOrderByItem.InternalParse: boolean;
@@ -640,97 +585,6 @@ end;
 function TTableRef.InternalGetMatchSource: TBaseStatementList;
 begin
   Result := _Select.GetMatchSource;
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-//                               Оператор UPDATE                              //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-
-type
-
-  { Присвоение в update }
-  TUpdateAssignment = class(TStatement)
-  strict private
-    _Target: TStatement;
-    _Assignment: TTerminal;
-    _Value: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function StatementName: string; override;
-  end;
-
-  { Список присвоений в update }
-  TUpdateAssignments = class(TCommaList<TUpdateAssignment>)
-  strict protected
-    function ParseBreak: boolean; override;
-    function Aligned: TAlignMode; override;
-  end;
-
-{ TUpdate }
-
-function TUpdate.InternalParse: boolean;
-begin
-  _Update := Keyword('update');
-  if not Assigned(_Update) then exit(false);
-  TTableRef.Parse(Self, Source, _Table);
-  _Set := Keyword('set');
-  TUpdateAssignments.Parse(Self, Source, _Assignments);
-  TWhere.Parse(Self, Source, _Where);
-  TReturning.Parse(Self, Source, _Returning);
-  inherited;
-  Result := true;
-end;
-
-procedure TUpdate.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItem(_Update);
-  APrinter.PrintIndented(_Table);
-  APrinter.NextLine;
-  APrinter.PrintItem(_Set);
-  APrinter.PrintIndented(_Assignments);
-  APrinter.PrintItem(_Where);
-  APrinter.PrintItem(_Returning);
-  inherited;
-end;
-
-{ TUpdateAssignment }
-
-function TUpdateAssignment.InternalParse: boolean;
-begin
-  TQualifiedIdent.Parse(Self, Source, _Target);
-  _Assignment := Terminal('=');
-  Result := Assigned(_Target) and Assigned(_Assignment);
-  if Result then TExpression.Parse(Self, Source, _Value);
-end;
-
-function TUpdateAssignment.StatementName: string;
-begin
-  if Assigned(_Target)
-    then Result := _Target.StatementName
-    else Result := '';
-end;
-
-procedure TUpdateAssignment.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintRulerItems('target', [_Target]);
-  APrinter.PrintRulerItems('assignment', [_Assignment]);
-  APrinter.PrintRulerItems('value', [_Value]);
-end;
-
-{ TUpdateAssignments }
-
-function TUpdateAssignments.ParseBreak: boolean;
-begin
-  Result := Any([Terminal(';'), Keyword(['*'])]);
-end;
-
-function TUpdateAssignments.Aligned: TAlignMode;
-begin
-  Result := AlignMode(Settings.AlignFields);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////

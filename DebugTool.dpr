@@ -45,7 +45,9 @@ uses
   OpenFor in 'Source\PLSQL\OpenFor.pas',
   ForAll in 'Source\PLSQL\ForAll.pas',
   Assignment in 'Source\PLSQL\Assignment.pas',
-  Intervals in 'Source\Core\Intervals.pas';
+  Intervals in 'Source\Core\Intervals.pas',
+  Update in 'Source\DML\Update.pas',
+  DML_Commons in 'Source\DML\DML_Commons.pas';
 
 {$R *.res}
 

@@ -1,0 +1,23 @@
+-- Список полей в set не должен давать ошибку
+
+update
+    t_cc_invoicepositionunits ipui
+set
+    (
+        ipui.reinvposunitid,
+        ipui.state,
+        ipui.changeuser,
+        ipui.changedate
+    ) = (
+            select
+                ipur.id,
+                pk_main.rec_state_update,
+                pk_main.getterminal(),
+                sysdate
+            from
+                t_cc_invoicepositionunits ipur
+            where
+                ipur.invoicepositionid  = p_id
+                and ipur.reinvposunitid = ipui.id
+        ) where
+    ipui.invoicepositionid = p_invposid;

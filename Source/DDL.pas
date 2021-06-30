@@ -276,7 +276,7 @@ type
 implementation
 
 uses Parser, DML, Expressions, Trigger, Role, Sequence, Synonym, Create, Alter,
-  Set_, Select, Grant, Drop;
+  Set_, Select, Grant, Drop, DML_Commons;
 
 { TView }
 

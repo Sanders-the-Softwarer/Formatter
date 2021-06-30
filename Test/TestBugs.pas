@@ -108,6 +108,7 @@ type
     procedure _85;
     procedure _86;
     procedure _87;
+    procedure _88;
   end;
 
 implementation
