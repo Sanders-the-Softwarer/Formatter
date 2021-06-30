@@ -1,0 +1,4 @@
+select
+    listagg(a.docnumber, ',' || chr(13) || chr(10)) within group (order by a.docnumber)
+from
+    dual

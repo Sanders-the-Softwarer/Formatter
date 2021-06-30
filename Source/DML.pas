@@ -255,7 +255,7 @@ type
     _OpenBracket: TTerminal;
     _Expression: TStatement;
     _Comma: TTerminal;
-    _Delimiter: TLiteral;
+    _Delimiter: TStatement;
     _On, _Overflow, _Truncate: TEpithet;
     _OverflowTag: TLiteral;
     _Without, _Count: TEpithet;
@@ -466,7 +466,7 @@ begin
   _OpenBracket := Terminal('(');
   TExpression.Parse(Self, Source, _Expression);
   _Comma := Terminal(',');
-  if Assigned(_Comma) then _Delimiter := Literal;
+  if Assigned(_Comma) then TExpression.Parse(Self, Source, _Delimiter);
   _On := Keyword('on');
   _Overflow := Keyword('overflow');
   _Truncate := Keyword('truncate');

@@ -106,6 +106,7 @@ type
     procedure _83;
     procedure _84;
     procedure _85;
+    procedure _86;
   end;
 
 implementation
@@ -519,6 +520,10 @@ procedure _Bugs._85;
 begin
   PostponeTill(2021, 6, 1);
   Settings.PreferredExpressionLength := 100;
+end;
+
+procedure _Bugs._86;
+begin
 end;
 
 procedure _Bugs._9;
