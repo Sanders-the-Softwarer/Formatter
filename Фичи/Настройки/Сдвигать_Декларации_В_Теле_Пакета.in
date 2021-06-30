@@ -1,0 +1,14 @@
+-- Декларации в пакете должны быть без сдвига,
+-- в теле пакета - со сдвигом
+
+create package x is
+
+procedure y;
+
+end;
+
+create package body x is
+
+    procedure y;
+
+end;

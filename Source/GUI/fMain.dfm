@@ -297,7 +297,7 @@ object FormMain: TFormMain
         end
         object Label4: TLabel
           Left = 3
-          Top = 453
+          Top = 494
           Width = 233
           Height = 13
           Caption = #1064#1080#1088#1080#1085#1072' '#1074#1099#1088#1072#1078#1077#1085#1080#1081' '#1087#1086' '#1074#1086#1079#1084#1086#1078#1085#1086#1089#1090#1080' '#1085#1077' '#1073#1086#1083#1077#1077
@@ -490,7 +490,7 @@ object FormMain: TFormMain
         end
         object edPreferredExpressionLength: TSpinEdit
           Left = 267
-          Top = 450
+          Top = 491
           Width = 46
           Height = 22
           MaxValue = 1000
@@ -581,8 +581,8 @@ object FormMain: TFormMain
           end
         end
         object checkLongOperands: TCheckBox
-          Left = 16
-          Top = 397
+          Left = 175
+          Top = 446
           Width = 128
           Height = 28
           Caption = #1059#1095#1080#1090#1099#1074#1072#1090#1100' '#1076#1083#1080#1085#1085#1099#1077' '#1086#1087#1077#1088#1072#1085#1076#1099
@@ -591,6 +591,38 @@ object FormMain: TFormMain
           TabOrder = 10
           WordWrap = True
           OnClick = UpdateRequired
+        end
+        object GroupBox6: TGroupBox
+          Left = 3
+          Top = 397
+          Width = 153
+          Height = 91
+          Caption = ' '#1057#1076#1074#1080#1075' '
+          TabOrder = 11
+          object checkShiftPackageHeader: TCheckBox
+            Left = 13
+            Top = 26
+            Width = 128
+            Height = 26
+            Caption = #1042' '#1079#1072#1075#1086#1083#1086#1074#1082#1072#1093' '#1087#1072#1082#1077#1090#1086#1074
+            Checked = True
+            State = cbChecked
+            TabOrder = 0
+            WordWrap = True
+            OnClick = UpdateRequired
+          end
+          object checkShiftPackageBody: TCheckBox
+            Left = 13
+            Top = 49
+            Width = 128
+            Height = 26
+            Caption = #1042' '#1090#1077#1083#1072#1093' '#1087#1072#1082#1077#1090#1086#1074
+            Checked = True
+            State = cbChecked
+            TabOrder = 1
+            WordWrap = True
+            OnClick = UpdateRequired
+          end
         end
       end
     end

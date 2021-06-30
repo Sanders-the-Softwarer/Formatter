@@ -53,6 +53,7 @@ type
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
     function IndentBody: boolean; virtual;
+    function IndentInsideBody: boolean; virtual;
   end;
 
   { Заголовок анонимного блока }
@@ -80,12 +81,14 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function StatementName: string; override;
+    function IndentInsideBody: boolean;
   end;
 
   { Пакет }
   TPackage = class(TProgramBlock)
   strict protected
     function GetHeaderClass: TStatementClass; override;
+    function IndentInsideBody: boolean; override;
   public
     function StatementName: string; override;
   end;
@@ -581,27 +584,34 @@ begin
 end;
 
 procedure TProgramBlock.InternalPrintSelf(APrinter: TPrinter);
-var _AdditionalIndent, _AdditionalUndent: TObject;
+var _I1, _I2, _U1, _U2: TObject;
 begin
-  if IndentBody
-    then begin _AdditionalIndent := _Indent; _AdditionalUndent := _Undent; end
-    else begin _AdditionalIndent := nil; _AdditionalUndent := nil; end;
+  _I1 := nil; _I2 := nil; _U1 := nil; _U2 := nil;
+  if IndentBody then begin _I1 := _Indent; _U1 := _Undent; end;
+  if IndentInsideBody then begin _I2 := _Indent; _U2 := _Undent; end;
   if _Header is TSubroutineHeaderBase then
     TSubroutineHeaderBase(_Header).IndentedAfterIs := Assigned(_Declarations);
-  APrinter.PrintItems([_Header,    _IndentNextLine,
-                                   _AdditionalIndent,
-                                   _Declarations,   _UndentNextLine,
+  APrinter.PrintItems([_Header,    _NextLine,
+                                   _I1,
+                                   _I2,
+                                   _Declarations,   _NextLine,
+                                   _U2,
                        _Begin,     _IndentNextLine,
                                    _Operators,      _UndentNextLine,
                        _Exception, _IndentNextLine,
                                    _Handlers,       _UndentNextLine,
-                       _End,       _AfterEnd,       _AdditionalUndent]);
+                       _End,       _AfterEnd,       _U1]);
   inherited;
 end;
 
 function TProgramBlock.IndentBody: boolean;
 begin
   Result := false;
+end;
+
+function TProgramBlock.IndentInsideBody: boolean;
+begin
+  Result := true;
 end;
 
 { TPackageHeader }
@@ -632,6 +642,13 @@ begin
   Result := Concat([_Package, _Name]);
 end;
 
+function TPackageHeader.IndentInsideBody: boolean;
+begin
+  if Assigned(_Package) and SameText(_Package.Value, 'package')
+    then Result := Settings.ShiftPackageHeader
+    else Result := Settings.ShiftPackageBody;
+end;
+
 { TPackage }
 
 function TPackage.StatementName: string;
@@ -642,6 +659,11 @@ end;
 function TPackage.GetHeaderClass: TStatementClass;
 begin
   Result := TPackageHeader;
+end;
+
+function TPackage.IndentInsideBody: boolean;
+begin
+  Result := Assigned(Header) and (Header as TPackageHeader).IndentInsideBody;
 end;
 
 { TSubroutineHeaderBase }

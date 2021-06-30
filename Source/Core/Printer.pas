@@ -66,6 +66,8 @@ type
     AlignUseSpace: boolean;
     AlignRightComments: boolean;
     AlignFrom: boolean;
+    ShiftPackageHeader: boolean;
+    ShiftPackageBody: boolean;
     ReplaceDefault: boolean;
     ReplaceAsIs: boolean;
     ChangeCommentType: boolean;
@@ -347,6 +349,8 @@ begin
   CorrectCommentSpaces      := true;
   RemoveConnectPasswords    := false;
   BeautifyLongOperands      := true;
+  ShiftPackageHeader        := true;
+  ShiftPackageBody          := true;
   PreferredExpressionLength := 100;
 end;
 
@@ -357,6 +361,8 @@ begin
   PositionalArgumentSingleLineParamLimit := 999;
   PreferredExpressionLength              := 9999;
   MatchParamLimit                        := 99;
+  ShiftPackageHeader                     := true;
+  ShiftPackageBody                       := true;
 end;
 
 end.

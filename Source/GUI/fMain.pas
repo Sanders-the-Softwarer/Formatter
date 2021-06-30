@@ -93,6 +93,9 @@ type
     checkAlignRightComments: TCheckBox;
     checkCommentCorrectSpaces: TCheckBox;
     checkAlignFrom: TCheckBox;
+    GroupBox6: TGroupBox;
+    checkShiftPackageHeader: TCheckBox;
+    checkShiftPackageBody: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -172,6 +175,8 @@ begin
     Settings.CorrectCommentSpaces            := checkCommentCorrectSpaces.Checked;
     Settings.RemoveConnectPasswords          := checkRemovePasswords.Checked;
     Settings.BeautifyLongOperands            := checkLongOperands.Checked;
+    Settings.ShiftPackageHeader              := checkShiftPackageHeader.Checked;
+    Settings.ShiftPackageBody                := checkShiftPackageBody.Checked;
     Settings.PreferredExpressionLength       := edPreferredExpressionLength.Value;
   end;
   { Создадим потоки }
@@ -272,6 +277,8 @@ begin
     checkCommentCorrectSpaces.Checked    := Settings.CorrectCommentSpaces;
     checkRemovePasswords.Checked         := Settings.RemoveConnectPasswords;
     checkLongOperands.Checked            := Settings.BeautifyLongOperands;
+    checkShiftPackageHeader.Checked      := Settings.ShiftPackageHeader;
+    checkShiftPackageBody.Checked        := Settings.ShiftPackageBody;
   finally
     IntoUpdateSettings := false;
   end;

@@ -47,6 +47,10 @@ type
     procedure Предел_Позиционных_Аргументов_В_Строке;
     procedure Предел_Сопоставляемых_Параметров;
     procedure Предпочитаемая_Длина_Выражений;
+    procedure Сдвигать_Декларации_В_Пакете;
+    procedure Сдвигать_Декларации_В_Теле_Пакета;
+    procedure Не_Сдвигать_Декларации_В_Пакете;
+    procedure Не_Сдвигать_Декларации_В_Теле_Пакета;
   end;
 
 implementation
@@ -198,6 +202,18 @@ begin
   Settings.ChangeCommentType := false;
 end;
 
+procedure _Settings.Не_Сдвигать_Декларации_В_Пакете;
+begin
+  Settings.ShiftPackageHeader := false;
+  Settings.ShiftPackageBody   := false;
+end;
+
+procedure _Settings.Не_Сдвигать_Декларации_В_Теле_Пакета;
+begin
+  Settings.ShiftPackageHeader := false;
+  Settings.ShiftPackageBody   := false;
+end;
+
 procedure _Settings.Не_Удалять_Пароли_Из_Connect;
 begin
   Settings.RemoveConnectPasswords := false;
@@ -232,6 +248,18 @@ end;
 procedure _Settings.Предпочитаемая_Длина_Выражений;
 begin
   Settings.PreferredExpressionLength := 40;
+end;
+
+procedure _Settings.Сдвигать_Декларации_В_Пакете;
+begin
+  Settings.ShiftPackageHeader := true;
+  Settings.ShiftPackageBody := false;
+end;
+
+procedure _Settings.Сдвигать_Декларации_В_Теле_Пакета;
+begin
+  Settings.ShiftPackageHeader := false;
+  Settings.ShiftPackageBody := true;
 end;
 
 procedure _Settings.Удалять_Пароли_Из_Connect;
