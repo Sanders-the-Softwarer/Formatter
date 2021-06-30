@@ -1,0 +1,18 @@
+-- cross join и алиас после table expression должны нормально распознаваться
+
+select distinct
+    s.docnumber
+from
+    t_cc_invoices i
+        join
+    t_cc_invoicepositions ip
+        on
+            i.id = ip.invoiceid
+        cross join
+    table(pk_main.get_po_info(ip.poguid, decode(i.reinvoiceflag, 0, 'Y', 'N'))) po
+        join
+    t_specifications s
+        on
+            po.specification_guid = s.guid
+where
+    i.cc_contractid = p_cc_contract_id

@@ -51,15 +51,12 @@ type
     procedure Into;
     procedure Keep;
     procedure Lateral;
-    procedure Left_Right_Full_Join;
     procedure Order_By;
-    procedure Outer_Cross_Apply;
     procedure Start_With_И_Connect_By;
     procedure Using;
     procedure Where;
     procedure With_;
     procedure Из_Подзапроса;
-    procedure Лишние_Слова_В_Joinах;
     procedure Аналитические_Функции;
     procedure Подзапрос_В_Select;
     procedure Подзапрос_В_Where;
@@ -304,15 +301,7 @@ procedure _Запросы.Lateral;
 begin
 end;
 
-procedure _Запросы.Left_Right_Full_Join;
-begin
-end;
-
 procedure _Запросы.Order_By;
-begin
-end;
-
-procedure _Запросы.Outer_Cross_Apply;
 begin
 end;
 
@@ -351,10 +340,6 @@ end;
 procedure _Запросы.Из_Табличной_Функции;
 begin
 
-end;
-
-procedure _Запросы.Лишние_Слова_В_Joinах;
-begin
 end;
 
 procedure _Запросы.Направление_Сортировки;

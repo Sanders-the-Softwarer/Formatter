@@ -650,6 +650,7 @@ begin
   if Check(Result, 'connect', 'by') then exit;
   { !!Õ≈À‹«ﬂ!! if Check(Result, 'connect', 'to') then exit; »Á-Á‡ grant connect to user }
   if Check(Result, 'cross', 'apply') then exit;
+  if Check(Result, 'cross', 'join') then exit;
   if Check(Result, 'database', 'link') then exit;
   if Check(Result, 'default', 'tablespace') then exit;
   if Check(Result, 'disassociate', 'statistics') then exit;

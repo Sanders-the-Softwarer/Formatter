@@ -260,6 +260,7 @@ type
     _Table: TEpithet;
     _Value: TStatement;
     _Outer: TTerminal;
+    _Alias: TEpithet;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -1267,7 +1268,7 @@ begin
   _Natural := Keyword('natural');
   _Join := Keyword(['join', 'inner join', 'cross join', 'cross apply', 'outer apply', 'full join', 'left join', 'right join', 'full outer join', 'left outer join', 'right outer join']);
   if not Assigned(_Join) then exit(false);
-  if not TTableCollectionExpression.Parse(Self, Source, _TableRef) then
+  //if not TTableCollectionExpression.Parse(Self, Source, _TableRef) then
     TTableReference.Parse(Self, Source, _TableRef);
   _Partition2 := Keyword('partition by');
   if Assigned(_Partition2) then TExpression.Parse(Self, Source, _PartitionExpr2);
