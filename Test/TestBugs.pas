@@ -532,6 +532,10 @@ procedure _Bugs._87;
 begin
 end;
 
+procedure _Bugs._88;
+begin
+end;
+
 procedure _Bugs._9;
 begin
 end;

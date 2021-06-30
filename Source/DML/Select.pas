@@ -250,7 +250,6 @@ type
     _Table: TEpithet;
     _Value: TStatement;
     _Outer: TTerminal;
-    _Alias: TEpithet;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;

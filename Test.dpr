@@ -68,7 +68,9 @@ uses
   Trigger in 'Source\PLSQL\Trigger.pas',
   Exit_SQLPlus in 'Source\SQL_Plus\Exit_SQLPlus.pas',
   Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas',
-  Intervals in 'Source\Core\Intervals.pas';
+  Intervals in 'Source\Core\Intervals.pas',
+  DML_Commons in 'Source\DML\DML_Commons.pas',
+  Update in 'Source\DML\Update.pas';
 
 {$R *.RES}
 

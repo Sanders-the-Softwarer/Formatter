@@ -34,7 +34,7 @@ object FormMain: TFormMain
     Margins.Top = 0
     Margins.Right = 5
     Margins.Bottom = 5
-    ActivePage = tabResult
+    ActivePage = tabTokenizer
     Align = alClient
     TabOrder = 0
     OnChange = pgDestChange
@@ -317,6 +317,15 @@ object FormMain: TFormMain
           Height = 13
           Alignment = taRightJustify
           Caption = #1055#1086#1079#1080#1094#1080#1086#1085#1085#1099#1093
+        end
+        object btnSaveToFile: TcxButton
+          Left = 240
+          Top = 519
+          Width = 75
+          Height = 25
+          Caption = #1042' '#1092#1072#1081#1083
+          TabOrder = 12
+          OnClick = btnSaveToFileClick
         end
         object edDeclarationSingleLineParamLimit: TSpinEdit
           Left = 269
@@ -632,5 +641,11 @@ object FormMain: TFormMain
     OnTimer = tmMemoTimer
     Left = 100
     Top = 105
+  end
+  object OpenDialog: TOpenDialog
+    DefaultExt = '.ini'
+    Filter = #1060#1072#1081#1083#1099' '#1085#1072#1089#1090#1088#1086#1077#1082'|*.ini|'#1042#1089#1077' '#1092#1072#1081#1083#1099'|*.*'
+    Left = 497
+    Top = 149
   end
 end

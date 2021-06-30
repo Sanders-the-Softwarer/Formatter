@@ -46,7 +46,9 @@ uses
   ForAll in 'Source\PLSQL\ForAll.pas',
   Assignment in 'Source\PLSQL\Assignment.pas',
   Label_ in 'Source\PLSQL\Label_.pas',
-  Intervals in 'Source\Core\Intervals.pas';
+  Intervals in 'Source\Core\Intervals.pas',
+  DML_Commons in 'Source\DML\DML_Commons.pas',
+  Update in 'Source\DML\Update.pas';
 
 const
   Desc  = 'Formatter';

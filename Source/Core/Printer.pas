@@ -80,6 +80,8 @@ type
   public
     constructor Default;
     constructor ForTest;
+    procedure Load(Source: TStrings);
+    procedure Save(Target: TStrings);
   end;
 
   { Интерфейс вывода на принтер }
@@ -363,6 +365,105 @@ begin
   MatchParamLimit                        := 99;
   ShiftPackageHeader                     := true;
   ShiftPackageBody                       := true;
+end;
+
+
+procedure TFormatSettings.Save(Target: TStrings);
+begin
+  Assert(Target <> nil);
+  Target.Clear;
+  Target.AddPair('DeclarationSingleLineParamLimit', IntToStr(DeclarationSingleLineParamLimit));
+  Target.AddPair('NamedArgumentSingleLineParamLimit', IntToStr(NamedArgumentSingleLineParamLimit));
+  Target.AddPair('PositionalArgumentSingleLineParamLimit', IntToStr(PositionalArgumentSingleLineParamLimit));
+  Target.AddPair('MatchParamLimit', IntToStr(MatchParamLimit));
+  Target.AddPair('AlignVariables', BoolToStr(AlignVariables, true));
+  Target.AddPair('AlignFields', BoolToStr(AlignFields, true));
+  Target.AddPair('AlignColumns', BoolToStr(AlignColumns, true));
+  Target.AddPair('AlignExpressions', BoolToStr(AlignExpressions, true));
+  Target.AddPair('AlignCommands', BoolToStr(AlignCommands, true));
+  Target.AddPair('AlignSpecialComments', BoolToStr(AlignSpecialComments, true));
+  Target.AddPair('AlignUseSpace', BoolToStr(AlignUseSpace, true));
+  Target.AddPair('AlignRightComments', BoolToStr(AlignRightComments, true));
+  Target.AddPair('AlignFrom', BoolToStr(AlignFrom, true));
+  Target.AddPair('ShiftPackageHeader', BoolToStr(ShiftPackageHeader, true));
+  Target.AddPair('ShiftPackageBody', BoolToStr(ShiftPackageBody, true));
+  Target.AddPair('ReplaceDefault', BoolToStr(ReplaceDefault, true));
+  Target.AddPair('ReplaceAsIs', BoolToStr(ReplaceAsIs, true));
+  Target.AddPair('ChangeCommentType', BoolToStr(ChangeCommentType, true));
+  Target.AddPair('CorrectCommentSpaces', BoolToStr(CorrectCommentSpaces, true));
+  Target.AddPair('AddInAccessSpecificator', BoolToStr(AddInAccessSpecificator, true));
+  Target.AddPair('AddFromToDelete', BoolToStr(AddFromToDelete, true));
+  Target.AddPair('PreferredExpressionLength', IntToStr(PreferredExpressionLength));
+  Target.AddPair('RemoveConnectPasswords', BoolToStr(RemoveConnectPasswords, true));
+  Target.AddPair('BeautifyLongOperands', BoolToStr(BeautifyLongOperands, true));
+end;
+
+procedure TFormatSettings.Load(Source: TStrings);
+
+  procedure Apply(const Name, Value: string);
+  begin
+    if SameText(Name, 'DeclarationSingleLineParamLimit') then
+      TryStrToInt(Value, DeclarationSingleLineParamLimit)
+    else if SameText(Name, 'NamedArgumentSingleLineParamLimit') then
+      TryStrToInt(Value, NamedArgumentSingleLineParamLimit)
+    else if SameText(Name, 'PositionalArgumentSingleLineParamLimit') then
+      TryStrToInt(Value, PositionalArgumentSingleLineParamLimit)
+    else if SameText(Name, 'PreferredExpressionLength') then
+      TryStrToInt(Value, PreferredExpressionLength)
+    else if SameText(Name, 'MatchParamLimit') then
+      TryStrToInt(Value, MatchParamLimit)
+    else if SameText(Name, 'AlignVariables') then
+      TryStrToBool(Value, AlignVariables)
+    else if SameText(Name, 'AlignFields') then
+      TryStrToBool(Value, AlignFields)
+    else if SameText(Name, 'AlignColumns') then
+      TryStrToBool(Value, AlignColumns)
+    else if SameText(Name, 'AlignExpressions') then
+      TryStrToBool(Value, AlignExpressions)
+    else if SameText(Name, 'AlignCommands') then
+      TryStrToBool(Value, AlignCommands)
+    else if SameText(Name, 'AlignSpecialComments') then
+      TryStrToBool(Value, AlignSpecialComments)
+    else if SameText(Name, 'AlignUseSpace') then
+      TryStrToBool(Value, AlignUseSpace)
+    else if SameText(Name, 'AlignRightComments') then
+      TryStrToBool(Value, AlignRightComments)
+    else if SameText(Name, 'AlignFrom') then
+      TryStrToBool(Value, AlignFrom)
+    else if SameText(Name, 'ShiftPackageHeader') then
+      TryStrToBool(Value, ShiftPackageHeader)
+    else if SameText(Name, 'ShiftPackageBody') then
+      TryStrToBool(Value, ShiftPackageBody)
+    else if SameText(Name, 'ReplaceDefault') then
+      TryStrToBool(Value, ReplaceDefault)
+    else if SameText(Name, 'ReplaceAsIs') then
+      TryStrToBool(Value, ReplaceAsIs)
+    else if SameText(Name, 'ChangeCommentType') then
+      TryStrToBool(Value, ChangeCommentType)
+    else if SameText(Name, 'CorrectCommentSpaces') then
+      TryStrToBool(Value, CorrectCommentSpaces)
+    else if SameText(Name, 'AddInAccessSpecificator') then
+      TryStrToBool(Value, AddInAccessSpecificator)
+    else if SameText(Name, 'AddFromToDelete') then
+      TryStrToBool(Value, AddFromToDelete)
+    else if SameText(Name, 'RemoveConnectPasswords') then
+      TryStrToBool(Value, RemoveConnectPasswords)
+    else if SameText(Name, 'BeautifyLongOperands') then
+      TryStrToBool(Value, BeautifyLongOperands);
+  end;
+
+  var
+    i: integer;
+    Name, Value: string;
+
+begin
+  if not Assigned(Source) then exit;
+  for i := 0 to Source.Count - 1 do
+  begin
+    Name := Source.Names[i];
+    Value := Source.ValueFromIndex[i];
+    Apply(Name, Value);
+  end;
 end;
 
 end.
