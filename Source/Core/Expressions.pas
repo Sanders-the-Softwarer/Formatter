@@ -695,8 +695,6 @@ begin
   Result := (InnerStatement is TExpression) and TExpression(InnerStatement).IsMultiLine;
 end;
 
-{ TWhereExpression }
-
 initialization
   { Заполняем список ключевых слов для выражений }
   Keywords.RegisterKeywords(TExpression, ['case', 'when']);

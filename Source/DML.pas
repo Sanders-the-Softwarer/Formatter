@@ -276,16 +276,6 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция where }
-  TWhere = class(TStatement)
-  strict private
-    _Where: TEpithet;
-    _Condition: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
 { TSQLTerm }
 
 function TSQLTerm.ParseSQLStatement: TStatement;
@@ -511,20 +501,6 @@ end;
 function TExpressionFields.Aligned: TAlignMode;
 begin
   Result := amNo; { нечего тут выравнивать, но нужно для спецкомментариев }
-end;
-
-{ TWhere }
-
-function TWhere.InternalParse: boolean;
-begin
-  _Where := Keyword('where');
-  TExpression.Parse(Self, Source, _Condition);
-  Result := Assigned(_Where);
-end;
-
-procedure TWhere.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.NextLineIf([_Where, _IndentNextLine, _Condition, _Undent]);
 end;
 
 { TReturning }

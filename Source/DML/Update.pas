@@ -72,13 +72,12 @@ end;
 
 procedure TUpdate.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Update);
-  APrinter.PrintIndented(_Table);
-  APrinter.NextLine;
-  APrinter.PrintItem(_Set);
-  APrinter.PrintIndented(_Assignments);
-  APrinter.PrintItem(_Where);
-  APrinter.PrintItem(_Returning);
+  APrinter.PrintItems([_Update, _IndentNextLine,
+                                _Table,          _UndentNextLine,
+                       _Set,    _IndentNextLine,
+                                _Assignments,    _UndentNextLine,
+                       _Where,  _NextLine,
+                       _Returning]);
   inherited;
 end;
 
