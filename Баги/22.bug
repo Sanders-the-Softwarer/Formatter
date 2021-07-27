@@ -1,3 +1,4 @@
 -- Эта строчка НЕ ДОЛЖНА распознаваться по шаблону when not matched then
 
-exit when not v_quote_flag and (v_char = chr(10) or v_is_delimiter);
+exit when not v_quote_flag 
+          and (v_char = chr(10) or v_is_delimiter);

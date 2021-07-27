@@ -30,7 +30,6 @@ type
     procedure Запрос_С_Выражениями_И_Алиасами;
     procedure Связывание_Запросов_Через_Операции_Над_Множествами;
     procedure Форматирование_Подзапросов_В_Select;
-    procedure Переносы_По_And_В_Where;
     procedure Commit_Rollback_Savepoint;
   end;
 
@@ -156,10 +155,6 @@ end;
 procedure _Select.Форматирование_Подзапросов_В_Select;
 begin
   Settings.PreferredExpressionLength := 80;
-end;
-
-procedure _Select.Переносы_По_And_В_Where;
-begin
 end;
 
 procedure _Select.Commit_Rollback_Savepoint;

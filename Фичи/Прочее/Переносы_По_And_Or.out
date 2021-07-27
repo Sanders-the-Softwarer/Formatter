@@ -1,0 +1,40 @@
+-- ¬ыражение в where должно перенестись по and, а в select остатьс€ нетронутым
+select
+    case when dummy = 'X' and dummy <> 'Y' and sysdate > 1000 then 1 else 0 end
+from
+    dual
+where
+    dummy = 'X'
+    and dummy <> 'Y'
+    and sysdate > 1000;
+
+-- ¬ыражение в where должно перенестись по and, а в set остатьс€ нетронутым
+update
+    dual
+set
+    dummy = case when dummy = 'X' and dummy <> 'Y' and sysdate > 1000 then '1' else '0' end
+where
+    dummy = 'X'
+    and dummy <> 'Y'
+    and sysdate > 1000;
+
+-- ¬ыражение в where должно перенестись по and
+delete
+from
+    dual
+where
+    dummy = 'X'
+    and dummy <> 'Y'
+    and sysdate > 1000;
+
+-- ¬ыражение (теперь) должно переноситьс€
+begin
+    if a > b
+       and c < d
+       and e ^= f
+    then
+        null;
+    else
+        raise;
+    end if;
+end;

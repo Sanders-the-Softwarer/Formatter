@@ -192,6 +192,14 @@ type
     procedure Select_Into;
   end;
 
+  { Прочие фичи }
+  _Прочее = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure Переносы_По_And_Or;
+  end;
+
   { Контрольные примеры - большие файлы, на которых проверяется глобально
     удовлетворительный результат }
   _Контрольные_Примеры = class(TFileBasedTest)
@@ -812,6 +820,17 @@ begin
   Settings.MatchParamLimit := 5;
 end;
 
+{ _Прочее }
+
+function _Прочее.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Прочее';
+end;
+
+procedure _Прочее.Переносы_По_And_Or;
+begin
+end;
+
 initialization
   RegisterTest(_PLSQL.Suite);
   RegisterTest(_Выравнивание.Suite);
@@ -825,6 +844,7 @@ initialization
   RegisterTest(_PLSQL_Типы.Suite);
   RegisterTest(_Форматирование_Выражений.Suite);
   RegisterTest(_Контрольные_Примеры.Suite);
+  RegisterTest(_Прочее.Suite);
 
 end.
 

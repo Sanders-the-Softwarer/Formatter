@@ -1014,7 +1014,7 @@ end;
 function TExceptionHandler.InternalParse: boolean;
 begin
   _When := Keyword('when');
-  Result := Assigned(_When) and TExpression.Parse(Self, Source, _Condition);
+  Result := Assigned(_When) and TSingleLine<TExpression>.Parse(Self, Source, _Condition);
   if not Result then exit;
   _Then := Keyword('then');
   TStatements.Parse(Self, Source, _Body);

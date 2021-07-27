@@ -4,7 +4,8 @@
 begin
     if
         -- не корректно когда что-то не указано
-        p_edi_sysrowid is null or p_edi_barcode is null
+        p_edi_sysrowid is null 
+        or p_edi_barcode is null
     then
         null;
 end;

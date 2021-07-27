@@ -571,7 +571,7 @@ end;
 
 function TExpression.ForcedLineBreaks: boolean;
 begin
-  Result := false;
+  Result := true; { сейчас принято решение всегда разбивать логические выражения по and/or }
 end;
 
 class function TExpression.Candidates(AParent: TStatement): TArray<TStatementClass>;

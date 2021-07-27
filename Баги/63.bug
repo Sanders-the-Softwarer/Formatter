@@ -7,7 +7,8 @@ l_modified := l_modified
               (deleting and (:old.op_type like 'op_h_td_out_opt%' or :old.op_type like 'op_h_td_vn_opt%'))
               or
               (
-                  updating and
+                  updating 
+                  and
                   (
                       :old.op_type like 'op_h_td_out_opt%'
                       or :old.op_type like 'op_h_td_vn_opt%'

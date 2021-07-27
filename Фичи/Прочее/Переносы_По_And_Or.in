@@ -19,7 +19,7 @@ from
 where
   dummy = 'X' and dummy <> 'Y' and sysdate > 1000;
 
--- ¬ыражение не должно переноситьс€, потому что не в where
+-- ¬ыражение (теперь) должно переноситьс€
 begin
   if a > b and c < d and e ^= f then null; else raise; end if;
 end;
