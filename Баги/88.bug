@@ -17,7 +17,8 @@ set
             from
                 t_cc_invoicepositionunits ipur
             where
-                ipur.invoicepositionid  = p_id
+                ipur.invoicepositionid = p_id
                 and ipur.reinvposunitid = ipui.id
-        ) where
+        )
+where
     ipui.invoicepositionid = p_invposid;
