@@ -481,7 +481,7 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
       case AComment.Position of
         poFarAbove: EmptyLine := true;
         poAbove   : ForceNextLine := true;
-        poAfter   : ForceNextLine := LineComment;
+        else        ForceNextLine := LineComment;
       end;
     { Если это команда завершения исходного форматирования, сменим режим после печати }
     if IsComment and Value.StartsWith(C_UNFORMAT_STOP) then

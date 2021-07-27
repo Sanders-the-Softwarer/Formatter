@@ -455,7 +455,7 @@ end;
 
 function TCommentProcessor.AppliedAbove(C: TComment; T: TToken): boolean;
 begin
-  Result := Assigned(C) and Assigned(T) and (C.Col = T.Col) and (T.Line - C.Line = C.Height);
+  Result := Assigned(C) and Assigned(T) and (Abs(C.Col - T.Col) < 2) and (T.Line - C.Line = C.Height);
 end;
 
 function TCommentProcessor.AppliedFarAbove(C: TComment; T: TToken): boolean;

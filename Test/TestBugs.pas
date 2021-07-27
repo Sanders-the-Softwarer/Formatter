@@ -109,6 +109,7 @@ type
     procedure _86;
     procedure _87;
     procedure _88;
+    procedure _89;
   end;
 
 implementation
@@ -534,6 +535,11 @@ end;
 
 procedure _Bugs._88;
 begin
+end;
+
+procedure _Bugs._89;
+begin
+  Settings.CorrectCommentSpaces := true;
 end;
 
 procedure _Bugs._9;

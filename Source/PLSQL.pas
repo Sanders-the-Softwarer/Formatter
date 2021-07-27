@@ -980,7 +980,7 @@ begin
     then _NL := _NextLine
     else _NL := nil;
   { Собственно печать }
-  APrinter.PrintItems([_If, _Condition, _NL, _Sections, _NextLine, _EndIf]);
+  APrinter.PrintItems([_If, _Indent, _Condition, _Undent, _NL, _Sections, _NextLine, _EndIf]);
   inherited;
 end;
 
