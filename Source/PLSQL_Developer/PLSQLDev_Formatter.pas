@@ -122,8 +122,9 @@ procedure TPLSQLDevPlugIn.FormatText(ANewWindow: boolean);
 var
   H: THandle;
   Range: TCharRange;
-  Line, Col, ColShift: integer;
-  Input, Output: string;
+  Line, Col, ColShift, i: integer;
+  Input, Output, Postfix: string;
+  LastCR: boolean;
   Settings: TFormatSettings;
 begin
   { Получим хандл окна редактирования }
@@ -141,13 +142,19 @@ begin
   { Возьмём форматируемый текст }
   Input := string(IDE_GetSelectedText);
   if Input.Trim = '' then exit;
-  { Если выделена вся строка, а текст с отступом - учтём реальный сдвиг }
+  { Если выделена вся строка, а текст с отступом - учтём реальный сдвиг, чтобы при форматировании сохранился отступ }
   ColShift := 0;
   if Col = 0 then
     while (Col + ColShift < Input.Length) and (Input[Col + ColShift + 1] = ' ') do Inc(ColShift)
   { Если же выделено со сдвигом - учтём его, чтобы лексемы получили правильные позиции и не ломалась привязка комментариев }
   else if Col > 0 then
     Input := StringOfChar(' ', Col) + Input;
+  { Сохраним перевод строки и отступ между выделенным фрагментом и дальнейшим текстом }
+  i := Input.Length + 1;
+  while (i > 1) and (Input[i - 1] = ' ') do Dec(i);
+  if (i > 1) and (Input[i - 1] in [#13, #10])
+    then Postfix := #13 + Input.Substring(i)
+    else Postfix := Input.Substring(i);
   { Отформатируем текст }
   try
     Settings := TFormatSettings.Default;
@@ -165,6 +172,8 @@ begin
   end;
   { Уберём из результата первый отступ первой строки - он уже учтён в позиции вставки }
   if Col > 0 then Output := Output.Substring(Col);
+  { Добавим whitespace-ы, отделяющие от дальнейшего текста }
+  Output := Output + Postfix;
   { Заменим полученным текстом выделенный фрагмент }
   SendMessage(H, EM_EXGETSEL, 0, LPARAM(@Range));
   SendMessage(H, EM_REPLACESEL, WPARAM(true), LPARAM(@Output[1]));
