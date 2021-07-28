@@ -77,6 +77,7 @@ type
     PreferredExpressionLength: integer;
     RemoveConnectPasswords: boolean;
     BeautifyLongOperands: boolean;
+    StartIndent: integer;
   public
     constructor Default;
     constructor ForTest;

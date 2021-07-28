@@ -69,6 +69,7 @@ type
     DelimiterCol: integer;
   strict protected
     TokenPos, TokenLen: TDictionary<TToken, integer>;
+    function StartShift: integer; virtual;
     function SpaceRequired(ALeft, ARight: TToken): boolean;
     procedure PrintEmptyToken;
     procedure MeasureRuler;
@@ -115,6 +116,8 @@ type
 
   { Принтер для итогового результата }
   TFineCopyPrinter = class(TFormatterPrinter)
+  protected
+    function StartShift: integer; override;
   public
     procedure AbstractForWarning; override;
   end;
@@ -172,7 +175,7 @@ procedure TFormatterPrinter.Clear;
 begin
   inherited;
   TextBuilder.Clear;
-  Shift := 0;
+  Shift := StartShift;
   SpecialShift := 0;
   ForceNextLine := false;
   OriginalFormatCount := 0;
@@ -209,6 +212,12 @@ begin
     end
   else
     inherited;
+end;
+
+{ Функция установки стартового отступа }
+function TFormatterPrinter.StartShift: integer;
+begin
+  Result := 0;
 end;
 
 { Проверка, нужен ли пробел между двумя лексемами }
@@ -727,6 +736,11 @@ begin
 end;
 
 { TFineCopyPrinter }
+
+function TFineCopyPrinter.StartShift: integer;
+begin
+  Result := Settings.StartIndent;
+end;
 
 procedure TFineCopyPrinter.AbstractForWarning;
 begin

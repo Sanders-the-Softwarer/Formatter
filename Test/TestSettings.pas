@@ -51,6 +51,7 @@ type
     procedure Сдвигать_Декларации_В_Теле_Пакета;
     procedure Не_Сдвигать_Декларации_В_Пакете;
     procedure Не_Сдвигать_Декларации_В_Теле_Пакета;
+    procedure Стартовый_Сдвиг;
   end;
 
 implementation
@@ -260,6 +261,11 @@ procedure _Settings.Сдвигать_Декларации_В_Теле_Пакета;
 begin
   Settings.ShiftPackageHeader := false;
   Settings.ShiftPackageBody := true;
+end;
+
+procedure _Settings.Стартовый_Сдвиг;
+begin
+  Settings.StartIndent := 7;
 end;
 
 procedure _Settings.Удалять_Пароли_Из_Connect;
