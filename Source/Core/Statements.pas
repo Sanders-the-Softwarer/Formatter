@@ -485,6 +485,10 @@ begin
     Result := Result + Format('Выравнивание: %s'#13#13, [GetEnumName(TypeInfo(TAlignMode), Ord(Aligned))]);
   if (HasSpecialComments <> hscNo) then
     Result := Result + Format('Спецкомментарии: %s'#13#13, [GetEnumName(TypeInfo(THasSpecialComments), Ord(HasSpecialComments))]);
+  if Assigned(FRulers) then
+    Result := Result + Format('Собственное выравнивание: [%p]'#13#13, [pointer(FRulers)]);
+  if not Assigned(FRulers) and (GetRulers <> nil) then
+    Result := Result + Format('Унаследованное выравнивание: [%p]'#13#13, [pointer(GetRulers)]);
   if IsAligned then
     Result := Result + Format('Информация выравнивания:'#13#13'%s'#13#13, [Rulers.DebugInfo]);
 end;

@@ -93,6 +93,17 @@ type
     function StatementName: string; override;
   end;
 
+  { Атрибуты функции }
+  TFunctionAttributes = class(TStatement)
+  strict private
+    _Keyword, _ReliesOn: TEpithet;
+    _Datasources: TStatement;
+    _Next: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
   { Объявление подпрограммы }
   TSubroutineHeaderBase = class(TStatement)
   strict private
@@ -104,8 +115,7 @@ type
     _Return: TEpithet;
     _SelfAsResult: TEpithet;
     _ReturnType: TStatement;
-    _Deterministic: TEpithet;
-    _Pipelined: TEpithet;
+    _Attributes: TStatement;
     FIndentedBeforeIs, FIndentedAfterIs: boolean;
   strict protected
     function InternalParse: boolean; override;
@@ -685,8 +695,7 @@ begin
   _SelfAsResult := Keyword('self as result');
   if not Assigned(_SelfAsResult) then TTypeRef.Parse(Self, Source, _ReturnType);
   { Признаки }
-  _Deterministic := Keyword('deterministic');
-  _Pipelined := Keyword('pipelined');
+  TFunctionAttributes.Parse(Self, Source, _Attributes);
 end;
 
 procedure TSubroutineHeaderBase.InternalPrintSelf(APrinter: TPrinter);
@@ -700,8 +709,7 @@ begin
   else
     FIndentedBeforeIs := APrinter.PrintItems([_Params, _Return, _SelfAsResult, _ReturnType]);
   FIndentedBeforeIs := FIndentedBeforeIs or
-                       APrinter.NextLineIf([_Deterministic]) or
-                       APrinter.NextLineIf([_Pipelined]);
+                       APrinter.NextLineIf([_Attributes]);
   {$B-}
   APrinter.Undent;
 end;
@@ -1592,6 +1600,23 @@ begin
             TStandaloneComment.Parse(AParent, ASource, AResult);
 end;
 
+{ TFunctionAttributes }
+
+function TFunctionAttributes.InternalParse: boolean;
+begin
+  Result := true;
+  _Keyword := Keyword(['deterministic', 'pipelined', 'parallel_enable', 'result_cache']);
+  if not Assigned(_Keyword) then exit(false);
+  if SameText(_Keyword.Value, 'result_cache') then _ReliesOn := Keyword('relies_on');
+  if Assigned(_ReliesOn) then TSingleLine<TBracketedStatement<TIdentFields>>.Parse(Self, Source, _Datasources);
+  TFunctionAttributes.Parse(Self, Source, _Next);
+end;
+
+procedure TFunctionAttributes.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Keyword, _ReliesOn, _Datasources, _NextLine, _Next]);
+end;
+
 initialization
   Keywords.RegisterOrphan(TPLSQLStatement);
   Keywords.RegisterKeywords(TPLSQLStatement, ['as', 'begin', 'end', 'exception',
@@ -1599,3 +1624,4 @@ initialization
   Keywords.RegisterKeywords(TFetch, ['limit']);
 
 end.
+

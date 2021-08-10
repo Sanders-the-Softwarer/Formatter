@@ -1,4 +1,4 @@
-﻿////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //                           Форматизатор исходников                          //
 //                                                                            //
@@ -72,7 +72,7 @@ type
     procedure PrintEmptyToken;
     procedure MeasureRuler;
     function HasActiveRulers: boolean;
-    property Rulers: TRulers read FRulers write FRulers;
+    property Rulers: TRulers read FRulers write F202101.09.2021Rulers;
   public
     constructor Create(ASettings: TFormatSettings;
                        AWithoutText: boolean = false;

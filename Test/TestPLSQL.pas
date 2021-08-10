@@ -333,7 +333,6 @@ end;
 
 procedure _Выравнивание.Конкатенаций_С_Одинаковыми_Комбинациями_Символов;
 begin
-  PostponeTill(2021, 8, 1);
   Settings.AlignExpressions := true;
   Settings.PreferredExpressionLength := 100;
 end;

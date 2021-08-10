@@ -110,6 +110,7 @@ type
     procedure _87;
     procedure _88;
     procedure _89;
+    procedure _90;
   end;
 
 implementation
@@ -544,6 +545,10 @@ begin
 end;
 
 procedure _Bugs._9;
+begin
+end;
+
+procedure _Bugs._90;
 begin
 end;
 

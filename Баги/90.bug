@@ -1,0 +1,10 @@
+-- Должна работать конструкция result_cache
+
+function pay_stage_tt1
+    return integer
+    deterministic
+    result_cache relies_on (pay, stage)
+    is
+begin
+    return get_pay_stage_id('TT1');
+end; -- TT1

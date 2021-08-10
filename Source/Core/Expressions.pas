@@ -54,14 +54,12 @@ type
     _Cast: TStatement;
     _OuterJoin: TTerminal;
     _Postfix: TEpithet;
-    FMultiLine: boolean;
   strict protected
     function InternalParse: boolean; override;
     function ParseSQLStatement: TStatement; virtual;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function IsSimpleIdent: boolean;
-    property MultiLine: boolean read FMultiLine write FMultiLine;
   end;
 
   { Информация о форматировании выражения }
@@ -508,8 +506,6 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
         APrinter.SupressNextLine(true)
       else if i > 0 then
         APrinter.NextLine;
-      if Item(i) is TTerm then
-        TTerm(Item(i)).MultiLine := not TermInfo[i].SingleLine;
       APrinter.PrintItem(Item(i));
       if TermInfo[i].SingleLine then
         APrinter.SupressNextLine(false);
@@ -584,7 +580,7 @@ end;
 
 function TExpression.Aligned: TAlignMode;
 begin
-  Result := AlignMode(false {Settings.AlignExpressions});
+  Result := AlignMode(Settings.AlignExpressions);
 end;
 
 function TExpression.GetMultiLine: boolean;

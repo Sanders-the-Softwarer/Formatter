@@ -31,10 +31,10 @@ unit Rulers;
   набора "линеек", под которые они должны подравниваться.
 
   Технически выравнивание делается следующим образом: принтер сначала выдаёт
-  текст в режиме fmGetRulers, при этом с помощью метода Take собирая информацию
-  о выравниваниях, а затем выдаёт его в режиме fmSetRulers, при этом с помощью
-  метода Fix определяет необходимое в каждый момент число выравнивающих
-  пробелов.
+  текст в режиме fmGetRulers, при этом с помощью метода Measure собирая
+  информацию о выравниваниях, а затем выдаёт его в режиме fmSetRulers, при этом
+  с помощью метода Fix определяет необходимое в каждый момент число
+  выравнивающих пробелов.
 
   Сам по себе алгоритм выравнивания действует следующим образом. Выводимый
   текст представляется заполняющим прямоугольную таблицу. Каждая ячейка
@@ -58,7 +58,8 @@ unit Rulers;
 
 interface
 
-uses Classes, SysUtils, System.Generics.Collections, Math, Utils, Printer;
+uses Classes, SysUtils, System.Generics.Collections, Math, Utils, Printer,
+  Tokens;
 
 type
 
@@ -88,6 +89,8 @@ type
     Rulers: TDictionary<string, integer>;
     { Индекс для добавления следующей линейки }
     NextRulerIndex: integer;
+    { Текущая лексема - для отладочной печати }
+    FToken: TToken;
   protected
     function GetCell(ALine, ACol, AIndex: integer): integer;
     procedure SetCell(ALine, ACol, AIndex, AValue: integer);
@@ -109,6 +112,7 @@ type
     property UseSpaces: boolean read FUseSpaces write FUseSpaces;
     property Full: boolean read FFull write FFull;
     property Owner: TObject read FOwner;
+    property Token: TToken read FToken write FToken;
   public
     function DebugInfo: string;
     procedure Print(APrinter: TPrinter);
@@ -163,6 +167,10 @@ begin
     CurrentRuler := LEFT_RULER;
     StartLine := ALine;
     StartCol := Shift^ + 1;
+    {$IFDEF DEBUG}
+    if Assigned(Token) then
+      Token.AddDebugInfo('[rulers = %p] :: Measure, ruler = %s, line = %d, col = %d, start col = %d', [pointer(Self), CurrentRuler, ALine, ACol, StartCol]);
+    {$ENDIF}
   end;
   { Если вызваны без CurrentRuler - это технический вызов после перевода строки }
   if CurrentRuler = '' then exit;
@@ -175,6 +183,10 @@ begin
   if not AFromStart and (ALine <> StartLine) then exit;
   { Найдём её номер }
   ColIndex := Names.IndexOf(CurrentRuler);
+  {$IFDEF DEBUG}
+  if Assigned(Token) then
+    Token.AddDebugInfo('[%p] :: Measure, ruler = %s, index = %d, line = %d, col = %d, old width = %d, new width = %d', [pointer(Self), CurrentRuler, ColIndex, ALine, ACol, Width[ALine, ColIndex], ACol - StartCol]);
+  {$ENDIF}
   { Сохраним ширину текущей ячейки }
   Width[ALine, ColIndex] := ACol - StartCol;
   MaxColIndex := Math.Max(MaxColIndex, ColIndex);
@@ -195,9 +207,7 @@ end;
 function TRulers.Fix(const ARuler: string): integer;
 begin
   if not Assigned(Rulers) then CalcRulers;
-  if Rulers.ContainsKey(ARuler)
-    then Result := Rulers[ARuler] + Shift^
-    else Result := 0;
+  if not Rulers.TryGetValue(ARuler, Result) then Result := 0;
 end;
 
 function TRulers.Empty: boolean;
