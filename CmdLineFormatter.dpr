@@ -51,7 +51,10 @@ uses
   Intervals in 'Source\Core\Intervals.pas',
   GpCommandLineParser in 'Source\Core\GpCommandLineParser.pas',
   DML_Commons in 'Source\DML\DML_Commons.pas',
-  Update in 'Source\DML\Update.pas';
+  Update in 'Source\DML\Update.pas',
+  Clear in 'Source\SQL_Plus\Clear.pas',
+  Accept in 'Source\SQL_Plus\Accept.pas',
+  Undefine in 'Source\SQL_Plus\Undefine.pas';
 
 type
   TCommandLine = class

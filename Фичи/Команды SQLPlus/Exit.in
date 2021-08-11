@@ -1,0 +1,17 @@
+-- Варианты команды exit
+
+exit
+
+quit
+
+exit success
+
+quit failure
+
+exit warning
+
+exit :n + 1
+
+quit success commit
+
+exit :n + 1 rollback

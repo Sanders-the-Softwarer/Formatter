@@ -1,0 +1,8 @@
+select
+    *
+from
+    some_table
+where
+    a      = b
+    and c  = d
+    and ee = f

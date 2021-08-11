@@ -66,7 +66,6 @@ end;
 procedure _Settings.Выравнивать_Выражения;
 begin
   Settings.AlignExpressions := true;
-  UnderConstruction;
 end;
 
 procedure _Settings.Выравнивать_Колонки;
@@ -137,7 +136,6 @@ end;
 procedure _Settings.Не_Выравнивать_Выражения;
 begin
   Settings.AlignExpressions := false;
-  UnderConstruction;
 end;
 
 procedure _Settings.Не_Выравнивать_Колонки;

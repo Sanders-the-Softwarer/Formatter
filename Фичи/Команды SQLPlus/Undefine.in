@@ -1,0 +1,6 @@
+undef    a b c
+undefi   d e
+undefine f
+undefine g h i j k
+
+select

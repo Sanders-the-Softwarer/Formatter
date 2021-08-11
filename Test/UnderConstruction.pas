@@ -7,7 +7,6 @@ uses SysUtils, TestFramework, FileBasedTest;
 type
   _UnderConstruction = class(TFileBasedTest)
   published
-    procedure Тесты_Команд_SQLPLUS;
     procedure Тесты_Объектные_Типы;
     procedure Тесты_Create_Trigger;
     procedure Тесты_Group_By_Rollup_Cube_Grouping_Sets;
@@ -35,11 +34,6 @@ begin
 end;
 
 procedure _UnderConstruction.Тесты_Group_By_Rollup_Cube_Grouping_Sets;
-begin
-  UnderConstruction;
-end;
-
-procedure _UnderConstruction.Тесты_Команд_SQLPLUS;
 begin
   UnderConstruction;
 end;

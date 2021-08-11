@@ -24,8 +24,6 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function Grouping: TStatementClass; override;
   end;
 
 implementation
@@ -67,11 +65,6 @@ begin
   APrinter.PrintRulerItems('target', [_Set, _Target]);
   APrinter.PrintRulerItems('value', [_Value]);
   inherited;
-end;
-
-function TSet.Grouping: TStatementClass;
-begin
-  Result := TSet;
 end;
 
 { TSetCommands }

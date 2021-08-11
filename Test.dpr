@@ -70,7 +70,14 @@ uses
   Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas',
   Intervals in 'Source\Core\Intervals.pas',
   DML_Commons in 'Source\DML\DML_Commons.pas',
-  Update in 'Source\DML\Update.pas';
+  Update in 'Source\DML\Update.pas',
+  Clear in 'Source\SQL_Plus\Clear.pas',
+  At in 'Source\SQL_Plus\At.pas',
+  Slash in 'Source\SQL_Plus\Slash.pas',
+  Accept in 'Source\SQL_Plus\Accept.pas',
+  Host in 'Source\SQL_Plus\Host.pas',
+  Variable in 'Source\SQL_Plus\Variable.pas',
+  Undefine in 'Source\SQL_Plus\Undefine.pas';
 
 {$R *.RES}
 

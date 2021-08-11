@@ -148,8 +148,6 @@
         <DCCReference Include="Source\DML\Insert.pas"/>
         <DCCReference Include="Source\DDL\Session.pas"/>
         <DCCReference Include="Source\DDL\Set_.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Set_SQLPlus.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Exit_SQLPlus.pas"/>
         <DCCReference Include="Source\DDL\AlterPackageProcedureFunction.pas"/>
         <DCCReference Include="Source\DDL\Grant.pas"/>
         <DCCReference Include="Source\DDL\Drop.pas"/>
@@ -164,6 +162,18 @@
         <DCCReference Include="Source\DML\Update.pas"/>
         <DCCReference Include="Source\PLSQL_Developer\PlugInIntf.pas"/>
         <DCCReference Include="Source\PLSQL_Developer\PLSQLDev_Formatter.pas"/>
+        <DCCReference Include="Source\DML\Call.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Accept.pas"/>
+        <DCCReference Include="Source\SQL_Plus\At.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Clear.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Define.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Execute.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Exit_SQLPlus.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Host.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Set_SQLPlus.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Slash.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Variable.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Undefine.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

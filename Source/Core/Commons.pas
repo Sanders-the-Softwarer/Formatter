@@ -55,6 +55,15 @@ type
     function Transparent: boolean; override;
   end;
 
+  { Базовый класс для списка однотипных конструкций, идущих подряд }
+  TRawList<S: TStatement> = class(TStatementList<S>)
+  strict protected
+    function ParseDelimiter(out AResult: TObject): boolean; override;
+    function AllowUnexpected: boolean; override;
+  public
+    function Transparent: boolean; override;
+  end;
+
   { Аргумент вызова подпрограммы }
   TArgument = class(TStatement)
   strict private
@@ -425,6 +434,23 @@ end;
 function TEqList<S>.AllowUnexpected: boolean;
 begin
   Result := false;
+end;
+
+{ TRawList<S> }
+
+function TRawList<S>.ParseDelimiter(out AResult: TObject): boolean;
+begin
+  Result := true;
+end;
+
+function TRawList<S>.AllowUnexpected: boolean;
+begin
+  Result := false;
+end;
+
+function TRawList<S>.Transparent: boolean;
+begin
+  Result := true;
 end;
 
 end.

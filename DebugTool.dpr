@@ -34,9 +34,7 @@ uses
   Set_ in 'Source\DDL\Set_.pas',
   Insert in 'Source\DML\Insert.pas',
   Session in 'Source\DDL\Session.pas',
-  Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas',
   AlterPackageProcedureFunction in 'Source\DDL\AlterPackageProcedureFunction.pas',
-  Exit_SQLPlus in 'Source\SQL_Plus\Exit_SQLPlus.pas',
   Grant in 'Source\DDL\Grant.pas',
   Drop in 'Source\DDL\Drop.pas',
   Label_ in 'Source\PLSQL\Label_.pas',
@@ -47,7 +45,19 @@ uses
   Assignment in 'Source\PLSQL\Assignment.pas',
   Intervals in 'Source\Core\Intervals.pas',
   Update in 'Source\DML\Update.pas',
-  DML_Commons in 'Source\DML\DML_Commons.pas';
+  DML_Commons in 'Source\DML\DML_Commons.pas',
+  Call in 'Source\DML\Call.pas',
+  Accept in 'Source\SQL_Plus\Accept.pas',
+  At in 'Source\SQL_Plus\At.pas',
+  Clear in 'Source\SQL_Plus\Clear.pas',
+  Define in 'Source\SQL_Plus\Define.pas',
+  Execute in 'Source\SQL_Plus\Execute.pas',
+  Exit_SQLPlus in 'Source\SQL_Plus\Exit_SQLPlus.pas',
+  Host in 'Source\SQL_Plus\Host.pas',
+  Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas',
+  Slash in 'Source\SQL_Plus\Slash.pas',
+  Variable in 'Source\SQL_Plus\Variable.pas',
+  Undefine in 'Source\SQL_Plus\Undefine.pas';
 
 {$R *.res}
 

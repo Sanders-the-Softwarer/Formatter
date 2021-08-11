@@ -1,3 +1,5 @@
+def    a = b
+defi   c = 'd'
 define a = 1
 define b = 'Str'
 define c = &c

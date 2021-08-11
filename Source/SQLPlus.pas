@@ -28,17 +28,12 @@ type
   strict protected
     { Считывание лексемы "символы до конца строки" }
     function SqlPlusString: TTerminal;
+    { Учёт сокращённой формы ключевых слов SQL*Plus }
+    function Keyword(const AKeyword: string): TEpithet; overload;
+    function Keyword(const AKeywords: array of string): TEpithet; overload;
   public
+    function Grouping: TStatementClass; override;
     function SameTypeAligned: TAlignMode; override;
-  end;
-
-  { Команда clear }
-  TClear = class(TSQLPlusStatement)
-  strict private
-    _Clear: TEpithet;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
   { Команда whenever }
@@ -49,32 +44,6 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function Grouping: TStatementClass; override;
-  end;
-
-  { Команда define }
-  TDefine = class(TSQLPlusStatement)
-  strict private
-    _Define, _Target: TEpithet;
-    _Eq: TTerminal;
-    _Value: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function Grouping: TStatementClass; override;
-  end;
-
-  { Команда @ }
-  TAt = class(TSQLPlusStatement)
-  strict private
-    _At, _FileName: TTerminal;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function Grouping: TStatementClass; override;
   end;
 
   { Команда spool }
@@ -87,33 +56,11 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Команда call }
-  TCall = class(TSQLPlusStatement)
-  strict private
-    _Call: TEpithet;
-    _What: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function Grouping: TStatementClass; override;
-  end;
-
   { Анонимный блок в SQL*Plus }
   TStandaloneAnonymousBlock = class(TStatement)
   strict private
     _Block: TStatement;
     _Slash: TTerminal;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Команда CHCP }
-  TChcp = class(TSQLPlusStatement)
-  strict private
-    _Chcp: TEpithet;
-    _CodePage: TNumber;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
@@ -132,21 +79,34 @@ type
 
 implementation
 
-uses Expressions, Commons, PLSQL, Keywords, Set_SQLPlus, Exit_SQLPlus;
+uses Expressions, Commons, PLSQL, Keywords, Set_SQLPlus, Exit_SQLPlus, Clear,
+  Define, Execute, At, Slash, Accept, Host, Variable, Undefine;
 
-{ TClear }
-
-function TClear.InternalParse: boolean;
+{ Роспись вариантов ключевых слов, заданных как 'undef[ine]' }
+function ExpandKeyword(const AKeyword: string): TArray<string>;
+var
+  p1, p2, i: integer;
+  S: string;
 begin
-  _Clear := Keyword('clear');
-  Result := Assigned(_Clear);
-  inherited;
+  Result := [AKeyword];
+  p1 := Pos('[', AKeyword);
+  p2 := Pos(']', AKeyword);
+  if (p1 <= 0) or (p2 <= p1) or (p2 < Length(AKeyword)) then exit;
+  S := Copy(AKeyword, 1, p1 - 1);
+  Result := [S];
+  for i := p1 + 1 to p2 - 1 do
+  begin
+    S := S + AKeyword[i];
+    Result := Result + [S];
+  end;
 end;
 
-procedure TClear.InternalPrintSelf(APrinter: TPrinter);
+{ Регистрация ключевых слов, заданных как 'undef[ine]' }
+procedure RegisterKeywords(AStatementClass: TStatementClass; AKeywords: array of string);
+var Keyword: string;
 begin
-  APrinter.PrintItems([_Clear]);
-  inherited;
+  for Keyword in AKeywords do
+    Keywords.RegisterKeywords(AStatementClass, ExpandKeyword(Keyword));
 end;
 
 { TWhenever }
@@ -178,32 +138,6 @@ begin
   inherited;
 end;
 
-function TWhenever.Grouping: TStatementClass;
-begin
-  Result := TWhenever;
-end;
-
-{ TAt }
-
-function TAt.InternalParse: boolean;
-begin
-  _At := Terminal(['@', '@@']);
-  Result := Assigned(_At);
-  if Result then _FileName := SqlPlusString;
-  inherited;
-end;
-
-procedure TAt.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_At, _FileName]);
-  inherited;
-end;
-
-function TAt.Grouping: TStatementClass;
-begin
-  Result := TAt;
-end;
-
 { TSpool }
 
 function TSpool.InternalParse: boolean;
@@ -220,27 +154,6 @@ begin
   inherited;
 end;
 
-{ TCall }
-
-function TCall.InternalParse: boolean;
-begin
-  _Call := Keyword(['call', 'exec']);
-  Result := Assigned(_Call);
-  if Result then TQualifiedIndexedIdent.Parse(Self, Source, _What);
-  Result := Result and inherited;
-end;
-
-procedure TCall.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Call, _What]);
-  inherited;
-end;
-
-function TCall.Grouping: TStatementClass;
-begin
-  Result := TCall;
-end;
-
 { TStandaloneAnonymousBlock }
 
 function TStandaloneAnonymousBlock.InternalParse: boolean;
@@ -255,48 +168,6 @@ begin
   APrinter.NextLineIf(_Slash);
 end;
 
-{ TChcp }
-
-function TChcp.InternalParse: boolean;
-begin
-  Result := true;
-  _Chcp := Keyword('chcp');
-  if not Assigned(_Chcp) then exit(false);
-  _CodePage := Number;
-  inherited;
-end;
-
-procedure TChcp.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Chcp, _CodePage]);
-  inherited;
-end;
-
-{ TDefine }
-
-function TDefine.InternalParse: boolean;
-begin
-  Result := true;
-  _Define := Keyword('define');
-  if not Assigned(_Define) then exit(false);
-  _Target := Identifier;
-  _Eq := Terminal('=');
-  TExpression.Parse(Self, Source, _Value);
-  inherited;
-end;
-
-procedure TDefine.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintRulerItems('target', [_Define, _Target]);
-  APrinter.PrintRulerItems('value', [_Eq, _Value]);
-  inherited;
-end;
-
-function TDefine.Grouping: TStatementClass;
-begin
-  Result := TDefine;
-end;
-
 { SQLPlusParser }
 
 class function SQLPlusParser.Parse(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
@@ -307,10 +178,14 @@ begin
             TExit.Parse(AParent, ASource, AResult) or
             TAt.Parse(AParent, ASource, AResult) or
             TSpool.Parse(AParent, ASource, AResult) or
-            TCall.Parse(AParent, ASource, AResult) or
-            TChcp.Parse(AParent, ASource, AResult) or
+            TExecute.Parse(AParent, ASource, AResult) or
             TDefine.Parse(AParent, ASource, AResult) or
-            TConnect.Parse(AParent, ASource, AResult);
+            TConnect.Parse(AParent, ASource, AResult) or
+            TAccept.Parse(AParent, ASource, AResult) or
+            TSlash.Parse(AParent, ASource, AResult) or
+            THost.Parse(AParent, ASource, AResult) or
+            TVariable.Parse(AParent, ASource, AResult) or
+            TUndefine.Parse(AParent, ASource, AResult);
 end;
 
 { TConnect }
@@ -345,6 +220,11 @@ begin
 end;
 
 { TSQLPlusStatement }
+
+function TSQLPlusStatement.Grouping: TStatementClass;
+begin
+  Result := TStatementClass(Self.ClassType);
+end;
 
 function TSQLPlusStatement.SameTypeAligned: TAlignMode;
 begin
@@ -387,6 +267,22 @@ begin
   Result.CommentAfter := Comment;
 end;
 
+{ Учёт сокращённой формы ключевых слов SQL*Plus }
+
+function TSQLPlusStatement.Keyword(const AKeyword: string): TEpithet;
+begin
+  Result := inherited Keyword(ExpandKeyword(AKeyword));
+end;
+
+function TSQLPlusStatement.Keyword(const AKeywords: array of string): TEpithet;
+var
+  Keywords: TArray<string>;
+  S: string;
+begin
+  for S in AKeywords do Keywords := Keywords + ExpandKeyword(S);
+  Result := inherited Keyword(Keywords);
+end;
+
 initialization
   { Команды SQL*Plus не разделяются точками с запятой, поэтому нужно явно
     назвать их ключевыми словами, в противном случае легко случится так,
@@ -394,9 +290,16 @@ initialization
     whenever или подобной. По этой же причине здесь нужны стартовые
     ключевые слова основных SQL-комад }
   RegisterOrphan(TSQLPlusStatement);
-  RegisterKeywords(TSQLPlusStatement, ['alter', 'begin', 'call', 'chcp',
-    'connect', 'clear', 'create', 'declare', 'exec', 'set', 'define', 'spool',
-    'whenever']);
+  RegisterKeywords(TSQLPlusStatement, ['acc[ept]', 'appe[nd]', 'archive',
+    'attr[ibute', 'bre[ak]', 'bti[tle]', 'cha[nge]', 'cl[ear]', 'col[umn]',
+    'comp[ute]', 'conn[ect]', 'copy', 'def[ine]', 'del', 'desc[ribe]',
+    'disc[onnect]', 'ed[it]', 'exec[ute]', 'exit', 'quit', 'get', 'help',
+    'hist[ory]', 'ho[st]', 'in[put]', 'li[st]', 'passw[ord]', 'pau[se]',
+    'print', 'pro[mpt]', 'recover', 'rem[ark]', 'repf[ooter]', 'reph[eader]',
+    'ru[n]', 'sav[e]', 'set', 'sho[w]', 'shutdown', 'spo[ol]', 'sta[rt]',
+    'startup', 'store', 'timi[ng]', 'tti[tle]', 'undef[ine]', 'var[iable]',
+    'whenever', 'xquery', 'create', 'alter', 'begin', 'call', 'select',
+    'insert', 'update', 'delete', 'merge', 'declare']);
 
 end.
 

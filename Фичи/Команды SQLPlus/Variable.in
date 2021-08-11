@@ -1,0 +1,6 @@
+var      a
+vari     b   number
+varia    c   char
+variab   d   char(10 char)
+variabl  e   nvarchar2 (100 byte) = '0123456789'
+variable fff clob                 = empty_clob()

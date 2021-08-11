@@ -1,0 +1,15 @@
+-- Команды с @
+
+@PRINTRPT
+@WKRPT.QRY
+@HTTP://machine_name.domain:port/YEAREND.SQL VAL1 VAL2
+@FTP://machine_name.domain:port/YEAREND.SQL  VAL1 VAL2
+@HTTP://machine_name.domain:port/SCRIPTSERVER?ENDOFYEAR VAL1 VAL2
+
+-- Команды с @@
+
+@@PRINTRPT
+@@WKRPT.QRY
+@@HTTP://machine_name.domain:port/YEAREND.SQL VAL1 VAL2
+@@FTP://machine_name.domain:port/YEAREND.SQL  VAL1 VAL2
+@@HTTP://machine_name.domain:port/SCRIPTSERVER?ENDOFYEAR VAL1 VAL2

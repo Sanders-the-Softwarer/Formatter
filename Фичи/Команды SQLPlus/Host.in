@@ -1,0 +1,5 @@
+ho   echo on
+hos  type *.sql
+host ls *.sql
+host dir *.sql
+

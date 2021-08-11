@@ -144,6 +144,13 @@
         <DCCReference Include="Source\Core\Intervals.pas"/>
         <DCCReference Include="Source\DML\DML_Commons.pas"/>
         <DCCReference Include="Source\DML\Update.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Clear.pas"/>
+        <DCCReference Include="Source\SQL_Plus\At.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Slash.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Accept.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Host.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Variable.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Undefine.pas"/>
         <None Include="Profiling\AQtimeModule1.aqt"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

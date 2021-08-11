@@ -1,0 +1,15 @@
+acc    a
+acce   b
+accep  c
+accept d
+accept e   num
+accept f   number
+accept g   char
+accept h   date
+accept i   binary_float
+accept j   binary_double
+accept k   num for '999.99'
+accept l   num format '999.99'
+accept m   num default 123.12
+accept nnn char prompt 'nnn?'
+accept o   char noprompt hide

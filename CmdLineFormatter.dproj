@@ -154,6 +154,9 @@
         <DCCReference Include="Source\Core\GpCommandLineParser.pas"/>
         <DCCReference Include="Source\DML\DML_Commons.pas"/>
         <DCCReference Include="Source\DML\Update.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Clear.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Accept.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Undefine.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

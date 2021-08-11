@@ -122,7 +122,7 @@ type
 
 implementation
 
-uses Parser, Commons, DML, DDL, SQLPlus, Expressions, DML_Commons;
+uses Parser, Commons, DML, DDL, SQLPlus, Expressions, DML_Commons, Call;
 
 { TTrigger }
 
