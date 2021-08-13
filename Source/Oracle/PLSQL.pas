@@ -138,6 +138,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    class function Priority: integer; override;
   end;
 
   { Подпрограмма }
@@ -215,6 +217,8 @@ type
     function AllowUnexpected: boolean; override;
     function AllowStatement(AStatement: TStatement): boolean; override;
     function Aligned: TAlignMode; override;
+  public
+    class function Priority: integer; override;
   end;
 
   { Курсор }
@@ -256,6 +260,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    class function Priority: integer; override;
   end;
 
   { Оператор return }
@@ -870,6 +876,11 @@ end;
 
 { TVariableDeclarations }
 
+class function TVariableDeclarations.Priority: integer;
+begin
+  Result := LOWEST_PRIORITY;
+end;
+
 function TVariableDeclarations.ParseBreak: boolean;
 begin
   Result := false;
@@ -891,6 +902,11 @@ begin
 end;
 
 { TProcedureCall }
+
+class function TProcedureCall.Priority: integer;
+begin
+  Result := LOWER_PRIORITY;
+end;
 
 function TProcedureCall.InternalParse: boolean;
 begin
@@ -961,6 +977,11 @@ begin
 end;
 
 { TSubroutineForwardDeclaration }
+
+class function TSubroutineForwardDeclaration.Priority: integer;
+begin
+  Result := HIGHER_PRIORITY;
+end;
 
 function TSubroutineForwardDeclaration.InternalParse: boolean;
 begin
@@ -1531,8 +1552,8 @@ end;
 function TExecuteImmediate.InternalParse: boolean;
 begin
   _Execute := Keyword('execute');
-  if not Assigned(_Execute) then exit(false);
   _Immediate := Keyword('immediate');
+  if not Assigned(_Execute) or not Assigned(_Immediate) then exit(false);
   TExpression.Parse(Self, Source, _Command);
   _Into := Keyword('into');
   if Assigned(_Into) then TIdentFields.Parse(Self, Source, _IntoFields);
@@ -1666,6 +1687,8 @@ initialization
   end;
   { Включим PLSQL в общеоракловый парсер }
   OracleParser.Add(PLSQLParser);
+  OracleParser.Add(DeclarationParser);
+  OracleParser.Add(TypeParser);
 
 finalization
   FreeAndNil(PLSQLParserInfo);

@@ -22,13 +22,20 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    class function Priority: integer; override;
   end;
 
 implementation
 
-uses Expressions;
+uses Parser, Expressions;
 
 { TExit }
+
+class function TExit.Priority: integer;
+begin
+  Result := LOWER_PRIORITY;
+end;
 
 function TExit.InternalParse: boolean;
 begin

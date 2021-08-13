@@ -202,6 +202,7 @@ begin
     if TQualifiedIndexedIdent.Parse(Self, Source, _Ident) then
     begin
       _Suffix := Terminal(['%rowcount', '%found', '%notfound', '%isopen']);
+      if Assigned(_Suffix) then _Suffix.ForceLowercase := true;
       exit(true);
     end;
     { Вложенным запросом }

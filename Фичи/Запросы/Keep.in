@@ -1,16 +1,16 @@
 select 
     min(dummy) 
         keep 
-            (
-                dense_rank 
-                first 
-                order by 
-                    dummy
-            ) 
+        (
+            dense_rank 
+            first 
+            order by 
+                dummy
+        ) 
         over 
-            (
-                partition by 
-                    dummy
-            ) 
+        (
+            partition by 
+                dummy
+        ) 
 from 
     dual

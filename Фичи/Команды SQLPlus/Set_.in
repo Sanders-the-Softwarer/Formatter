@@ -1,17 +1,17 @@
 -- Команда set проста и незатейлива
 
-set define off -- Сюрприз! define это не только ключевое слово!
-set autoprint on
-set exitcommit off
-set feedback 6
-set history on
-set null <null>
-set pause on
-set serveroutput on
+set define        off -- Сюрприз! define это не только ключевое слово!
+set autoprint     on
+set exitcommit    off
+set feedback      6
+set history       on
+set null          <null>
+set pause         on
+set serveroutput  on
 set sqlblanklines on
-set sqlnumber off
-set termout on
-set timing on
-set trimout on
-set trimspool on
-set verify off
+set sqlnumber     off
+set termout       on
+set timing        on
+set trimout       on
+set trimspool     on
+set verify        off

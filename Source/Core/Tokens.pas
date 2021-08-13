@@ -129,11 +129,13 @@ type
   TTerminal = class(TToken)
   strict private
     FOpType: TOpType;
-    FWithoutSpace: boolean;
+    FWithoutSpace, FForceLowerCase: boolean;
+    procedure SetForceLowerCase(AForceLowerCase: boolean);
   public
     function TokenType: string; override;
     property OpType: TOpType read FOpType write FOpType; { позволяет отличить унарные плюсы-минусы от бинарных }
     property WithoutSpace: boolean read FWithoutSpace write FWithoutSpace; { позволяет отличить запятую в number(5,2) и подобные ситуации }
+    property ForceLowercase: boolean read FForceLowerCase write SetForceLowerCase; { для %type и подобных }
   end;
 
   { Идентификатор либо ключевое слово }
@@ -451,6 +453,12 @@ end;
 function TTerminal.TokenType: string;
 begin
   Result := 'Символ';
+end;
+
+procedure TTerminal.SetForceLowerCase(AForceLowerCase: boolean);
+begin
+  FForceLowerCase := AForceLowerCase;
+  if AForceLowerCase then Value := Value.ToLower;
 end;
 
 { TUnexpectedEOF }

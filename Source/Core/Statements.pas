@@ -125,6 +125,8 @@ type
   public
     class function StatementType: string;
     class procedure Match(ASource, ATarget: TStatement);
+    { Приоритет конструкции в синтаксическом анализаторе }
+    class function Priority: integer; virtual;
     function Name: string; virtual;
     function StatementName: string; virtual;
     function SameTypeAligned: TAlignMode; virtual;
@@ -189,6 +191,7 @@ type
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
+    class function Priority: integer; override;
     function StatementName: string; override;
     property Token: TToken read _Token;
   end;
@@ -243,7 +246,7 @@ function AlignMode(ASetting: boolean): TAlignMode;
 
 implementation
 
-uses Keywords;
+uses Parser, Keywords;
 
 { Конвертация настройки в TAlignMode }
 function AlignMode(ASetting: boolean): TAlignMode;
@@ -446,6 +449,12 @@ begin
     TargetItem := TargetList.Item(i);
     if Assigned(SourceItem) then SourceItem.MatchedTo := TargetItem;
   end;
+end;
+
+{ Приоритет конструкции в синтаксическом анализаторе }
+class function TStatement.Priority: integer;
+begin
+  Result := STD_PRIORITY;
 end;
 
 function TStatement.GetMatchSource: TBaseStatementList;
@@ -882,6 +891,11 @@ begin
 end;
 
 { TUnexpectedToken }
+
+class function TUnexpectedToken.Priority: integer;
+begin
+  Result := MIN_PRIORITY;
+end;
 
 function TUnexpectedToken.StatementName: string;
 begin

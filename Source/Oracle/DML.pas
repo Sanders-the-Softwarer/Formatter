@@ -350,8 +350,7 @@ end;
 
 procedure TWithinGroup.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Within, _Group]);
-  APrinter.PrintIndented(_OrderBy);
+  APrinter.PrintItems([_Within, _Group, _NextLine, _OrderBy]);
 end;
 
 { TOver }
@@ -371,12 +370,12 @@ end;
 procedure TOver.InternalPrintSelf(APrinter: TPrinter);
 begin
   if Assigned(_PartitionBy) or Assigned(_OrderBy) then
-    APrinter.PrintItems([_Over, _IndentNextLine,
-                                _OpenBracket,    _IndentNextLine,
-                                                 _PartitionBy,    _IndentNextLine,
-                                                                  _PartitionFields, _UndentNextLine,
-                                                 _OrderBy, _UndentNextLine,
-                                _CloseBracket,   _Undent])
+    APrinter.PrintItems([_Over, _NextLine,
+                         _OpenBracket,    _IndentNextLine,
+                                          _PartitionBy,    _IndentNextLine,
+                                                           _PartitionFields, _UndentNextLine,
+                                          _OrderBy, _UndentNextLine,
+                         _CloseBracket])
   else
     APrinter.PrintItems([_Over, _OpenBracket, _CloseBracket]);
 end;
@@ -397,12 +396,12 @@ end;
 
 procedure TKeep.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Keep, _IndentNextLine,
-                              _OpenBracket, _IndentNextLine,
-                                            _Rank, _NextLine,
-                                            _FirstOrLast, _NextLine,
-                                            _OrderBy, _UndentNextLine,
-                              _CloseBracket, _Undent]);
+  APrinter.PrintItems([_Keep, _NextLine,
+                       _OpenBracket, _IndentNextLine,
+                                     _Rank, _NextLine,
+                                     _FirstOrLast, _NextLine,
+                                     _OrderBy, _UndentNextLine,
+                       _CloseBracket]);
 end;
 
 { TAnalyticFunctionCall }

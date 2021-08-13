@@ -373,6 +373,7 @@ begin
   if not Assigned(_Ident) then exit(false);
   { Проверим %[row]type }
   _Type := Terminal(['%type', '%rowtype']);
+  if Assigned(_Type) then _Type.ForceLowerCase := true;
   { Проверим указание размера }
   _OpenBracket := Terminal('(');
   if Assigned(_OpenBracket) then

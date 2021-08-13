@@ -21,6 +21,7 @@ type
   _Команды_SQLPLUS = class(TFileBasedTest)
   protected
     function GetDir: string; override;
+    procedure SetUp; override;
   published
     procedure Clear;
     procedure Define;
@@ -85,6 +86,12 @@ begin
   Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды SQLPLUS';
 end;
 
+procedure _Команды_SQLPLUS.SetUp;
+begin
+  inherited;
+  Settings.AlignCommands := true; { команды SQL*Plus выравниваются по умолчанию все }
+end;
+
 procedure _Команды_SQLPLUS.Get;
 begin
   PostponeTill(2021, 9, 30);
@@ -92,7 +99,6 @@ end;
 
 procedure _Команды_SQLPLUS.Accept;
 begin
-  Settings.AlignCommands := true;
 end;
 
 procedure _Команды_SQLPLUS.Append;
@@ -141,7 +147,6 @@ end;
 
 procedure _Команды_SQLPLUS.Host;
 begin
-  Settings.AlignCommands := true;
 end;
 
 procedure _Команды_SQLPLUS.Input;
@@ -223,7 +228,6 @@ end;
 
 procedure _Команды_SQLPLUS.Define;
 begin
-  Settings.AlignCommands := true;
 end;
 
 procedure _Команды_SQLPLUS.Del;
@@ -293,12 +297,10 @@ end;
 
 procedure _Команды_SQLPLUS.Undefine;
 begin
-  Settings.AlignCommands := true;
 end;
 
 procedure _Команды_SQLPLUS.Variable;
 begin
-  Settings.AlignCommands := true;
 end;
 
 procedure _Команды_SQLPLUS.Whenever;

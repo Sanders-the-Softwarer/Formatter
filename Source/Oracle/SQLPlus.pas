@@ -304,6 +304,7 @@ initialization
     Add(THost);
     Add(TVariable);
     Add(TUndefine);
+    Add(TStandaloneAnonymousBlock);
   end;
   { Добавим их в общеоракловый синтаксис }
   OracleParser.Add(SQLPlusParser);

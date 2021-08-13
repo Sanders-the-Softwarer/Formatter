@@ -1,3 +1,2 @@
 connect scott/tiger
-
 connect scott/tiger@manager

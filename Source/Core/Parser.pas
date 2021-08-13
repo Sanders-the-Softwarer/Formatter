@@ -37,7 +37,7 @@ unit Parser;
 interface
 
 uses Windows, System.SysUtils, Streams, Tokens, Statements, Printer,
-  System.Generics.Collections;
+  System.Generics.Collections, System.Generics.Defaults;
 
 type
 
@@ -45,6 +45,7 @@ type
   TParserInfo = class
   strict protected
     Statements: TList<TStatementClass>;
+    Prepared: boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -95,9 +96,12 @@ type
 
 const
   { Приоритеты синтаксических конструкций при разборе }
-  MIN_PRIORITY = -MaxInt;
-  MAX_PRIORITY = MaxInt;
-  STD_PRIORITY = 0;
+  MAX_PRIORITY    =  1000;
+  HIGHER_PRIORITY =   100;
+  STD_PRIORITY    =     0;
+  LOWER_PRIORITY  =  -100;
+  LOWEST_PRIORITY =  -900;
+  MIN_PRIORITY    = -1000;
 
 implementation
 
@@ -244,6 +248,7 @@ end;
 { Добавление информации о разбираемой конструкции }
 procedure TParserInfo.Add(AStatement: TStatementClass);
 begin
+  Prepared := false;
   Assert(AStatement <> nil);
   with Statements do
     if not Contains(AStatement) then Add(AStatement);
@@ -252,14 +257,41 @@ end;
 { Добавление информации из подчинённого списка }
 procedure TParserInfo.Add(AInfo: TParserInfo);
 begin
+  Prepared := false;
   Assert(AInfo <> nil);
   Statements.AddRange(AInfo.Statements);
 end;
 
 { Возврат списка "кандидатов" для разбора очередной синтаксической конструкции }
+
+type
+  TStatementClassComparer = class(TComparer<TStatementClass>)
+  public
+    function Compare(const Left, Right: TStatementClass): integer; override;
+  end;
+
+var
+  StatementClassComparer: TStatementClassComparer;
+
 function TParserInfo.Candidates: TList<TStatementClass>;
 begin
+  if not Prepared then
+  begin
+    Statements.Sort(StatementClassComparer);
+    Prepared := true;
+  end;
   Result := Statements;
 end;
+
+function TStatementClassComparer.Compare(const Left, Right: TStatementClass): integer;
+begin
+  Result := Right.Priority - Left.Priority;
+end;
+
+initialization
+  StatementClassComparer := TStatementClassComparer.Create;
+
+finalization
+  FreeAndNil(StatementClassComparer);
 
 end.

@@ -24,6 +24,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    class function Priority: integer; override;
   end;
 
 implementation
@@ -31,6 +33,11 @@ implementation
 uses Parser, PLSQL;
 
 { TExecute }
+
+class function TExecute.Priority: integer;
+begin
+  Result := LOWER_PRIORITY;
+end;
 
 function TExecute.InternalParse: boolean;
 begin
@@ -42,8 +49,8 @@ end;
 
 procedure TExecute.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Cmd, _What]);
-  inherited;
+  APrinter.PrintRulerItems('cmd', [_Cmd]);
+  APrinter.PrintRulerItems('what', [_What]);
 end;
 
 end.
