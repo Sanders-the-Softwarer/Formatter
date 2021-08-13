@@ -190,7 +190,7 @@ begin
   { Создадим потоки }
   MinTokenStream  := Controller.MakeMinimalTokenStream(edSrc.Text);
   AdvTokenStream  := Controller.MakeAdvancedTokenStream(MinTokenStream);
-  StatementStream := Controller.MakeStatementStream(AdvTokenStream, Settings);
+  StatementStream := Controller.MakeStatementStream(AdvTokenStream, Settings, OracleParser);
   { Напечатаем данные }
   try
     StatementStream.PrintAll(ResultPrinter);

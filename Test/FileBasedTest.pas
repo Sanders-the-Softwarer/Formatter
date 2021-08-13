@@ -53,7 +53,7 @@ type
     { Приведение строки к наглядному для сравнения виду }
     function Beautify(const S: string): string;
     { Сравнение форматированного текста с ожидаемым }
-    procedure Check(AText, AExpected, ASaveToFile: string);
+    procedure Check(AText, AExpected, ASaveToFile: string); reintroduce;
     { Отложить тест до указанной даты }
     procedure PostponeTill(AYear, AMonth, ADay: integer);
   protected
@@ -162,7 +162,7 @@ begin
   if Random >= 0.5
     then AText := TrimRight(AText) + #13
     else AText := TrimRight(AText);
-  Controller.MakeFormatted(AText, Settings, Actual);
+  Controller.MakeFormatted(AText, Settings, OracleParser, Actual);
   if ASaveToFile <> '' then
     with TStringList.Create do
     try

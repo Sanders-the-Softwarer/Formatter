@@ -41,16 +41,16 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
-        <DCC_ExeOutput>.\Exe</DCC_ExeOutput>
+        <DCC_ExeOutput>X:\Formatter\Exe</DCC_ExeOutput>
         <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
         <SanitizedProjectName>Test</SanitizedProjectName>
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>$(BDS)\Source\DUnit\src;.\Dcu;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>$(BDS)\Source\DUnit\src;X:\Formatter\Dcu\$(Platform)\$(Config);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1049</VerInfo_Locale>
         <Manifest_File>None</Manifest_File>
-        <DCC_DcuOutput>.\Dcu</DCC_DcuOutput>
+        <DCC_DcuOutput>X:\Formatter\Dcu\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_E>false</DCC_E>
         <DCC_N>false</DCC_N>
         <DCC_S>false</DCC_S>
@@ -91,6 +91,8 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="Lib\FastMM4.pas"/>
+        <DCCReference Include="Lib\FastMM4Messages.pas"/>
         <DCCReference Include="Test\TestDML.pas"/>
         <DCCReference Include="Test\FileBasedTest.pas"/>
         <DCCReference Include="Test\TestExpressions.pas"/>
@@ -98,59 +100,8 @@
         <DCCReference Include="Test\TestPLSQL.pas"/>
         <DCCReference Include="Test\TestBugs.pas"/>
         <DCCReference Include="Test\TestSQLPLUS.pas"/>
-        <DCCReference Include="Source\Core\BasePrinter.pas"/>
-        <DCCReference Include="Source\Core\Commons.pas"/>
-        <DCCReference Include="Source\Core\Controller.pas"/>
-        <DCCReference Include="Source\DDL.pas"/>
-        <DCCReference Include="Source\DML.pas"/>
-        <DCCReference Include="Source\Core\Expressions.pas"/>
-        <DCCReference Include="Source\Core\FormatterPrinter.pas"/>
-        <DCCReference Include="Source\Core\Keywords.pas"/>
-        <DCCReference Include="Source\Core\Parser.pas"/>
-        <DCCReference Include="Source\PLSQL.pas"/>
-        <DCCReference Include="Source\Core\Printer.pas"/>
-        <DCCReference Include="Source\Core\Rulers.pas"/>
-        <DCCReference Include="Source\SQLPlus.pas"/>
-        <DCCReference Include="Source\Core\Statements.pas"/>
-        <DCCReference Include="Source\Core\Streams.pas"/>
-        <DCCReference Include="Source\Core\TextBuilder.pas"/>
-        <DCCReference Include="Source\Core\Tokenizer.pas"/>
-        <DCCReference Include="Source\Core\Tokens.pas"/>
-        <DCCReference Include="Source\Core\Utils.pas"/>
         <DCCReference Include="Test\UnderConstruction.pas"/>
         <DCCReference Include="Test\TestSettings.pas"/>
-        <DCCReference Include="Source\DML\Insert.pas"/>
-        <DCCReference Include="Source\DML\Select.pas"/>
-        <DCCReference Include="Source\DDL\Alter.pas"/>
-        <DCCReference Include="Source\DDL\AlterPackageProcedureFunction.pas"/>
-        <DCCReference Include="Source\DDL\Create.pas"/>
-        <DCCReference Include="Source\DDL\DatabaseLink.pas"/>
-        <DCCReference Include="Source\DDL\Drop.pas"/>
-        <DCCReference Include="Source\DDL\Grant.pas"/>
-        <DCCReference Include="Source\DDL\Role.pas"/>
-        <DCCReference Include="Source\DDL\Sequence.pas"/>
-        <DCCReference Include="Source\DDL\Session.pas"/>
-        <DCCReference Include="Source\DDL\Set_.pas"/>
-        <DCCReference Include="Source\DDL\Synonym.pas"/>
-        <DCCReference Include="Source\PLSQL\Assignment.pas"/>
-        <DCCReference Include="Source\PLSQL\Exit_.pas"/>
-        <DCCReference Include="Source\PLSQL\ForAll.pas"/>
-        <DCCReference Include="Source\PLSQL\Goto_.pas"/>
-        <DCCReference Include="Source\PLSQL\Label_.pas"/>
-        <DCCReference Include="Source\PLSQL\OpenFor.pas"/>
-        <DCCReference Include="Source\PLSQL\Trigger.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Exit_SQLPlus.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Set_SQLPlus.pas"/>
-        <DCCReference Include="Source\Core\Intervals.pas"/>
-        <DCCReference Include="Source\DML\DML_Commons.pas"/>
-        <DCCReference Include="Source\DML\Update.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Clear.pas"/>
-        <DCCReference Include="Source\SQL_Plus\At.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Slash.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Accept.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Host.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Variable.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Undefine.pas"/>
         <None Include="Profiling\AQtimeModule1.aqt"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
@@ -245,7 +196,16 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
+                <DeployClass Name="DependencyModule">
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                        <Extensions>.dll;.bpl</Extensions>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="ProjectOSXResource">
                     <Platform Name="OSX32">
                         <RemoteDir>Contents\Resources</RemoteDir>
@@ -584,16 +544,7 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="DependencyModule">
-                    <Platform Name="Win32">
-                        <Operation>0</Operation>
-                        <Extensions>.dll;.bpl</Extensions>
-                    </Platform>
-                    <Platform Name="OSX32">
-                        <Operation>1</Operation>
-                        <Extensions>.dylib</Extensions>
-                    </Platform>
-                </DeployClass>
+                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>

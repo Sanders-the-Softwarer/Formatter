@@ -12,15 +12,9 @@ unit DDL;
 
 interface
 
-uses SysUtils, Tokens, Statements, Printer, Streams, Commons, PLSQL;
+uses SysUtils, Tokens, Statements, Parser, Printer, Streams, Commons, PLSQL;
 
 type
-
-  { Парсер DDL }
-  DDLParser = class
-  public
-    class function Parse(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-  end;
 
   { Объект view }
   TView = class(TStatement)
@@ -273,10 +267,23 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+{ Парсер для DDL }
+function DDLParser: TParserInfo;
+
 implementation
 
-uses Parser, DML, Expressions, Trigger, Role, Sequence, Synonym, Create, Alter,
-  Set_, Select, Grant, Drop, DML_Commons;
+uses DML, Expressions, Trigger, Role, Sequence, Synonym, Create, Alter,
+  Set_, Select, Grant, Drop, DML_Commons, Controller;
+
+var
+  DDLParserInfo: TParserInfo;
+
+{ Парсер для DDL }
+function DDLParser: TParserInfo;
+begin
+  if not Assigned(DDLParserInfo) then DDLParserInfo := TParserInfo.Create;
+  Result := DDLParserInfo;
+end;
 
 { TView }
 
@@ -745,18 +752,22 @@ begin
   APrinter.PrintItems([_Sharing, _Eq, _What]);
 end;
 
-{ DDLParser }
+initialization
+  { Зарегистрируем конструкции DDL }
+  with DDLParser do
+  begin
+    Add(TCreate);
+    Add(TDrop);
+    Add(TAlter);
+    Add(TSet);
+    Add(TComment);
+    Add(TGrant);
+  end;
+  { И добавим их в общеоракловый синтаксис }
+  OracleParser.Add(DDLParser);
 
-class function DDLParser.Parse(AParent: TStatement;
-  ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-begin
-  Result := TCreate.Parse(AParent, ASource, AResult) or
-            TDrop.Parse(AParent, ASource, AResult) or
-            TAlter.Parse(AParent, ASource, AResult) or
-            TSet.Parse(AParent, ASource, AResult) or
-            TComment.Parse(AParent, ASource, AResult) or
-            TGrant.Parse(AParent, ASource, AResult);
-end;
+finalization
+  FreeAndNil(DDLParserInfo);
 
 end.
 

@@ -53,15 +53,15 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <Manifest_File>None</Manifest_File>
-        <DCC_ExeOutput>.\Exe</DCC_ExeOutput>
-        <DCC_DcpOutput>.\Dcu</DCC_DcpOutput>
+        <DCC_ExeOutput>X:\Formatter\Exe</DCC_ExeOutput>
+        <DCC_DcpOutput>X:\Formatter\Dcu\$(Platform)\$(Config)</DCC_DcpOutput>
         <SanitizedProjectName>PLSQLDev_Plugin</SanitizedProjectName>
         <GenDll>true</GenDll>
-        <DCC_BplOutput>.\Dcu</DCC_BplOutput>
+        <DCC_BplOutput>X:\Formatter\Dcu\$(Platform)\$(Config)</DCC_BplOutput>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_Locale>1049</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <DCC_DcuOutput>.\Dcu</DCC_DcuOutput>
+        <DCC_DcuOutput>X:\Formatter\Dcu\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_E>false</DCC_E>
         <DCC_N>false</DCC_N>
         <DCC_S>false</DCC_S>
@@ -118,62 +118,8 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Source\DDL\Alter.pas"/>
-        <DCCReference Include="Source\DDL\Create.pas"/>
-        <DCCReference Include="Source\DDL\DatabaseLink.pas"/>
-        <DCCReference Include="Source\DDL\Role.pas"/>
-        <DCCReference Include="Source\DDL\Sequence.pas"/>
-        <DCCReference Include="Source\DDL\Synonym.pas"/>
-        <DCCReference Include="Source\PLSQL\Trigger.pas"/>
-        <DCCReference Include="Source\Core\BasePrinter.pas"/>
-        <DCCReference Include="Source\Core\Commons.pas"/>
-        <DCCReference Include="Source\Core\Controller.pas"/>
-        <DCCReference Include="Source\DDL.pas"/>
-        <DCCReference Include="Source\DML.pas"/>
-        <DCCReference Include="Source\Core\Expressions.pas"/>
-        <DCCReference Include="Source\Core\FormatterPrinter.pas"/>
-        <DCCReference Include="Source\Core\Keywords.pas"/>
-        <DCCReference Include="Source\Core\Parser.pas"/>
-        <DCCReference Include="Source\PLSQL.pas"/>
-        <DCCReference Include="Source\Core\Printer.pas"/>
-        <DCCReference Include="Source\Core\Rulers.pas"/>
-        <DCCReference Include="Source\SQLPlus.pas"/>
-        <DCCReference Include="Source\Core\Statements.pas"/>
-        <DCCReference Include="Source\Core\Streams.pas"/>
-        <DCCReference Include="Source\Core\TextBuilder.pas"/>
-        <DCCReference Include="Source\Core\Tokenizer.pas"/>
-        <DCCReference Include="Source\Core\Tokens.pas"/>
-        <DCCReference Include="Source\Core\Utils.pas"/>
-        <DCCReference Include="Source\DML\Select.pas"/>
-        <DCCReference Include="Source\DML\Insert.pas"/>
-        <DCCReference Include="Source\DDL\Session.pas"/>
-        <DCCReference Include="Source\DDL\Set_.pas"/>
-        <DCCReference Include="Source\DDL\AlterPackageProcedureFunction.pas"/>
-        <DCCReference Include="Source\DDL\Grant.pas"/>
-        <DCCReference Include="Source\DDL\Drop.pas"/>
-        <DCCReference Include="Source\PLSQL\Goto_.pas"/>
-        <DCCReference Include="Source\PLSQL\Exit_.pas"/>
-        <DCCReference Include="Source\PLSQL\OpenFor.pas"/>
-        <DCCReference Include="Source\PLSQL\ForAll.pas"/>
-        <DCCReference Include="Source\PLSQL\Assignment.pas"/>
-        <DCCReference Include="Source\PLSQL\Label_.pas"/>
-        <DCCReference Include="Source\Core\Intervals.pas"/>
-        <DCCReference Include="Source\DML\DML_Commons.pas"/>
-        <DCCReference Include="Source\DML\Update.pas"/>
         <DCCReference Include="Source\PLSQL_Developer\PlugInIntf.pas"/>
         <DCCReference Include="Source\PLSQL_Developer\PLSQLDev_Formatter.pas"/>
-        <DCCReference Include="Source\DML\Call.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Accept.pas"/>
-        <DCCReference Include="Source\SQL_Plus\At.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Clear.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Define.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Execute.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Exit_SQLPlus.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Host.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Set_SQLPlus.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Slash.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Variable.pas"/>
-        <DCCReference Include="Source\SQL_Plus\Undefine.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

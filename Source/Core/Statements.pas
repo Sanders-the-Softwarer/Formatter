@@ -50,7 +50,7 @@ unit Statements;
 interface
 
 uses Classes, SysUtils, Math, System.Generics.Collections, Contnrs, TypInfo,
-  Streams, Tokens, Printer, Rulers, Utils;
+  Streams, Tokens, Printer, Rulers;
 
 type
 
@@ -101,6 +101,7 @@ type
     function Terminal(const ATerminals: array of string): TTerminal; overload;
     function Concat(Params: array of TObject): string;
     procedure AddToFreeList(AObj: TObject);
+    procedure RemoveFromFreeList(AObj: TObject);
     procedure ReplaceToken(var AOld: TToken; ANew: TToken);
     function GetRulers: TRulers;
   public
@@ -257,11 +258,13 @@ end;
 constructor TStatement.Create(AParent: TStatement; ASource: TBufferedStream<TToken>);
 begin
   FParent := AParent;
+  if Assigned(AParent) then AParent.AddToFreeList(Self);
   Source := ASource;
 end;
 
 destructor TStatement.Destroy;
 begin
+  if Assigned(Parent) then Parent.RemoveFromFreeList(Self);
   inherited;
   FreeAndNil(FreeList);
   FreeAndNil(FRulers);
@@ -655,6 +658,11 @@ begin
   FreeList.Add(AObj);
 end;
 
+procedure TStatement.RemoveFromFreeList(AObj: TObject);
+begin
+  if Assigned(FreeList) then FreeList.Extract(AObj);
+end;
+
 procedure TStatement.ReplaceToken(var AOld: TToken; ANew: TToken);
 var i: TCommentPosition;
 begin
@@ -712,9 +720,9 @@ end;
 
 procedure TStatementList<S>.BeforeDestruction;
 begin
-  inherited;
   FreeAndNil(Statements);
   FreeAndNil(Delimiters);
+  inherited;
 end;
 
 function TStatementList<S>.StatementName: string;

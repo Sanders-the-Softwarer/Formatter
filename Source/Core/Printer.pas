@@ -46,7 +46,7 @@ unit Printer;
 interface
 
 uses
-  Classes, SysUtils, Math, System.Generics.Collections, Tokens, Utils;
+  Classes, SysUtils, Math, Contnrs, System.Generics.Collections, Tokens;
 
 type
 
@@ -123,6 +123,7 @@ type
   { Спецконструкции для более удобного форматирования вывода }
   TFormatterCmd = class
   public
+    constructor Create;
     procedure PrintSelf(APrinter: TPrinter); virtual; abstract;
   end;
 
@@ -144,15 +145,27 @@ function _Undent: TObject;
 function _IndentNextLine: TObject;
 function _UndentNextLine: TObject;
 
+{ Освобождение объектов, созданных предыдущими вызовами (_NextLine итп.)}
+procedure FreeFormatterCmds;
+
 implementation
 
-uses SQLPlus, FormatterPrinter;
+uses FormatterPrinter;
 
 { Отправка извещения о необходимости синхронизации интерфейса }
 procedure SendSyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
 begin
   if Assigned(SyncNotification) then
     SyncNotification(AObject, ALine, ACol, ALen);
+end;
+
+var
+  FreeList: TObjectList;
+
+{ Освобождение объектов, созданных предыдущими вызовами (_NextLine итп.)}
+procedure FreeFormatterCmds;
+begin
+  FreeList.Clear;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -234,6 +247,7 @@ end;
 constructor TNextLineIf.Create(AItems: array of TObject);
 var i: integer;
 begin
+  inherited Create;
   SetLength(Items, Length(AItems));
   for i := Low(AItems) to High(AItems) do Items[i] := AItems[i];
 end;
@@ -466,5 +480,19 @@ begin
     Apply(Name, Value);
   end;
 end;
+
+{ TFormatterCmd }
+
+constructor TFormatterCmd.Create;
+begin
+  inherited;
+  FreeList.Add(Self);
+end;
+
+initialization
+  FreeList := TObjectList.Create(true);
+
+finalization
+  FreeAndNil(FreeList);
 
 end.

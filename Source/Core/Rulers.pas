@@ -58,11 +58,18 @@ unit Rulers;
 
 interface
 
-uses Classes, SysUtils, System.Generics.Collections, Math, Utils, Printer,
-  Tokens;
+uses Classes, SysUtils, System.Generics.Collections, Math, Printer, Tokens;
+
+const
+  { Названия стандартных линеек для выравнивания }
+  LEFT_RULER             = '$left$';
+  RIGHT_COMMENT          = '$right-comment$';
+  SPECIAL_COMMENT_START  = '$spec-comment-start$';
+  SPECIAL_COMMENT_FINISH = '$spec-comment-finish$';
+  CONCAT_DELIM_RULER     = '$concat-delim$';
+  WHERE_DELIM_RULER      = '$where-delim$';
 
 type
-
   { Информация о выравниваниях }
   TRulers = class
   private

@@ -38,7 +38,7 @@ type
 
 implementation
 
-uses Commons, Expressions, DML;
+uses Parser, Commons, Expressions, DML;
 
 { TForAll }
 
@@ -62,7 +62,7 @@ begin
     end;
   _Save := Keyword('save');
   _Exceptions := Keyword('exceptions');
-  if not DMLParser.Parse(Self, Source, _DML) then PLSQLParser.Parse(Self, Source, _DML);
+  if not TParser.Parse(Source, Settings, DMLParser, Self, _DML) then TParser.Parse(Source, Settings, PLSQLParser, Self, _DML);
   inherited;
   Result := true;
 end;

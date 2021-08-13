@@ -28,7 +28,7 @@ type
 
 implementation
 
-uses PLSQL;
+uses Parser, PLSQL;
 
 { TExecute }
 
@@ -36,8 +36,8 @@ function TExecute.InternalParse: boolean;
 begin
   _Cmd := Keyword(['exec[ute]']);
   Result := Assigned(_Cmd);
-  if Result then PLSQLParser.Parse(Self, Source, _What);
-  Result := Result and inherited;
+  if Result then TParser.Parse(Source, Settings, PLSQLParser, Self, _What);
+  inherited;
 end;
 
 procedure TExecute.InternalPrintSelf(APrinter: TPrinter);

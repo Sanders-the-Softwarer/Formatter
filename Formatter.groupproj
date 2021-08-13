@@ -3,6 +3,12 @@
         <ProjectGuid>{34AAC6D8-F6F0-4A71-A458-DD2664352148}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
+        <Projects Include="Core.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Oracle.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="DebugTool.dproj">
             <Dependencies/>
         </Projects>
@@ -23,6 +29,24 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
+    <Target Name="Core">
+        <MSBuild Projects="Core.dproj"/>
+    </Target>
+    <Target Name="Core:Clean">
+        <MSBuild Projects="Core.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Core:Make">
+        <MSBuild Projects="Core.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Oracle">
+        <MSBuild Projects="Oracle.dproj"/>
+    </Target>
+    <Target Name="Oracle:Clean">
+        <MSBuild Projects="Oracle.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Oracle:Make">
+        <MSBuild Projects="Oracle.dproj" Targets="Make"/>
+    </Target>
     <Target Name="DebugTool">
         <MSBuild Projects="DebugTool.dproj"/>
     </Target>
@@ -60,13 +84,13 @@
         <MSBuild Projects="CmdLineFormatter.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="DebugTool;Test;PLSQLDev_Plugin;CmdLineFormatter"/>
+        <CallTarget Targets="Core;Oracle;DebugTool;Test;PLSQLDev_Plugin;CmdLineFormatter"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="DebugTool:Clean;Test:Clean;PLSQLDev_Plugin:Clean;CmdLineFormatter:Clean"/>
+        <CallTarget Targets="Core:Clean;Oracle:Clean;DebugTool:Clean;Test:Clean;PLSQLDev_Plugin:Clean;CmdLineFormatter:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="DebugTool:Make;Test:Make;PLSQLDev_Plugin:Make;CmdLineFormatter:Make"/>
+        <CallTarget Targets="Core:Make;Oracle:Make;DebugTool:Make;Test:Make;PLSQLDev_Plugin:Make;CmdLineFormatter:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

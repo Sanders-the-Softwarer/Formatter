@@ -18,8 +18,15 @@ unit Controller;
   реализации (потоки и т. п., о чём им думать решительно незачем).
 
   Процедура MakeFormatted проходит все шаги преобразований и формирует из
-  строки на входе строку на выходе. Функция MakeMinimalTokenStream формирует
-  входной поток лексем с расставленными координатами и выброшенными пробелами.
+  строки на входе строку на выходе. Функции MakeMinimalTokenStream/
+  MakeAdvancedTokenStream/MakeStatementStream дают больший контроль над
+  процессом, позволяющий отладочной программе (DebugTool.exe) выдавать
+  необходимую ей информацию.
+
+  Функция OracleParser возвращает коллекцию синтаксических конструкций для
+  Oracle. Пока что она размещена здесь просто за неимением лучшего места.
+  Когда форматизатор начнёт поддерживать другие языки - этот аспект, безусловно,
+  потребует рефакторинга.
 
 ------------------------------------------------------------------------------ }
 
@@ -28,7 +35,7 @@ interface
 uses SysUtils, Printer, FormatterPrinter, Streams, Tokens, Statements, Parser;
 
 { Форматирование текста, полученного в виде строки, с возвратом результата в строку }
-procedure MakeFormatted(const AText: string; ASettings: TFormatSettings; out AResult: string);
+procedure MakeFormatted(const AText: string; ASettings: TFormatSettings; AParserInfo: TParserInfo; out AResult: string);
 
 { Создание минимально обработанного потока лексем из текста, полученного в виде строки }
 function MakeMinimalTokenStream(const AText: string): TBufferedStream<TToken>;
@@ -37,14 +44,27 @@ function MakeMinimalTokenStream(const AText: string): TBufferedStream<TToken>;
 function MakeAdvancedTokenStream(ATokenStream: TBufferedStream<TToken>): TBufferedStream<TToken>;
 
 { Создание потока синтаксических конструкций из потока лексем }
-function MakeStatementStream(ATokenStream: TBufferedStream<TToken>; ASettings: TFormatSettings): TBufferedStream<TStatement>;
+function MakeStatementStream(ATokenStream: TBufferedStream<TToken>; ASettings: TFormatSettings; AParserInfo: TParserInfo): TBufferedStream<TStatement>;
+
+{ Парсер для ораклового синтаксиса }
+function OracleParser: TParserInfo;
 
 implementation
 
 uses Tokenizer;
 
+var
+  OracleParserInfo: TParserInfo;
+
+{ Парсер для ораклового синтаксиса }
+function OracleParser: TParserInfo;
+begin
+  if not Assigned(OracleParserInfo) then OracleParserInfo := TParserInfo.Create;
+  Result := OracleParserInfo;
+end;
+
 { Форматирование текста, полученного в виде строки, с возвратом результата в строку }
-procedure MakeFormatted(const AText: string; ASettings: TFormatSettings; out AResult: string);
+procedure MakeFormatted(const AText: string; ASettings: TFormatSettings; AParserInfo: TParserInfo; out AResult: string);
 var
   Parser: TBufferedStream<TStatement>;
   Printer: TPrinter;
@@ -60,7 +80,7 @@ begin
         ASettings := Settings;
       end;
     { Создадим парсер входного текста }
-    Parser := MakeStatementStream(MakeAdvancedTokenStream(MakeMinimalTokenStream(AText)), ASettings);
+    Parser := MakeStatementStream(MakeAdvancedTokenStream(MakeMinimalTokenStream(AText)), ASettings, AParserInfo);
     { И выведем его результат на принтер }
     Printer := TFineCopyPrinter.Create(ASettings);
     Parser.PrintAll(Printer);
@@ -86,9 +106,19 @@ begin
 end;
 
 { Создание потока синтаксических конструкций из потока лексем }
-function MakeStatementStream(ATokenStream: TBufferedStream<TToken>; ASettings: TFormatSettings): TBufferedStream<TStatement>;
+function MakeStatementStream(ATokenStream: TBufferedStream<TToken>; ASettings: TFormatSettings; AParserInfo: TParserInfo): TBufferedStream<TStatement>;
 begin
-  Result := TSameTypeLinker.Create(TParser.Create(ATokenStream, ASettings));
+  { Каков бы ни был синтаксис, засунем в него вариант unexpected token }
+  Assert(AParserInfo <> nil);
+  AParserInfo.Add(TUnexpectedToken);
+  { И соберём итоговый поток }
+  Result := TSameTypeLinker.Create(TParser.Create(ATokenStream, ASettings, AParserInfo));
+  Result.FreeFormatterCmds := true;
 end;
+
+initialization
+
+finalization
+  FreeAndNil(OracleParserInfo);
 
 end.

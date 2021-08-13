@@ -124,7 +124,6 @@ var
   Range: TCharRange;
   Line, Col, ColShift, i: integer;
   Input, Output, Postfix: string;
-  LastCR: boolean;
   Settings: TFormatSettings;
 begin
   { Получим хандл окна редактирования }
@@ -152,14 +151,14 @@ begin
   { Сохраним перевод строки и отступ между выделенным фрагментом и дальнейшим текстом }
   i := Input.Length + 1;
   while (i > 1) and (Input[i - 1] = ' ') do Dec(i);
-  if (i > 1) and (Input[i - 1] in [#13, #10])
+  if (i > 1) and CharInSet(Input[i - 1], [#13, #10])
     then Postfix := #13 + Input.Substring(i)
     else Postfix := Input.Substring(i);
   { Отформатируем текст }
   try
     Settings := TFormatSettings.Default;
     Settings.StartIndent := Col + ColShift;
-    Controller.MakeFormatted(Input, Settings, Output);
+    Controller.MakeFormatted(Input, Settings, OracleParser, Output);
     if Output = '' then exit;
   finally
     FreeAndNil(Settings);

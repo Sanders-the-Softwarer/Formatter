@@ -7,54 +7,9 @@ program CmdLineFormatter;
 uses
   Classes,
   SysUtils,
-  BasePrinter in 'Source\Core\BasePrinter.pas',
-  Commons in 'Source\Core\Commons.pas',
-  Controller in 'Source\Core\Controller.pas',
-  DDL in 'Source\DDL.pas',
-  DML in 'Source\DML.pas',
-  Expressions in 'Source\Core\Expressions.pas',
-  FormatterPrinter in 'Source\Core\FormatterPrinter.pas',
-  Keywords in 'Source\Core\Keywords.pas',
-  Parser in 'Source\Core\Parser.pas',
-  PLSQL in 'Source\PLSQL.pas',
-  Printer in 'Source\Core\Printer.pas',
-  Rulers in 'Source\Core\Rulers.pas',
-  SQLPlus in 'Source\SQLPlus.pas',
-  Statements in 'Source\Core\Statements.pas',
-  Streams in 'Source\Core\Streams.pas',
-  TextBuilder in 'Source\Core\TextBuilder.pas',
-  Tokenizer in 'Source\Core\Tokenizer.pas',
-  Tokens in 'Source\Core\Tokens.pas',
-  Utils in 'Source\Core\Utils.pas',
-  Insert in 'Source\DML\Insert.pas',
-  Select in 'Source\DML\Select.pas',
-  Alter in 'Source\DDL\Alter.pas',
-  AlterPackageProcedureFunction in 'Source\DDL\AlterPackageProcedureFunction.pas',
-  Create in 'Source\DDL\Create.pas',
-  DatabaseLink in 'Source\DDL\DatabaseLink.pas',
-  Drop in 'Source\DDL\Drop.pas',
-  Grant in 'Source\DDL\Grant.pas',
-  Role in 'Source\DDL\Role.pas',
-  Sequence in 'Source\DDL\Sequence.pas',
-  Session in 'Source\DDL\Session.pas',
-  Set_ in 'Source\DDL\Set_.pas',
-  Synonym in 'Source\DDL\Synonym.pas',
-  Assignment in 'Source\PLSQL\Assignment.pas',
-  Exit_ in 'Source\PLSQL\Exit_.pas',
-  ForAll in 'Source\PLSQL\ForAll.pas',
-  Goto_ in 'Source\PLSQL\Goto_.pas',
-  Label_ in 'Source\PLSQL\Label_.pas',
-  OpenFor in 'Source\PLSQL\OpenFor.pas',
-  Trigger in 'Source\PLSQL\Trigger.pas',
-  Exit_SQLPlus in 'Source\SQL_Plus\Exit_SQLPlus.pas',
-  Set_SQLPlus in 'Source\SQL_Plus\Set_SQLPlus.pas',
-  Intervals in 'Source\Core\Intervals.pas',
-  GpCommandLineParser in 'Source\Core\GpCommandLineParser.pas',
-  DML_Commons in 'Source\DML\DML_Commons.pas',
-  Update in 'Source\DML\Update.pas',
-  Clear in 'Source\SQL_Plus\Clear.pas',
-  Accept in 'Source\SQL_Plus\Accept.pas',
-  Undefine in 'Source\SQL_Plus\Undefine.pas';
+  Printer,
+  Controller,
+  GpCommandLineParser in 'Source\Core\GpCommandLineParser.pas';
 
 type
   TCommandLine = class
@@ -141,7 +96,7 @@ begin
       end;
     end;
     { Отформатируем }
-    Controller.MakeFormatted(InText, Settings, OutText);
+    Controller.MakeFormatted(InText, Settings, OracleParser, OutText);
     { И сохраним }
     OutFile := nil;
     try

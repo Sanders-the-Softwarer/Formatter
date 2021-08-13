@@ -31,8 +31,7 @@ unit Expressions;
 
 interface
 
-uses Classes, SysUtils, Math, Tokens, Statements, Printer,
-  System.Generics.Collections, Utils;
+uses Classes, SysUtils, Math, Tokens, Statements, Printer, System.Generics.Collections;
 
 type
 
@@ -98,7 +97,7 @@ type
 
 implementation
 
-uses Parser, Commons, DML, PLSQL, Keywords, FormatterPrinter, Select, Intervals;
+uses Parser, Commons, Keywords, FormatterPrinter, Intervals, DML, Select, Rulers;
 
 var
   Operations: TDictionary<String, integer>;

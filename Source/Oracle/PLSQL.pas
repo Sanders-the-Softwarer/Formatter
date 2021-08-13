@@ -27,15 +27,9 @@ unit PLSQL;
 interface
 
 uses Classes, Windows, SysUtils, Math, Streams, Tokens, Statements, Commons,
-  Printer, Utils;
+  Printer, Parser;
 
 type
-
-  { Парсер PL/SQL }
-  PLSQLParser = class
-  public
-    class function Parse(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-  end;
 
   { Базовый класс для операторов PL/SQL }
   TPLSQLStatement = class(TSemicolonStatement);
@@ -562,10 +556,43 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+{ Парсер для PL/SQL }
+function PLSQLParser: TParserInfo;
+
+{ Парсер для типов }
+function TypeParser: TParserInfo;
+
+{ Парсер для деклараций }
+function DeclarationParser: TParserInfo;
+
 implementation
 
-uses Parser, Expressions, DML, DDL, Keywords, Select, Label_, Goto_, Exit_,
-  OpenFor, ForAll, Assignment, DML_Commons;
+uses Expressions, DML, DDL, Keywords, Select, Label_, Goto_, Exit_,
+  OpenFor, ForAll, Assignment, DML_Commons, Controller;
+
+var
+  PLSQLParserInfo, TypeParserInfo, DeclarationParserInfo: TParserInfo;
+
+{ Парсер для PL/SQL }
+function PLSQLParser: TParserInfo;
+begin
+  if not Assigned(PLSQLParserInfo) then PLSQLParserInfo := TParserInfo.Create;
+  Result := PLSQLParserInfo;
+end;
+
+{ Парсер для типов }
+function TypeParser: TParserInfo;
+begin
+  if not Assigned(TypeParserInfo) then TypeParserInfo := TParserInfo.Create;
+  Result := TypeParserInfo;
+end;
+
+{ Парсер для деклараций }
+function DeclarationParser: TParserInfo;
+begin
+  if not Assigned(DeclarationParserInfo) then DeclarationParserInfo := TParserInfo.Create;
+  Result := DeclarationParserInfo;
+end;
 
 { TProgramBlock }
 
@@ -761,7 +788,7 @@ end;
 
 function TDeclarations.ParseStatement(out AResult: TStatement): boolean;
 begin
-  Result := TParser.ParseDeclaration(Self, Source, AResult);
+  Result := TParser.Parse(Source, Settings, DeclarationParser, Self, AResult);
 end;
 
 function TDeclarations.ParseBreak: boolean;
@@ -952,8 +979,7 @@ end;
 
 function TStatements.ParseStatement(out AResult: TStatement): boolean;
 begin
-  Result := DMLParser.Parse(Self, Source, AResult) or
-            PLSQLParser.Parse(Self, Source, AResult);
+  Result := TParser.Parse(Source, Settings, PLSQLParser, Self, AResult);
 end;
 
 function TStatements.ParseBreak: boolean;
@@ -1267,15 +1293,15 @@ end;
 
 function TType.InternalParse: boolean;
 begin
+  Result := true;
   _Type := Keyword('type');
   if not Assigned(_Type) then exit(false);
   TQualifiedIdent.Parse(Self, Source, _TypeName);
   _Force := Keyword('force');
   _AsIs := Keyword(['as', 'is']);
   if Assigned(_AsIs) then _AsIs.CanReplace := true;
-  TParser.ParseType(Self, Source, _Body);
+  TParser.Parse(Source, Settings, TypeParserInfo, Self, _Body);
   inherited;
-  Result := true;
 end;
 
 procedure TType.InternalPrintSelf(APrinter: TPrinter);
@@ -1571,35 +1597,6 @@ begin
   Result := (InnerStatement is TAlignedParamsDeclaration) and TAlignedParamsDeclaration(InnerStatement).OnePerLine;
 end;
 
-{ PLSQLParser }
-
-class function PLSQLParser.Parse(AParent: TStatement;
-  ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-begin
-  Result := TPragma.Parse(AParent, ASource, AResult) or
-            TReturn.Parse(AParent, ASource, AResult) or
-            TNull.Parse(AParent, ASource, AResult) or
-            TRaise.Parse(AParent, ASource, AResult) or
-            TIf.Parse(AParent, ASource, AResult) or
-            TCase.Parse(AParent, ASource, AResult) or
-            TLoop.Parse(AParent, ASource, AResult) or
-            TFor.Parse(AParent, ASource, AResult) or
-            TWhile.Parse(AParent, ASource, AResult) or
-            TForAll.Parse(AParent,ASource, AResult) or
-            TOpenFor.Parse(AParent, ASource, AResult) or
-            TFetch.Parse(AParent, ASource, AResult) or
-            TExit.Parse(AParent, ASource, AResult) or
-            TPipeRow.Parse(AParent, ASource, AResult) or
-            TClose.Parse(AParent, ASource, AResult) or
-            TExecuteImmediate.Parse(AParent, ASource, AResult) or
-            TAnonymousBlock.Parse(AParent, ASource, AResult) or
-            TAssignment.Parse(AParent, ASource, AResult) or
-            TProcedureCall.Parse(AParent, ASource, AResult) or
-            TLabel.Parse(AParent, ASource, AResult) or
-            TGoto.Parse(AParent, ASource, AResult) or
-            TStandaloneComment.Parse(AParent, ASource, AResult);
-end;
-
 { TFunctionAttributes }
 
 function TFunctionAttributes.InternalParse: boolean;
@@ -1622,6 +1619,58 @@ initialization
   Keywords.RegisterKeywords(TPLSQLStatement, ['as', 'begin', 'end', 'exception',
     'function', 'is', 'procedure', 'using']);
   Keywords.RegisterKeywords(TFetch, ['limit']);
+  { Зарегистрируем конструкции PL/SQL }
+  with PLSQLParser do
+  begin
+    Add(TPragma);
+    Add(TReturn);
+    Add(TNull);
+    Add(TRaise);
+    Add(TIf);
+    Add(TCase);
+    Add(TLoop);
+    Add(TFor);
+    Add(TWhile);
+    Add(TForAll);
+    Add(TOpenFor);
+    Add(TFetch);
+    Add(TExit);
+    Add(TPipeRow);
+    Add(TClose);
+    Add(TExecuteImmediate);
+    Add(TAnonymousBlock);
+    Add(TAssignment);
+    Add(TProcedureCall);
+    Add(TLabel);
+    Add(TGoto);
+    Add(TStandaloneComment);
+  end;
+  { Зарегистрируем конструкции для деклараций }
+  with DeclarationParser do
+  begin
+    Add(TType);
+    Add(TCursor);
+    Add(TPragma);
+    Add(TSubroutineForwardDeclaration);
+    Add(TSubroutine);
+    Add(TExceptionDeclaration);
+    Add(TVariableDeclarations);
+  end;
+  { Зарегистрируем конструкции для типов }
+  with TypeParser do
+  begin
+    Add(TRecord);
+    Add(TObject_);
+    Add(TPLSQLTable);
+    Add(TRefCursor);
+  end;
+  { Включим PLSQL в общеоракловый парсер }
+  OracleParser.Add(PLSQLParser);
+
+finalization
+  FreeAndNil(PLSQLParserInfo);
+  FreeAndNil(TypeParserInfo);
+  FreeAndNil(DeclarationParserInfo);
 
 end.
 

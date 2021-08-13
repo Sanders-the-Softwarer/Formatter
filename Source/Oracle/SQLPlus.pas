@@ -12,16 +12,10 @@ unit SQLPlus;
 
 interface
 
-uses SysUtils, Statements, Streams, Tokens, Printer, Utils, Contnrs,
+uses SysUtils, Statements, Streams, Tokens, Parser, Printer, Contnrs,
   System.Generics.Collections;
 
 type
-
-  { Парсер команд SQL*Plus }
-  SQLPlusParser = class
-  public
-    class function Parse(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-  end;
 
   { Базовый класс команд SQL*Plus }
   TSQLPlusStatement = class(TSemicolonStatement)
@@ -77,10 +71,23 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+{ Парсер для SQLPlus }
+function SQLPlusParser: TParserInfo;
+
 implementation
 
 uses Expressions, Commons, PLSQL, Keywords, Set_SQLPlus, Exit_SQLPlus, Clear,
-  Define, Execute, At, Slash, Accept, Host, Variable, Undefine;
+  Define, Execute, At, Slash, Accept, Host, Variable, Undefine, Controller;
+
+var
+  SQLPlusParserInfo: TParserInfo;
+
+{ Парсер для DML }
+function SQLPlusParser: TParserInfo;
+begin
+  if not Assigned(SQLPlusParserInfo) then SQLPlusParserInfo := TParserInfo.Create;
+  Result := SQLPlusParserInfo;
+end;
 
 { Роспись вариантов ключевых слов, заданных как 'undef[ine]' }
 function ExpandKeyword(const AKeyword: string): TArray<string>;
@@ -166,26 +173,6 @@ procedure TStandaloneAnonymousBlock.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItem(_Block);
   APrinter.NextLineIf(_Slash);
-end;
-
-{ SQLPlusParser }
-
-class function SQLPlusParser.Parse(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-begin
-  Result := TClear.Parse(AParent, ASource, AResult) or
-            TWhenever.Parse(AParent, ASource, AResult) or
-            TSet.Parse(AParent, ASource, AResult) or
-            TExit.Parse(AParent, ASource, AResult) or
-            TAt.Parse(AParent, ASource, AResult) or
-            TSpool.Parse(AParent, ASource, AResult) or
-            TExecute.Parse(AParent, ASource, AResult) or
-            TDefine.Parse(AParent, ASource, AResult) or
-            TConnect.Parse(AParent, ASource, AResult) or
-            TAccept.Parse(AParent, ASource, AResult) or
-            TSlash.Parse(AParent, ASource, AResult) or
-            THost.Parse(AParent, ASource, AResult) or
-            TVariable.Parse(AParent, ASource, AResult) or
-            TUndefine.Parse(AParent, ASource, AResult);
 end;
 
 { TConnect }
@@ -300,6 +287,29 @@ initialization
     'startup', 'store', 'timi[ng]', 'tti[tle]', 'undef[ine]', 'var[iable]',
     'whenever', 'xquery', 'create', 'alter', 'begin', 'call', 'select',
     'insert', 'update', 'delete', 'merge', 'declare']);
+  { Зарегистрируем конструкции SQL*Plus }
+  with SQLPlusParser do
+  begin
+    Add(TClear);
+    Add(TWhenever);
+    Add(TSet);
+    Add(TExit);
+    Add(TAt);
+    Add(TSpool);
+    Add(TExecute);
+    Add(TDefine);
+    Add(TConnect);
+    Add(TAccept);
+    Add(TSlash);
+    Add(THost);
+    Add(TVariable);
+    Add(TUndefine);
+  end;
+  { Добавим их в общеоракловый синтаксис }
+  OracleParser.Add(SQLPlusParser);
+
+finalization
+  FreeAndNil(SQLPlusParserInfo);
 
 end.
 

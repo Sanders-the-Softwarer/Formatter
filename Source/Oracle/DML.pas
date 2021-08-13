@@ -13,15 +13,9 @@ unit DML;
 interface
 
 uses Classes, SysUtils, Math, Tokens, Streams, Statements, Printer, Commons,
-  Expressions, Utils, Rulers;
+  Expressions, Rulers, Parser;
 
 type
-
-  { Парсер DML-команд }
-  DMLParser = class
-  public
-    class function Parse(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-  end;
 
   { Общий предок DML-операторов }
   TDML = class(TSemicolonStatement);
@@ -135,9 +129,22 @@ type
     function Aligned: TAlignMode; override;
   end;
 
+{ Парсер для DML }
+function DMLParser: TParserInfo;
+
 implementation
 
-uses Parser, Keywords, Select, Insert, Update, DML_Commons;
+uses Keywords, Select, Insert, Update, DML_Commons, PLSQL;
+
+var
+  DMLParserInfo: TParserInfo;
+
+{ Парсер для DML }
+function DMLParser: TParserInfo;
+begin
+  if not Assigned(DMLParserInfo) then DMLParserInfo := TParserInfo.Create;
+  Result := DMLParserInfo;
+end;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -584,7 +591,10 @@ end;
 procedure TDelete.InternalPrintSelf(APrinter: TPrinter);
 begin
   if Settings.AddFromToDelete and not Assigned(_From) then
+  begin
     _From := TEpithet.Create('from', -1, -1);
+    AddToFreeList(_From);
+  end;
   APrinter.PrintItems([_Delete, _NextLine,
                        _From,   _IndentNextLine,
                                 _Table, _UndentNextLine,
@@ -744,21 +754,6 @@ begin
   inherited;
 end;
 
-{ DMLParser }
-
-class function DMLParser.Parse(AParent: TStatement;
-  ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-begin
-  Result := TSelect.Parse(AParent, ASource, AResult) or
-            TInsert.Parse(AParent, ASource, AResult) or
-            TUpdate.Parse(AParent, ASource, AResult) or
-            TDelete.Parse(AParent, ASource, AResult) or
-             TMerge.Parse(AParent, ASource, AResult) or
-            TCommit.Parse(AParent, ASource, AResult) or
-            TRollback.Parse(AParent, ASource, AResult) or
-            TSavepoint.Parse(AParent, ASource, AResult);
-end;
-
 { TTrim }
 
 function TTrim.InternalParse: boolean;
@@ -807,4 +802,22 @@ initialization
     'merge', 'minus', 'on', 'order', 'returning', 'select', 'set', 'start',
     'union', 'update', 'using', 'values', 'where']);
   Keywords.RegisterKeywords(TIdentFields, ['of', 'on', 'or']);
+  { Зарегистрируем конструкции DML }
+  with DMLParser do
+  begin
+    Add(TSelect);
+    Add(TInsert);
+    Add(TUpdate);
+    Add(TDelete);
+    Add(TMerge);
+    Add(TCommit);
+    Add(TRollback);
+    Add(TSavepoint);
+  end;
+  { Включим DML в PLSQL - так проще, чем в нескольких местах парсить "dml или plsql" }
+  PLSQLParser.Add(DMLParser);
+
+finalization
+  FreeAndNil(DMLParserInfo);
+
 end.

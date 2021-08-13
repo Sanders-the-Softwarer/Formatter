@@ -25,7 +25,7 @@ unit Streams;
   символы, лексемы и синтаксические конструкции. Для их корректного освобождения
   принят следующий подход:
 
-      а) В цепочке потоков каждый уничтожает предыдущий
+      а) Потоки поддерживают автоуничтожение по счётчику ссылок
       б) Благодаря классу ObjectStream каждый поток запоминает созданные объекты
          и уничтожает их вместе с собой
       в) В тех случаях, когда поток должен передать дальше объект, созданный
@@ -40,11 +40,20 @@ uses SysUtils, System.Generics.Collections, Tokens, Windows, Printer;
 
 type
 
-  { Базовый класс потока предоставляет интерфейс из двух функций, Eof и Next }
+  { Базовый класс потока предоставляет интерфейс из двух функций, Eof и Next,
+    а также поддерживает автоуничтожение по счётчику ссылок }
   TBaseStream<T: class> = class
+  strict private
+    RefCount: integer;
+    FFreeFormatterCmds: boolean;
   public
     function Eof: boolean; virtual; abstract;
     function Next: T; virtual; abstract;
+  public
+    procedure AddRef;
+    procedure Release(var Ref);
+  public
+    property FreeFormatterCmds: boolean read FFreeFormatterCmds write FFreeFormatterCmds;
   end;
 
   { Класс владельца запоминает созданные объекты и уничтожает их вместе с собой }
@@ -256,12 +265,13 @@ end;
 
 constructor TNextStream<I, O>.Create(ASource: TBufferedStream<I>);
 begin
+  ASource.AddRef;
   FSource := ASource;
 end;
 
 destructor TNextStream<I, O>.Destroy;
 begin
-  FreeAndNil(FSource);
+  FSource.Release(FSource);
   inherited;
 end;
 
@@ -310,6 +320,25 @@ begin
         if Source.Next.Value <> #10 then Source.Restore;
       end;
     end;
+end;
+
+{ TBaseStream<T> }
+
+procedure TBaseStream<T>.AddRef;
+begin
+  Assert(Self <> nil);
+  Inc(RefCount);
+end;
+
+procedure TBaseStream<T>.Release(var Ref);
+begin
+  Assert(Self <> nil);
+  Assert(pointer(Ref) = Self);
+  Dec(RefCount);
+  if RefCount > 0 then exit;
+  if FreeFormatterCmds then Printer.FreeFormatterCmds;
+  pointer(Ref) := nil;
+  Free;
 end;
 
 end.

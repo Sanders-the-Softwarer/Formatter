@@ -127,8 +127,6 @@ const
 
 implementation
 
-uses Utils, SQLPlus, PLSQL;
-
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //                  Принтер для печати форматированного текста                //
@@ -202,13 +200,9 @@ end;
 { Универсальный метод вывода на принтер поддерживаемых объектов }
 procedure TFormatterPrinter.PrintItem(AItem: TObject);
 begin
-  if AItem is TFormatterCmd then
-    begin
-      TFormatterCmd(AItem).PrintSelf(Self);
-      FreeAndNil(AItem);
-    end
-  else
-    inherited;
+  if AItem is TFormatterCmd
+    then TFormatterCmd(AItem).PrintSelf(Self)
+    else inherited;
 end;
 
 { Функция установки стартового отступа }
@@ -315,7 +309,8 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     IsComment, LineComment, SpecComment, FakeToken, EmptyToken, OriginalFormat: boolean;
     EOLLimit, ActualShift, Fix: integer;
   begin
-    if HasActiveRulers then Rulers.Token := AToken;
+    if HasActiveRulers then
+      Rulers.Token := AToken;
     { Определим статус комментариев }
     IsComment := AToken is TComment;
     LineComment := IsComment and AComment.LineComment;
@@ -491,6 +486,9 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     { Если это команда завершения исходного форматирования, сменим режим после печати }
     if IsComment and Value.StartsWith(C_UNFORMAT_STOP) then
       Dec(OriginalFormatCount);
+    { Сбросим теряющий валидность указатель, без этого падает на строчке DraftPrinter.MeasureRuler }
+    if HasActiveRulers then
+      Rulers.Token := nil;
   end;
 
 begin

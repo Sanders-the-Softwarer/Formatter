@@ -40,17 +40,37 @@ uses Windows, System.SysUtils, Streams, Tokens, Statements, Printer,
   System.Generics.Collections;
 
 type
+
+  { Информация для синтаксического анализатора }
+  TParserInfo = class
+  strict protected
+    Statements: TList<TStatementClass>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+  public
+    { Добавление информации о разбираемой конструкции }
+    procedure Add(AStatement: TStatementClass); overload;
+    { Добавление информации из подчинённого списка }
+    procedure Add(AInfo: TParserInfo); overload;
+    { Возврат списка "кандидатов" для разбора очередной синтаксической конструкции }
+    function Candidates: TList<TStatementClass>;
+  end;
+
   { Синтаксический анализатор }
   TParser = class(TNextStream<TToken, TStatement>)
   strict private
     Settings: TFormatSettings;
   strict protected
+    ParserInfo: TParserInfo;
+    { Разбор входного потока имеющимися синтаксическими конструкциями }
+    function Parse(AParent: TStatement; out AResult: TStatement): boolean; overload;
+    { Вычисление очередного выходного символа }
     function InternalNext: TStatement; override;
   public
-    constructor Create(AStream: TBufferedStream<TToken>; ASettings: TFormatSettings);
-    class function ParseDeclaration(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-    class function ParseType(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-    class function ParseAny(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+    constructor Create(AStream: TBufferedStream<TToken>; ASettings: TFormatSettings; AParserInfo: TParserInfo);
+    { Разбор одной конструкции из указанного потока }
+    class function Parse(AStream: TBufferedStream<TToken>; ASettings: TFormatSettings; AParserInfo: TParserInfo; AParent: TStatement; out AResult: TStatement): boolean; overload;
   end;
 
   { Конструкция для группировки элементов одного типа }
@@ -73,9 +93,13 @@ type
     function InternalNext: TStatement; override;
   end;
 
-implementation
+const
+  { Приоритеты синтаксических конструкций при разборе }
+  MIN_PRIORITY = -MaxInt;
+  MAX_PRIORITY = MaxInt;
+  STD_PRIORITY = 0;
 
-uses DDL, DML, PLSQL, SQLPlus, Expressions, Select, Label_;
+implementation
 
 type
   { "Пустое" выражение }
@@ -86,61 +110,45 @@ type
 
 { TParser }
 
-constructor TParser.Create(AStream: TBufferedStream<TToken>; ASettings: TFormatSettings);
+constructor TParser.Create(AStream: TBufferedStream<TToken>; ASettings: TFormatSettings; AParserInfo: TParserInfo);
 begin
+  Assert(AParserInfo <> nil);
   inherited Create(AStream);
   Settings := ASettings;
+  ParserInfo := AParserInfo;
 end;
 
-{ Разбор деклараций (переменных, процедур, типов, курсоров, прагм и т. п. }
-class function TParser.ParseDeclaration(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+{ Разбор одной конструкции из указанного потока }
+class function TParser.Parse(AStream: TBufferedStream<TToken>; ASettings: TFormatSettings; AParserInfo: TParserInfo; AParent: TStatement; out AResult: TStatement): boolean;
 begin
-  Result := TType.Parse(AParent, ASource, AResult) or
-            TCursor.Parse(AParent, ASource, AResult) or
-            TPragma.Parse(AParent, ASource, AResult) or
-            TSubroutineForwardDeclaration.Parse(AParent, ASource, AResult) or
-            TSubroutine.Parse(AParent, ASource, AResult) or
-            TExceptionDeclaration.Parse(AParent, ASource, AResult) or
-            TVariableDeclarations.Parse(AParent, ASource, AResult);
+  with TParser.Create(AStream, ASettings, AParserInfo) do
+  try
+    Result := Parse(AParent, AResult);
+  finally
+    Free;
+  end;
 end;
 
-{ Разбор типов, описываемых предложением type }
-class function TParser.ParseType(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
+{ Разбор входного потока имеющимися синтаксическими конструкциями }
+function TParser.Parse(AParent: TStatement; out AResult: TStatement): boolean;
+var i: integer;
 begin
-  Result := TRecord.Parse(AParent, ASource, AResult) or
-            TObject_.Parse(AParent, ASource, AResult) or
-            TPLSQLTable.Parse(AParent, ASource, AResult) or
-            TRefCursor.Parse(AParent, ASource, AResult);
+  Assert(ParserInfo <> nil);
+  Result := true;
+  with ParserInfo.Candidates do
+    for i := 0 to Count - 1 do
+      if Items[i].Parse(AParent, Self.Source, AResult) then exit;
+  Result := false;
 end;
 
-{ Разбор произвольной заранее неизвестной конструкции }
-class function TParser.ParseAny(AParent: TStatement; ASource: TBufferedStream<TToken>; out AResult: TStatement): boolean;
-begin
-  Result := DDLParser.Parse(AParent, ASource, AResult) or
-            DMLParser.Parse(AParent, ASource, AResult) or
-            TStandaloneAnonymousBlock.Parse(AParent, ASource, AResult) { нужно до PLSQL } or
-            PLSQLParser.Parse(AParent, ASource, AResult) or
-            SQLPlusParser.Parse(AParent, ASource, AResult) or
-            ParseDeclaration(AParent, ASource, AResult) { должно быть в конце из-за variable declaration } or
-            ParseType(AParent, ASource, AResult) or
-            TExpression.Parse(AParent, ASource, AResult);
-end;
-
-{ Вычисление очередного выходного символа сводится к вызову ParseAny }
+{ Вычисление очередного выходного символа }
 function TParser.InternalNext: TStatement;
-var
-  MarkBefore, MarkAfter: TMark;
+var MarkBefore: TMark;
 begin
   MarkBefore := Source.Mark;
-  if ParseAny(nil, Source, Result) or
-     TUnexpectedToken.Parse(nil, Source, Result) then
-    begin
-      MarkAfter := Source.Mark;
-      if MarkBefore = MarkAfter then raise Exception.Create('There is no progress in parsing input stream, parser aborted');
-      Result.Settings := Self.Settings;
-    end
-  else
-    Result := TEOFStatement.Create(nil, Source);
+  if not Parse(nil, Result) then exit(TEOFStatement.Create(nil, Source));
+  Result.Settings := Self.Settings;
+  if MarkBefore = Source.Mark then raise Exception.Create('There is no progress in parsing input stream, parser aborted');
 end;
 
 { TEOFStatement }
@@ -217,6 +225,41 @@ end;
 function TSameTypeList.Transparent: boolean;
 begin
   Result := true;
+end;
+
+{ TParserInfo }
+
+constructor TParserInfo.Create;
+begin
+  inherited;
+  Statements := TList<TStatementClass>.Create;
+end;
+
+destructor TParserInfo.Destroy;
+begin
+  FreeAndNil(Statements);
+  inherited;
+end;
+
+{ Добавление информации о разбираемой конструкции }
+procedure TParserInfo.Add(AStatement: TStatementClass);
+begin
+  Assert(AStatement <> nil);
+  with Statements do
+    if not Contains(AStatement) then Add(AStatement);
+end;
+
+{ Добавление информации из подчинённого списка }
+procedure TParserInfo.Add(AInfo: TParserInfo);
+begin
+  Assert(AInfo <> nil);
+  Statements.AddRange(AInfo.Statements);
+end;
+
+{ Возврат списка "кандидатов" для разбора очередной синтаксической конструкции }
+function TParserInfo.Candidates: TList<TStatementClass>;
+begin
+  Result := Statements;
 end;
 
 end.
