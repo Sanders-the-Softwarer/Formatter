@@ -25,16 +25,12 @@ unit fMain;
 
 interface
 
-{$IFNDEF DEBUG}
-  {$MESSAGE Fatal 'DebugTool.exe нужно компилировать в режиме Debug' }
-{$ENDIF}
-
 uses
   Tokens { должен идти до StdCtrls, чтобы TLabel не мешала загрузке формы },
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, Printer,
-  Vcl.ExtCtrls, Vcl.Samples.Spin, Controller, Streams, Statements, Tokenizer,
-  cxGraphics, cxLookAndFeels, cxLookAndFeelPainters, Vcl.Menus, cxButtons;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.Samples.Spin,
+  Printer, Controller, Streams, Statements, Tokenizer, frSettings;
 
 type
   TFormMain = class(TForm)
@@ -53,52 +49,16 @@ type
     pgSrc: TPageControl;
     tabSrc: TTabSheet;
     edSrc: TMemo;
-    tabSettings: TTabSheet;
     spVert: TSplitter;
-    edDeclarationSingleLineParamLimit: TSpinEdit;
-    Label1: TLabel;
-    Label2: TLabel;
-    edNamedArgumentSingleLineParamLimit: TSpinEdit;
-    GroupBox1: TGroupBox;
-    checkAlignFields: TCheckBox;
-    checkAlignVariables: TCheckBox;
-    checkAlignSpecialComments: TCheckBox;
-    GroupBox3: TGroupBox;
-    checkReplaceDefault: TCheckBox;
-    Label3: TLabel;
-    edMatchParamLimit: TSpinEdit;
     tmMemo: TTimer;
-    checkAlignCommands: TCheckBox;
-    checkReplaceAsIs: TCheckBox;
-    edPreferredExpressionLength: TSpinEdit;
-    Label4: TLabel;
-    checkAlignExpressions: TCheckBox;
-    checkAlignColumns: TCheckBox;
-    GroupBox2: TGroupBox;
-    checkAddInAccessSpecificator: TCheckBox;
-    Label5: TLabel;
-    Label6: TLabel;
-    edPositionalArgumentSingleLineParamLimit: TSpinEdit;
     tabCompareAutoTestResult: TTabSheet;
     edCompareAutoTestResult: TMemo;
-    GroupBox4: TGroupBox;
-    checkChangeCommentType: TCheckBox;
-    checkUseSpace: TCheckBox;
-    GroupBox5: TGroupBox;
-    checkRemovePasswords: TCheckBox;
-    checkLongOperands: TCheckBox;
     checkShowTransparent: TCheckBox;
     edDebugInfo: TMemo;
     spDebugInfo: TSplitter;
     checkShowDebugInfo: TCheckBox;
-    checkAlignRightComments: TCheckBox;
-    checkCommentCorrectSpaces: TCheckBox;
-    checkAlignFrom: TCheckBox;
-    GroupBox6: TGroupBox;
-    checkShiftPackageHeader: TCheckBox;
-    checkShiftPackageBody: TCheckBox;
-    btnSaveToFile: TcxButton;
-    OpenDialog: TOpenDialog;
+    checkShowSettings: TCheckBox;
+    frSettings: TFrameSettings;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -112,7 +72,7 @@ type
     procedure edCompareAutoTestResultChange(Sender: TObject);
     procedure checkShowTransparentClick(Sender: TObject);
     procedure checkShowDebugInfoClick(Sender: TObject);
-    procedure btnSaveToFileClick(Sender: TObject);
+    procedure checkShowSettingsClick(Sender: TObject);
   private
     TokenizerPrinter, SyntaxTreePrinter, ResultPrinter, AlarmTokenPrinter, AlarmStatementPrinter: TPrinter;
     MinTokenStream, AdvTokenStream: TBufferedStream<TToken>;
@@ -121,7 +81,6 @@ type
     PrevSrcCaret, PrevResultCaret: integer;
     IntoSync, IntoUpdateSettings: boolean;
     function CorrectCRLF: boolean;
-    procedure UpdateSettings;
     procedure UpdateData;
     procedure SyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
     procedure CoordsToCaret(Memo: TMemo; const Line, Col: integer; out Pos: integer);
@@ -153,40 +112,12 @@ begin
   if Result then edSrc.Text := Dest;
 end;
 
-{ Обновление настроек из интерфейса }
-procedure TFormMain.UpdateSettings;
-begin
-  Settings.DeclarationSingleLineParamLimit := edDeclarationSingleLineParamLimit.Value;
-  Settings.NamedArgumentSingleLineParamLimit := edNamedArgumentSingleLineParamLimit.Value;
-  Settings.PositionalArgumentSingleLineParamLimit := edPositionalArgumentSingleLineParamLimit.Value;
-  Settings.MatchParamLimit                 := edMatchParamLimit.Value;
-  Settings.AlignVariables                  := checkAlignVariables.Checked;
-  Settings.AlignFields                     := checkAlignFields.Checked;
-  Settings.AlignColumns                    := checkAlignColumns.Checked;
-  Settings.AlignExpressions                := checkAlignExpressions.Checked;
-  Settings.AlignSpecialComments            := checkAlignSpecialComments.Checked;
-  Settings.AlignCommands                   := checkAlignCommands.Checked;
-  Settings.AlignUseSpace                   := checkUseSpace.Checked;
-  Settings.AlignRightComments              := checkAlignRightComments.Checked;
-  Settings.AlignFrom                       := checkAlignFrom.Checked;
-  Settings.ReplaceDefault                  := checkReplaceDefault.Checked;
-  Settings.ReplaceAsIs                     := checkReplaceAsIs.Checked;
-  Settings.AddInAccessSpecificator         := checkAddInAccessSpecificator.Checked;
-  Settings.ChangeCommentType               := checkChangeCommentType.Checked;
-  Settings.CorrectCommentSpaces            := checkCommentCorrectSpaces.Checked;
-  Settings.RemoveConnectPasswords          := checkRemovePasswords.Checked;
-  Settings.BeautifyLongOperands            := checkLongOperands.Checked;
-  Settings.ShiftPackageHeader              := checkShiftPackageHeader.Checked;
-  Settings.ShiftPackageBody                := checkShiftPackageBody.Checked;
-  Settings.PreferredExpressionLength       := edPreferredExpressionLength.Value;
-end;
-
 { Подготовка и распечатка форматированного текста }
 procedure TFormMain.UpdateData;
 begin
   FreeAndNil(StatementStream);
   { Скопируем настройки }
-  if not IntoUpdateSettings then UpdateSettings;
+  if not IntoUpdateSettings then frSettings.UpdateSettings;
   { Создадим потоки }
   MinTokenStream  := Controller.MakeMinimalTokenStream(edSrc.Text);
   AdvTokenStream  := Controller.MakeAdvancedTokenStream(MinTokenStream);
@@ -262,33 +193,11 @@ begin
   AlarmTokenPrinter := GUIPrinters.CreateAlarmTokenPrinter(edAlarmToken, tabAlarmToken);
   AlarmStatementPrinter := GUIPrinters.CreateAlarmStatementPrinter(edAlarmStatement, tabAlarmStatement);
   Printer.SyncNotification := Self.SyncNotification;
-  try
-    IntoUpdateSettings := true;
-    edDeclarationSingleLineParamLimit.Value := Settings.DeclarationSingleLineParamLimit;
-    edNamedArgumentSingleLineParamLimit.Value := Settings.NamedArgumentSingleLineParamLimit;
-    edPositionalArgumentSingleLineParamLimit.Value := Settings.PositionalArgumentSingleLineParamLimit;
-    edMatchParamLimit.Value              := Settings.MatchParamLimit;
-    edPreferredExpressionLength.Value    := Settings.PreferredExpressionLength;
-    checkAlignFields.Checked             := Settings.AlignFields;
-    checkAlignColumns.Checked            := Settings.AlignColumns;
-    checkAlignVariables.Checked          := Settings.AlignVariables;
-    checkAlignSpecialComments.Checked    := Settings.AlignSpecialComments;
-    checkAlignCommands.Checked           := Settings.AlignCommands;
-    checkAlignExpressions.Checked        := Settings.AlignExpressions;
-    checkUseSpace.Checked                := Settings.AlignUseSpace;
-    checkAlignRightComments.Checked      := Settings.AlignRightComments;
-    checkAlignFrom.Checked               := Settings.AlignFrom;
-    checkReplaceDefault.Checked          := Settings.ReplaceDefault;
-    checkReplaceAsIs.Checked             := Settings.ReplaceAsIs;
-    checkAddInAccessSpecificator.Checked := Settings.AddInAccessSpecificator;
-    checkChangeCommentType.Checked       := Settings.ChangeCommentType;
-    checkCommentCorrectSpaces.Checked    := Settings.CorrectCommentSpaces;
-    checkRemovePasswords.Checked         := Settings.RemoveConnectPasswords;
-    checkLongOperands.Checked            := Settings.BeautifyLongOperands;
-    checkShiftPackageHeader.Checked      := Settings.ShiftPackageHeader;
-    checkShiftPackageBody.Checked        := Settings.ShiftPackageBody;
-  finally
-    IntoUpdateSettings := false;
+  with frSettings do
+  begin
+    Settings := Self.Settings;
+    UpdateEdits;
+    OnChanged := Self.UpdateRequired;
   end;
 end;
 
@@ -406,6 +315,12 @@ begin
   spDebugInfo.Visible := checkShowDebugInfo.Checked;
 end;
 
+{ Показ панели настроек }
+procedure TFormMain.checkShowSettingsClick(Sender: TObject);
+begin
+  frSettings.Visible := checkShowSettings.Checked;
+end;
+
 { Вывод отладочной информации по лексеме }
 procedure TFormMain.UpdateDebugInfo(AToken: TToken);
 begin
@@ -449,21 +364,6 @@ begin
     edCompareAutoTestResult.Text := Text;
   finally
     Free;
-  end;
-end;
-
-{ Сохранение настроек в файл }
-procedure TFormMain.btnSaveToFileClick(Sender: TObject);
-var S: TStringList;
-begin
-  UpdateSettings;
-  if not OpenDialog.Execute then exit;
-  S := TStringList.Create(dupIgnore, true, false);
-  try
-    Settings.Save(S);
-    S.SaveToFile(OpenDialog.FileName);
-  finally
-    FreeAndNil(S);
   end;
 end;
 

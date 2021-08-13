@@ -12,13 +12,15 @@ unit PLSQLDev_Formatter;
 
 interface
 
-uses SysUtils, Classes, Windows, Messages;
+uses SysUtils, Classes, Windows, Messages, Printer;
 
 type
   TPLSQLDevPlugIn = class
   private
     FPluginID: integer;
-    HasIDE_GetEditorHandle, HasIDE_SetMenuVisible: boolean;
+    FSettings: TFormatSettings;
+    HasIDE_GetEditorHandle, HasIDE_SetMenuVisible, HasIDE_GetPrefAsString,
+      HasIDE_SetPrefAsString: boolean;
   protected
     { Управление доступностью пункта меню }
     procedure ShowMenuItem(AIndex: integer; AState: boolean);
@@ -27,6 +29,9 @@ type
   public
     { Возврат синглтона }
     class function GetInstance: TPLSQLDevPlugIn;
+    { Создание-уничтожение объекта }
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
   public
     { Сохранение идентификатора плагина }
     procedure Identify(APluginID: integer);
@@ -40,18 +45,27 @@ type
     procedure Deactivate;
     { Выполнение пункта меню }
     procedure MenuItemClick(AIndex: integer);
+    { Загрузка настроек форматирования }
+    procedure LoadSettings;
+    { Сохранение настроек форматирования }
+    procedure SaveSettings;
   public
     property PluginID: integer read FPluginID;
+    property Settings: TFormatSettings read FSettings;
   end;
 
 implementation
 
-uses PlugInIntf, RichEdit, Printer, Controller;
+uses PlugInIntf, RichEdit, Controller, fSettings;
 
 resourcestring
   SDescription      = 'PL/SQL Formatter by Sanders the Softwarer';
   SFormatSameWindow = 'SM Lab / Formatter';
   SFormatNewWindow  = 'SM Lab / Formatter (new window)';
+  SDivider          = 'SM Lab / -';
+  SSettings         = 'SM Lab / Settings';
+  SCannotLoad       = 'Плагин не полностью совместим с этой версией PL/SQL Developer. Считывание настроек невозможно';
+  SCannotSave       = 'Плагин не полностью совместим с этой версией PL/SQL Developer. Сохранение настроек невозможно';
 
 { TPLSQLDevPlugIn }
 
@@ -62,6 +76,20 @@ var
 class function TPLSQLDevPlugIn.GetInstance: TPLSQLDevPlugIn;
 begin
   Result := Instance;
+end;
+
+{ Создание-уничтожение объекта }
+
+procedure TPLSQLDevPlugIn.AfterConstruction;
+begin
+  inherited;
+  FSettings := TFormatSettings.Default;
+end;
+
+procedure TPLSQLDevPlugIn.BeforeDestruction;
+begin
+  FreeAndNil(FSettings);
+  inherited;
 end;
 
 { Сохранение идентификатора плагина }
@@ -83,6 +111,8 @@ begin
   AItems.Clear;
   AItems.Add(SFormatSameWindow);
   AItems.Add(SFormatNewWindow);
+  AItems.Add(SDivider);
+  AItems.Add(SSettings);
 end;
 
 { Активация плагина }
@@ -91,9 +121,13 @@ begin
   { Определим имеющиеся функции }
   HasIDE_GetEditorHandle := Assigned(IDE_GetEditorHandle);
   HasIDE_SetMenuVisible  := Assigned(IDE_SetMenuVisible);
+  HasIDE_GetPrefAsString := Assigned(IDE_GetPrefAsString);
+  HasIDE_SetPrefAsString := Assigned(IDE_SetPrefAsString);
   { Если можем работать с редактором - можем и форматировать }
   ShowMenuItem(1, HasIDE_GetEditorHandle);
   ShowMenuItem(2, HasIDE_GetEditorHandle);
+  { Загрузим настройки форматирования }
+  LoadSettings;
 end;
 
 { Деактивация плагина }
@@ -106,7 +140,56 @@ end;
 { Выполнение пункта меню }
 procedure TPLSQLDevPlugIn.MenuItemClick(AIndex: integer);
 begin
-  FormatText(AIndex = 2);
+  case AIndex of
+    1, 2: FormatText(AIndex = 2);
+    4: TFormSettings.ShowSettings;
+  end;
+end;
+
+{ Загрузка настроек форматирования }
+procedure TPLSQLDevPlugIn.LoadSettings;
+var
+  S: TStringList;
+  i: integer;
+  Name, Value, NewValue: AnsiString;
+begin
+  if not HasIDE_GetPrefAsString then raise Exception.Create(SCannotLoad);
+  S := TStringList.Create;
+  try
+    Settings.Save(S);
+    for i := 0 to S.Count - 1 do
+    begin
+      Name := AnsiString(S.Names[i]);
+      Value := AnsiString(S.ValueFromIndex[i]);
+      NewValue := IDE_GetPrefAsString(PluginID, nil, @Name[1], @Value[1]);
+      S.ValueFromIndex[i] := string(NewValue);
+    end;
+    Settings.Load(S);
+  finally
+    FreeAndNil(S);
+  end;
+end;
+
+{ Сохранение настроек форматирования }
+procedure TPLSQLDevPlugIn.SaveSettings;
+var
+  S: TStringList;
+  i: integer;
+  Name, Value: AnsiString;
+begin
+  if not HasIDE_SetPrefAsString then raise Exception.Create(SCannotSave);
+  S := TStringList.Create;
+  try
+    Settings.Save(S);
+    for i := 0 to S.Count - 1 do
+    begin
+      Name := AnsiString(S.Names[i]);
+      Value := AnsiString(S.ValueFromIndex[i]);
+      IDE_SetPrefAsString(PluginID, nil, @Name[1], @Value[1]);
+    end;
+  finally
+    FreeAndNil(S);
+  end;
 end;
 
 { Управление доступностью пункта меню }
@@ -124,7 +207,6 @@ var
   Range: TCharRange;
   Line, Col, ColShift, i: integer;
   Input, Output, Postfix: string;
-  Settings: TFormatSettings;
 begin
   { Получим хандл окна редактирования }
   Assert(HasIDE_GetEditorHandle);
@@ -155,14 +237,9 @@ begin
     then Postfix := #13 + Input.Substring(i)
     else Postfix := Input.Substring(i);
   { Отформатируем текст }
-  try
-    Settings := TFormatSettings.Default;
-    Settings.StartIndent := Col + ColShift;
-    Controller.MakeFormatted(Input, Settings, OracleParser, Output);
-    if Output = '' then exit;
-  finally
-    FreeAndNil(Settings);
-  end;
+  Settings.StartIndent := Col + ColShift;
+  Controller.MakeFormatted(Input, Settings, OracleParser, Output);
+  if Output = '' then exit;
   { Если сказано сделать новое окно, вернём туда результат }
   if ANewWindow then
   begin

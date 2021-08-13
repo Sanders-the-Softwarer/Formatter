@@ -50,16 +50,6 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Анонимный блок в SQL*Plus }
-  TStandaloneAnonymousBlock = class(TStatement)
-  strict private
-    _Block: TStatement;
-    _Slash: TTerminal;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
   { Команда connect }
   TConnect = class(TSQLPlusStatement)
   strict private
@@ -76,7 +66,7 @@ function SQLPlusParser: TParserInfo;
 
 implementation
 
-uses Expressions, Commons, PLSQL, Keywords, Set_SQLPlus, Exit_SQLPlus, Clear,
+uses Expressions, Commons, Keywords, Set_SQLPlus, Exit_SQLPlus, Clear,
   Define, Execute, At, Slash, Accept, Host, Variable, Undefine, Controller;
 
 var
@@ -159,20 +149,6 @@ procedure TSpool.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Spool, _FileName]);
   inherited;
-end;
-
-{ TStandaloneAnonymousBlock }
-
-function TStandaloneAnonymousBlock.InternalParse: boolean;
-begin
-  Result := TAnonymousBlock.Parse(Self, Source, _Block);
-  if Result then _Slash := Terminal('/');
-end;
-
-procedure TStandaloneAnonymousBlock.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItem(_Block);
-  APrinter.NextLineIf(_Slash);
 end;
 
 { TConnect }
@@ -304,7 +280,6 @@ initialization
     Add(THost);
     Add(TVariable);
     Add(TUndefine);
-    Add(TStandaloneAnonymousBlock);
   end;
   { Добавим их в общеоракловый синтаксис }
   OracleParser.Add(SQLPlusParser);

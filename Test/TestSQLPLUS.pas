@@ -176,6 +176,7 @@ end;
 
 procedure _Команды_SQLPLUS.Prompt;
 begin
+  PostponeTill(2021, 8, 15);
 end;
 
 procedure _Команды_SQLPLUS.Recover;
@@ -185,6 +186,7 @@ end;
 
 procedure _Команды_SQLPLUS.Remark;
 begin
+  PostponeTill(2021, 8, 15);
 end;
 
 procedure _Команды_SQLPLUS.RepFooter;
@@ -256,6 +258,7 @@ end;
 
 procedure _Команды_SQLPLUS.Show;
 begin
+  PostponeTill(2021, 8, 15);
 end;
 
 procedure _Команды_SQLPLUS.Shutdown;
@@ -269,10 +272,12 @@ end;
 
 procedure _Команды_SQLPLUS.Spool;
 begin
+  PostponeTill(2021, 8, 15);
 end;
 
 procedure _Команды_SQLPLUS.Start;
 begin
+  PostponeTill(2021, 8, 15);
 end;
 
 procedure _Команды_SQLPLUS.Startup;

@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{6C0234D6-50E4-454F-9550-DE5DE3A473BC}</ProjectGuid>
         <ProjectVersion>18.2</ProjectVersion>
-        <FrameworkType>None</FrameworkType>
+        <FrameworkType>VCL</FrameworkType>
         <MainSource>PLSQLDev_Plugin.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
@@ -52,13 +52,14 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
+        <DCC_UnitSearchPath>X:\Formatter\Dcu\$(Platform)\$(Config);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <Manifest_File>None</Manifest_File>
         <DCC_ExeOutput>X:\Formatter\Exe</DCC_ExeOutput>
         <DCC_DcpOutput>X:\Formatter\Dcu\$(Platform)\$(Config)</DCC_DcpOutput>
         <SanitizedProjectName>PLSQLDev_Plugin</SanitizedProjectName>
         <GenDll>true</GenDll>
         <DCC_BplOutput>X:\Formatter\Dcu\$(Platform)\$(Config)</DCC_BplOutput>
-        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_Locale>1049</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DCC_DcuOutput>X:\Formatter\Dcu\$(Platform)\$(Config)</DCC_DcuOutput>
@@ -120,6 +121,15 @@
         </DelphiCompile>
         <DCCReference Include="Source\PLSQL_Developer\PlugInIntf.pas"/>
         <DCCReference Include="Source\PLSQL_Developer\PLSQLDev_Formatter.pas"/>
+        <DCCReference Include="Source\GUI\fSettings.pas">
+            <Form>FormSettings</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="Source\GUI\frSettings.pas">
+            <Form>FrameSettings</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

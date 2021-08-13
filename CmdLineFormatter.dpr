@@ -9,6 +9,7 @@ uses
   SysUtils,
   Printer,
   Controller,
+  OracleCore,
   GpCommandLineParser in 'Source\Core\GpCommandLineParser.pas';
 
 type

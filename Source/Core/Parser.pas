@@ -286,6 +286,7 @@ end;
 function TStatementClassComparer.Compare(const Left, Right: TStatementClass): integer;
 begin
   Result := Right.Priority - Left.Priority;
+  if Result = 0 then Result := CompareStr(Left.ClassName, Right.ClassName); { сделаем порядок однозначным, чтобы не возникало плавающих ошибок }
 end;
 
 initialization

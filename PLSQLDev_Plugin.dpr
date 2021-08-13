@@ -6,8 +6,11 @@ uses
   Windows,
   SysUtils,
   Classes,
+  OracleCore,
   PlugInIntf in 'Source\PLSQL_Developer\PlugInIntf.pas',
-  PLSQLDev_Formatter in 'Source\PLSQL_Developer\PLSQLDev_Formatter.pas';
+  PLSQLDev_Formatter in 'Source\PLSQL_Developer\PLSQLDev_Formatter.pas',
+  fSettings in 'Source\GUI\fSettings.pas' {FormSettings},
+  frSettings in 'Source\GUI\frSettings.pas' {FrameSettings: TFrame};
 
 var
   KeepDescription, KeepItem: AnsiString;
@@ -58,31 +61,17 @@ begin
   TPLSQLDevPlugIn.GetInstance.Deactivate;
 end;
 
-(*
-var SelectedText, FullText, Text, Formatted, Result: string;
+{ Строка описания плагина }
+function About: PAnsiChar;
 begin
-  { Найдём обрабатываемый текст }
-  SelectedText := String(IDE_GetSelectedText);
-  FullText := String(IDE_GetText);
-  if SelectedText <> ''
-    then Text := SelectedText
-    else Text := FullText;
-  { Отформатируем его }
-  Controller.MakeFormatted(Text, nil, Formatted);
-  if Formatted = '' then exit;
-  { И выдадим обратно в PL/SQL Developer }
-  case Index of
-    1: begin
-         Result := StringReplace(FullText, Text, Formatted, [rfReplaceAll]);
-         TextForOutput := AnsiString(Result);
-         IDE_SetText(PAnsiChar(TextForOutput));
-       end;
-    2: begin
-         TextForOutput := AnsiString(Formatted);
-         IDE_CreateWindow(wtSQL, PAnsiChar(TextForOutput), false);
-       end;
-  end;
-end; *)
+  Result := @KeepDescription[1];
+end;
+
+{ Действия при вызове конфигурации }
+procedure Configure; cdecl;
+begin
+  TFormSettings.ShowSettings;
+end;
 
 exports
   IdentifyPlugIn,
@@ -90,7 +79,9 @@ exports
   OnMenuClick,
   RegisterCallback,
   OnActivate,
-  OnDeactivate;
+  OnDeactivate,
+  Configure,
+  About;
 
 end.
 

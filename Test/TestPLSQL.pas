@@ -339,7 +339,6 @@ end;
 
 procedure _Выравнивание.Конкатенаций_По_Одинаковым_Символам;
 begin
-  PostponeTill(2021, 8, 1);
   Settings.AlignExpressions := true;
   Settings.PreferredExpressionLength := 80;
 end;
@@ -371,7 +370,6 @@ end;
 
 procedure _Выравнивание.Условий_В_Where;
 begin
-  PostponeTill(2021, 8, 1);
   Settings.AlignExpressions := true;
 end;
 

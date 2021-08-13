@@ -6,7 +6,8 @@ uses
   Vcl.Forms,
   OracleCore,
   fMain in 'Source\GUI\fMain.pas' {FormMain},
-  GUIPrinters in 'Source\GUI\GUIPrinters.pas';
+  GUIPrinters in 'Source\GUI\GUIPrinters.pas',
+  frSettings in 'Source\GUI\frSettings.pas' {FrameSettings: TFrame};
 
 {$R *.res}
 

@@ -39,6 +39,7 @@ type
   strict private
     _Header, _Declarations, _Operators, _Handlers: TStatement;
     _Begin, _Exception, _End: TEpithet;
+    _Slash: TTerminal;
     _AfterEnd: TObject;
   strict protected
     property Header: TStatement read _Header;
@@ -624,6 +625,8 @@ begin
   _End := Keyword('end');
   _AfterEnd := ParseAfterEnd;
   inherited;
+  { Завершающий слеш }
+  _Slash := Terminal('/');
 end;
 
 procedure TProgramBlock.InternalPrintSelf(APrinter: TPrinter);
@@ -645,6 +648,7 @@ begin
                                    _Handlers,       _UndentNextLine,
                        _End,       _AfterEnd,       _U1]);
   inherited;
+  APrinter.NextLineIf(_Slash);
 end;
 
 function TProgramBlock.IndentBody: boolean;
