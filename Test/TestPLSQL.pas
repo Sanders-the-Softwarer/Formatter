@@ -783,7 +783,6 @@ end;
 
 procedure _Контрольные_Примеры.cm_campaign_edit;
 begin
-  PostponeTill(2021, 8, 20);
 end;
 
 procedure _Контрольные_Примеры.fm_cc_user;

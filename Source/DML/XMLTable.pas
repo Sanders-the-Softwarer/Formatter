@@ -18,8 +18,7 @@ type
   { Специальный синтаксис функции xmltable }
   TXmlTable = class(TSpecialFunction)
   strict private
-    _Namespace, _Passing, _Returning, _Columns: TStatement;
-    _XQuery: TLiteral;
+    _Namespace, _Passing, _Returning, _Columns, _XQuery: TStatement;
     _Comma: TTerminal;
   strict protected
     function ParseFunction: TEpithet; override;
@@ -118,7 +117,7 @@ begin
   Result := true;
   TXmlNamespaces.Parse(Self, Source, _Namespace);
   if Assigned(_Namespace) then _Comma := Terminal(',');
-  _XQuery := Literal;
+  TExpression.Parse(Self, Source, _XQuery);
   TPassing.Parse(Self, Source, _Passing);
   TReturning.Parse(Self, Source, _Returning);
   TColumns.Parse(Self, Source, _Columns);

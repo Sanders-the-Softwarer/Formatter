@@ -89,6 +89,7 @@ contains
   Trim in 'Source\DML\Trim.pas',
   Extract in 'Source\DML\Extract.pas',
   ListAgg in 'Source\DML\ListAgg.pas',
-  View in 'Source\DDL\View.pas';
+  View in 'Source\DDL\View.pas',
+  XMLSerialize in 'Source\DML\XMLSerialize.pas';
 
 end.

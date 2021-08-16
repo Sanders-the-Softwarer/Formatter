@@ -153,6 +153,7 @@
         <DCCReference Include="Source\DML\Extract.pas"/>
         <DCCReference Include="Source\DML\ListAgg.pas"/>
         <DCCReference Include="Source\DDL\View.pas"/>
+        <DCCReference Include="Source\DML\XMLSerialize.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
