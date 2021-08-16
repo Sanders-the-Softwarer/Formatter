@@ -29,7 +29,7 @@ type
 
 implementation
 
-uses Expressions, Select, DML_Commons;
+uses Expressions, Select, Commons;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //

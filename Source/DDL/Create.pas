@@ -32,7 +32,7 @@ type
 
 implementation
 
-uses DDL, PLSQL, Sequence, Trigger, Role, Synonym, DatabaseLink;
+uses DDL, PLSQL, Sequence, Trigger, Role, Synonym, DatabaseLink, View;
 
 { TCreate }
 
@@ -52,7 +52,7 @@ begin
   _Force := Keyword('force');
   { И, наконец, распознаем, что же мы создаём }
   if TTable.Parse(Self, Source, _What) or
-     TView.Parse(Self, Source, _What) or
+     TViewCreate.Parse(Self, Source, _What) or
      TIndex.Parse(Self, Source, _What) or
      TPackage.Parse(Self, Source, _What) or
      TSubroutine.Parse(Self, Source, _What) or

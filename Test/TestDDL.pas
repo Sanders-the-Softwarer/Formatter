@@ -44,6 +44,14 @@ type
     procedure Synonym;
   end;
 
+  { Тесты на alter }
+  _Alter = class(TFileBasedTest)
+  protected
+    function GetDir: string; override;
+  published
+    procedure View;
+  end;
+
   { Тесты на drop }
   _Drop = class(TFileBasedTest)
   protected
@@ -274,8 +282,20 @@ procedure _Команды_DDL.Set_Role;
 begin
 end;
 
+{ _Alter }
+
+function _Alter.GetDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды DDL\Alter';
+end;
+
+procedure _Alter.View;
+begin
+end;
+
 initialization
   RegisterTest(_Create.Suite);
+  RegisterTest(_Alter.Suite);
   RegisterTest(_Drop.Suite);
   RegisterTest(_Comment.Suite);
   RegisterTest(_Команды_DDL.Suite);

@@ -577,28 +577,22 @@ implementation
 uses Expressions, DML, DDL, Keywords, Select, Label_, Goto_, Exit_,
   OpenFor, ForAll, Assignment, DML_Commons, Controller;
 
-var
-  PLSQLParserInfo, TypeParserInfo, DeclarationParserInfo: TParserInfo;
-
 { Парсер для PL/SQL }
 function PLSQLParser: TParserInfo;
 begin
-  if not Assigned(PLSQLParserInfo) then PLSQLParserInfo := TParserInfo.Create;
-  Result := PLSQLParserInfo;
+  Result := TParserInfo.InstanceFor('Oracle.PLSQL');
 end;
 
 { Парсер для типов }
 function TypeParser: TParserInfo;
 begin
-  if not Assigned(TypeParserInfo) then TypeParserInfo := TParserInfo.Create;
-  Result := TypeParserInfo;
+  Result := TParserInfo.InstanceFor('Oracle.Types');
 end;
 
 { Парсер для деклараций }
 function DeclarationParser: TParserInfo;
 begin
-  if not Assigned(DeclarationParserInfo) then DeclarationParserInfo := TParserInfo.Create;
-  Result := DeclarationParserInfo;
+  Result := TParserInfo.InstanceFor('Oracle.PLSQL.Declarations');
 end;
 
 { TProgramBlock }
@@ -1325,7 +1319,7 @@ begin
   _Force := Keyword('force');
   _AsIs := Keyword(['as', 'is']);
   if Assigned(_AsIs) then _AsIs.CanReplace := true;
-  TParser.Parse(Source, Settings, TypeParserInfo, Self, _Body);
+  TParser.Parse(Source, Settings, TypeParser, Self, _Body);
   inherited;
 end;
 
@@ -1693,11 +1687,6 @@ initialization
   OracleParser.Add(PLSQLParser);
   OracleParser.Add(DeclarationParser);
   OracleParser.Add(TypeParser);
-
-finalization
-  FreeAndNil(PLSQLParserInfo);
-  FreeAndNil(TypeParserInfo);
-  FreeAndNil(DeclarationParserInfo);
 
 end.
 

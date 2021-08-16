@@ -4,7 +4,7 @@
 //                                                                            //
 //                       Синтаксические конструкции DML                       //
 //                                                                            //
-//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
+//               Copyright(c) 2019-2021 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -132,18 +132,33 @@ type
 { Парсер для DML }
 function DMLParser: TParserInfo;
 
+{ Парсер для функций с особым синтаксисом, употребляемых в select }
+function SelectSpecFunctionParser: TParserInfo;
+
+{ Парсер для функций с особым синтаксисом, употребляемых во from }
+function FromSpecFunctionParser: TParserInfo;
+
 implementation
 
-uses Keywords, Select, Insert, Update, DML_Commons, PLSQL;
-
-var
-  DMLParserInfo: TParserInfo;
+uses Keywords, Select, Insert, Update, DML_Commons, PLSQL, Trim, Extract,
+  ListAgg, XmlTable;
 
 { Парсер для DML }
 function DMLParser: TParserInfo;
 begin
-  if not Assigned(DMLParserInfo) then DMLParserInfo := TParserInfo.Create;
-  Result := DMLParserInfo;
+  Result := TParserInfo.InstanceFor('Oracle.DML');
+end;
+
+{ Парсер для функций с особым синтаксисом, употребляемых в select }
+function SelectSpecFunctionParser: TParserInfo;
+begin
+  Result := TParserInfo.InstanceFor('Oracle.Special-Functions.Select');
+end;
+
+{ Парсер для функций с особым синтаксисом, употребляемых во from }
+function FromSpecFunctionParser: TParserInfo;
+begin
+  Result := TParserInfo.InstanceFor('Oracle.Special-Functions.From');
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -224,45 +239,6 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Спецфункция listagg }
-  TListagg = class(TStatement)
-  strict private
-    _ListAgg: TEpithet;
-    _OpenBracket: TTerminal;
-    _Expression: TStatement;
-    _Comma: TTerminal;
-    _Delimiter: TStatement;
-    _On, _Overflow, _Truncate: TEpithet;
-    _OverflowTag: TLiteral;
-    _Without, _Count: TEpithet;
-    _CloseBracket: TTerminal;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Специальный синтаксис функции trim }
-  TTrim = class(TStatement)
-  strict private
-    _Trim, _Sides, _From: TEpithet;
-    _TrimCharacter, _TrimSource: TStatement;
-    _OpenBracket, _CloseBracket: TTerminal;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Специальный синтаксис функции extract }
-  TExtract = class(TStatement)
-  strict private
-    _Extract, _What, _From: TEpithet;
-    _Expr: TStatement;
-    _OpenBracket, _CloseBracket: TTerminal;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
   { Строка выражения order by }
   TOrderByItem = class(TStatement)
   strict private
@@ -290,10 +266,8 @@ begin
   Result := nil;
   if not Assigned(Result) then TAsterisk.Parse(Self, Source, Result);
   if not Assigned(Result) then TExists.Parse(Self, Source, Result);
-  if not Assigned(Result) then TTrim.Parse(Self, Source, Result);
-  if not Assigned(Result) then TExtract.Parse(Self, Source, Result);
   if not Assigned(Result) then TSelectFunctionCall.Parse(Self, Source, Result);
-  if not Assigned(Result) then TListagg.Parse(Self, Source, Result);
+  if not Assigned(Result) then TParser.Parse(Source, Settings, SelectSpecFunctionParser, Self, Result);
 end;
 
 { TSQLExpression }
@@ -420,32 +394,6 @@ end;
 procedure TSelectFunctionCall.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_FunctionCall, _IndentNextLine, _WithinGroup, _NextLine, _Keep, _NextLine, _Over, _Undent]);
-end;
-
-{ TListagg }
-
-function TListagg.InternalParse: boolean;
-begin
-  _ListAgg := Keyword('listagg');
-  if not Assigned(_ListAgg) then exit(false);
-  _OpenBracket := Terminal('(');
-  TExpression.Parse(Self, Source, _Expression);
-  _Comma := Terminal(',');
-  if Assigned(_Comma) then TExpression.Parse(Self, Source, _Delimiter);
-  _On := Keyword('on');
-  _Overflow := Keyword('overflow');
-  _Truncate := Keyword('truncate');
-  _OverflowTag := Literal;
-  _Without := Keyword('without');
-  _Count := Keyword('count');
-  _CloseBracket := Terminal(')');
-  Result := true;
-end;
-
-procedure TListagg.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_ListAgg, _OpenBracket, _Expression, _Comma, _Delimiter,
-    _On, _Overflow, _Truncate, _OverflowTag, _Without, _Count, _CloseBracket]);
 end;
 
 { TOrderByItem }
@@ -753,47 +701,6 @@ begin
   inherited;
 end;
 
-{ TTrim }
-
-function TTrim.InternalParse: boolean;
-begin
-  Result := false;
-  _Trim := Identifier;
-  if not Assigned(_Trim) or not SameText(_Trim.Value, 'trim') then exit;
-  _OpenBracket := Terminal('(');
-  _Sides := Keyword(['leading', 'trailing', 'both']);
-  TExpression.Parse(Self, Source, _TrimCharacter);
-  _From := Keyword('from');
-  TExpression.Parse(Self, Source, _TrimSource);
-  _CloseBracket := Terminal(')');
-  Result := Assigned(_Sides) or Assigned(_From);
-end;
-
-procedure TTrim.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Trim, _OpenBracket, _Sides, _TrimCharacter, _From, _TrimSource, _CloseBracket]);
-end;
-
-{ TExtract }
-
-function TExtract.InternalParse: boolean;
-begin
-  Result := false;
-  _Extract := Identifier;
-  if not Assigned(_Extract) or not SameText(_Extract.Value, 'extract') then exit;
-  _OpenBracket := Terminal('(');
-  _What := Identifier;
-  _From := Keyword('from');
-  TExpression.Parse(Self, Source, _Expr);
-  _CloseBracket := Terminal(')');
-  Result := Assigned(_From);
-end;
-
-procedure TExtract.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Extract, _OpenBracket, _What, _From, _Expr, _CloseBracket]);
-end;
-
 initialization
   Keywords.RegisterOrphan(TDML);
   Keywords.RegisterKeywords(TDML, ['comment', 'connect', 'create', 'delete',
@@ -815,8 +722,5 @@ initialization
   end;
   { Включим DML в PLSQL - так проще, чем в нескольких местах парсить "dml или plsql" }
   PLSQLParser.Add(DMLParser);
-
-finalization
-  FreeAndNil(DMLParserInfo);
 
 end.

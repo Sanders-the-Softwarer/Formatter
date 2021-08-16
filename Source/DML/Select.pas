@@ -900,6 +900,7 @@ end;
 function TQueryTableExpression.InternalParse: boolean;
 begin
   Result := TTableCollectionExpression.Parse(Self, Source, _Body) or
+            TParser.Parse(Source, Settings, FromSpecFunctionParser, Self, _Body) or
             TLateral.Parse(Self, Source, _Body) or
             TTableViewExpression.Parse(Self, Source, _Body);
 end;

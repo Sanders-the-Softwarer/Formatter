@@ -71,6 +71,7 @@ type
     procedure Спецкомментариев_В_Insert_Select;
     procedure Конкатенаций_По_Одинаковым_Символам;
     procedure Конкатенаций_С_Одинаковыми_Комбинациями_Символов;
+    procedure Полей_В_XmlTable;
   end;
 
   { Тесты на расстановку комментариев }
@@ -220,6 +221,7 @@ type
     procedure top_report_api;
     procedure top_ref_api;
     procedure top_dev_style_sop_link_api;
+    procedure cm_campaign_edit;
   end;
 
 implementation
@@ -360,6 +362,12 @@ end;
 
 procedure _Выравнивание.Полей_В_Update;
 begin
+  Settings.AlignFields := true;
+end;
+
+procedure _Выравнивание.Полей_В_XmlTable;
+begin
+  PostponeTill(2021, 8, 16);
   Settings.AlignFields := true;
 end;
 
@@ -771,6 +779,11 @@ end;
 procedure _Контрольные_Примеры.fm_pc_v_pcgi_link;
 begin
   PostponeTill(2021, 8, 15);
+end;
+
+procedure _Контрольные_Примеры.cm_campaign_edit;
+begin
+  PostponeTill(2021, 8, 20);
 end;
 
 procedure _Контрольные_Примеры.fm_cc_user;

@@ -61,7 +61,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-{ Парсер для SQLPlus }
+{ Парсер для SQL*Plus }
 function SQLPlusParser: TParserInfo;
 
 implementation
@@ -69,14 +69,10 @@ implementation
 uses Expressions, Commons, Keywords, Set_SQLPlus, Exit_SQLPlus, Clear,
   Define, Execute, At, Slash, Accept, Host, Variable, Undefine, Controller;
 
-var
-  SQLPlusParserInfo: TParserInfo;
-
-{ Парсер для DML }
+{ Парсер для SQL*Plus }
 function SQLPlusParser: TParserInfo;
 begin
-  if not Assigned(SQLPlusParserInfo) then SQLPlusParserInfo := TParserInfo.Create;
-  Result := SQLPlusParserInfo;
+  Result := TParserInfo.InstanceFor('Oracle.SQLPlus');
 end;
 
 { Роспись вариантов ключевых слов, заданных как 'undef[ine]' }
@@ -283,9 +279,6 @@ initialization
   end;
   { Добавим их в общеоракловый синтаксис }
   OracleParser.Add(SQLPlusParser);
-
-finalization
-  FreeAndNil(SQLPlusParserInfo);
 
 end.
 

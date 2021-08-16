@@ -1,0 +1,12 @@
+select
+    p_block_code as block_code,
+    t.kis_discount_code
+from
+    xmltable
+    (
+        'discount_list/discount'
+        passing 
+            p_xml
+        columns
+            kis_discount_code number path '@kis_discount_code'
+    ) t

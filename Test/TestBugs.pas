@@ -111,6 +111,8 @@ type
     procedure _88;
     procedure _89;
     procedure _90;
+    procedure _91;
+    procedure _92;
   end;
 
 implementation
@@ -549,6 +551,18 @@ end;
 
 procedure _Bugs._90;
 begin
+end;
+
+procedure _Bugs._91;
+begin
+  PostponeTill(2021, 8, 16);
+  Settings.AlignSpecialComments := true;
+end;
+
+procedure _Bugs._92;
+begin
+  PostponeTill(2021, 8, 16);
+  Settings.PreferredExpressionLength := 84;
 end;
 
 procedure _Bugs._10;

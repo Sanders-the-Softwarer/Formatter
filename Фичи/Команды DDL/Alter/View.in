@@ -1,0 +1,15 @@
+alter view v1 add constraint v1_pk primary key(id);
+
+alter view schema.v2 modify constraint v2_uk rely;
+
+alter view v3 drop constraint v3_pk;
+
+alter view v4 drop primary key;
+
+alter view v5 drop unique(f1, f2, f3);
+
+alter view v6 compile;
+
+alter view v7 read only;
+
+alter view v8 noneditionable;

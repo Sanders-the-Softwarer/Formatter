@@ -133,6 +133,36 @@ type
 
   TNameValueList = class(TEqList<TNameValuePair>);
 
+  { Функция с особым синтаксисом }
+  TSpecialFunction = class(TStatement)
+  strict private
+    _Function: TEpithet;
+    _OpenBracket, _CloseBracket: TTerminal;
+  strict protected
+    function InternalParse: boolean; override; final;
+    function ParseFunction: TEpithet; virtual; abstract;
+    function InternalParse2: boolean; virtual; abstract;
+    procedure InternalPrintSelf(APrinter: TPrinter); override; final;
+    procedure InternalPrintSelf2(APrinter: TPrinter); virtual; abstract;
+  end;
+
+  { Идентификатор как поле в insert, select into итп }
+  TIdentField = class(TStatement)
+  strict private
+    _FieldName: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function StatementName: string; override;
+  end;
+
+  { Список идентификаторов }
+  TIdentFields = class(TCommaList<TIdentField>)
+  strict protected
+    function ParseBreak: boolean; override;
+  end;
+
 implementation
 
 uses Parser, Expressions, Intervals;
@@ -452,6 +482,50 @@ end;
 function TRawList<S>.Transparent: boolean;
 begin
   Result := true;
+end;
+
+{ TSpecialFunction }
+
+function TSpecialFunction.InternalParse: boolean;
+begin
+  _Function := ParseFunction;
+  if not Assigned(_Function) then exit(false);
+  _Function.IsKeyword := false;
+  _Function.IsIdent := true;
+  _OpenBracket := Terminal('(');
+  Result := InternalParse2;
+  if Result then _CloseBracket := Terminal(')');
+end;
+
+procedure TSpecialFunction.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItems([_Function, _NextLine, _OpenBracket, _IndentNextLine]);
+  InternalPrintSelf2(APrinter);
+  APrinter.PrintItems([_UndentNextLine, _CloseBracket]);
+end;
+
+{ TIdentField }
+
+function TIdentField.InternalParse: boolean;
+begin
+  Result := TQualifiedIndexedIdent.Parse(Self, Source, _FieldName);
+end;
+
+function TIdentField.StatementName: string;
+begin
+  Result := _FieldName.StatementName;
+end;
+
+procedure TIdentField.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_FieldName);
+end;
+
+{ TIdentFields }
+
+function TIdentFields.ParseBreak: boolean;
+begin
+  Result := Any([Terminal([')', ';']), Keyword('*')]);
 end;
 
 end.

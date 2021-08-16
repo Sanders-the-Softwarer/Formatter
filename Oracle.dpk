@@ -84,6 +84,11 @@ contains
   Label_ in 'Source\PLSQL\Label_.pas',
   OpenFor in 'Source\PLSQL\OpenFor.pas',
   Trigger in 'Source\PLSQL\Trigger.pas',
-  OracleCore in 'Source\Oracle\OracleCore.pas';
+  OracleCore in 'Source\Oracle\OracleCore.pas',
+  XMLTable in 'Source\DML\XMLTable.pas',
+  Trim in 'Source\DML\Trim.pas',
+  Extract in 'Source\DML\Extract.pas',
+  ListAgg in 'Source\DML\ListAgg.pas',
+  View in 'Source\DDL\View.pas';
 
 end.

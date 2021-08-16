@@ -16,18 +16,6 @@ uses SysUtils, Tokens, Statements, Parser, Printer, Streams, Commons, PLSQL;
 
 type
 
-  { Объект view }
-  TView = class(TStatement)
-  strict private
-    _View, _As: TEpithet;
-    _ViewName, _Columns, _Select: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function StatementName: string; override;
-  end;
-
   { Объект index }
   TIndex = class(TSemicolonStatement)
   strict private
@@ -275,40 +263,10 @@ implementation
 uses DML, Expressions, Trigger, Role, Sequence, Synonym, Create, Alter,
   Set_, Select, Grant, Drop, DML_Commons, Controller;
 
-var
-  DDLParserInfo: TParserInfo;
-
 { Парсер для DDL }
 function DDLParser: TParserInfo;
 begin
-  if not Assigned(DDLParserInfo) then DDLParserInfo := TParserInfo.Create;
-  Result := DDLParserInfo;
-end;
-
-{ TView }
-
-function TView.InternalParse: boolean;
-begin
-  _View := Keyword('view');
-  if not Assigned(_View) then exit(false);
-  TQualifiedIdent.Parse(Self, Source, _ViewName);
-  TBracketedStatement<TIdentFields>.Parse(Self, Source, _Columns);
-  _As := Keyword('as');
-  TSelect.Parse(Self, Source, _Select);
-  Result := true;
-end;
-
-procedure TView.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_View, _ViewName]);
-  APrinter.NextLineIf([_IndentNextLine, _Columns, _UndentNextLine]);
-  APrinter.PrintItem(_As);
-  APrinter.PrintIndented(_Select);
-end;
-
-function TView.StatementName: string;
-begin
-  Result := Concat([_View, _ViewName]);
+  Result := TParserInfo.InstanceFor('Oracle.DDL');
 end;
 
 { TIndex }
@@ -765,9 +723,6 @@ initialization
   end;
   { И добавим их в общеоракловый синтаксис }
   OracleParser.Add(DDLParser);
-
-finalization
-  FreeAndNil(DDLParserInfo);
 
 end.
 

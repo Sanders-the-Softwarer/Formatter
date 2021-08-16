@@ -1,0 +1,12 @@
+-- Не вижу оснований для переноса первого условия в where на две строчки
+
+select
+                    code,
+                    row_number() over(order by dat desc) as rn
+                from
+                    cm_autosaved_draft
+                where
+                    nvl(campaign_ver_code, -999) = nvl(p_campaign_ver_code, -999) -- либо есть версия и блок
+                    and nvl(block_code, -999) = nvl(p_block_code, -999)
+                    and nvl(template_code, -999) = nvl(p_template_code, -999) -- либо есть шаблон
+                    and is_email = 1

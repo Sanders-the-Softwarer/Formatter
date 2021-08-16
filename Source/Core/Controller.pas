@@ -53,14 +53,10 @@ implementation
 
 uses Tokenizer;
 
-var
-  OracleParserInfo: TParserInfo;
-
 { Парсер для ораклового синтаксиса }
 function OracleParser: TParserInfo;
 begin
-  if not Assigned(OracleParserInfo) then OracleParserInfo := TParserInfo.Create;
-  Result := OracleParserInfo;
+  Result := TParserInfo.InstanceFor('Oracle');
 end;
 
 { Форматирование текста, полученного в виде строки, с возвратом результата в строку }
@@ -115,10 +111,5 @@ begin
   Result := TSameTypeLinker.Create(TParser.Create(ATokenStream, ASettings, AParserInfo));
   Result.FreeFormatterCmds := true;
 end;
-
-initialization
-
-finalization
-  FreeAndNil(OracleParserInfo);
 
 end.

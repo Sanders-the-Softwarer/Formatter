@@ -29,7 +29,8 @@ type
 
 implementation
 
-uses Role, Sequence, DatabaseLink, Session, AlterPackageProcedureFunction;
+uses Role, Sequence, DatabaseLink, Session, AlterPackageProcedureFunction,
+  View;
 
 { TAlter }
 
@@ -42,6 +43,7 @@ begin
      not TRole.Parse(Self, Source, _What) and
      not TDatabaseLink.Parse(Self, Source, _What) and
      not TSession.Parse(Self, Source, _What) and
+     not TViewAlter.Parse(Self, Source, _What) and
      not TAlterPackageProcedureFunction.Parse(Self, Source, _What)
      then;
   inherited;

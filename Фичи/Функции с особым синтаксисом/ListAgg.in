@@ -1,14 +1,17 @@
-select 
-    listagg(dummy, ',' on overflow truncate '...' without count) 
-        within group 
+select
+    listagg
+    (
+        dummy, ',' on overflow truncate '...' without count
+    )
+        within group
         (
-            order by 
-                dummy
-        ) 
-        over
-        (
-            order by 
+            order by
                 dummy
         )
-from 
+        over
+        (
+            order by
+                dummy
+        )
+from
     dual

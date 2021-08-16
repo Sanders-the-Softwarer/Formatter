@@ -56,6 +56,9 @@ type
     procedure Add(AInfo: TParserInfo); overload;
     { Возврат списка "кандидатов" для разбора очередной синтаксической конструкции }
     function Candidates: TList<TStatementClass>;
+  public
+    { Генератор синглтонов }
+    class function InstanceFor(const AName: string): TParserInfo;
   end;
 
   { Синтаксический анализатор }
@@ -233,6 +236,17 @@ end;
 
 { TParserInfo }
 
+var
+  ParserInstances: TDictionary<string, TParserInfo>;
+
+{ Генератор синглтонов }
+class function TParserInfo.InstanceFor(const AName: string): TParserInfo;
+begin
+  if ParserInstances.TryGetValue(AName, Result) then exit;
+  Result := TParserInfo.Create;
+  ParserInstances.Add(AName, Result);
+end;
+
 constructor TParserInfo.Create;
 begin
   inherited;
@@ -290,9 +304,11 @@ begin
 end;
 
 initialization
+  ParserInstances := TObjectDictionary<string, TParserInfo>.Create([doOwnsValues]);
   StatementClassComparer := TStatementClassComparer.Create;
 
 finalization
+  FreeAndNil(ParserInstances);
   FreeAndNil(StatementClassComparer);
 
 end.

@@ -126,6 +126,7 @@ type
     procedure ListAgg;
     procedure Trim;
     procedure Extract;
+    procedure XmlTable;
   end;
 
 implementation
@@ -419,10 +420,14 @@ end;
 
 procedure _Функции_С_Особым_Синтаксисом.ListAgg;
 begin
-  Settings.PreferredExpressionLength := 60;
+  Settings.PreferredExpressionLength := 100;
 end;
 
 procedure _Функции_С_Особым_Синтаксисом.Trim;
+begin
+end;
+
+procedure _Функции_С_Особым_Синтаксисом.XmlTable;
 begin
 end;
 
