@@ -107,7 +107,13 @@ var S: string;
 begin
   if not Assigned(AOperation) then exit(false);
   S := AOperation.Value.ToLower;
-  Result := Operations.ContainsKey(S);
+  Result := Operations.ContainsKey(S) and ((S <> '/') or (AOperation.Col <> 1));
+    { Весёлое условие вызвано тем, что без него в командах наподобие
+        select *
+        from table
+        where id = 0
+        /
+      слеш воспринимается как знак арифметической операции }
   if Result then APriority := Operations[S];
 end;
 
@@ -257,7 +263,7 @@ procedure TExpression.InternalPrintSelf(APrinter: TPrinter);
     LastToken: TToken;
   begin
     SetLength(TermInfo, Count);
-    DraftPrinter := TDraftPrinter.Create(APrinter.Settings, true, [poAbove, poBelow, poBelowBOL, poFarAbove, poFarBelow], false, false);
+    DraftPrinter := TDraftPrinter.Create(APrinter.Settings, true, [poAbove, poBelow, poBelowBOL, poFarAbove, poFarBelow], false);
     try
       DraftPrinter.BeginPrint;
       for i := 0 to Count - 1 do
@@ -587,7 +593,7 @@ function TExpression.GetMultiLine: boolean;
 var Printer: TFormatterPrinter;
 begin
   if LineCount > 0 then exit(LineCount > 1);
-  Printer := TDraftPrinter.Create(Settings, true, [], false, false);
+  Printer := TDraftPrinter.Create(Settings, true, [], false);
   try
     Printer.BeginPrint;
     PrintSelf(Printer);

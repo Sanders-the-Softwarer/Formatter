@@ -93,6 +93,8 @@ type
 
   { Поток, объединяющий однотипные выражения в блоки }
   TSameTypeLinker = class(TNextStream<TStatement, TStatement>)
+  strict private
+    function CanGroup(S1, S2: TStatement): boolean;
   strict protected
     function InternalNext: TStatement; override;
   end;
@@ -167,30 +169,43 @@ end;
 
 { TSameTypeLinker }
 
+{ Выражения можно собрать в список, если они входят в группу и не разбиты заголовочным комментарием }
+function TSameTypeLinker.CanGroup(S1, S2: TStatement): boolean;
+begin
+  Result := Assigned(S1) and Assigned(S2) and (S1.Grouping <> nil) and (S1.Grouping = S2.Grouping) and not S2.HasCommentsAbove;
+end;
+
 function TSameTypeLinker.InternalNext: TStatement;
 var
-  S: TStatement;
+  S1, S2: TStatement;
   List: TSameTypeList;
 begin
-  { Прочитаем очередной элемент }
-  S := Source.Next;
-  { Если элемент не группируемый, просто его вернём }
-  if S.Grouping = nil then exit(Transit(S));
-  { В противном случае начнём новую группу }
-  List := TSameTypeList.Create(S);
-  { Добавим следующие элементы того же класса, не разбитые комментариями }
+  { Если у нас нет хотя бы двух группируемых элементов, просто вернём очередной }
+  S1 := Source.Next;
+  if Source.Eof then exit(Transit(S1));
+  Source.SaveMark;
+  S2 := Source.Next;
+  if not CanGroup(S1, S2) then
+  begin
+    Source.Restore;
+    exit(Transit(S1));
+  end;
+  { В противном случае создадим группу }
+  List := TSameTypeList.Create(S1);
+  List.Add(S2);
+  { И заполним её }
   while not Source.Eof do
   begin
     Source.SaveMark;
-    S := Source.Next;
-    if (List.ItemType <> S.Grouping) or S.HasCommentsAbove then
+    S2 := Source.Next;
+    if not CanGroup(S1, S2) then
     begin
       Source.Restore;
       break;
     end;
-    List.Add(S);
+    List.Add(S2);
   end;
-  { Всё, группа идёт на выход }
+  { Вернём полученную группу как один элемент }
   Result := List;
 end;
 

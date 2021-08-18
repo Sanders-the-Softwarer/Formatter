@@ -1,0 +1,16 @@
+-- Содержимое скобок не должно уезжать на дикое расстояние вправо
+
+select 
+    lang.format
+        (
+            p_format => 'Несоотвествие типа ''%s'', нужно ''%s'', ''%s'' или ''%s''.',
+            p_parms => arg_list
+                (
+                    nicfa.pk_rslibr.SelectorStr(nicfa.pk_rslibr.slgContract, c.selector, 0),
+                    nicfa.pk_rslibr.SelectorStr(nicfa.pk_rslibr.slgContract, nicfa.pk_rslibr.slcOriginal, 0),
+                    nicfa.pk_rslibr.SelectorStr(nicfa.pk_rslibr.slgContract, nicfa.pk_rslibr.slcSource2, 0),
+                    nicfa.pk_rslibr.SelectorStr(nicfa.pk_rslibr.slgContract, nicfa.pk_rslibr.slcService, 0)
+                )
+        )
+from 
+    nicfa.contract c

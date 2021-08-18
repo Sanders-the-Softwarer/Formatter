@@ -19,8 +19,8 @@ type
   { Общий класс описания view }
   TView = class(TStatement)
   strict private
-    _View, _As: TEpithet;
-    _ViewName, _Columns, _Select: TStatement;
+    _View: TEpithet;
+    _ViewName: TStatement;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;

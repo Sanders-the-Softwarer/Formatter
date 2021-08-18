@@ -23,6 +23,8 @@ type
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function NoEmptyLineBefore: boolean; override;
   end;
 
 implementation
@@ -37,7 +39,12 @@ end;
 
 procedure TSlash.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItem(_Slash);
+  APrinter.PrintItems([_NextLine, _Slash]);
+end;
+
+function TSlash.NoEmptyLineBefore: boolean;
+begin
+  Result := true;
 end;
 
 end.

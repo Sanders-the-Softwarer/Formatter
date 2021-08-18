@@ -109,7 +109,7 @@ end;
 
 function TUpdateAssignments.ParseBreak: boolean;
 begin
-  Result := Any([Terminal(';'), Keyword(['*'])]);
+  Result := true;
 end;
 
 function TUpdateAssignments.Aligned: TAlignMode;

@@ -40,6 +40,10 @@ object FormMain: TFormMain
     OnChange = pgDestChange
     object tabTokenizer: TTabSheet
       Caption = #1051#1077#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object edTokenizer: TListBox
         AlignWithMargins = True
         Left = 5
@@ -59,6 +63,10 @@ object FormMain: TFormMain
     object tabParser: TTabSheet
       Caption = #1057#1080#1085#1090#1072#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object treeParser: TTreeView
         AlignWithMargins = True
         Left = 5
@@ -121,6 +129,10 @@ object FormMain: TFormMain
     object tabAlarmToken: TTabSheet
       Caption = '>>> '#1058#1056#1045#1042#1054#1043#1040' <<<'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object edAlarmToken: TListBox
         AlignWithMargins = True
         Left = 5
@@ -140,6 +152,10 @@ object FormMain: TFormMain
     object tabAlarmStatement: TTabSheet
       Caption = '>>> '#1058#1056#1045#1042#1054#1043#1040' <<<'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object edAlarmStatement: TListBox
         AlignWithMargins = True
         Left = 5
@@ -159,6 +175,10 @@ object FormMain: TFormMain
     object tabCompareAutoTestResult: TTabSheet
       Caption = #1055#1088#1086#1089#1084#1086#1090#1088' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074' '#1072#1074#1090#1086#1090#1077#1089#1090#1072
       ImageIndex = 5
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object edCompareAutoTestResult: TMemo
         Left = 0
         Top = 0
@@ -289,9 +309,6 @@ object FormMain: TFormMain
             Caption = #1054#1090#1082#1088#1099#1090#1100' '#1087#1072#1085#1077#1083#1100' '#1086#1090#1083#1072#1076#1086#1095#1085#1086#1081' '#1080#1085#1092#1086#1088#1084#1072#1094#1080#1080
             TabOrder = 1
             OnClick = checkShowDebugInfoClick
-            ExplicitLeft = 350
-            ExplicitTop = 1
-            ExplicitHeight = 23
           end
           object checkShowSettings: TCheckBox
             Left = 0
@@ -306,9 +323,6 @@ object FormMain: TFormMain
             Caption = #1054#1090#1082#1088#1099#1090#1100' '#1085#1072#1089#1090#1088#1086#1081#1082#1080
             TabOrder = 0
             OnClick = checkShowSettingsClick
-            ExplicitLeft = 1
-            ExplicitTop = 1
-            ExplicitHeight = 23
           end
         end
       end

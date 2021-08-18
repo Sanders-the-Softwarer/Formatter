@@ -135,7 +135,7 @@ begin
   Assert(AMemo <> nil);
   inherited Create(ASettings, false, [], true);
   Memo := AMemo;
-  Assert(Assigned(TokenPos) and Assigned(TokenLen));
+  SaveTokenPositions := true;
 end;
 
 { При завершении печати выведем сформированный текст в Memo }

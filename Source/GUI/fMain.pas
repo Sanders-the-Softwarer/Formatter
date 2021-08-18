@@ -240,7 +240,8 @@ end;
 { Оповещение принтера о движении пользователя по синтаксическому дереву }
 procedure TFormMain.treeParserChange(Sender: TObject; Node: TTreeNode);
 begin
-  SyntaxTreePrinter.ControlChanged;
+  if Assigned(SyntaxTreePrinter) then
+    SyntaxTreePrinter.ControlChanged;
 end;
 
 { Оповещение о движении пользователя по исходникам либо форматированному выводу }

@@ -51,7 +51,7 @@ type
     { Игнорируемые виды комментариев }
     SkipComments: TCommentPositions;
     { Флаг сохранения информации о местоположении лексем }
-    SaveTokenPositions: boolean;
+    FSaveTokenPositions: boolean;
     { Информация режима сохранения исходного форматирования }
     OriginalFormatCount, OriginalFormatStartLine: integer;
     OriginalFormatToken: TToken;
@@ -77,7 +77,6 @@ type
     constructor Create(ASettings: TFormatSettings;
                        AWithoutText: boolean = false;
                        ASkipComments: TCommentPositions = [];
-                       ASaveTokenPositions: boolean = true;
                        ACanChangeLineCommentsToBrackets: boolean = true);
     destructor Destroy; override;
     procedure Clear; override;
@@ -104,6 +103,8 @@ type
     procedure Ruler(const ARuler: string);
   public
     procedure AbstractForWarning; virtual; abstract;
+  public
+    property SaveTokenPositions: boolean read FSaveTokenPositions write FSaveTokenPositions;
   end;
 
   { Принтер для черновиков }
@@ -136,23 +137,18 @@ implementation
 constructor TFormatterPrinter.Create(ASettings: TFormatSettings;
                                      AWithoutText: boolean = false;
                                      ASkipComments: TCommentPositions = [];
-                                     ASaveTokenPositions: boolean = true;
                                      ACanChangeLineCommentsToBrackets: boolean = true);
 begin
   Assert(ASettings <> nil);
   inherited Create;
   Settings := ASettings;
   SkipComments := ASkipComments;
-  SaveTokenPositions := ASaveTokenPositions;
   CanChangeLineCommentsToBrackets := ACanChangeLineCommentsToBrackets and Settings.ChangeCommentType;
   TextBuilder := TTextBuilder.Create(AWithoutText);
-  if SaveTokenPositions then
-  begin
-    TokenPos := TDictionary<TToken, integer>.Create;
-    TokenLen := TDictionary<TToken, integer>.Create;
-  end;
   Indents := TStack<integer>.Create;
   TokenQueue := TQueue<TToken>.Create;
+  TokenPos := TDictionary<TToken, integer>.Create;
+  TokenLen := TDictionary<TToken, integer>.Create;
 end;
 
 destructor TFormatterPrinter.Destroy;
@@ -309,8 +305,7 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     IsComment, LineComment, SpecComment, FakeToken, EmptyToken, OriginalFormat: boolean;
     EOLLimit, ActualShift, Fix: integer;
   begin
-    if HasActiveRulers then
-      Rulers.Token := AToken;
+    if HasActiveRulers then Rulers.Token := AToken;
     { Определим статус комментариев }
     IsComment := AToken is TComment;
     LineComment := IsComment and AComment.LineComment;
@@ -465,7 +460,7 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     { Напечатаем лексему и запомним её позицию }
     if SaveTokenPositions and not FakeToken then TokenPos.Add(AToken, TextBuilder.Length);
     {$IFDEF DEBUG}
-    if SaveTokenPositions then AToken.AddDebugInfo('Позиция в тексте: [%d, %d]', [TextBuilder.Line, TextBuilder.Col]);
+    AToken.AddDebugInfo('Позиция в тексте: [%d, %d]', [TextBuilder.Line, TextBuilder.Col]);
     {$ENDIF}
     TextBuilder.AppendText(Value);
     if SaveTokenPositions then AToken.Printed := true;
@@ -513,7 +508,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     _EmptyInside := not Assigned(AStatement.Parent) or AStatement.Parent.EmptyLineInside;
     _EmptyAfter  := AStatement.EmptyLineAfter;
     { Пустая строка перед конструкцией }
-    EmptyLine := EmptyLine or _EmptyBefore or _EmptyInside;
+    EmptyLine := (EmptyLine or _EmptyBefore or _EmptyInside) and not AStatement.NoEmptyLineBefore;
     { Печать и проверка отступа }
     _Shift := Shift;
     _PrevStatement := CurrentStatement;
@@ -534,7 +529,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   var DraftPrinter: TFormatterPrinter;
   begin
     if AStatement.Rulers.Full then exit;
-    DraftPrinter := TDraftPrinter.Create(Self.Settings, false, [poFarAbove..poFarBelow], false, false);
+    DraftPrinter := TDraftPrinter.Create(Self.Settings, false, [poFarAbove..poFarBelow], false);
     try
       AStatement.Rulers.UseSpaces := Settings.AlignUseSpace;
       DraftPrinter.Rulers := AStatement.Rulers;
@@ -573,7 +568,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   begin
     if not Assigned(SpecCommentDraftPrinter) then
     begin
-      SpecCommentDraftPrinter := TDraftPrinter.Create(Self.Settings, true, [poFarAbove..poFarBelow], false, false);
+      SpecCommentDraftPrinter := TDraftPrinter.Create(Self.Settings, true, [poFarAbove..poFarBelow], false);
       SpecCommentDraftPrinter.BeginPrint;
       SpecCommentDraftPrinter.Mode := fpmCheckSpecialComments;
     end;

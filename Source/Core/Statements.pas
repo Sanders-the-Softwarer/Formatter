@@ -110,6 +110,7 @@ type
     function EmptyLineBefore: boolean; virtual;
     function EmptyLineAfter: boolean; virtual;
     function EmptyLineInside: boolean; virtual;
+    function NoEmptyLineBefore: boolean; virtual;
   public
     constructor Create(AParent: TStatement; ASource: TBufferedStream<TToken>); virtual;
     destructor Destroy; override;
@@ -336,6 +337,12 @@ end;
 
 { Определение необходимости пустой строки между элементами конструкции }
 function TStatement.EmptyLineInside: boolean;
+begin
+  Result := false;
+end;
+
+{ Запрет пустой строки перед конструкцией }
+function TStatement.NoEmptyLineBefore: boolean;
 begin
   Result := false;
 end;
