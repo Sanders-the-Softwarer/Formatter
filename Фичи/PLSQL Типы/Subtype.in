@@ -1,0 +1,7 @@
+subtype t1 is number;
+
+subtype t2 is number(8,2) not null;
+
+subtype t3 is number range 100 .. 200;
+
+subtype t4 is varchar2 character set win1251;

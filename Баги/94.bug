@@ -1,0 +1,22 @@
+-- Комментарии не должны сдвигаться вправо
+-- Не должна ломаться структура отступов в многострочном комментарии
+-- Выражение должно быть ниже комментария, а не правее
+-- Знак равенства должен форматироваться под относящемуся к нему sum, а не под and
+
+select
+    case
+        when /* Если Сумма (Quantity total (T.2.3)) <> 0, то
+                  Если по всем строкам, где (Quantity total (T.2.3)) <> 0 ,
+                  Calculation_custom_manual = Null, то выставляем значение
+                  Calculation_custom_manual в ручных параметрах расчета как Null*/
+             sum(t.quantity_total) <> 0
+             and sum(case when t.quantity_total <> 0 and t.calculate_custom_manual is null then 1 else 0 end)
+                 =
+                 sum(case when t.quantity_total <> 0 then 1 else 0 end)
+        then
+            null
+        else /* иначе Calculation_custom_manual = MAX(Calculation_custom_manual (T.2.3))*/
+            max(t.calculate_custom_manual)
+    end calc_custom_manual
+from 
+    dual

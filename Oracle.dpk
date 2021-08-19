@@ -90,6 +90,7 @@ contains
   Extract in 'Source\DML\Extract.pas',
   ListAgg in 'Source\DML\ListAgg.pas',
   View in 'Source\DDL\View.pas',
-  XMLSerialize in 'Source\DML\XMLSerialize.pas';
+  XMLSerialize in 'Source\DML\XMLSerialize.pas',
+  Subtype in 'Source\PLSQL\Subtype.pas';
 
 end.

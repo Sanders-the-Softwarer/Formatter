@@ -575,7 +575,7 @@ function DeclarationParser: TParserInfo;
 implementation
 
 uses Expressions, DML, DDL, Keywords, Select, Label_, Goto_, Exit_,
-  OpenFor, ForAll, Assignment, DML_Commons, Controller;
+  OpenFor, ForAll, Assignment, DML_Commons, Controller, SubType;
 
 { Парсер для PL/SQL }
 function PLSQLParser: TParserInfo;

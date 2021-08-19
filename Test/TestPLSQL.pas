@@ -172,6 +172,7 @@ type
     procedure Ref_Cursor_Return;
     procedure Табличные_Типы;
     procedure Записи;
+    procedure Subtype;
   end;
 
   { Тесты на форматирование выражений }
@@ -544,6 +545,10 @@ begin
 end;
 
 procedure _PLSQL_Типы.Ref_Cursor_Return;
+begin
+end;
+
+procedure _PLSQL_Типы.Subtype;
 begin
 end;
 
