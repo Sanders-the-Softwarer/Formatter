@@ -42,6 +42,7 @@ type
     procedure Database_Link;
     procedure Role;
     procedure Synonym;
+    procedure Context;
   end;
 
   { Тесты на alter }
@@ -57,20 +58,21 @@ type
   protected
     function GetDir: string; override;
   published
-    procedure Drop_Function;
-    procedure Drop_Package;
-    procedure Drop_Package_Body;
-    procedure Drop_Procedure;
-    procedure Drop_Synonym;
-    procedure Drop_Table;
-    procedure Drop_View;
-    procedure Drop_Index;
-    procedure Drop_Role;
-    procedure Drop_Sequence;
-    procedure Drop_Type;
-    procedure Drop_Type_Body;
-    procedure Drop_Trigger;
-    procedure Drop_Database_Link;
+    procedure Function_;
+    procedure Package;
+    procedure Package_Body;
+    procedure Procedure_;
+    procedure Synonym;
+    procedure Table;
+    procedure View;
+    procedure Index;
+    procedure Role;
+    procedure Sequence;
+    procedure Type_;
+    procedure Type_Body;
+    procedure Trigger;
+    procedure Database_Link;
+    procedure Context;
   end;
 
   { Тесты на comment }
@@ -99,6 +101,10 @@ implementation
 function _Create.GetDir: string;
 begin
   Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды DDL\Create';
+end;
+
+procedure _Create.Context;
+begin
 end;
 
 procedure _Create.Create;
@@ -189,59 +195,63 @@ begin
   Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды DDL\Drop';
 end;
 
-procedure _Drop.Drop_Database_Link;
+procedure _Drop.Context;
 begin
 end;
 
-procedure _Drop.Drop_Function;
+procedure _Drop.Database_Link;
 begin
 end;
 
-procedure _Drop.Drop_Index;
+procedure _Drop.Function_;
 begin
 end;
 
-procedure _Drop.Drop_Package;
+procedure _Drop.Index;
 begin
 end;
 
-procedure _Drop.Drop_Package_Body;
+procedure _Drop.Package;
 begin
 end;
 
-procedure _Drop.Drop_Procedure;
+procedure _Drop.Package_Body;
 begin
 end;
 
-procedure _Drop.Drop_Role;
+procedure _Drop.Procedure_;
 begin
 end;
 
-procedure _Drop.Drop_Sequence;
+procedure _Drop.Role;
 begin
 end;
 
-procedure _Drop.Drop_Synonym;
+procedure _Drop.Sequence;
 begin
 end;
 
-procedure _Drop.Drop_Table;
+procedure _Drop.Synonym;
 begin
 end;
 
-procedure _Drop.Drop_Trigger;
+procedure _Drop.Table;
 begin
 end;
 
-procedure _Drop.Drop_Type;
+procedure _Drop.Trigger;
 begin
 end;
 
-procedure _Drop.Drop_Type_Body;
+procedure _Drop.Type_;
 begin
 end;
 
-procedure _Drop.Drop_View;
+procedure _Drop.Type_Body;
+begin
+end;
+
+procedure _Drop.View;
 begin
 end;
 

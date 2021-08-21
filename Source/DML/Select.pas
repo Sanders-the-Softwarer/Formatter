@@ -1307,4 +1307,7 @@ begin
     Result := Result and (Item(i) is TTableReference) and TTableReference(Item(i)).IsSimpleReference;
 end;
 
+initialization
+  DMLParser.Add(TSelect);
+
 end.

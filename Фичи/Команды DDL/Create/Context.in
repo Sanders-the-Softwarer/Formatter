@@ -1,0 +1,4 @@
+create context hr_context using emp_mgmt;
+create or replace context hr_context using hr.emp_mgmt initialized externally;
+create context hr_context using hr.emp_mgmt accessed globally;
+

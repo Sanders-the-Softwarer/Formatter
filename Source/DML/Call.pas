@@ -42,11 +42,16 @@ begin
   if Assigned(_Into) then TQualifiedIdent.Parse(Self, Source, _IntoVar);
   _Indicator := Keyword('indicator');
   if Assigned(_Indicator) then TQualifiedIdent.Parse(Self, Source, _IndicatorVar);
+  inherited;
 end;
 
 procedure TCall.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Call, _What, _Into, _IntoVar, _Indicator, _IndicatorVar]);
+  inherited;
 end;
+
+initialization
+  DMLParser.Add(TCall);
 
 end.

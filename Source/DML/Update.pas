@@ -117,4 +117,7 @@ begin
   Result := AlignMode(Settings.AlignFields);
 end;
 
+initialization
+  DMLParser.Add(TUpdate);
+
 end.

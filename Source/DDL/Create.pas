@@ -12,7 +12,7 @@ unit Create;
 
 interface
 
-uses Statements, Tokens, Printer;
+uses Statements, Tokens, Printer, Parser;
 
 type
   { Команда create [or replace] }
@@ -30,9 +30,18 @@ type
     function SameTypeAligned: TAlignMode; override;
   end;
 
+{ Список конструкций для команды CREATE }
+function CreateParser: TParserInfo;
+
 implementation
 
-uses DDL, PLSQL, Sequence, Trigger, Role, Synonym, DatabaseLink, View;
+uses DDL, PLSQL, Sequence, Trigger, Role, Synonym, DatabaseLink, View, Context;
+
+{ Список конструкций для команды CREATE }
+function CreateParser: TParserInfo;
+begin
+  Result := TParserInfo.InstanceFor('Oracle.DDL.Create');
+end;
 
 { TCreate }
 
@@ -51,19 +60,7 @@ begin
   { Проверим наличие force }
   _Force := Keyword('force');
   { И, наконец, распознаем, что же мы создаём }
-  if TTable.Parse(Self, Source, _What) or
-     TViewCreate.Parse(Self, Source, _What) or
-     TIndex.Parse(Self, Source, _What) or
-     TPackage.Parse(Self, Source, _What) or
-     TSubroutine.Parse(Self, Source, _What) or
-     TTypeBody.Parse(Self, Source, _What) or
-     TType.Parse(Self, Source, _What) or
-     TSequence.Parse(Self, Source, _What) or
-     TTrigger.Parse(Self, Source, _What) or
-     TSynonym.Parse(Self, Source, _What) or
-     TUser.Parse(Self, Source, _What) or
-     TRole.Parse(Self, Source, _What) or
-     TDatabaseLink.Parse(Self, Source, _What) or
+  if TParser.Parse(Source, Settings, CreateParser, Self, _What) or
      TUnexpectedToken.Parse(Self, Source, _What) then inherited;
   { Завершающий слеш }
   _Slash := Terminal('/');
@@ -94,5 +91,22 @@ begin
     then Result := _What.SameTypeAligned
     else Result := amNever;
 end;
+
+initialization
+  with CreateParser do
+  begin
+    Add(TTable);
+    Add(TIndex);
+    Add(TPackage);
+    Add(TSubroutine);
+    Add(TTypeBody);
+    Add(TType);
+    Add(TSequence);
+    Add(TTrigger);
+    Add(TSynonym);
+    Add(TUser);
+    Add(TRole);
+    Add(TDatabaseLink);
+  end;
 
 end.

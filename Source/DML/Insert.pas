@@ -72,4 +72,7 @@ begin
   inherited;
 end;
 
+initialization
+  DMLParser.Add(TInsert);
+
 end.

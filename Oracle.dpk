@@ -55,7 +55,6 @@ contains
   Undefine in 'Source\SQL_Plus\Undefine.pas',
   Variable in 'Source\SQL_Plus\Variable.pas',
   Commons in 'Source\Oracle\Commons.pas',
-  DDL in 'Source\Oracle\DDL.pas',
   DML in 'Source\Oracle\DML.pas',
   Expressions in 'Source\Oracle\Expressions.pas',
   Intervals in 'Source\Oracle\Intervals.pas',
@@ -91,6 +90,8 @@ contains
   ListAgg in 'Source\DML\ListAgg.pas',
   View in 'Source\DDL\View.pas',
   XMLSerialize in 'Source\DML\XMLSerialize.pas',
-  Subtype in 'Source\PLSQL\Subtype.pas';
+  Subtype in 'Source\PLSQL\Subtype.pas',
+  DDL in 'Source\Oracle\DDL.pas',
+  Context in 'Source\DDL\Context.pas';
 
 end.

@@ -141,7 +141,7 @@ function FromSpecFunctionParser: TParserInfo;
 implementation
 
 uses Keywords, Select, Insert, Update, DML_Commons, PLSQL, Trim, Extract,
-  ListAgg, XmlTable, XMLSerialize;
+  ListAgg, XmlTable, XMLSerialize, Call;
 
 { Парсер для DML }
 function DMLParser: TParserInfo;
@@ -711,9 +711,6 @@ initialization
   { Зарегистрируем конструкции DML }
   with DMLParser do
   begin
-    Add(TSelect);
-    Add(TInsert);
-    Add(TUpdate);
     Add(TDelete);
     Add(TMerge);
     Add(TCommit);

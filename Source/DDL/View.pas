@@ -51,7 +51,7 @@ type
 
 implementation
 
-uses DDL, Commons, Select;
+uses DDL, Commons, Select, Create;
 
 { TView }
 
@@ -138,5 +138,8 @@ begin
   inherited;
   APrinter.PrintItems([_Compile, _Read, _Only, _Editionable, _Add, _Modify, _Drop, _Constraint, _ConstraintName, _ConstraintDesc, _Primary, _Key, _Unique, _UniqueFields, _Rely]);
 end;
+
+initialization
+  CreateParser.Add(TViewCreate);
 
 end.
