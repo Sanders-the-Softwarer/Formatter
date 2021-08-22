@@ -12,7 +12,7 @@ unit Set_;
 
 interface
 
-uses Tokens, Statements, Printer;
+uses Tokens, Statements, Printer, Commons;
 
 type
   { Команда set }
@@ -28,8 +28,6 @@ type
   end;
 
 implementation
-
-uses Commons;
 
 type
 

@@ -7,8 +7,7 @@ uses
   OracleCore,
   fMain in 'Source\GUI\fMain.pas' {FormMain},
   GUIPrinters in 'Source\GUI\GUIPrinters.pas',
-  frSettings in 'Source\GUI\frSettings.pas' {FrameSettings: TFrame},
-  Context in 'Source\DDL\Context.pas';
+  frSettings in 'Source\GUI\frSettings.pas' {FrameSettings: TFrame};
 
 {$R *.res}
 

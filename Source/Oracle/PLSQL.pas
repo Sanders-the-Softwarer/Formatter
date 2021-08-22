@@ -32,7 +32,7 @@ uses Classes, Windows, SysUtils, Math, Streams, Tokens, Statements, Commons,
 type
 
   { Базовый класс для операторов PL/SQL }
-  TPLSQLStatement = class(TSemicolonStatement);
+  TPLSQLStatement = class(TSemicolonSlashStatement);
 
   { Программный блок - та или иная конструкция на основе begin .. end }
   TProgramBlock = class(TPLSQLStatement)

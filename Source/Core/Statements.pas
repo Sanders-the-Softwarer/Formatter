@@ -110,7 +110,6 @@ type
     function EmptyLineBefore: boolean; virtual;
     function EmptyLineAfter: boolean; virtual;
     function EmptyLineInside: boolean; virtual;
-    function NoEmptyLineBefore: boolean; virtual;
   public
     constructor Create(AParent: TStatement; ASource: TBufferedStream<TToken>); virtual;
     destructor Destroy; override;
@@ -195,17 +194,6 @@ type
     class function Priority: integer; override;
     function StatementName: string; override;
     property Token: TToken read _Token;
-  end;
-
-  { Конструкция, завершающаяся точкой с запятой }
-  TSemicolonStatement = class(TStatement)
-  strict private
-    _Semicolon: TTerminal;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function HasSemicolon: boolean;
   end;
 
   { Конструкция заданного типа в скобках }
@@ -337,12 +325,6 @@ end;
 
 { Определение необходимости пустой строки между элементами конструкции }
 function TStatement.EmptyLineInside: boolean;
-begin
-  Result := false;
-end;
-
-{ Запрет пустой строки перед конструкцией }
-function TStatement.NoEmptyLineBefore: boolean;
 begin
   Result := false;
 end;
@@ -920,25 +902,6 @@ begin
   APrinter.PrintItem(_Token);
   APrinter.NextLine;
   APrinter.PrintSpecialComment('!!! SHIT HAPPENS !!!');
-end;
-
-{ TSemicolonStatement }
-
-function TSemicolonStatement.InternalParse: boolean;
-begin
-  _Semicolon := Terminal(';');
-  Result := Assigned(_Semicolon);
-end;
-
-procedure TSemicolonStatement.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.CancelNextLine;
-  APrinter.PrintItem(_Semicolon);
-end;
-
-function TSemicolonStatement.HasSemicolon: boolean;
-begin
-  Result := Assigned(_Semicolon);
 end;
 
 { TBracketedStatement<T> }

@@ -508,7 +508,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
     _EmptyInside := not Assigned(AStatement.Parent) or AStatement.Parent.EmptyLineInside;
     _EmptyAfter  := AStatement.EmptyLineAfter;
     { Пустая строка перед конструкцией }
-    EmptyLine := (EmptyLine or _EmptyBefore or _EmptyInside) and not AStatement.NoEmptyLineBefore;
+    EmptyLine := (EmptyLine or _EmptyBefore or _EmptyInside);
     { Печать и проверка отступа }
     _Shift := Shift;
     _PrevStatement := CurrentStatement;

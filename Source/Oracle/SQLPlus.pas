@@ -13,7 +13,7 @@ unit SQLPlus;
 interface
 
 uses SysUtils, Statements, Streams, Tokens, Parser, Printer, Contnrs,
-  System.Generics.Collections;
+  System.Generics.Collections, Commons;
 
 type
 
@@ -66,7 +66,7 @@ function SQLPlusParser: TParserInfo;
 
 implementation
 
-uses Expressions, Commons, Keywords, Set_SQLPlus, Exit_SQLPlus, Clear,
+uses Expressions, Keywords, Set_SQLPlus, Exit_SQLPlus, Clear,
   Define, Execute, At, Slash, Accept, Host, Variable, Undefine, Controller;
 
 { Парсер для SQL*Plus }

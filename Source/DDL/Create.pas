@@ -12,11 +12,11 @@ unit Create;
 
 interface
 
-uses Statements, Tokens, Printer, Parser;
+uses Statements, Tokens, Printer, Parser, Commons;
 
 type
   { Команда create [or replace] }
-  TCreate = class(TSemicolonStatement)
+  TCreate = class(TSemicolonSlashStatement)
   strict private
     _Create, _Or, _Replace, _Editionable, _Force: TEpithet;
     _What: TStatement;

@@ -16,6 +16,26 @@ uses SysUtils, Tokens, Statements, Printer;
 
 type
 
+  { Конструкция, завершающаяся точкой с запятой }
+  TSemicolonStatement = class(TStatement)
+  strict private
+    _Semicolon: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function HasSemicolon: boolean;
+  end;
+
+  { Конструкция, завершающаяся точкой с запятой и слешем }
+  TSemicolonSlashStatement = class(TSemicolonStatement)
+  strict private
+    _Slash: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
   { Квалифицированный идентификатор }
   TQualifiedIdent = class(TStatement)
   strict private
@@ -166,6 +186,53 @@ type
 implementation
 
 uses Parser, Expressions, Intervals;
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                   Оператор, завершающийся точкой с запятой                 //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+function TSemicolonStatement.InternalParse: boolean;
+begin
+  _Semicolon := Terminal(';');
+  Result := Assigned(_Semicolon);
+end;
+
+procedure TSemicolonStatement.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.CancelNextLine;
+  APrinter.PrintItem(_Semicolon);
+end;
+
+function TSemicolonStatement.HasSemicolon: boolean;
+begin
+  Result := Assigned(_Semicolon);
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//               Оператор, завершающийся точкой с запятой и слешем            //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+function TSemicolonSlashStatement.InternalParse: boolean;
+var Last: TToken;
+begin
+  Result := inherited;
+  Last := Source.Last;
+  Source.SaveMark;
+  _Slash := Terminal('/');
+  if not Assigned(Last) or not Assigned(_Slash) or (Last.Line < _Slash.Line) then exit;
+  FreeAndNil(_Slash);
+  Source.Restore;
+end;
+
+procedure TSemicolonSlashStatement.InternalPrintSelf(APrinter: TPrinter);
+begin
+  inherited;
+  APrinter.NextLineIf(_Slash);
+end;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //

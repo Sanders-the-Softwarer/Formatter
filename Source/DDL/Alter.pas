@@ -12,11 +12,11 @@ unit Alter;
 
 interface
 
-uses Tokens, Statements, Printer;
+uses Tokens, Statements, Printer, Commons;
 
 type
   { Команда alter }
-  TAlter = class(TSemicolonStatement)
+  TAlter = class(TSemicolonSlashStatement)
   strict private
     _Alter: TEpithet;
     _What: TStatement;
@@ -25,6 +25,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   public
     function Grouping: TStatementClass; override;
+    function StatementName: string; override;
   end;
 
 implementation
@@ -53,6 +54,11 @@ procedure TAlter.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Alter, _What]);
   inherited;
+end;
+
+function TAlter.StatementName: string;
+begin
+  Result := Concat([_Alter, _What]);
 end;
 
 function TAlter.Grouping: TStatementClass;

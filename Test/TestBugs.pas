@@ -115,6 +115,7 @@ type
     procedure _92;
     procedure _93;
     procedure _94;
+    procedure _95;
   end;
 
 implementation
@@ -578,6 +579,10 @@ begin
   Settings.PreferredExpressionLength := 100;
   Settings.AlignFields := true;
   Settings.AlignRightComments := true;
+end;
+
+procedure _Bugs._95;
+begin
 end;
 
 procedure _Bugs._10;

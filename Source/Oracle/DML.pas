@@ -18,7 +18,7 @@ uses Classes, SysUtils, Math, Tokens, Streams, Statements, Printer, Commons,
 type
 
   { Общий предок DML-операторов }
-  TDML = class(TSemicolonStatement);
+  TDML = class(TSemicolonSlashStatement);
 
   { Указание таблицы - в select, merge, delete и т. п. }
   TTableRef = class(TStatement)
