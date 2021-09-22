@@ -1,0 +1,6 @@
+-- bulk collect должен работать в execute immediate
+
+execute immediate  
+    'select * from dual' 
+bulk collect into 
+    v_collections;

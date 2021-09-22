@@ -33,7 +33,6 @@ type
     procedure Exit;
 
     procedure At;
-    procedure Slash;
     procedure Append;
     procedure ArchiveLog;
     procedure Attribute;
@@ -176,7 +175,7 @@ end;
 
 procedure _Команды_SQLPLUS.Prompt;
 begin
-  PostponeTill(2021, 8, 15);
+  PostponeTill(2021, 9, 1);
 end;
 
 procedure _Команды_SQLPLUS.Recover;
@@ -186,7 +185,7 @@ end;
 
 procedure _Команды_SQLPLUS.Remark;
 begin
-  PostponeTill(2021, 8, 15);
+  PostponeTill(2021, 9, 1);
 end;
 
 procedure _Команды_SQLPLUS.RepFooter;
@@ -258,7 +257,7 @@ end;
 
 procedure _Команды_SQLPLUS.Show;
 begin
-  PostponeTill(2021, 8, 15);
+  PostponeTill(2021, 9, 1);
 end;
 
 procedure _Команды_SQLPLUS.Shutdown;
@@ -266,18 +265,14 @@ begin
   PostponeTill(2021, 9, 30);
 end;
 
-procedure _Команды_SQLPLUS.Slash;
-begin
-end;
-
 procedure _Команды_SQLPLUS.Spool;
 begin
-  PostponeTill(2021, 8, 15);
+  PostponeTill(2021, 9, 1);
 end;
 
 procedure _Команды_SQLPLUS.Start;
 begin
-  PostponeTill(2021, 8, 15);
+  PostponeTill(2021, 9, 1);
 end;
 
 procedure _Команды_SQLPLUS.Startup;

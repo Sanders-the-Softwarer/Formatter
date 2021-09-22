@@ -92,6 +92,7 @@ contains
   XMLSerialize in 'Source\DML\XMLSerialize.pas',
   Subtype in 'Source\PLSQL\Subtype.pas',
   DDL in 'Source\Oracle\DDL.pas',
-  Context in 'Source\DDL\Context.pas';
+  Context in 'Source\DDL\Context.pas',
+  ExecuteImmediate in 'Source\PLSQL\ExecuteImmediate.pas';
 
 end.

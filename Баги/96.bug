@@ -1,0 +1,81 @@
+-- Ёлементы on и join во вложенных запросах не должны съезжать правее чем нужно
+
+select
+    shopid,
+    name
+from
+    (
+        select
+            "shopID",
+            "name",
+            sum("quantity")
+        from
+            (
+                select
+                    "id",
+                    "name",
+                    "shopID",
+                    "markID",
+                    "quantity"
+                from
+                    "shop"
+                        join
+                    "stock"
+                        on
+                            "stock"."shopID" = "shop"."id"
+                where
+                    "id" in
+                    (
+                        select
+                            "id"
+                        from
+                            (
+                                select
+                                    "id",
+                                    "name"
+                                from
+                                    (
+                                        select
+                                            *
+                                        from
+                                            (
+                                                select
+                                                    "t1"."id",
+                                                    sum("quantity") as "q"
+                                                from
+                                                    (
+                                                        select
+                                                            "mark"."id",
+                                                            "quantity"
+                                                        from
+                                                            "stock"
+                                                                join
+                                                            "shop"
+                                                                on
+                                                                    "stock"."shopID" = "shop"."id"
+                                                                join
+                                                            "mark"
+                                                                on
+                                                                    "stock"."markID" = "mark"."id"
+                                                                join
+                                                            "manufacturer"
+                                                                on
+                                                                    "mark"."manufacturerID" = "manufacturer"."id"
+                                                    )
+                                                    "t1"
+                                        group by
+                                            "id"
+                                    )
+                                    "t2"
+                        where
+                            "q" > 10
+                    )
+            )
+            "t3"
+                join
+            "mark"
+                on
+                    "t3"."id" = "mark"."id"
+        group by
+            "shopID",
+            "name"

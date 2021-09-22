@@ -444,16 +444,6 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Оператор execute immediate }
-  TExecuteImmediate = class(TPLSQLStatement)
-  strict private
-    _Execute, _Immediate, _Into: TEpithet;
-    _Command, _IntoFields, _Using: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
   { Блок обработки исключений }
   TExceptionHandler = class(TStatement)
   strict private
@@ -575,7 +565,7 @@ function DeclarationParser: TParserInfo;
 implementation
 
 uses Expressions, DML, DDL, Keywords, Select, Label_, Goto_, Exit_,
-  OpenFor, ForAll, Assignment, DML_Commons, Controller, SubType;
+  OpenFor, ForAll, Assignment, DML_Commons, Controller, SubType, ExecuteImmediate;
 
 { Парсер для PL/SQL }
 function PLSQLParser: TParserInfo;
@@ -991,6 +981,7 @@ end;
 procedure TSubroutineForwardDeclaration.InternalPrintSelf(APrinter: TPrinter);
 begin
   inherited;
+  APrinter.CancelNextLine;
   APrinter.PrintItem(_Semicolon);
 end;
 
@@ -1545,31 +1536,6 @@ begin
   inherited;
 end;
 
-{ TExecuteImmediate }
-
-function TExecuteImmediate.InternalParse: boolean;
-begin
-  _Execute := Keyword('execute');
-  _Immediate := Keyword('immediate');
-  if not Assigned(_Execute) or not Assigned(_Immediate) then exit(false);
-  TExpression.Parse(Self, Source, _Command);
-  _Into := Keyword('into');
-  if Assigned(_Into) then TIdentFields.Parse(Self, Source, _IntoFields);
-  TUsing.Parse(Self, Source, _Using);
-  inherited;
-  Result := true;
-end;
-
-procedure TExecuteImmediate.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Execute, _Immediate,  _IndentNextLine,
-                                 _Command,    _UndentNextLine,
-                       _Into,    _IndentNextLine,
-                                 _IntoFields, _UndentNextLine,
-                       _Using]);
-  inherited;
-end;
-
 { TStandaloneComment }
 
 function TStandaloneComment.InternalParse: boolean;
@@ -1656,7 +1622,6 @@ initialization
     Add(TExit);
     Add(TPipeRow);
     Add(TClose);
-    Add(TExecuteImmediate);
     Add(TAnonymousBlock);
     Add(TAssignment);
     Add(TProcedureCall);

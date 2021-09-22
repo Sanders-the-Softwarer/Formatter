@@ -116,6 +116,8 @@ type
     procedure _93;
     procedure _94;
     procedure _95;
+    procedure _96;
+    procedure _97;
   end;
 
 implementation
@@ -443,7 +445,6 @@ end;
 
 procedure _Bugs._72;
 begin
-  PostponeTill(2021, 8, 15);
   Settings.PreferredExpressionLength := 100;
   Settings.AlignExpressions := true;
   Settings.AlignRightComments := true;
@@ -469,20 +470,17 @@ end;
 
 procedure _Bugs._77;
 begin
-  PostponeTill(2021, 8, 15);
   Settings.AlignExpressions := true;
   Settings.PreferredExpressionLength := 100;
 end;
 
 procedure _Bugs._78;
 begin
-  PostponeTill(2021, 8, 15);
   Settings.AlignExpressions := true;
 end;
 
 procedure _Bugs._79;
 begin
-  PostponeTill(2021, 8, 15);
   Settings.AlignFields := true;
   Settings.AlignUseSpace := true;
   Settings.PreferredExpressionLength := 100;
@@ -500,13 +498,11 @@ end;
 
 procedure _Bugs._81;
 begin
-  PostponeTill(2021, 8, 15);
   Settings.AlignVariables := true;
 end;
 
 procedure _Bugs._82;
 begin
-  PostponeTill(2021, 8, 15);
   Settings.AlignFields := true;
   Settings.AlignRightComments := true;
   Settings.AlignUseSpace := true;
@@ -519,14 +515,12 @@ end;
 
 procedure _Bugs._84;
 begin
-  PostponeTill(2021, 8, 15);
   Settings.AlignFields := true;
   Settings.PreferredExpressionLength := 100;
 end;
 
 procedure _Bugs._85;
 begin
-  PostponeTill(2021, 8, 15);
   Settings.PreferredExpressionLength := 100;
 end;
 
@@ -558,13 +552,11 @@ end;
 
 procedure _Bugs._91;
 begin
-  PostponeTill(2021, 8, 16);
   Settings.AlignSpecialComments := true;
 end;
 
 procedure _Bugs._92;
 begin
-  PostponeTill(2021, 8, 16);
   Settings.PreferredExpressionLength := 84;
 end;
 
@@ -582,6 +574,16 @@ begin
 end;
 
 procedure _Bugs._95;
+begin
+end;
+
+procedure _Bugs._96;
+begin
+  Settings.PreferredExpressionLength := 100;
+  Settings.AlignExpressions := true;
+end;
+
+procedure _Bugs._97;
 begin
 end;
 

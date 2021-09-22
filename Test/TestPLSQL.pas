@@ -221,7 +221,6 @@ type
     procedure root_container_init;
     procedure top_report_api;
     procedure top_ref_api;
-    procedure top_dev_style_sop_link_api;
     procedure cm_campaign_edit;
   end;
 
@@ -368,7 +367,6 @@ end;
 
 procedure _Выравнивание.Полей_В_XmlTable;
 begin
-  PostponeTill(2021, 8, 16);
   Settings.AlignFields := true;
 end;
 
@@ -510,7 +508,6 @@ end;
 
 procedure _Пустые_Строки.Exec_Собираются_Вместе;
 begin
-  PostponeTill(2021, 8, 15);
 end;
 
 procedure _Пустые_Строки.Set_Собираются_Вместе;
@@ -760,7 +757,6 @@ end;
 
 procedure _Контрольные_Примеры.root_container_init;
 begin
-  PostponeTill(2021, 8, 15);
 end;
 
 procedure _Контрольные_Примеры.SetUp;
@@ -774,7 +770,6 @@ end;
 
 procedure _Контрольные_Примеры.fm_pc_triggers;
 begin
-  PostponeTill(2021, 8, 15);
 end;
 
 procedure _Контрольные_Примеры.fm_pc_user;
@@ -783,7 +778,6 @@ end;
 
 procedure _Контрольные_Примеры.fm_pc_v_pcgi_link;
 begin
-  PostponeTill(2021, 8, 15);
 end;
 
 procedure _Контрольные_Примеры.cm_campaign_edit;
@@ -794,24 +788,16 @@ procedure _Контрольные_Примеры.fm_cc_user;
 begin
 end;
 
-procedure _Контрольные_Примеры.top_dev_style_sop_link_api;
-begin
-  PostponeTill(2021, 8, 15);
-end;
-
 procedure _Контрольные_Примеры.top_lc_calc_utils;
 begin
-  PostponeTill(2021, 8, 15);
 end;
 
 procedure _Контрольные_Примеры.top_ref_api;
 begin
-  PostponeTill(2021, 8, 15);
 end;
 
 procedure _Контрольные_Примеры.top_report_api;
 begin
-  PostponeTill(2021, 8, 15);
 end;
 
 { _Сопоставление_Полей }
