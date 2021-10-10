@@ -628,7 +628,7 @@ begin
   _With := Keyword('with');
   if Assigned(_With) then TCommaList<TWithItem>.Parse(Self, Source, _WithList);
   _Select := Keyword('select');
-  if not Assigned(_Select) then exit(false);
+  if not Assigned(_Select) then exit(Assigned(_With)); { ошибка в выражении with до select - не повод отказывать в распознавании конструкции }
   _Distinct := Keyword(['distinct', 'unique', 'all']);
   TAliasedExpressions.Parse(Self, Source, _SelectList);
   TInto.Parse(Self, Source, _Into);
@@ -900,7 +900,6 @@ end;
 function TQueryTableExpression.InternalParse: boolean;
 begin
   Result := TTableCollectionExpression.Parse(Self, Source, _Body) or
-            TParser.Parse(Source, Settings, FromSpecFunctionParser, Self, _Body) or
             TLateral.Parse(Self, Source, _Body) or
             TTableViewExpression.Parse(Self, Source, _Body);
 end;
@@ -935,10 +934,9 @@ end;
 function TTableCollectionExpression.InternalParse: boolean;
 begin
   _Table := Keyword('table');
-  Result := Assigned(_Table);
-  if not Result then exit;
-  TExpression.Parse(Self, Source, _Value);
-  _Outer := Terminal('(+)');
+  if Assigned(_Table) then TExpression.Parse(Self, Source, _Value);
+  Result := Assigned(_Table) or TParser.Parse(Source, Settings, TableSpecFunctionParser, Self, _Value);
+  if Result then _Outer := Terminal('(+)');
 end;
 
 procedure TTableCollectionExpression.InternalPrintSelf(APrinter: TPrinter);
@@ -1289,14 +1287,14 @@ end;
 
 function TAliasedExpressions.Aligned: TAlignMode;
 begin
-  Result := AlignMode(Settings.AlignFields);
+  Result := AlignMode(Settings.AlignFields or Settings.AlignExpressions);
 end;
 
 { TTableReferences }
 
 function TTableReferences.Aligned: TAlignMode;
 begin
-  Result := AlignMode(Settings.AlignFrom and IsSimpleReferences);
+  Result := AlignMode((Settings.AlignFrom or Settings.AlignExpressions) and IsSimpleReferences);
 end;
 
 function TTableReferences.IsSimpleReferences: boolean;

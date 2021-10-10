@@ -460,7 +460,8 @@ procedure TFormatterPrinter.PrintToken(AToken: TToken);
     { Напечатаем лексему и запомним её позицию }
     if SaveTokenPositions and not FakeToken then TokenPos.Add(AToken, TextBuilder.Length);
     {$IFDEF DEBUG}
-    AToken.AddDebugInfo('Позиция в тексте: [%d, %d]', [TextBuilder.Line, TextBuilder.Col]);
+    if Self is TFineCopyPrinter then
+      AToken.AddDebugInfo('Позиция в тексте: [%d, %d]', [TextBuilder.Line, TextBuilder.Col]);
     {$ENDIF}
     TextBuilder.AppendText(Value);
     if SaveTokenPositions then AToken.Printed := true;
@@ -528,6 +529,7 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   procedure CollectRulers;
   var DraftPrinter: TFormatterPrinter;
   begin
+    Assert(AStatement.Rulers <> nil);
     if AStatement.Rulers.Full then exit;
     DraftPrinter := TDraftPrinter.Create(Self.Settings, false, [poFarAbove..poFarBelow], false);
     try

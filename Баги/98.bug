@@ -1,0 +1,165 @@
+-- Должны нормально разбираться запросы, содержащие xmltable с (+)
+
+with
+    xml_data as
+        (
+            select
+                x.code,
+                bp.email_block_code,
+                bp.email_block_order,
+                p.email_block_param,
+                p.code as code_param,
+                p.parent_code as parent_code_param,
+                p.email_block_param_val,
+                p.email_block_level_param,
+                bp.steps,
+                pv.param_val,
+                pv.order_num as param_val_order
+            from
+                xmltable
+                (
+                    'email'
+                    passing
+                        xmltype(:b1)
+                    columns
+                        code number(18) path '@code',
+                        name varchar2(200 char) path '@name',
+                        block_par xmltype path './email_content/email_blocks'
+                ) x,
+                xmltable
+                (
+                    '/email_blocks/email_block'
+                    passing
+                        x.block_par
+                    columns
+                        code number(18) path '@code',
+                        email_block_code number(18) path '@code_block',
+                        steps number(2) path '@steps',
+                        email_block_order number(5) path '@block_order',
+                        params xmltype path './params'
+                ) (+) bp,
+                xmltable
+                (
+                    '/params/param'
+                    passing
+                        bp.params
+                    columns
+                        code varchar2(100 char) path '@code',
+                        parent_code varchar2(100 char) path '@parent_code',
+                        email_template_block_code number(18) path '@code_block',
+                        email_block_param number(18) path '@code_param',
+                        email_block_level_param varchar2(100 char) path '@level_param',
+                        email_block_param_val clob path 'xs:string(./value)',
+                        formula_vars xmltype path './formula_vars'
+                ) (+) p,
+                xmltable
+                (
+                    '/formula_vars/formula_var'
+                    passing
+                        p.formula_vars
+                    columns
+                        code varchar2(100 char) path '@code',
+                        order_num number(2) path '@order_num',
+                        param_val varchar2(4000 char) path '@param_val'
+                ) (+) pv
+        )
+select
+    p.code,
+    p.email_block_code,
+    p.email_block_order,
+    p.email_block_param,
+    p.code_param,
+    p.parent_code_param,
+    case when to_char(dbms_lob.substr(p.email_block_param_val, 2000, 1)) is null and ref_bp.show_for_user = 0 then to_clob(ref_bp.default_val) else p.email_block_param_val end email_block_param_val,
+    p.param_val_order,
+    p.param_val,
+    ref_bp.num_param as email_block_num_param,
+    ref_bp.type_par,
+    ref_bp.level_param,
+    ref_bp.name,
+    ref_bp.default_val,
+    ref_bp.show_for_user
+from
+    xml_data p,
+    (
+        select distinct
+            code as code_param,
+            code || '_' || lv as code,
+            decode(lv_first, 1, null, parent_code || '_' || lv) as parent_code,
+            a.email_block,
+            type_par,
+            can_null,
+            decode(type_par, 5, num_param + lv - 1, num_param) num_param,
+            name,
+            name_gui,
+            substr(level_param, 1, instr(level_param, '.')) || (substr(level_param, instr(level_param, '.') + 1) + lv - 1) as level_param,
+            default_val,
+            show_for_user
+        from
+            (
+                select
+                    p.*,
+                    level as lv_first
+                from
+                    tu_ref_cm_email_block_par p
+                where
+                    p.email_block in (select email_block_code from xml_data)
+                start with
+                    p.type_par = 5
+                    and p.email_block in (select email_block_code from xml_data)
+                connect by
+                    prior p.code = p.parent_code
+                    and prior p.email_block = p.email_block
+            )
+            a,
+            (
+                select
+                    level as lv,
+                    email_block_code
+                from
+                    (
+                        select
+                            steps,
+                            email_block_code
+                        from
+                            xml_data
+                        group by
+                            steps,
+                            email_block_code
+                    )
+                connect by
+                    level <= steps
+            )
+            b
+        where
+            a.email_block = b.email_block_code
+        union all
+        select
+            code as code_param,
+            cast (code as varchar2(100 char)),
+            cast (parent_code as varchar2(100 char)),
+            email_block,
+            type_par,
+            can_null,
+            num_param,
+            name,
+            name_gui,
+            level_param,
+            default_val,
+            show_for_user
+        from
+            tu_ref_cm_email_block_par
+        where
+            email_block in (select email_block_code from xml_data)
+            and type_par != 5
+        start with
+            parent_code is null
+        connect by
+            prior code = parent_code
+            and prior type_par != 5
+            and prior email_block = email_block
+    )
+    ref_bp
+where
+    p.email_block_param = ref_bp.code_param (+)
+    and p.email_block_level_param = ref_bp.level_param (+)

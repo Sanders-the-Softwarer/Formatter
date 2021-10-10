@@ -696,7 +696,7 @@ end;
 
 function TStatement.GetRulers: TRulers;
 begin
-  if IsAligned then
+  if Aligned <> amNever then
     begin
       if not Assigned(FRulers) then FRulers := TRulers.Create(Self);
       Result := FRulers;

@@ -268,7 +268,7 @@ begin
 end;
 
 initialization
-  FromSpecFunctionParser.Add(TXmlTable);
+  TableSpecFunctionParser.Add(TXmlTable);
 
 end.
 

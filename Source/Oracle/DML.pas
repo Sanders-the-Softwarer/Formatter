@@ -135,8 +135,8 @@ function DMLParser: TParserInfo;
 { Парсер для функций с особым синтаксисом, употребляемых в select }
 function SelectSpecFunctionParser: TParserInfo;
 
-{ Парсер для функций с особым синтаксисом, употребляемых во from }
-function FromSpecFunctionParser: TParserInfo;
+{ Парсер для табличных функций с особым синтаксисом, употребляемых во from }
+function TableSpecFunctionParser: TParserInfo;
 
 implementation
 
@@ -155,10 +155,10 @@ begin
   Result := TParserInfo.InstanceFor('Oracle.Special-Functions.Select');
 end;
 
-{ Парсер для функций с особым синтаксисом, употребляемых во from }
-function FromSpecFunctionParser: TParserInfo;
+{ Парсер для табличных функций с особым синтаксисом, употребляемых во from }
+function TableSpecFunctionParser: TParserInfo;
 begin
-  Result := TParserInfo.InstanceFor('Oracle.Special-Functions.From');
+  Result := TParserInfo.InstanceFor('Oracle.Special-Functions.Table');
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
