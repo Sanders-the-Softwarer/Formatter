@@ -1287,14 +1287,14 @@ end;
 
 function TAliasedExpressions.Aligned: TAlignMode;
 begin
-  Result := AlignMode(Settings.AlignFields or Settings.AlignExpressions);
+  Result := AlignMode(Settings.AlignFields);
 end;
 
 { TTableReferences }
 
 function TTableReferences.Aligned: TAlignMode;
 begin
-  Result := AlignMode((Settings.AlignFrom or Settings.AlignExpressions) and IsSimpleReferences);
+  Result := AlignMode(Settings.AlignFrom and IsSimpleReferences);
 end;
 
 function TTableReferences.IsSimpleReferences: boolean;

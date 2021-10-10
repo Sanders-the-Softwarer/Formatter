@@ -529,7 +529,6 @@ procedure TFormatterPrinter.PrintStatement(AStatement: TStatement);
   procedure CollectRulers;
   var DraftPrinter: TFormatterPrinter;
   begin
-    Assert(AStatement.Rulers <> nil);
     if AStatement.Rulers.Full then exit;
     DraftPrinter := TDraftPrinter.Create(Self.Settings, false, [poFarAbove..poFarBelow], false);
     try
