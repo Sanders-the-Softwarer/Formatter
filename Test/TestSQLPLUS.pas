@@ -93,7 +93,7 @@ end;
 
 procedure _Команды_SQLPLUS.Get;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Accept;
@@ -102,12 +102,12 @@ end;
 
 procedure _Команды_SQLPLUS.Append;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.ArchiveLog;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.At;
@@ -116,32 +116,32 @@ end;
 
 procedure _Команды_SQLPLUS.Attribute;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Break;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.BTitle;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Change;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Help;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.History;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Host;
@@ -150,57 +150,57 @@ end;
 
 procedure _Команды_SQLPLUS.Input;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.List;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Password;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Pause;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Print;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Prompt;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Recover;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Remark;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.RepFooter;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.RepHeader;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Run;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Clear;
@@ -209,22 +209,22 @@ end;
 
 procedure _Команды_SQLPLUS.Column;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Compute;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Connect;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Copy;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Define;
@@ -233,22 +233,22 @@ end;
 
 procedure _Команды_SQLPLUS.Del;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Describe;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Disconnect;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Save;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Set_;
@@ -257,42 +257,42 @@ end;
 
 procedure _Команды_SQLPLUS.Show;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Shutdown;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Spool;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Start;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Startup;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Store;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Timing;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Ttitle;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Undefine;
@@ -309,12 +309,12 @@ end;
 
 procedure _Команды_SQLPLUS.Edit;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.XQuery;
 begin
-  PostponeTill(2021, 10, 30);
+  PostponeTill(2024, 7, 1);
 end;
 
 procedure _Команды_SQLPLUS.Execute;

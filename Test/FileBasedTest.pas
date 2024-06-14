@@ -89,7 +89,7 @@ end;
 
 function TFileBasedTest.GetDir: string;
 begin
-  Result := '..\Фичи\';
+  Result := 'X:\Projects\Formatter\Фичи\';
 end;
 
 function TFileBasedTest.GetExtIn: string;

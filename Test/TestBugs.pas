@@ -127,7 +127,7 @@ implementation
 
 function _Bugs.GetDir: string;
 begin
-  Result := '..\Баги\';
+  Result := 'X:\Projects\Formatter\Баги\';
 end;
 
 function _Bugs.GetExtIn: string;

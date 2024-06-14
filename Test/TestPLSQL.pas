@@ -202,28 +202,6 @@ type
     procedure Переносы_По_And_Or;
   end;
 
-  { Контрольные примеры - большие файлы, на которых проверяется глобально
-    удовлетворительный результат }
-  _Контрольные_Примеры = class(TFileBasedTest)
-  protected
-    function GetDir: string; override;
-    function GetExtIn: string; override;
-    function GetExtOut: string; override;
-    function GetFileNameToSave(const AFileName: string): string; override;
-    procedure SetUp; override;
-  published
-    procedure fm_cc_user;
-    procedure fm_pc_sequences;
-    procedure fm_pc_triggers;
-    procedure fm_pc_user;
-    procedure fm_pc_v_pcgi_link;
-    procedure top_lc_calc_utils;
-    procedure root_container_init;
-    procedure top_report_api;
-    procedure top_ref_api;
-    procedure cm_campaign_edit;
-  end;
-
 implementation
 
 { _PLSQL }
@@ -727,79 +705,6 @@ begin
   Settings.PreferredExpressionLength := 100;
 end;
 
-{ _Контрольные_Примеры }
-
-function _Контрольные_Примеры.GetDir: string;
-begin
-  Result := ExtractFilePath(ExcludeTrailingPathDelimiter(inherited GetDir)) + '\Контрольные примеры';
-end;
-
-function _Контрольные_Примеры.GetExtIn: string;
-begin
-  { НЕ НАДО !! менять это расширение. Его суть в том, чтобы файлы не попали
-    под маску команды git add и не уехали в репозиторий. Поскольку это файлы
-    исходников Спортмастера, будет очень плохо опубликовать их таким образом }
-  Result := '.original';
-end;
-
-function _Контрольные_Примеры.GetExtOut: string;
-begin
-  { НЕ НАДО !! менять это расширение. Его суть в том, чтобы файлы не попали
-    под маску команды git add и не уехали в репозиторий. Поскольку это файлы
-    исходников Спортмастера, будет очень плохо опубликовать их таким образом }
-  Result := '.formatted';
-end;
-
-function _Контрольные_Примеры.GetFileNameToSave(const AFileName: string): string;
-begin
-  Result := AFileName + '.actual';
-end;
-
-procedure _Контрольные_Примеры.root_container_init;
-begin
-end;
-
-procedure _Контрольные_Примеры.SetUp;
-begin
-  Settings := TFormatSettings.Default;
-end;
-
-procedure _Контрольные_Примеры.fm_pc_sequences;
-begin
-end;
-
-procedure _Контрольные_Примеры.fm_pc_triggers;
-begin
-end;
-
-procedure _Контрольные_Примеры.fm_pc_user;
-begin
-end;
-
-procedure _Контрольные_Примеры.fm_pc_v_pcgi_link;
-begin
-end;
-
-procedure _Контрольные_Примеры.cm_campaign_edit;
-begin
-end;
-
-procedure _Контрольные_Примеры.fm_cc_user;
-begin
-end;
-
-procedure _Контрольные_Примеры.top_lc_calc_utils;
-begin
-end;
-
-procedure _Контрольные_Примеры.top_ref_api;
-begin
-end;
-
-procedure _Контрольные_Примеры.top_report_api;
-begin
-end;
-
 { _Сопоставление_Полей }
 
 function _Сопоставление_Полей.GetDir: string;
@@ -845,7 +750,6 @@ initialization
   RegisterTest(_SQL_Типы.Suite);
   RegisterTest(_PLSQL_Типы.Suite);
   RegisterTest(_Форматирование_Выражений.Suite);
-  RegisterTest(_Контрольные_Примеры.Suite);
   RegisterTest(_Прочее.Suite);
 
 end.

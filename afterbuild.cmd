@@ -1,4 +1,6 @@
-x:
+exit 
+
+w:
 cd \formatter
 del /f /q /s Win32\*.*
 del /f /q /s Win64\*.*
