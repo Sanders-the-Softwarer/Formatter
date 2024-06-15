@@ -28,7 +28,7 @@ unit FileBasedTest;
 
 interface
 
-uses Classes, SysUtils, StrUtils, TestFramework, Printer, Controller;
+uses Classes, SysUtils, StrUtils, TestFramework, Printer;
 
 type
   { Класс автотестов, проверяющих совпадение форматирования файла с результатом }
@@ -64,6 +64,8 @@ type
   end;
 
 implementation
+
+uses Controller, OracleCore;
 
 { Подготовка к выполнению теста }
 procedure TFileBasedTest.SetUp;

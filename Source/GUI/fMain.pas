@@ -98,7 +98,7 @@ implementation
 
 {$R *.dfm}
 
-uses GUIPrinters;
+uses GUIPrinters, OracleCore;
 
 { Приведение переносов строк к стандартному виду }
 function TFormMain.CorrectCRLF: boolean;

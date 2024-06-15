@@ -23,11 +23,6 @@ unit Controller;
   процессом, позволяющий отладочной программе (DebugTool.exe) выдавать
   необходимую ей информацию.
 
-  Функция OracleParser возвращает коллекцию синтаксических конструкций для
-  Oracle. Пока что она размещена здесь просто за неимением лучшего места.
-  Когда форматизатор начнёт поддерживать другие языки - этот аспект, безусловно,
-  потребует рефакторинга.
-
 ------------------------------------------------------------------------------ }
 
 interface
@@ -46,18 +41,9 @@ function MakeAdvancedTokenStream(ATokenStream: TBufferedStream<TToken>): TBuffer
 { Создание потока синтаксических конструкций из потока лексем }
 function MakeStatementStream(ATokenStream: TBufferedStream<TToken>; ASettings: TFormatSettings; AParserInfo: TParserInfo): TBufferedStream<TStatement>;
 
-{ Парсер для ораклового синтаксиса }
-function OracleParser: TParserInfo;
-
 implementation
 
 uses Tokenizer;
-
-{ Парсер для ораклового синтаксиса }
-function OracleParser: TParserInfo;
-begin
-  Result := TParserInfo.InstanceFor('Oracle');
-end;
 
 { Форматирование текста, полученного в виде строки, с возвратом результата в строку }
 procedure MakeFormatted(const AText: string; ASettings: TFormatSettings; AParserInfo: TParserInfo; out AResult: string);

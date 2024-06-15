@@ -24,8 +24,20 @@ unit OracleCore;
 
 interface
 
+uses Parser;
+
+{ Парсер для ораклового синтаксиса }
+function OracleParser: TParserInfo;
+
 implementation
 
 uses PLSQL, DML, DDL, SQLPlus;
+
+
+{ Парсер для ораклового синтаксиса }
+function OracleParser: TParserInfo;
+begin
+  Result := TParserInfo.InstanceFor('Oracle');
+end;
 
 end.

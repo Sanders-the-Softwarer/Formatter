@@ -565,7 +565,8 @@ function DeclarationParser: TParserInfo;
 implementation
 
 uses Expressions, DML, DDL, Keywords, Select, Label_, Goto_, Exit_,
-  OpenFor, ForAll, Assignment, DML_Commons, Controller, SubType, ExecuteImmediate;
+  OpenFor, ForAll, Assignment, DML_Commons, SubType, ExecuteImmediate,
+  OracleCore;
 
 { Парсер для PL/SQL }
 function PLSQLParser: TParserInfo;

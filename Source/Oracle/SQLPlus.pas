@@ -67,7 +67,7 @@ function SQLPlusParser: TParserInfo;
 implementation
 
 uses Expressions, Keywords, Set_SQLPlus, Exit_SQLPlus, Clear,
-  Define, Execute, At, Slash, Accept, Host, Variable, Undefine, Controller;
+  Define, Execute, At, Slash, Accept, Host, Variable, Undefine, OracleCore;
 
 { Парсер для SQL*Plus }
 function SQLPlusParser: TParserInfo;

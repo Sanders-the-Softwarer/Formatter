@@ -160,6 +160,57 @@
         <DCCReference Include="Source\Core\Parser.pas"/>
         <DCCReference Include="Source\Core\Controller.pas"/>
         <DCCReference Include="Source\Core\Tokenizer.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Accept.pas"/>
+        <DCCReference Include="Source\SQL_Plus\At.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Clear.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Define.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Execute.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Exit_SQLPlus.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Host.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Set_SQLPlus.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Slash.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Undefine.pas"/>
+        <DCCReference Include="Source\SQL_Plus\Variable.pas"/>
+        <DCCReference Include="Source\Oracle\Commons.pas"/>
+        <DCCReference Include="Source\Oracle\DML.pas"/>
+        <DCCReference Include="Source\Oracle\Expressions.pas"/>
+        <DCCReference Include="Source\Oracle\Intervals.pas"/>
+        <DCCReference Include="Source\Oracle\PLSQL.pas"/>
+        <DCCReference Include="Source\Oracle\SQLPlus.pas"/>
+        <DCCReference Include="Source\DDL\Alter.pas"/>
+        <DCCReference Include="Source\DDL\AlterPackageProcedureFunction.pas"/>
+        <DCCReference Include="Source\DDL\Create.pas"/>
+        <DCCReference Include="Source\DDL\DatabaseLink.pas"/>
+        <DCCReference Include="Source\DDL\Drop.pas"/>
+        <DCCReference Include="Source\DDL\Grant.pas"/>
+        <DCCReference Include="Source\DDL\Role.pas"/>
+        <DCCReference Include="Source\DDL\Sequence.pas"/>
+        <DCCReference Include="Source\DDL\Session.pas"/>
+        <DCCReference Include="Source\DDL\Set_.pas"/>
+        <DCCReference Include="Source\DDL\Synonym.pas"/>
+        <DCCReference Include="Source\DML\Call.pas"/>
+        <DCCReference Include="Source\DML\DML_Commons.pas"/>
+        <DCCReference Include="Source\DML\Insert.pas"/>
+        <DCCReference Include="Source\DML\Select.pas"/>
+        <DCCReference Include="Source\DML\Update.pas"/>
+        <DCCReference Include="Source\PLSQL\Assignment.pas"/>
+        <DCCReference Include="Source\PLSQL\Exit_.pas"/>
+        <DCCReference Include="Source\PLSQL\ForAll.pas"/>
+        <DCCReference Include="Source\PLSQL\Goto_.pas"/>
+        <DCCReference Include="Source\PLSQL\Label_.pas"/>
+        <DCCReference Include="Source\PLSQL\OpenFor.pas"/>
+        <DCCReference Include="Source\PLSQL\Trigger.pas"/>
+        <DCCReference Include="Source\Oracle\OracleCore.pas"/>
+        <DCCReference Include="Source\DML\XMLTable.pas"/>
+        <DCCReference Include="Source\DML\Trim.pas"/>
+        <DCCReference Include="Source\DML\Extract.pas"/>
+        <DCCReference Include="Source\DML\ListAgg.pas"/>
+        <DCCReference Include="Source\DDL\View.pas"/>
+        <DCCReference Include="Source\DML\XMLSerialize.pas"/>
+        <DCCReference Include="Source\PLSQL\Subtype.pas"/>
+        <DCCReference Include="Source\Oracle\DDL.pas"/>
+        <DCCReference Include="Source\DDL\Context.pas"/>
+        <DCCReference Include="Source\PLSQL\ExecuteImmediate.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -932,7 +983,6 @@
             <Platforms>
                 <Platform value="Android">False</Platform>
                 <Platform value="Android64">False</Platform>
-                <Platform value="Linux64">False</Platform>
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">True</Platform>
             </Platforms>

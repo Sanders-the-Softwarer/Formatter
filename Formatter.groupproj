@@ -6,9 +6,6 @@
         <Projects Include="Core.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Oracle.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="DebugTool.dproj">
             <Dependencies/>
         </Projects>
@@ -37,15 +34,6 @@
     </Target>
     <Target Name="Core:Make">
         <MSBuild Projects="Core.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="Oracle">
-        <MSBuild Projects="Oracle.dproj"/>
-    </Target>
-    <Target Name="Oracle:Clean">
-        <MSBuild Projects="Oracle.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="Oracle:Make">
-        <MSBuild Projects="Oracle.dproj" Targets="Make"/>
     </Target>
     <Target Name="DebugTool">
         <MSBuild Projects="DebugTool.dproj"/>
@@ -84,13 +72,13 @@
         <MSBuild Projects="CmdLineFormatter.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="Core;Oracle;DebugTool;Test;PLSQLDev_Plugin;CmdLineFormatter"/>
+        <CallTarget Targets="Core;DebugTool;Test;PLSQLDev_Plugin;CmdLineFormatter"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Core:Clean;Oracle:Clean;DebugTool:Clean;Test:Clean;PLSQLDev_Plugin:Clean;CmdLineFormatter:Clean"/>
+        <CallTarget Targets="Core:Clean;DebugTool:Clean;Test:Clean;PLSQLDev_Plugin:Clean;CmdLineFormatter:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Core:Make;Oracle:Make;DebugTool:Make;Test:Make;PLSQLDev_Plugin:Make;CmdLineFormatter:Make"/>
+        <CallTarget Targets="Core:Make;DebugTool:Make;Test:Make;PLSQLDev_Plugin:Make;CmdLineFormatter:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

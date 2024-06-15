@@ -261,7 +261,7 @@ function DDLParser: TParserInfo;
 implementation
 
 uses DML, Expressions, Trigger, Role, Sequence, Synonym, Create, Alter,
-  Set_, Select, Grant, Drop, DML_Commons, Controller;
+  Set_, Select, Grant, Drop, DML_Commons, OracleCore;
 
 { Парсер для DDL }
 function DDLParser: TParserInfo;
