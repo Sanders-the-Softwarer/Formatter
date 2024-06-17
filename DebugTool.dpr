@@ -5,6 +5,7 @@ uses
   FastMM4Messages in 'Lib\FastMM4Messages.pas',
   Vcl.Forms,
   OracleCore,
+  PostgresCore,
   fMain in 'Source\GUI\fMain.pas' {FormMain},
   GUIPrinters in 'Source\GUI\GUIPrinters.pas',
   frSettings in 'Source\GUI\frSettings.pas' {FrameSettings: TFrame};

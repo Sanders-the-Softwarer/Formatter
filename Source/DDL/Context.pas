@@ -29,7 +29,7 @@ type
 
 implementation
 
-uses Commons, Create;
+uses Commons, OracleCreate;
 
 { TContext }
 
@@ -56,6 +56,6 @@ begin
 end;
 
 initialization
-  CreateParser.Add(TContext);
+  OracleCreateParser.Add(TContext);
 
 end.

@@ -12,36 +12,28 @@ unit Create;
 
 interface
 
-uses Statements, Tokens, Printer, Parser, Commons;
+uses Commons, Statements, Tokens, Printer, Parser, Keywords;
 
 type
   { Команда create [or replace] }
-  TCreate = class(TSemicolonSlashStatement)
+  TCreate = class(TSemicolonStatement)
   strict private
-    _Create, _Or, _Replace, _Editionable, _Force: TEpithet;
+    _Create, _Or, _Replace: TEpithet;
     _What: TStatement;
-    _Slash: TTerminal;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  strict protected
+    function WhatParser: TParserInfo; virtual; abstract;
+    function AdditionalParse: boolean; virtual;
+    procedure AdditionalPrintSelf(APrinter: TPrinter); virtual;
   public
     function StatementName: string; override;
     function Grouping: TStatementClass; override;
     function SameTypeAligned: TAlignMode; override;
   end;
 
-{ Список конструкций для команды CREATE }
-function CreateParser: TParserInfo;
-
 implementation
-
-uses DDL, PLSQL, Sequence, Trigger, Role, Synonym, DatabaseLink, View, Context;
-
-{ Список конструкций для команды CREATE }
-function CreateParser: TParserInfo;
-begin
-  Result := TParserInfo.InstanceFor('Oracle.DDL.Create');
-end;
 
 { TCreate }
 
@@ -55,22 +47,29 @@ begin
   _Or := Keyword('or');
   if Assigned(_Or) then _Replace := Keyword('replace');
   if Assigned(_Or) and not Assigned(_Replace) then exit(true);
-  { Проверим наличие editionable }
-  _Editionable := Keyword(['editionable', 'noneditionable']);
-  { Проверим наличие force }
-  _Force := Keyword('force');
+  { Место для подключения дополнительных конструкций в наследниках }
+  if not AdditionalParse then exit(false);
   { И, наконец, распознаем, что же мы создаём }
-  if TParser.Parse(Source, Settings, CreateParser, Self, _What) or
+  if TParser.Parse(Source, Settings, WhatParser, Self, _What) or
      TUnexpectedToken.Parse(Self, Source, _What) then inherited;
-  { Завершающий слеш }
-  _Slash := Terminal('/');
+end;
+
+function TCreate.AdditionalParse: boolean;
+begin
+  Result := true;
 end;
 
 procedure TCreate.InternalPrintSelf(APrinter: TPrinter);
 begin
-  APrinter.PrintItems([_Create, _Or, _Replace, _Editionable, _Force, _What]);
+  APrinter.PrintItems([_Create, _Or, _Replace]);
+  AdditionalPrintSelf(APrinter);
+  APrinter.PrintItems([_What]);
   inherited;
-  APrinter.NextLineIf([_Slash]);
+end;
+
+procedure TCreate.AdditionalPrintSelf(APrinter: TPrinter);
+begin
+  { ничего не делаем }
 end;
 
 function TCreate.StatementName: string;
@@ -91,22 +90,5 @@ begin
     then Result := _What.SameTypeAligned
     else Result := amNever;
 end;
-
-initialization
-  with CreateParser do
-  begin
-    Add(TTable);
-    Add(TIndex);
-    Add(TPackage);
-    Add(TSubroutine);
-    Add(TTypeBody);
-    Add(TType);
-    Add(TSequence);
-    Add(TTrigger);
-    Add(TSynonym);
-    Add(TUser);
-    Add(TRole);
-    Add(TDatabaseLink);
-  end;
 
 end.

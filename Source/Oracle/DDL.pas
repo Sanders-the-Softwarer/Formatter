@@ -228,6 +228,7 @@ type
 
   { Конструкция sharing }
   TSharing = class(TStatement)
+  strict private
     _Sharing, _What: TEpithet;
     _Eq: TTerminal;
   strict protected
@@ -260,8 +261,8 @@ function DDLParser: TParserInfo;
 
 implementation
 
-uses DML, Expressions, Trigger, Role, Sequence, Synonym, Create, Alter,
-  Set_, Select, Grant, Drop, DML_Commons, OracleCore;
+uses DML, Expressions, Trigger, Role, Sequence, Synonym, Alter,
+  Set_, Select, Grant, Drop, DML_Commons, OracleCore, OracleCreate;
 
 { Парсер для DDL }
 function DDLParser: TParserInfo;
@@ -714,7 +715,7 @@ initialization
   { Зарегистрируем конструкции DDL }
   with DDLParser do
   begin
-    Add(TCreate);
+    Add(TOracleCreate);
     Add(TDrop);
     Add(TAlter);
     Add(TSet);

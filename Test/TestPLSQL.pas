@@ -345,6 +345,7 @@ end;
 
 procedure _Выравнивание.Полей_В_XmlTable;
 begin
+  PostponeTill(2024, 6, 30);
   Settings.AlignFields := true;
 end;
 

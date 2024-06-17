@@ -59,6 +59,7 @@ type
     checkShowDebugInfo: TCheckBox;
     checkShowSettings: TCheckBox;
     frSettings: TFrameSettings;
+    rgParser: TRadioGroup;
     procedure FormResize(Sender: TObject);
     procedure UpdateRequired(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -98,7 +99,7 @@ implementation
 
 {$R *.dfm}
 
-uses GUIPrinters, OracleCore;
+uses GUIPrinters, Parser;
 
 { Приведение переносов строк к стандартному виду }
 function TFormMain.CorrectCRLF: boolean;
@@ -121,7 +122,7 @@ begin
   { Создадим потоки }
   MinTokenStream  := Controller.MakeMinimalTokenStream(edSrc.Text);
   AdvTokenStream  := Controller.MakeAdvancedTokenStream(MinTokenStream);
-  StatementStream := Controller.MakeStatementStream(AdvTokenStream, Settings, OracleParser);
+  StatementStream := Controller.MakeStatementStream(AdvTokenStream, Settings, TParserInfo.InstanceFor(rgParser.Items[rgParser.ItemIndex]));
   { Напечатаем данные }
   try
     StatementStream.PrintAll(ResultPrinter);

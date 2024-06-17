@@ -51,7 +51,7 @@ type
 
 implementation
 
-uses DDL, Commons, Select, Create;
+uses DDL, Commons, Select, OracleCreate;
 
 { TView }
 
@@ -140,6 +140,6 @@ begin
 end;
 
 initialization
-  CreateParser.Add(TViewCreate);
+  OracleCreateParser.Add(TViewCreate);
 
 end.

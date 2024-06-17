@@ -93,7 +93,11 @@ contains
   Subtype in 'Source\PLSQL\Subtype.pas',
   DDL in 'Source\Oracle\DDL.pas',
   Context in 'Source\DDL\Context.pas',
-  ExecuteImmediate in 'Source\PLSQL\ExecuteImmediate.pas';
+  ExecuteImmediate in 'Source\PLSQL\ExecuteImmediate.pas',
+  OracleCreate in 'Source\Oracle\OracleCreate.pas',
+  PostgresCreate in 'Source\Postgres\PostgresCreate.pas',
+  PostgresCore in 'Source\Postgres\PostgresCore.pas',
+  PostgresDDL in 'Source\Postgres\PostgresDDL.pas';
 
 end.
 

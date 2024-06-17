@@ -211,6 +211,10 @@
         <DCCReference Include="Source\Oracle\DDL.pas"/>
         <DCCReference Include="Source\DDL\Context.pas"/>
         <DCCReference Include="Source\PLSQL\ExecuteImmediate.pas"/>
+        <DCCReference Include="Source\Oracle\OracleCreate.pas"/>
+        <DCCReference Include="Source\Postgres\PostgresCreate.pas"/>
+        <DCCReference Include="Source\Postgres\PostgresCore.pas"/>
+        <DCCReference Include="Source\Postgres\PostgresDDL.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -255,6 +259,12 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="Dcu\Win32\Debug\Core.bpl" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="W:\Formatter\Dcu\Win32\Debug\Core.bpl" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>Core.bpl</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="OSX32">
                         <Operation>1</Operation>

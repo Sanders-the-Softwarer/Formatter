@@ -56,7 +56,7 @@ type
 
 implementation
 
-uses PlugInIntf, RichEdit, Controller, fSettings;
+uses PlugInIntf, RichEdit, Controller, OracleCore, fSettings;
 
 resourcestring
   SDescription      = 'PL/SQL Formatter by Sanders the Softwarer';

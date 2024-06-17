@@ -10,6 +10,7 @@ uses
   Printer,
   Controller,
   OracleCore,
+  PostgresCore,
   GpCommandLineParser in 'Source\Core\GpCommandLineParser.pas';
 
 type
