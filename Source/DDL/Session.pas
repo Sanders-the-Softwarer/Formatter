@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                         Синтаксис параметров сессии                        //
+//                         РЎРёРЅС‚Р°РєСЃРёСЃ РїР°СЂР°РјРµС‚СЂРѕРІ СЃРµСЃСЃРёРё                        //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -34,7 +34,7 @@ uses Streams, Commons, Expressions;
 
 type
 
-  { Параметр сессии }
+  { РџР°СЂР°РјРµС‚СЂ СЃРµСЃСЃРёРё }
   TSessionParam = class(TStatement)
   strict private
     _Name, _Add1, _Add2: TEpithet;
@@ -45,7 +45,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Параметры сессии }
+  { РџР°СЂР°РјРµС‚СЂС‹ СЃРµСЃСЃРёРё }
   TSessionParams = class(TStatementList<TSessionParam>)
   protected
     function AllowUnexpected: boolean; override;

@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                             Декларация  SUBTYPE                            //
+//                             Р”РµРєР»Р°СЂР°С†РёСЏ  SUBTYPE                            //
 //                                                                            //
 //               Copyright(c) 2019-2021 by Sanders the Softwarer              //
 //                                                                            //
@@ -15,7 +15,7 @@ interface
 uses Statements, Tokens, Printer, PLSQL;
 
 type
-  { Определение подтипа }
+  { РћРїСЂРµРґРµР»РµРЅРёРµ РїРѕРґС‚РёРїР° }
   TSubtype = class(TPLSQLStatement)
   strict private
     _Subtype, _Name, _Is, _Character, _Set, _Charset, _Range, _Not, _Null: TEpithet;

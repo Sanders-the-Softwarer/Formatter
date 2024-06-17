@@ -11,9 +11,7 @@ object FormSettings: TFormSettings
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poScreenCenter
-  PixelsPerInch = 96
   TextHeight = 13
   inline frSettings: TFrameSettings
     Left = 0
@@ -21,6 +19,46 @@ object FormSettings: TFormSettings
     Width = 326
     Height = 551
     TabOrder = 0
+    inherited Label1: TLabel
+      Width = 217
+      Height = 13
+      ExplicitWidth = 217
+      ExplicitHeight = 13
+    end
+    inherited Label2: TLabel
+      Width = 216
+      Height = 13
+      ExplicitWidth = 216
+      ExplicitHeight = 13
+    end
+    inherited Label3: TLabel
+      Width = 219
+      Height = 13
+      ExplicitWidth = 219
+      ExplicitHeight = 13
+    end
+    inherited Label4: TLabel
+      Width = 233
+      Height = 13
+      ExplicitWidth = 233
+      ExplicitHeight = 13
+    end
+    inherited Label5: TLabel
+      Left = 180
+      Width = 69
+      Height = 13
+      ExplicitLeft = 180
+      ExplicitWidth = 69
+      ExplicitHeight = 13
+    end
+    inherited Label6: TLabel
+      Left = 181
+      Width = 68
+      Height = 13
+      ExplicitLeft = 181
+      ExplicitWidth = 68
+      ExplicitHeight = 13
+    end
     inherited edDeclarationSingleLineParamLimit: TSpinEdit
       Left = 267
       ExplicitLeft = 267

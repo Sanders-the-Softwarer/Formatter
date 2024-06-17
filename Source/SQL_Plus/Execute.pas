@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                          Команда EXECUTE (SQL*Plus)                        //
+//                          РљРѕРјР°РЅРґР° EXECUTE (SQL*Plus)                        //
 //                                                                            //
 //               Copyright(c) 2019-2021 by Sanders the Softwarer              //
 //                                                                            //
@@ -16,7 +16,7 @@ uses SQLPlus, Tokens, Statements, Printer;
 
 type
 
-  { Команда execute }
+  { РљРѕРјР°РЅРґР° execute }
   TExecute = class(TSQLPlusStatement)
   strict private
     _Cmd: TEpithet;

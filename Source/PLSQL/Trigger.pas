@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                             Синтаксис триггеров                            //
+//                             РЎРёРЅС‚Р°РєСЃРёСЃ С‚СЂРёРіРіРµСЂРѕРІ                            //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -15,7 +15,7 @@ interface
 uses Tokens, Statements, Printer, PLSQL;
 
 type
-  { Триггер }
+  { РўСЂРёРіРіРµСЂ }
   TTrigger = class(TStatement)
   strict private
     _Trigger, _Type, _ForEachRow, _State, _When: TEpithet;
@@ -28,7 +28,7 @@ type
     function StatementName: string; override;
   end;
 
-  { Событие срабатывания триггера }
+  { РЎРѕР±С‹С‚РёРµ СЃСЂР°Р±Р°С‚С‹РІР°РЅРёСЏ С‚СЂРёРіРіРµСЂР° }
   TTriggerEvent = class(TStatement)
   strict private
     _Event, _Of: TEpithet;
@@ -40,7 +40,7 @@ type
     function StatementName: string; override;
   end;
 
-  { События срабатывания триггера }
+  { РЎРѕР±С‹С‚РёСЏ СЃСЂР°Р±Р°С‚С‹РІР°РЅРёСЏ С‚СЂРёРіРіРµСЂР° }
   TTriggerEvents = class(TStatementList<TTriggerEvent>)
   strict private
     _On, _Nested, _Table, _Column, _Of: TEpithet;
@@ -52,7 +52,7 @@ type
     function AllowUnexpected: boolean; override;
   end;
 
-  { Конструкция referencing }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ referencing }
   TReferencing = class(TStatement)
   strict private
     _Referencing, _Old, _New, _Parent, _OldVar, _NewVar, _ParentVar,
@@ -62,7 +62,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция default collation }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ default collation }
   TDefaultCollation = class(TStatement)
   strict private
     _Default, _Collation, _Option: TEpithet;
@@ -71,7 +71,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция edition }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ edition }
   TTriggerEdition = class(TStatement)
   strict private
     _Direction, _Crossedition: TEpithet;
@@ -80,7 +80,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция ordering }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ ordering }
   TTriggerOrdering = class(TStatement)
   strict private
     _Relation: TEpithet;
@@ -90,7 +90,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Тело compound триггера }
+  { РўРµР»Рѕ compound С‚СЂРёРіРіРµСЂР° }
   TTriggerCompoundBody = class(TStatement)
   strict private
     _CompoundTrigger, _End, _AfterEnd: TEpithet;
@@ -101,7 +101,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Блок составного триггера }
+  { Р‘Р»РѕРє СЃРѕСЃС‚Р°РІРЅРѕРіРѕ С‚СЂРёРіРіРµСЂР° }
   TTimingBlock = class(TProgramBlock)
   strict protected
     function GetHeaderClass: TStatementClass; override;
@@ -111,7 +111,7 @@ type
     function StatementName: string; override;
   end;
 
-  { Заголовок блока }
+  { Р—Р°РіРѕР»РѕРІРѕРє Р±Р»РѕРєР° }
   TTimingBlockHeader = class(TStatement)
   private
     _TimingPoint, _Is: TEpithet;
@@ -143,7 +143,7 @@ begin
   _State := Keyword(['enable', 'disable']);
   _When := Keyword('when');
   if Assigned(_When) then TExpression.Parse(Self, Source, _Condition);
-  { Самое весёлое - тело триггера }
+  { РЎР°РјРѕРµ РІРµСЃС‘Р»РѕРµ - С‚РµР»Рѕ С‚СЂРёРіРіРµСЂР° }
   if not TTriggerCompoundBody.Parse(Self, Source, _Body) and
      not TAnonymousBlock.Parse(Self, Source, _Body) and
      not TCall.Parse(Self, Source, _Body) then exit;

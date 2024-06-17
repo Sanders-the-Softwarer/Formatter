@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                          Команда ACCEPT (SQL*Plus)                         //
+//                          РљРѕРјР°РЅРґР° ACCEPT (SQL*Plus)                         //
 //                                                                            //
 //               Copyright(c) 2019-2021 by Sanders the Softwarer              //
 //                                                                            //
@@ -16,7 +16,7 @@ uses Tokens, Statements, Printer, SQLPlus;
 
 type
 
-  { Команда accept }
+  { РљРѕРјР°РЅРґР° accept }
   TAccept = class(TSQLPlusStatement)
   strict private
     _Accept, _Type, _Format, _Default, _Prompt, _Hide: TEpithet;

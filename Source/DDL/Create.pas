@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                                Команда CREATE                              //
+//                                РљРѕРјР°РЅРґР° CREATE                              //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -15,7 +15,7 @@ interface
 uses Commons, Statements, Tokens, Printer, Parser, Keywords;
 
 type
-  { Команда create [or replace] }
+  { РљРѕРјР°РЅРґР° create [or replace] }
   TCreate = class(TSemicolonStatement)
   strict private
     _Create, _Or, _Replace: TEpithet;
@@ -40,16 +40,16 @@ implementation
 function TCreate.InternalParse: boolean;
 begin
   Result := true;
-  { Если распознали слово create, то распознали конструкцию }
+  { Р•СЃР»Рё СЂР°СЃРїРѕР·РЅР°Р»Рё СЃР»РѕРІРѕ create, С‚Рѕ СЂР°СЃРїРѕР·РЅР°Р»Рё РєРѕРЅСЃС‚СЂСѓРєС†РёСЋ }
   _Create := Keyword('create');
   if not Assigned(_Create) then exit(false);
-  { Проверим наличие or replace }
+  { РџСЂРѕРІРµСЂРёРј РЅР°Р»РёС‡РёРµ or replace }
   _Or := Keyword('or');
   if Assigned(_Or) then _Replace := Keyword('replace');
   if Assigned(_Or) and not Assigned(_Replace) then exit(true);
-  { Место для подключения дополнительных конструкций в наследниках }
+  { РњРµСЃС‚Рѕ РґР»СЏ РїРѕРґРєР»СЋС‡РµРЅРёСЏ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹С… РєРѕРЅСЃС‚СЂСѓРєС†РёР№ РІ РЅР°СЃР»РµРґРЅРёРєР°С… }
   if not AdditionalParse then exit(false);
-  { И, наконец, распознаем, что же мы создаём }
+  { Р, РЅР°РєРѕРЅРµС†, СЂР°СЃРїРѕР·РЅР°РµРј, С‡С‚Рѕ Р¶Рµ РјС‹ СЃРѕР·РґР°С‘Рј }
   if TParser.Parse(Source, Settings, WhatParser, Self, _What) or
      TUnexpectedToken.Parse(Self, Source, _What) then inherited;
 end;
@@ -69,7 +69,7 @@ end;
 
 procedure TCreate.AdditionalPrintSelf(APrinter: TPrinter);
 begin
-  { ничего не делаем }
+  { РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
 end;
 
 function TCreate.StatementName: string;

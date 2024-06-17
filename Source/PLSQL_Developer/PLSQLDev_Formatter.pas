@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                 Основной объект плагина для PL/SQL Developer               //
+//                 РћСЃРЅРѕРІРЅРѕР№ РѕР±СЉРµРєС‚ РїР»Р°РіРёРЅР° РґР»СЏ PL/SQL Developer               //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -22,32 +22,32 @@ type
     HasIDE_GetEditorHandle, HasIDE_SetMenuVisible, HasIDE_GetPrefAsString,
       HasIDE_SetPrefAsString: boolean;
   protected
-    { Управление доступностью пункта меню }
+    { РЈРїСЂР°РІР»РµРЅРёРµ РґРѕСЃС‚СѓРїРЅРѕСЃС‚СЊСЋ РїСѓРЅРєС‚Р° РјРµРЅСЋ }
     procedure ShowMenuItem(AIndex: integer; AState: boolean);
-    { Форматирование текста }
+    { Р¤РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёРµ С‚РµРєСЃС‚Р° }
     procedure FormatText(ANewWindow: boolean);
   public
-    { Возврат синглтона }
+    { Р’РѕР·РІСЂР°С‚ СЃРёРЅРіР»С‚РѕРЅР° }
     class function GetInstance: TPLSQLDevPlugIn;
-    { Создание-уничтожение объекта }
+    { РЎРѕР·РґР°РЅРёРµ-СѓРЅРёС‡С‚РѕР¶РµРЅРёРµ РѕР±СЉРµРєС‚Р° }
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
   public
-    { Сохранение идентификатора плагина }
+    { РЎРѕС…СЂР°РЅРµРЅРёРµ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂР° РїР»Р°РіРёРЅР° }
     procedure Identify(APluginID: integer);
-    { Возврат описания плагина }
+    { Р’РѕР·РІСЂР°С‚ РѕРїРёСЃР°РЅРёСЏ РїР»Р°РіРёРЅР° }
     function Description: string;
-    { Возврат списка пунктов меню }
+    { Р’РѕР·РІСЂР°С‚ СЃРїРёСЃРєР° РїСѓРЅРєС‚РѕРІ РјРµРЅСЋ }
     procedure GetMenuItems(const AItems: TStrings);
-    { Активация плагина }
+    { РђРєС‚РёРІР°С†РёСЏ РїР»Р°РіРёРЅР° }
     procedure Activate;
-    { Деактивация плагина }
+    { Р”РµР°РєС‚РёРІР°С†РёСЏ РїР»Р°РіРёРЅР° }
     procedure Deactivate;
-    { Выполнение пункта меню }
+    { Р’С‹РїРѕР»РЅРµРЅРёРµ РїСѓРЅРєС‚Р° РјРµРЅСЋ }
     procedure MenuItemClick(AIndex: integer);
-    { Загрузка настроек форматирования }
+    { Р—Р°РіСЂСѓР·РєР° РЅР°СЃС‚СЂРѕРµРє С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ }
     procedure LoadSettings;
-    { Сохранение настроек форматирования }
+    { РЎРѕС…СЂР°РЅРµРЅРёРµ РЅР°СЃС‚СЂРѕРµРє С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ }
     procedure SaveSettings;
   public
     property PluginID: integer read FPluginID;
@@ -64,21 +64,21 @@ resourcestring
   SFormatNewWindow  = 'SM Lab / Formatter (new window)';
   SDivider          = 'SM Lab / -';
   SSettings         = 'SM Lab / Settings';
-  SCannotLoad       = 'Плагин не полностью совместим с этой версией PL/SQL Developer. Считывание настроек невозможно';
-  SCannotSave       = 'Плагин не полностью совместим с этой версией PL/SQL Developer. Сохранение настроек невозможно';
+  SCannotLoad       = 'РџР»Р°РіРёРЅ РЅРµ РїРѕР»РЅРѕСЃС‚СЊСЋ СЃРѕРІРјРµСЃС‚РёРј СЃ СЌС‚РѕР№ РІРµСЂСЃРёРµР№ PL/SQL Developer. РЎС‡РёС‚С‹РІР°РЅРёРµ РЅР°СЃС‚СЂРѕРµРє РЅРµРІРѕР·РјРѕР¶РЅРѕ';
+  SCannotSave       = 'РџР»Р°РіРёРЅ РЅРµ РїРѕР»РЅРѕСЃС‚СЊСЋ СЃРѕРІРјРµСЃС‚РёРј СЃ СЌС‚РѕР№ РІРµСЂСЃРёРµР№ PL/SQL Developer. РЎРѕС…СЂР°РЅРµРЅРёРµ РЅР°СЃС‚СЂРѕРµРє РЅРµРІРѕР·РјРѕР¶РЅРѕ';
 
 { TPLSQLDevPlugIn }
 
 var
   Instance: TPLSQLDevPlugIn;
 
-{ Возврат синглтона }
+{ Р’РѕР·РІСЂР°С‚ СЃРёРЅРіР»С‚РѕРЅР° }
 class function TPLSQLDevPlugIn.GetInstance: TPLSQLDevPlugIn;
 begin
   Result := Instance;
 end;
 
-{ Создание-уничтожение объекта }
+{ РЎРѕР·РґР°РЅРёРµ-СѓРЅРёС‡С‚РѕР¶РµРЅРёРµ РѕР±СЉРµРєС‚Р° }
 
 procedure TPLSQLDevPlugIn.AfterConstruction;
 begin
@@ -92,19 +92,19 @@ begin
   inherited;
 end;
 
-{ Сохранение идентификатора плагина }
+{ РЎРѕС…СЂР°РЅРµРЅРёРµ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂР° РїР»Р°РіРёРЅР° }
 procedure TPLSQLDevPlugIn.Identify(APluginID: integer);
 begin
   FPluginID := APluginID;
 end;
 
-{ Возврат описания плагина }
+{ Р’РѕР·РІСЂР°С‚ РѕРїРёСЃР°РЅРёСЏ РїР»Р°РіРёРЅР° }
 function TPLSQLDevPlugIn.Description: string;
 begin
   Result := SDescription;
 end;
 
-{ Возврат списка пунктов меню }
+{ Р’РѕР·РІСЂР°С‚ СЃРїРёСЃРєР° РїСѓРЅРєС‚РѕРІ РјРµРЅСЋ }
 procedure TPLSQLDevPlugIn.GetMenuItems(const AItems: TStrings);
 begin
   Assert(AItems <> nil);
@@ -115,29 +115,29 @@ begin
   AItems.Add(SSettings);
 end;
 
-{ Активация плагина }
+{ РђРєС‚РёРІР°С†РёСЏ РїР»Р°РіРёРЅР° }
 procedure TPLSQLDevPlugIn.Activate;
 begin
-  { Определим имеющиеся функции }
+  { РћРїСЂРµРґРµР»РёРј РёРјРµСЋС‰РёРµСЃСЏ С„СѓРЅРєС†РёРё }
   HasIDE_GetEditorHandle := Assigned(IDE_GetEditorHandle);
   HasIDE_SetMenuVisible  := Assigned(IDE_SetMenuVisible);
   HasIDE_GetPrefAsString := Assigned(IDE_GetPrefAsString);
   HasIDE_SetPrefAsString := Assigned(IDE_SetPrefAsString);
-  { Если можем работать с редактором - можем и форматировать }
+  { Р•СЃР»Рё РјРѕР¶РµРј СЂР°Р±РѕС‚Р°С‚СЊ СЃ СЂРµРґР°РєС‚РѕСЂРѕРј - РјРѕР¶РµРј Рё С„РѕСЂРјР°С‚РёСЂРѕРІР°С‚СЊ }
   ShowMenuItem(1, HasIDE_GetEditorHandle);
   ShowMenuItem(2, HasIDE_GetEditorHandle);
-  { Загрузим настройки форматирования }
+  { Р—Р°РіСЂСѓР·РёРј РЅР°СЃС‚СЂРѕР№РєРё С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ }
   LoadSettings;
 end;
 
-{ Деактивация плагина }
+{ Р”РµР°РєС‚РёРІР°С†РёСЏ РїР»Р°РіРёРЅР° }
 procedure TPLSQLDevPlugIn.Deactivate;
 begin
   ShowMenuItem(1, false);
   ShowMenuItem(2, false);
 end;
 
-{ Выполнение пункта меню }
+{ Р’С‹РїРѕР»РЅРµРЅРёРµ РїСѓРЅРєС‚Р° РјРµРЅСЋ }
 procedure TPLSQLDevPlugIn.MenuItemClick(AIndex: integer);
 begin
   case AIndex of
@@ -146,7 +146,7 @@ begin
   end;
 end;
 
-{ Загрузка настроек форматирования }
+{ Р—Р°РіСЂСѓР·РєР° РЅР°СЃС‚СЂРѕРµРє С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ }
 procedure TPLSQLDevPlugIn.LoadSettings;
 var
   S: TStringList;
@@ -170,7 +170,7 @@ begin
   end;
 end;
 
-{ Сохранение настроек форматирования }
+{ РЎРѕС…СЂР°РЅРµРЅРёРµ РЅР°СЃС‚СЂРѕРµРє С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ }
 procedure TPLSQLDevPlugIn.SaveSettings;
 var
   S: TStringList;
@@ -192,7 +192,7 @@ begin
   end;
 end;
 
-{ Управление доступностью пункта меню }
+{ РЈРїСЂР°РІР»РµРЅРёРµ РґРѕСЃС‚СѓРїРЅРѕСЃС‚СЊСЋ РїСѓРЅРєС‚Р° РјРµРЅСЋ }
 procedure TPLSQLDevPlugIn.ShowMenuItem(AIndex: integer; AState: boolean);
 begin
   if HasIDE_SetMenuVisible
@@ -200,7 +200,7 @@ begin
     else IDE_MenuState(PluginID, AIndex, AState);
 end;
 
-{ Форматирование текста }
+{ Р¤РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёРµ С‚РµРєСЃС‚Р° }
 procedure TPLSQLDevPlugIn.FormatText(ANewWindow: boolean);
 var
   H: THandle;
@@ -208,49 +208,49 @@ var
   Line, Col, ColShift, i: integer;
   Input, Output, Postfix: string;
 begin
-  { Получим хандл окна редактирования }
+  { РџРѕР»СѓС‡РёРј С…Р°РЅРґР» РѕРєРЅР° СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ }
   Assert(HasIDE_GetEditorHandle);
   H := IDE_GetEditorHandle;
   if H = 0 then exit;
-  { Найдём выделение }
+  { РќР°Р№РґС‘Рј РІС‹РґРµР»РµРЅРёРµ }
   SendMessage(H, EM_EXGETSEL, 0, LPARAM(@Range));
-  { Если его нет - выделим весь текст }
+  { Р•СЃР»Рё РµРіРѕ РЅРµС‚ - РІС‹РґРµР»РёРј РІРµСЃСЊ С‚РµРєСЃС‚ }
   if Range.cpMin = Range.cpMax then SendMessage(H, EM_SETSEL, 0, -1);
-  { Найдём позицию начала выделения }
+  { РќР°Р№РґС‘Рј РїРѕР·РёС†РёСЋ РЅР°С‡Р°Р»Р° РІС‹РґРµР»РµРЅРёСЏ }
   SendMessage(H, EM_EXGETSEL, 0, LPARAM(@Range));
   Line := SendMessage(H, EM_EXLINEFROMCHAR, 0, Range.cpMin);
   Col := Range.cpMin - SendMessage(H, EM_LINEINDEX, Line, 0);
-  { Возьмём форматируемый текст }
+  { Р’РѕР·СЊРјС‘Рј С„РѕСЂРјР°С‚РёСЂСѓРµРјС‹Р№ С‚РµРєСЃС‚ }
   Input := string(IDE_GetSelectedText);
   if Input.Trim = '' then exit;
-  { Если выделена вся строка, а текст с отступом - учтём реальный сдвиг, чтобы при форматировании сохранился отступ }
+  { Р•СЃР»Рё РІС‹РґРµР»РµРЅР° РІСЃСЏ СЃС‚СЂРѕРєР°, Р° С‚РµРєСЃС‚ СЃ РѕС‚СЃС‚СѓРїРѕРј - СѓС‡С‚С‘Рј СЂРµР°Р»СЊРЅС‹Р№ СЃРґРІРёРі, С‡С‚РѕР±С‹ РїСЂРё С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёРё СЃРѕС…СЂР°РЅРёР»СЃСЏ РѕС‚СЃС‚СѓРї }
   ColShift := 0;
   if Col = 0 then
     while (Col + ColShift < Input.Length) and (Input[Col + ColShift + 1] = ' ') do Inc(ColShift)
-  { Если же выделено со сдвигом - учтём его, чтобы лексемы получили правильные позиции и не ломалась привязка комментариев }
+  { Р•СЃР»Рё Р¶Рµ РІС‹РґРµР»РµРЅРѕ СЃРѕ СЃРґРІРёРіРѕРј - СѓС‡С‚С‘Рј РµРіРѕ, С‡С‚РѕР±С‹ Р»РµРєСЃРµРјС‹ РїРѕР»СѓС‡РёР»Рё РїСЂР°РІРёР»СЊРЅС‹Рµ РїРѕР·РёС†РёРё Рё РЅРµ Р»РѕРјР°Р»Р°СЃСЊ РїСЂРёРІСЏР·РєР° РєРѕРјРјРµРЅС‚Р°СЂРёРµРІ }
   else if Col > 0 then
     Input := StringOfChar(' ', Col) + Input;
-  { Сохраним перевод строки и отступ между выделенным фрагментом и дальнейшим текстом }
+  { РЎРѕС…СЂР°РЅРёРј РїРµСЂРµРІРѕРґ СЃС‚СЂРѕРєРё Рё РѕС‚СЃС‚СѓРї РјРµР¶РґСѓ РІС‹РґРµР»РµРЅРЅС‹Рј С„СЂР°РіРјРµРЅС‚РѕРј Рё РґР°Р»СЊРЅРµР№С€РёРј С‚РµРєСЃС‚РѕРј }
   i := Input.Length + 1;
   while (i > 1) and (Input[i - 1] = ' ') do Dec(i);
   if (i > 1) and CharInSet(Input[i - 1], [#13, #10])
     then Postfix := #13 + Input.Substring(i)
     else Postfix := Input.Substring(i);
-  { Отформатируем текст }
+  { РћС‚С„РѕСЂРјР°С‚РёСЂСѓРµРј С‚РµРєСЃС‚ }
   Settings.StartIndent := Col + ColShift;
   Controller.MakeFormatted(Input, Settings, OracleParser, Output);
   if Output = '' then exit;
-  { Если сказано сделать новое окно, вернём туда результат }
+  { Р•СЃР»Рё СЃРєР°Р·Р°РЅРѕ СЃРґРµР»Р°С‚СЊ РЅРѕРІРѕРµ РѕРєРЅРѕ, РІРµСЂРЅС‘Рј С‚СѓРґР° СЂРµР·СѓР»СЊС‚Р°С‚ }
   if ANewWindow then
   begin
     IDE_CreateWindow(wtSQL, @(AnsiString(Output)[1]), false);
     exit;
   end;
-  { Уберём из результата первый отступ первой строки - он уже учтён в позиции вставки }
+  { РЈР±РµСЂС‘Рј РёР· СЂРµР·СѓР»СЊС‚Р°С‚Р° РїРµСЂРІС‹Р№ РѕС‚СЃС‚СѓРї РїРµСЂРІРѕР№ СЃС‚СЂРѕРєРё - РѕРЅ СѓР¶Рµ СѓС‡С‚С‘РЅ РІ РїРѕР·РёС†РёРё РІСЃС‚Р°РІРєРё }
   if Col > 0 then Output := Output.Substring(Col);
-  { Добавим whitespace-ы, отделяющие от дальнейшего текста }
+  { Р”РѕР±Р°РІРёРј whitespace-С‹, РѕС‚РґРµР»СЏСЋС‰РёРµ РѕС‚ РґР°Р»СЊРЅРµР№С€РµРіРѕ С‚РµРєСЃС‚Р° }
   Output := Output + Postfix;
-  { Заменим полученным текстом выделенный фрагмент }
+  { Р—Р°РјРµРЅРёРј РїРѕР»СѓС‡РµРЅРЅС‹Рј С‚РµРєСЃС‚РѕРј РІС‹РґРµР»РµРЅРЅС‹Р№ С„СЂР°РіРјРµРЅС‚ }
   SendMessage(H, EM_EXGETSEL, 0, LPARAM(@Range));
   SendMessage(H, EM_REPLACESEL, WPARAM(true), LPARAM(@Output[1]));
   Range.cpMax := Range.cpMin + Output.Length;

@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                              Команда SET (DDL)                             //
+//                              РљРѕРјР°РЅРґР° SET (DDL)                             //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -15,7 +15,7 @@ interface
 uses Tokens, Statements, Printer, Commons;
 
 type
-  { Команда set }
+  { РљРѕРјР°РЅРґР° set }
   TSet = class(TSemicolonStatement)
   strict private
     _Set: TEpithet;
@@ -31,7 +31,7 @@ implementation
 
 type
 
-  { Синтаксис ролей для команды set }
+  { РЎРёРЅС‚Р°РєСЃРёСЃ СЂРѕР»РµР№ РґР»СЏ РєРѕРјР°РЅРґС‹ set }
   TRole = class(TStatement)
   strict private
     _Role, _None, _All, _Except: TEpithet;
@@ -43,7 +43,7 @@ type
     function Grouping: TStatementClass; override;
   end;
 
-  { Идентифицируемая роль }
+  { РРґРµРЅС‚РёС„РёС†РёСЂСѓРµРјР°СЏ СЂРѕР»СЊ }
   TRoleRef = class(TStatement)
   strict private
     _Role, _IdentifiedBy, _Password: TEpithet;
@@ -59,7 +59,7 @@ begin
   Result := true;
   _Set := Keyword('set');
   if not Assigned(_Set) then exit(false);
-  { Если мы не распознали аргумент, значит это не ddl-команда, а sql*plus }
+  { Р•СЃР»Рё РјС‹ РЅРµ СЂР°СЃРїРѕР·РЅР°Р»Рё Р°СЂРіСѓРјРµРЅС‚, Р·РЅР°С‡РёС‚ СЌС‚Рѕ РЅРµ ddl-РєРѕРјР°РЅРґР°, Р° sql*plus }
   if not TRole.Parse(Self, Source, _What) then exit(false);
   inherited;
 end;

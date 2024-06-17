@@ -1,4 +1,4 @@
-unit UnderConstruction;
+п»їunit UnderConstruction;
 
 interface
 
@@ -7,38 +7,38 @@ uses SysUtils, TestFramework, FileBasedTest;
 type
   _UnderConstruction = class(TFileBasedTest)
   published
-    procedure Тесты_Объектные_Типы;
-    procedure Тесты_Create_Trigger;
-    procedure Тесты_Group_By_Rollup_Cube_Grouping_Sets;
-    procedure Тесты_Alter_Session;
-    procedure Тесты_Alter_Package;
+    procedure РўРµСЃС‚С‹_РћР±СЉРµРєС‚РЅС‹Рµ_РўРёРїС‹;
+    procedure РўРµСЃС‚С‹_Create_Trigger;
+    procedure РўРµСЃС‚С‹_Group_By_Rollup_Cube_Grouping_Sets;
+    procedure РўРµСЃС‚С‹_Alter_Session;
+    procedure РўРµСЃС‚С‹_Alter_Package;
   end;
 
 implementation
 
 { _UnderConstruction }
 
-procedure _UnderConstruction.Тесты_Alter_Package;
+procedure _UnderConstruction.РўРµСЃС‚С‹_Alter_Package;
 begin
   UnderConstruction;
 end;
 
-procedure _UnderConstruction.Тесты_Alter_Session;
+procedure _UnderConstruction.РўРµСЃС‚С‹_Alter_Session;
 begin
   UnderConstruction;
 end;
 
-procedure _UnderConstruction.Тесты_Create_Trigger;
+procedure _UnderConstruction.РўРµСЃС‚С‹_Create_Trigger;
 begin
   UnderConstruction;
 end;
 
-procedure _UnderConstruction.Тесты_Group_By_Rollup_Cube_Grouping_Sets;
+procedure _UnderConstruction.РўРµСЃС‚С‹_Group_By_Rollup_Cube_Grouping_Sets;
 begin
   UnderConstruction;
 end;
 
-procedure _UnderConstruction.Тесты_Объектные_Типы;
+procedure _UnderConstruction.РўРµСЃС‚С‹_РћР±СЉРµРєС‚РЅС‹Рµ_РўРёРїС‹;
 begin
   UnderConstruction;
 end;

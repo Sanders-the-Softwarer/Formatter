@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                         Команда VARIABLE (SQL*Plus)                        //
+//                         РљРѕРјР°РЅРґР° VARIABLE (SQL*Plus)                        //
 //                                                                            //
 //               Copyright(c) 2019-2021 by Sanders the Softwarer              //
 //                                                                            //
@@ -16,7 +16,7 @@ uses Tokens, Statements, Printer, SQLPlus;
 
 type
 
-  { Команда variable }
+  { РљРѕРјР°РЅРґР° variable }
   TVariable = class(TSQLPlusStatement)
   strict private
     _Variable, _VarName, _Type, _Size: TEpithet;

@@ -1,4 +1,4 @@
-// PL/SQL Developer Plug-In Interface functions
+﻿// PL/SQL Developer Plug-In Interface functions
 // Copyright 2009 Allround Automations
 // support@allroundautomations.com
 // http://www.allroundautomations.com

@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                          Оператор EXECUTE IMMEDIATE                        //
+//                          РћРїРµСЂР°С‚РѕСЂ EXECUTE IMMEDIATE                        //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -18,7 +18,7 @@ uses Statements, PLSQL, Tokens, Printer, Expressions, Commons;
 
 type
 
-  { Оператор execute immediate }
+  { РћРїРµСЂР°С‚РѕСЂ execute immediate }
   TExecuteImmediate = class(TPLSQLStatement)
   strict private
     _Execute, _Immediate: TEpithet;
@@ -28,7 +28,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция into }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ into }
   TInto = class(TStatement)
   strict private
     _Into: TEpithet;
@@ -38,7 +38,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция returning }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ returning }
   TReturningInto = class(TStatement)
   strict private
     _Returning: TEpithet;

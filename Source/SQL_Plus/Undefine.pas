@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                         Команда UNDEFINE (SQL*Plus)                        //
+//                         РљРѕРјР°РЅРґР° UNDEFINE (SQL*Plus)                        //
 //                                                                            //
 //               Copyright(c) 2019-2021 by Sanders the Softwarer              //
 //                                                                            //
@@ -16,7 +16,7 @@ uses Tokens, Statements, Printer, SQLPlus;
 
 type
 
-  { Команда undefine }
+  { РљРѕРјР°РЅРґР° undefine }
   TUndefine = class(TSQLPlusStatement)
   strict private
     _Undefine: TEpithet;

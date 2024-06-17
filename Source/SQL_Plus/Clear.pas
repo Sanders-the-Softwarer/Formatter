@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                           Команда CLEAR (SQL*Plus)                         //
+//                           РљРѕРјР°РЅРґР° CLEAR (SQL*Plus)                         //
 //                                                                            //
 //               Copyright(c) 2019-2021 by Sanders the Softwarer              //
 //                                                                            //
@@ -15,7 +15,7 @@ interface
 uses SQLPlus, Tokens, Printer, Statements;
 
 type
-  { Команда clear }
+  { РљРѕРјР°РЅРґР° clear }
   TClear = class(TSQLPlusStatement)
   strict private
     _Clear: TEpithet;
@@ -29,7 +29,7 @@ implementation
 
 type
 
-  { Опции команды clear }
+  { РћРїС†РёРё РєРѕРјР°РЅРґС‹ clear }
   TOption = class(TSQLPlusStatement)
   strict private
     _Option: TEpithet;
@@ -38,7 +38,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Список опций }
+  { РЎРїРёСЃРѕРє РѕРїС†РёР№ }
   TOptionList = class(TStatementList<TOption>)
   strict protected
     function ParseBreak: boolean; override;

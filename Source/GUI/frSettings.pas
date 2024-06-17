@@ -1,4 +1,4 @@
-unit frSettings;
+п»їunit frSettings;
 
 interface
 
@@ -57,9 +57,9 @@ type
     Settings: TFormatSettings;
     OnChanged: TNotifyEvent;
   public
-    { Обновление настроек из интерфейса }
+    { РћР±РЅРѕРІР»РµРЅРёРµ РЅР°СЃС‚СЂРѕРµРє РёР· РёРЅС‚РµСЂС„РµР№СЃР° }
     procedure UpdateSettings;
-    { Обновление интерфейса из настроек }
+    { РћР±РЅРѕРІР»РµРЅРёРµ РёРЅС‚РµСЂС„РµР№СЃР° РёР· РЅР°СЃС‚СЂРѕРµРє }
     procedure UpdateEdits;
   end;
 
@@ -67,7 +67,7 @@ implementation
 
 {$R *.dfm}
 
-{ Обновление настроек из интерфейса }
+{ РћР±РЅРѕРІР»РµРЅРёРµ РЅР°СЃС‚СЂРѕРµРє РёР· РёРЅС‚РµСЂС„РµР№СЃР° }
 procedure TFrameSettings.UpdateSettings;
 begin
   Assert(Settings <> nil);
@@ -96,7 +96,7 @@ begin
   Settings.PreferredExpressionLength       := edPreferredExpressionLength.Value;
 end;
 
-{ Обновление интерфейса из настроек }
+{ РћР±РЅРѕРІР»РµРЅРёРµ РёРЅС‚РµСЂС„РµР№СЃР° РёР· РЅР°СЃС‚СЂРѕРµРє }
 procedure TFrameSettings.UpdateEdits;
 begin
   Assert(Settings <> nil);

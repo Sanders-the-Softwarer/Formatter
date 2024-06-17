@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                    Описание VIEW для команд CREATE/ALTER                   //
+//                    РћРїРёСЃР°РЅРёРµ VIEW РґР»СЏ РєРѕРјР°РЅРґ CREATE/ALTER                   //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -16,7 +16,7 @@ uses Tokens, Statements, Printer;
 
 type
 
-  { Общий класс описания view }
+  { РћР±С‰РёР№ РєР»Р°СЃСЃ РѕРїРёСЃР°РЅРёСЏ view }
   TView = class(TStatement)
   strict private
     _View: TEpithet;
@@ -28,7 +28,7 @@ type
     function StatementName: string; override;
   end;
 
-  { view для команды create }
+  { view РґР»СЏ РєРѕРјР°РЅРґС‹ create }
   TViewCreate = class(TView)
   strict private
     _As: TEpithet;
@@ -38,7 +38,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { view для команды alter }
+  { view РґР»СЏ РєРѕРјР°РЅРґС‹ alter }
   TViewAlter = class(TView)
   strict private
     _Add, _Modify, _Constraint, _ConstraintName, _Rely, _Drop, _Primary, _Key,

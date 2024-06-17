@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                        Синтаксис последовательностей                       //
+//                        РЎРёРЅС‚Р°РєСЃРёСЃ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚РµР№                       //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -16,7 +16,7 @@ uses Tokens, Statements, Printer;
 
 type
 
-  { Объект sequence }
+  { РћР±СЉРµРєС‚ sequence }
   TSequence = class(TStatement)
   strict private
     _Sequence: TEpithet;
@@ -26,7 +26,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Части декларации sequence-а }
+  { Р§Р°СЃС‚Рё РґРµРєР»Р°СЂР°С†РёРё sequence-Р° }
   TSequencePart = class(TStatement)
   strict private
     _Name: TEpithet;

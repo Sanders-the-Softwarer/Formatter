@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                           Автотесты на модуль DML                          //
+//                           РђРІС‚РѕС‚РµСЃС‚С‹ РЅР° РјРѕРґСѓР»СЊ DML                          //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -17,33 +17,33 @@ uses
 
 type
 
-  { Тесты команд DML }
-  _Команды_DML = class(TFileBasedTest)
+  { РўРµСЃС‚С‹ РєРѕРјР°РЅРґ DML }
+  _РљРѕРјР°РЅРґС‹_DML = class(TFileBasedTest)
   end;
 
-  { Тесты на select }
+  { РўРµСЃС‚С‹ РЅР° select }
   _Select = class(TFileBasedTest)
   published
-    procedure Запрос_С_Алиасом;
-    procedure Запрос_С_Алиасами_В_Полях;
-    procedure Запрос_С_Выражениями_В_Полях;
-    procedure Запрос_С_Выражениями_И_Алиасами;
-    procedure Связывание_Запросов_Через_Операции_Над_Множествами;
-    procedure Форматирование_Подзапросов_В_Select;
+    procedure Р—Р°РїСЂРѕСЃ_РЎ_РђР»РёР°СЃРѕРј;
+    procedure Р—Р°РїСЂРѕСЃ_РЎ_РђР»РёР°СЃР°РјРё_Р’_РџРѕР»СЏС…;
+    procedure Р—Р°РїСЂРѕСЃ_РЎ_Р’С‹СЂР°Р¶РµРЅРёСЏРјРё_Р’_РџРѕР»СЏС…;
+    procedure Р—Р°РїСЂРѕСЃ_РЎ_Р’С‹СЂР°Р¶РµРЅРёСЏРјРё_Р_РђР»РёР°СЃР°РјРё;
+    procedure РЎРІСЏР·С‹РІР°РЅРёРµ_Р—Р°РїСЂРѕСЃРѕРІ_Р§РµСЂРµР·_РћРїРµСЂР°С†РёРё_РќР°Рґ_РњРЅРѕР¶РµСЃС‚РІР°РјРё;
+    procedure Р¤РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёРµ_РџРѕРґР·Р°РїСЂРѕСЃРѕРІ_Р’_Select;
     procedure Commit_Rollback_Savepoint;
   end;
 
-  { Тесты на SELECT }
-  _Запросы = class(TFileBasedTest)
+  { РўРµСЃС‚С‹ РЅР° SELECT }
+  _Р—Р°РїСЂРѕСЃС‹ = class(TFileBasedTest)
   protected
     function GetDir: string; override;
   published
-    procedure Ansi_Синтаксис;
-    procedure Bind_Переменные;
+    procedure Ansi_РЎРёРЅС‚Р°РєСЃРёСЃ;
+    procedure Bind_РџРµСЂРµРјРµРЅРЅС‹Рµ;
     procedure Bulk_Collect_Into;
     procedure Database_Links;
     procedure Distinct_Unique_All;
-    procedure Distinct_Unique_All_В_Count;
+    procedure Distinct_Unique_All_Р’_Count;
     procedure For_Update;
     procedure Group_By;
     procedure Having;
@@ -51,75 +51,75 @@ type
     procedure Keep;
     procedure Lateral;
     procedure Order_By;
-    procedure Start_With_И_Connect_By;
+    procedure Start_With_Р_Connect_By;
     procedure Using;
     procedure Where;
     procedure With_;
-    procedure Из_Подзапроса;
-    procedure Аналитические_Функции;
-    procedure Подзапрос_В_Select;
-    procedure Подзапрос_В_Where;
-    procedure Простейший;
-    procedure С_Несколькими_Полями;
-    procedure Направление_Сортировки;
-    procedure Оракловый_Синтаксис_Внешних_Соединений;
-    procedure Из_Вложенных_Структур_И_Табличных_Типов;
-    procedure С_Подстановками;
-    procedure Из_Нескольких_Таблиц;
-    procedure Из_Табличной_Функции;
+    procedure РР·_РџРѕРґР·Р°РїСЂРѕСЃР°;
+    procedure РђРЅР°Р»РёС‚РёС‡РµСЃРєРёРµ_Р¤СѓРЅРєС†РёРё;
+    procedure РџРѕРґР·Р°РїСЂРѕСЃ_Р’_Select;
+    procedure РџРѕРґР·Р°РїСЂРѕСЃ_Р’_Where;
+    procedure РџСЂРѕСЃС‚РµР№С€РёР№;
+    procedure РЎ_РќРµСЃРєРѕР»СЊРєРёРјРё_РџРѕР»СЏРјРё;
+    procedure РќР°РїСЂР°РІР»РµРЅРёРµ_РЎРѕСЂС‚РёСЂРѕРІРєРё;
+    procedure РћСЂР°РєР»РѕРІС‹Р№_РЎРёРЅС‚Р°РєСЃРёСЃ_Р’РЅРµС€РЅРёС…_РЎРѕРµРґРёРЅРµРЅРёР№;
+    procedure РР·_Р’Р»РѕР¶РµРЅРЅС‹С…_РЎС‚СЂСѓРєС‚СѓСЂ_Р_РўР°Р±Р»РёС‡РЅС‹С…_РўРёРїРѕРІ;
+    procedure РЎ_РџРѕРґСЃС‚Р°РЅРѕРІРєР°РјРё;
+    procedure РР·_РќРµСЃРєРѕР»СЊРєРёС…_РўР°Р±Р»РёС†;
+    procedure РР·_РўР°Р±Р»РёС‡РЅРѕР№_Р¤СѓРЅРєС†РёРё;
   end;
 
-  { Тесты на insert }
+  { РўРµСЃС‚С‹ РЅР° insert }
   _Insert = class(TFileBasedTest)
   published
-    procedure Простой_Insert;
-    procedure Insert_С_Алиасом_Таблицы;
-    procedure Insert_В_Подзапрос;
-    procedure Insert_В_Подзапрос_С_Алиасом;
-    procedure Insert_С_Указанием_Полей;
-    procedure Insert_С_Returning;
-    procedure Insert_С_Returning_С_Сопоставлением;
+    procedure РџСЂРѕСЃС‚РѕР№_Insert;
+    procedure Insert_РЎ_РђР»РёР°СЃРѕРј_РўР°Р±Р»РёС†С‹;
+    procedure Insert_Р’_РџРѕРґР·Р°РїСЂРѕСЃ;
+    procedure Insert_Р’_РџРѕРґР·Р°РїСЂРѕСЃ_РЎ_РђР»РёР°СЃРѕРј;
+    procedure Insert_РЎ_РЈРєР°Р·Р°РЅРёРµРј_РџРѕР»РµР№;
+    procedure Insert_РЎ_Returning;
+    procedure Insert_РЎ_Returning_РЎ_РЎРѕРїРѕСЃС‚Р°РІР»РµРЅРёРµРј;
   end;
 
-  { Тесты на update }
+  { РўРµСЃС‚С‹ РЅР° update }
   _Update = class(TFileBasedTest)
   protected
     function GetDir: string; override;
   published
-    procedure Простой_Update;
-    procedure Update_С_Алиасом;
-    procedure Update_С_Подзапросом;
-    procedure Update_С_Множественными_Присваиваниями;
-    procedure Update_С_Where;
-    procedure Update_С_Returning;
-    procedure Update_С_Returning_Bulk_Collect_Into;
-    procedure Update_С_Сопоставлением_В_Returning;
+    procedure РџСЂРѕСЃС‚РѕР№_Update;
+    procedure Update_РЎ_РђР»РёР°СЃРѕРј;
+    procedure Update_РЎ_РџРѕРґР·Р°РїСЂРѕСЃРѕРј;
+    procedure Update_РЎ_РњРЅРѕР¶РµСЃС‚РІРµРЅРЅС‹РјРё_РџСЂРёСЃРІР°РёРІР°РЅРёСЏРјРё;
+    procedure Update_РЎ_Where;
+    procedure Update_РЎ_Returning;
+    procedure Update_РЎ_Returning_Bulk_Collect_Into;
+    procedure Update_РЎ_РЎРѕРїРѕСЃС‚Р°РІР»РµРЅРёРµРј_Р’_Returning;
   end;
 
-  { Тесты на delete }
+  { РўРµСЃС‚С‹ РЅР° delete }
   _Delete = class(TFileBasedTest)
   protected
     function GetDir: string; override;
   published
-    procedure Простой_Delete;
-    procedure Delete_С_Алиасом;
-    procedure Delete_С_Where;
-    procedure Delete_С_Returning;
-    procedure Delete_С_Returning_Bulk_Collect;
+    procedure РџСЂРѕСЃС‚РѕР№_Delete;
+    procedure Delete_РЎ_РђР»РёР°СЃРѕРј;
+    procedure Delete_РЎ_Where;
+    procedure Delete_РЎ_Returning;
+    procedure Delete_РЎ_Returning_Bulk_Collect;
   end;
 
-  { Тесты на merge }
+  { РўРµСЃС‚С‹ РЅР° merge }
   _Merge = class(TFileBasedTest)
   published
-    procedure Простой_Merge;
-    procedure Merge_С_Другим_Порядком_Выражений;
-    procedure Merge_С_Подзапросом;
-    procedure Merge_С_Insert_Where_Update_Delete_Where;
-    procedure Merge_С_Последующим_Delete;
+    procedure РџСЂРѕСЃС‚РѕР№_Merge;
+    procedure Merge_РЎ_Р”СЂСѓРіРёРј_РџРѕСЂСЏРґРєРѕРј_Р’С‹СЂР°Р¶РµРЅРёР№;
+    procedure Merge_РЎ_РџРѕРґР·Р°РїСЂРѕСЃРѕРј;
+    procedure Merge_РЎ_Insert_Where_Update_Delete_Where;
+    procedure Merge_РЎ_РџРѕСЃР»РµРґСѓСЋС‰РёРј_Delete;
   end;
 
-  { Функции с особым синтаксисом }
-  _Функции_С_Особым_Синтаксисом = class(TFileBasedTest)
+  { Р¤СѓРЅРєС†РёРё СЃ РѕСЃРѕР±С‹Рј СЃРёРЅС‚Р°РєСЃРёСЃРѕРј }
+  _Р¤СѓРЅРєС†РёРё_РЎ_РћСЃРѕР±С‹Рј_РЎРёРЅС‚Р°РєСЃРёСЃРѕРј = class(TFileBasedTest)
   protected
     function GetDir: string; override;
   published
@@ -133,27 +133,27 @@ implementation
 
 { _Select }
 
-procedure _Select.Связывание_Запросов_Через_Операции_Над_Множествами;
+procedure _Select.РЎРІСЏР·С‹РІР°РЅРёРµ_Р—Р°РїСЂРѕСЃРѕРІ_Р§РµСЂРµР·_РћРїРµСЂР°С†РёРё_РќР°Рґ_РњРЅРѕР¶РµСЃС‚РІР°РјРё;
 begin
 end;
 
-procedure _Select.Запрос_С_Алиасом;
+procedure _Select.Р—Р°РїСЂРѕСЃ_РЎ_РђР»РёР°СЃРѕРј;
 begin
 end;
 
-procedure _Select.Запрос_С_Алиасами_В_Полях;
+procedure _Select.Р—Р°РїСЂРѕСЃ_РЎ_РђР»РёР°СЃР°РјРё_Р’_РџРѕР»СЏС…;
 begin
 end;
 
-procedure _Select.Запрос_С_Выражениями_В_Полях;
+procedure _Select.Р—Р°РїСЂРѕСЃ_РЎ_Р’С‹СЂР°Р¶РµРЅРёСЏРјРё_Р’_РџРѕР»СЏС…;
 begin
 end;
 
-procedure _Select.Запрос_С_Выражениями_И_Алиасами;
+procedure _Select.Р—Р°РїСЂРѕСЃ_РЎ_Р’С‹СЂР°Р¶РµРЅРёСЏРјРё_Р_РђР»РёР°СЃР°РјРё;
 begin
 end;
 
-procedure _Select.Форматирование_Подзапросов_В_Select;
+procedure _Select.Р¤РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёРµ_РџРѕРґР·Р°РїСЂРѕСЃРѕРІ_Р’_Select;
 begin
   Settings.PreferredExpressionLength := 80;
 end;
@@ -164,32 +164,32 @@ end;
 
 { _Insert }
 
-procedure _Insert.Insert_С_Returning;
+procedure _Insert.Insert_РЎ_Returning;
 begin
 end;
 
-procedure _Insert.Insert_В_Подзапрос;
+procedure _Insert.Insert_Р’_РџРѕРґР·Р°РїСЂРѕСЃ;
 begin
 end;
 
-procedure _Insert.Insert_В_Подзапрос_С_Алиасом;
+procedure _Insert.Insert_Р’_РџРѕРґР·Р°РїСЂРѕСЃ_РЎ_РђР»РёР°СЃРѕРј;
 begin
 end;
 
-procedure _Insert.Insert_С_Returning_С_Сопоставлением;
+procedure _Insert.Insert_РЎ_Returning_РЎ_РЎРѕРїРѕСЃС‚Р°РІР»РµРЅРёРµРј;
 begin
   Settings.MatchParamLimit := 5;
 end;
 
-procedure _Insert.Insert_С_Алиасом_Таблицы;
+procedure _Insert.Insert_РЎ_РђР»РёР°СЃРѕРј_РўР°Р±Р»РёС†С‹;
 begin
 end;
 
-procedure _Insert.Insert_С_Указанием_Полей;
+procedure _Insert.Insert_РЎ_РЈРєР°Р·Р°РЅРёРµРј_РџРѕР»РµР№;
 begin
 end;
 
-procedure _Insert.Простой_Insert;
+procedure _Insert.РџСЂРѕСЃС‚РѕР№_Insert;
 begin
 end;
 
@@ -197,248 +197,248 @@ end;
 
 function _Update.GetDir: string;
 begin
-  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды DML\Update';
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\РљРѕРјР°РЅРґС‹ DML\Update';
 end;
 
-procedure _Update.Update_С_Returning;
+procedure _Update.Update_РЎ_Returning;
 begin
 end;
 
-procedure _Update.Update_С_Returning_Bulk_Collect_Into;
+procedure _Update.Update_РЎ_Returning_Bulk_Collect_Into;
 begin
 end;
 
-procedure _Update.Update_С_Where;
+procedure _Update.Update_РЎ_Where;
 begin
 end;
 
-procedure _Update.Update_С_Алиасом;
+procedure _Update.Update_РЎ_РђР»РёР°СЃРѕРј;
 begin
 end;
 
-procedure _Update.Update_С_Множественными_Присваиваниями;
+procedure _Update.Update_РЎ_РњРЅРѕР¶РµСЃС‚РІРµРЅРЅС‹РјРё_РџСЂРёСЃРІР°РёРІР°РЅРёСЏРјРё;
 begin
 end;
 
-procedure _Update.Update_С_Подзапросом;
+procedure _Update.Update_РЎ_РџРѕРґР·Р°РїСЂРѕСЃРѕРј;
 begin
 end;
 
-procedure _Update.Update_С_Сопоставлением_В_Returning;
+procedure _Update.Update_РЎ_РЎРѕРїРѕСЃС‚Р°РІР»РµРЅРёРµРј_Р’_Returning;
 begin
   Settings.MatchParamLimit := 5;
 end;
 
-procedure _Update.Простой_Update;
+procedure _Update.РџСЂРѕСЃС‚РѕР№_Update;
 begin
 end;
 
 { _Delete }
 
-procedure _Delete.Delete_С_Returning;
+procedure _Delete.Delete_РЎ_Returning;
 begin
 end;
 
-procedure _Delete.Delete_С_Returning_Bulk_Collect;
+procedure _Delete.Delete_РЎ_Returning_Bulk_Collect;
 begin
 end;
 
-procedure _Delete.Delete_С_Where;
+procedure _Delete.Delete_РЎ_Where;
 begin
 end;
 
-procedure _Delete.Delete_С_Алиасом;
+procedure _Delete.Delete_РЎ_РђР»РёР°СЃРѕРј;
 begin
 end;
 
-procedure _Delete.Простой_Delete;
+procedure _Delete.РџСЂРѕСЃС‚РѕР№_Delete;
 begin
 end;
 
 function _Delete.GetDir: string;
 begin
-  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Команды DML\Delete';
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\РљРѕРјР°РЅРґС‹ DML\Delete';
 end;
 
 { _Merge }
 
-procedure _Merge.Merge_С_Insert_Where_Update_Delete_Where;
+procedure _Merge.Merge_РЎ_Insert_Where_Update_Delete_Where;
 begin
 end;
 
-procedure _Merge.Merge_С_Другим_Порядком_Выражений;
+procedure _Merge.Merge_РЎ_Р”СЂСѓРіРёРј_РџРѕСЂСЏРґРєРѕРј_Р’С‹СЂР°Р¶РµРЅРёР№;
 begin
 end;
 
-procedure _Merge.Merge_С_Подзапросом;
+procedure _Merge.Merge_РЎ_РџРѕРґР·Р°РїСЂРѕСЃРѕРј;
 begin
 end;
 
-procedure _Merge.Merge_С_Последующим_Delete;
+procedure _Merge.Merge_РЎ_РџРѕСЃР»РµРґСѓСЋС‰РёРј_Delete;
 begin
 end;
 
-procedure _Merge.Простой_Merge;
+procedure _Merge.РџСЂРѕСЃС‚РѕР№_Merge;
 begin
 end;
 
-{ _Запросы }
+{ _Р—Р°РїСЂРѕСЃС‹ }
 
-function _Запросы.GetDir: string;
+function _Р—Р°РїСЂРѕСЃС‹.GetDir: string;
 begin
-  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Запросы';
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Р—Р°РїСЂРѕСЃС‹';
 end;
 
-procedure _Запросы.Ansi_Синтаксис;
-begin
-end;
-
-procedure _Запросы.Lateral;
+procedure _Р—Р°РїСЂРѕСЃС‹.Ansi_РЎРёРЅС‚Р°РєСЃРёСЃ;
 begin
 end;
 
-procedure _Запросы.Order_By;
+procedure _Р—Р°РїСЂРѕСЃС‹.Lateral;
 begin
 end;
 
-procedure _Запросы.Start_With_И_Connect_By;
+procedure _Р—Р°РїСЂРѕСЃС‹.Order_By;
 begin
 end;
 
-procedure _Запросы.Using;
+procedure _Р—Р°РїСЂРѕСЃС‹.Start_With_Р_Connect_By;
 begin
 end;
 
-procedure _Запросы.Where;
+procedure _Р—Р°РїСЂРѕСЃС‹.Using;
 begin
 end;
 
-procedure _Запросы.With_;
+procedure _Р—Р°РїСЂРѕСЃС‹.Where;
 begin
 end;
 
-procedure _Запросы.Аналитические_Функции;
+procedure _Р—Р°РїСЂРѕСЃС‹.With_;
 begin
 end;
 
-procedure _Запросы.Из_Вложенных_Структур_И_Табличных_Типов;
+procedure _Р—Р°РїСЂРѕСЃС‹.РђРЅР°Р»РёС‚РёС‡РµСЃРєРёРµ_Р¤СѓРЅРєС†РёРё;
 begin
 end;
 
-procedure _Запросы.Из_Нескольких_Таблиц;
+procedure _Р—Р°РїСЂРѕСЃС‹.РР·_Р’Р»РѕР¶РµРЅРЅС‹С…_РЎС‚СЂСѓРєС‚СѓСЂ_Р_РўР°Р±Р»РёС‡РЅС‹С…_РўРёРїРѕРІ;
 begin
 end;
 
-procedure _Запросы.Из_Подзапроса;
+procedure _Р—Р°РїСЂРѕСЃС‹.РР·_РќРµСЃРєРѕР»СЊРєРёС…_РўР°Р±Р»РёС†;
 begin
 end;
 
-procedure _Запросы.Из_Табличной_Функции;
+procedure _Р—Р°РїСЂРѕСЃС‹.РР·_РџРѕРґР·Р°РїСЂРѕСЃР°;
+begin
+end;
+
+procedure _Р—Р°РїСЂРѕСЃС‹.РР·_РўР°Р±Р»РёС‡РЅРѕР№_Р¤СѓРЅРєС†РёРё;
 begin
 
 end;
 
-procedure _Запросы.Направление_Сортировки;
+procedure _Р—Р°РїСЂРѕСЃС‹.РќР°РїСЂР°РІР»РµРЅРёРµ_РЎРѕСЂС‚РёСЂРѕРІРєРё;
 begin
 end;
 
-procedure _Запросы.Оракловый_Синтаксис_Внешних_Соединений;
+procedure _Р—Р°РїСЂРѕСЃС‹.РћСЂР°РєР»РѕРІС‹Р№_РЎРёРЅС‚Р°РєСЃРёСЃ_Р’РЅРµС€РЅРёС…_РЎРѕРµРґРёРЅРµРЅРёР№;
 begin
 end;
 
-procedure _Запросы.Подзапрос_В_Select;
+procedure _Р—Р°РїСЂРѕСЃС‹.РџРѕРґР·Р°РїСЂРѕСЃ_Р’_Select;
 begin
 end;
 
-procedure _Запросы.Подзапрос_В_Where;
+procedure _Р—Р°РїСЂРѕСЃС‹.РџРѕРґР·Р°РїСЂРѕСЃ_Р’_Where;
 begin
 end;
 
-procedure _Запросы.Простейший;
+procedure _Р—Р°РїСЂРѕСЃС‹.РџСЂРѕСЃС‚РµР№С€РёР№;
 begin
 end;
 
-procedure _Запросы.С_Несколькими_Полями;
+procedure _Р—Р°РїСЂРѕСЃС‹.РЎ_РќРµСЃРєРѕР»СЊРєРёРјРё_РџРѕР»СЏРјРё;
 begin
 end;
 
-procedure _Запросы.С_Подстановками;
+procedure _Р—Р°РїСЂРѕСЃС‹.РЎ_РџРѕРґСЃС‚Р°РЅРѕРІРєР°РјРё;
 begin
 end;
 
-procedure _Запросы.Bind_Переменные;
+procedure _Р—Р°РїСЂРѕСЃС‹.Bind_РџРµСЂРµРјРµРЅРЅС‹Рµ;
 begin
 end;
 
-procedure _Запросы.Bulk_Collect_Into;
+procedure _Р—Р°РїСЂРѕСЃС‹.Bulk_Collect_Into;
 begin
 end;
 
-procedure _Запросы.Database_Links;
+procedure _Р—Р°РїСЂРѕСЃС‹.Database_Links;
 begin
 end;
 
-procedure _Запросы.Distinct_Unique_All;
+procedure _Р—Р°РїСЂРѕСЃС‹.Distinct_Unique_All;
 begin
 end;
 
-procedure _Запросы.Distinct_Unique_All_В_Count;
+procedure _Р—Р°РїСЂРѕСЃС‹.Distinct_Unique_All_Р’_Count;
 begin
 end;
 
-procedure _Запросы.For_Update;
+procedure _Р—Р°РїСЂРѕСЃС‹.For_Update;
 begin
 end;
 
-procedure _Запросы.Group_By;
+procedure _Р—Р°РїСЂРѕСЃС‹.Group_By;
 begin
 end;
 
-procedure _Запросы.Having;
+procedure _Р—Р°РїСЂРѕСЃС‹.Having;
 begin
 end;
 
-procedure _Запросы.Into;
+procedure _Р—Р°РїСЂРѕСЃС‹.Into;
 begin
 end;
 
-procedure _Запросы.Keep;
+procedure _Р—Р°РїСЂРѕСЃС‹.Keep;
 begin
   Settings.PreferredExpressionLength := 60;
 end;
 
-{ _Функции_С_Особым_Синтаксисом }
+{ _Р¤СѓРЅРєС†РёРё_РЎ_РћСЃРѕР±С‹Рј_РЎРёРЅС‚Р°РєСЃРёСЃРѕРј }
 
-procedure _Функции_С_Особым_Синтаксисом.Extract;
+procedure _Р¤СѓРЅРєС†РёРё_РЎ_РћСЃРѕР±С‹Рј_РЎРёРЅС‚Р°РєСЃРёСЃРѕРј.Extract;
 begin
 end;
 
-function _Функции_С_Особым_Синтаксисом.GetDir: string;
+function _Р¤СѓРЅРєС†РёРё_РЎ_РћСЃРѕР±С‹Рј_РЎРёРЅС‚Р°РєСЃРёСЃРѕРј.GetDir: string;
 begin
-  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Функции с особым синтаксисом';
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Р¤СѓРЅРєС†РёРё СЃ РѕСЃРѕР±С‹Рј СЃРёРЅС‚Р°РєСЃРёСЃРѕРј';
 end;
 
-procedure _Функции_С_Особым_Синтаксисом.ListAgg;
+procedure _Р¤СѓРЅРєС†РёРё_РЎ_РћСЃРѕР±С‹Рј_РЎРёРЅС‚Р°РєСЃРёСЃРѕРј.ListAgg;
 begin
   Settings.PreferredExpressionLength := 100;
 end;
 
-procedure _Функции_С_Особым_Синтаксисом.Trim;
+procedure _Р¤СѓРЅРєС†РёРё_РЎ_РћСЃРѕР±С‹Рј_РЎРёРЅС‚Р°РєСЃРёСЃРѕРј.Trim;
 begin
 end;
 
-procedure _Функции_С_Особым_Синтаксисом.XmlTable;
+procedure _Р¤СѓРЅРєС†РёРё_РЎ_РћСЃРѕР±С‹Рј_РЎРёРЅС‚Р°РєСЃРёСЃРѕРј.XmlTable;
 begin
 end;
 
 initialization
-  RegisterTest(_Команды_DML.Suite);
-  RegisterTest('_Команды_DML', _Запросы.Suite);
-  RegisterTest('_Команды_DML', _Select.Suite);
-  RegisterTest('_Команды_DML', _Insert.Suite);
-  RegisterTest('_Команды_DML', _Update.Suite);
-  RegisterTest('_Команды_DML', _Delete.Suite);
-  RegisterTest('_Команды_DML', _Merge.Suite);
-  RegisterTest('_Команды_DML\_Запросы', _Функции_С_Особым_Синтаксисом.Suite);
+  RegisterTest(_РљРѕРјР°РЅРґС‹_DML.Suite);
+  RegisterTest('_РљРѕРјР°РЅРґС‹_DML', _Р—Р°РїСЂРѕСЃС‹.Suite);
+  RegisterTest('_РљРѕРјР°РЅРґС‹_DML', _Select.Suite);
+  RegisterTest('_РљРѕРјР°РЅРґС‹_DML', _Insert.Suite);
+  RegisterTest('_РљРѕРјР°РЅРґС‹_DML', _Update.Suite);
+  RegisterTest('_РљРѕРјР°РЅРґС‹_DML', _Delete.Suite);
+  RegisterTest('_РљРѕРјР°РЅРґС‹_DML', _Merge.Suite);
+  RegisterTest('_РљРѕРјР°РЅРґС‹_DML\_Р—Р°РїСЂРѕСЃС‹', _Р¤СѓРЅРєС†РёРё_РЎ_РћСЃРѕР±С‹Рј_РЎРёРЅС‚Р°РєСЃРёСЃРѕРј.Suite);
 end.
 

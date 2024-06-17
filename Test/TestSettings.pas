@@ -1,4 +1,4 @@
-unit TestSettings;
+п»їunit TestSettings;
 
 interface
 
@@ -7,51 +7,51 @@ uses
 
 type
 
-  { Тесты на настройки форматизатора }
+  { РўРµСЃС‚С‹ РЅР° РЅР°СЃС‚СЂРѕР№РєРё С„РѕСЂРјР°С‚РёР·Р°С‚РѕСЂР° }
   _Settings = class(TFileBasedTest)
   protected
     function GetDir: string; override;
   published
-    procedure Выравнивать_Переменные;
-    procedure Выравнивать_Поля;
-    procedure Выравнивать_Колонки;
-    procedure Выравнивать_Выражения;
-    procedure Выравнивать_Команды;
-    procedure Выравнивать_Спецкомментарии;
-    procedure Заполнять_Пустоты;
-    procedure Заменять_Default;
-    procedure Заменять_As_На_Is;
-    procedure Менять_Типы_Комментариев;
-    procedure Исправлять_Пробелы_В_Комментариях;
-    procedure Добавлять_In;
-    procedure Добавлять_From_В_Delete;
-    procedure Удалять_Пароли_Из_Connect;
-    procedure Учитывать_Длинные_Операнды;
-    procedure Не_Выравнивать_Переменные;
-    procedure Не_Выравнивать_Поля;
-    procedure Не_Выравнивать_Колонки;
-    procedure Не_Выравнивать_Выражения;
-    procedure Не_Выравнивать_Команды;
-    procedure Не_Выравнивать_Спецкомментарии;
-    procedure Не_Заполнять_Пустоты;
-    procedure Не_Заменять_Default;
-    procedure Не_Заменять_As_На_Is;
-    procedure Не_Менять_Типы_Комментариев;
-    procedure Не_Исправлять_Пробелы_В_Комментариях;
-    procedure Не_Добавлять_In;
-    procedure Не_Добавлять_From_В_Delete;
-    procedure Не_Удалять_Пароли_Из_Connect;
-    procedure Не_Учитывать_Длинные_Операнды;
-    procedure Предел_Параметров_В_Строке;
-    procedure Предел_Именованных_Аргументов_В_Строке;
-    procedure Предел_Позиционных_Аргументов_В_Строке;
-    procedure Предел_Сопоставляемых_Параметров;
-    procedure Предпочитаемая_Длина_Выражений;
-    procedure Сдвигать_Декларации_В_Пакете;
-    procedure Сдвигать_Декларации_В_Теле_Пакета;
-    procedure Не_Сдвигать_Декларации_В_Пакете;
-    procedure Не_Сдвигать_Декларации_В_Теле_Пакета;
-    procedure Стартовый_Сдвиг;
+    procedure Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РџРµСЂРµРјРµРЅРЅС‹Рµ;
+    procedure Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РџРѕР»СЏ;
+    procedure Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РљРѕР»РѕРЅРєРё;
+    procedure Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_Р’С‹СЂР°Р¶РµРЅРёСЏ;
+    procedure Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РљРѕРјР°РЅРґС‹;
+    procedure Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РЎРїРµС†РєРѕРјРјРµРЅС‚Р°СЂРёРё;
+    procedure Р—Р°РїРѕР»РЅСЏС‚СЊ_РџСѓСЃС‚РѕС‚С‹;
+    procedure Р—Р°РјРµРЅСЏС‚СЊ_Default;
+    procedure Р—Р°РјРµРЅСЏС‚СЊ_As_РќР°_Is;
+    procedure РњРµРЅСЏС‚СЊ_РўРёРїС‹_РљРѕРјРјРµРЅС‚Р°СЂРёРµРІ;
+    procedure РСЃРїСЂР°РІР»СЏС‚СЊ_РџСЂРѕР±РµР»С‹_Р’_РљРѕРјРјРµРЅС‚Р°СЂРёСЏС…;
+    procedure Р”РѕР±Р°РІР»СЏС‚СЊ_In;
+    procedure Р”РѕР±Р°РІР»СЏС‚СЊ_From_Р’_Delete;
+    procedure РЈРґР°Р»СЏС‚СЊ_РџР°СЂРѕР»Рё_РР·_Connect;
+    procedure РЈС‡РёС‚С‹РІР°С‚СЊ_Р”Р»РёРЅРЅС‹Рµ_РћРїРµСЂР°РЅРґС‹;
+    procedure РќРµ_Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РџРµСЂРµРјРµРЅРЅС‹Рµ;
+    procedure РќРµ_Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РџРѕР»СЏ;
+    procedure РќРµ_Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РљРѕР»РѕРЅРєРё;
+    procedure РќРµ_Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_Р’С‹СЂР°Р¶РµРЅРёСЏ;
+    procedure РќРµ_Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РљРѕРјР°РЅРґС‹;
+    procedure РќРµ_Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РЎРїРµС†РєРѕРјРјРµРЅС‚Р°СЂРёРё;
+    procedure РќРµ_Р—Р°РїРѕР»РЅСЏС‚СЊ_РџСѓСЃС‚РѕС‚С‹;
+    procedure РќРµ_Р—Р°РјРµРЅСЏС‚СЊ_Default;
+    procedure РќРµ_Р—Р°РјРµРЅСЏС‚СЊ_As_РќР°_Is;
+    procedure РќРµ_РњРµРЅСЏС‚СЊ_РўРёРїС‹_РљРѕРјРјРµРЅС‚Р°СЂРёРµРІ;
+    procedure РќРµ_РСЃРїСЂР°РІР»СЏС‚СЊ_РџСЂРѕР±РµР»С‹_Р’_РљРѕРјРјРµРЅС‚Р°СЂРёСЏС…;
+    procedure РќРµ_Р”РѕР±Р°РІР»СЏС‚СЊ_In;
+    procedure РќРµ_Р”РѕР±Р°РІР»СЏС‚СЊ_From_Р’_Delete;
+    procedure РќРµ_РЈРґР°Р»СЏС‚СЊ_РџР°СЂРѕР»Рё_РР·_Connect;
+    procedure РќРµ_РЈС‡РёС‚С‹РІР°С‚СЊ_Р”Р»РёРЅРЅС‹Рµ_РћРїРµСЂР°РЅРґС‹;
+    procedure РџСЂРµРґРµР»_РџР°СЂР°РјРµС‚СЂРѕРІ_Р’_РЎС‚СЂРѕРєРµ;
+    procedure РџСЂРµРґРµР»_РРјРµРЅРѕРІР°РЅРЅС‹С…_РђСЂРіСѓРјРµРЅС‚РѕРІ_Р’_РЎС‚СЂРѕРєРµ;
+    procedure РџСЂРµРґРµР»_РџРѕР·РёС†РёРѕРЅРЅС‹С…_РђСЂРіСѓРјРµРЅС‚РѕРІ_Р’_РЎС‚СЂРѕРєРµ;
+    procedure РџСЂРµРґРµР»_РЎРѕРїРѕСЃС‚Р°РІР»СЏРµРјС‹С…_РџР°СЂР°РјРµС‚СЂРѕРІ;
+    procedure РџСЂРµРґРїРѕС‡РёС‚Р°РµРјР°СЏ_Р”Р»РёРЅР°_Р’С‹СЂР°Р¶РµРЅРёР№;
+    procedure РЎРґРІРёРіР°С‚СЊ_Р”РµРєР»Р°СЂР°С†РёРё_Р’_РџР°РєРµС‚Рµ;
+    procedure РЎРґРІРёРіР°С‚СЊ_Р”РµРєР»Р°СЂР°С†РёРё_Р’_РўРµР»Рµ_РџР°РєРµС‚Р°;
+    procedure РќРµ_РЎРґРІРёРіР°С‚СЊ_Р”РµРєР»Р°СЂР°С†РёРё_Р’_РџР°РєРµС‚Рµ;
+    procedure РќРµ_РЎРґРІРёРіР°С‚СЊ_Р”РµРєР»Р°СЂР°С†РёРё_Р’_РўРµР»Рµ_РџР°РєРµС‚Р°;
+    procedure РЎС‚Р°СЂС‚РѕРІС‹Р№_РЎРґРІРёРі;
   end;
 
 implementation
@@ -60,62 +60,62 @@ implementation
 
 function _Settings.GetDir: string;
 begin
-  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\Настройки';
+  Result := ExcludeTrailingPathDelimiter(inherited GetDir) + '\РќР°СЃС‚СЂРѕР№РєРё';
 end;
 
-procedure _Settings.Выравнивать_Выражения;
+procedure _Settings.Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_Р’С‹СЂР°Р¶РµРЅРёСЏ;
 begin
   Settings.AlignExpressions := true;
 end;
 
-procedure _Settings.Выравнивать_Колонки;
+procedure _Settings.Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РљРѕР»РѕРЅРєРё;
 begin
   Settings.AlignColumns := true;
   Settings.AlignRightComments := true;
 end;
 
-procedure _Settings.Выравнивать_Команды;
+procedure _Settings.Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РљРѕРјР°РЅРґС‹;
 begin
   Settings.AlignCommands := true;
 end;
 
-procedure _Settings.Выравнивать_Переменные;
+procedure _Settings.Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РџРµСЂРµРјРµРЅРЅС‹Рµ;
 begin
   Settings.AlignVariables := true;
 end;
 
-procedure _Settings.Выравнивать_Поля;
+procedure _Settings.Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РџРѕР»СЏ;
 begin
   Settings.AlignFields := true;
 end;
 
-procedure _Settings.Выравнивать_Спецкомментарии;
+procedure _Settings.Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РЎРїРµС†РєРѕРјРјРµРЅС‚Р°СЂРёРё;
 begin
   Settings.AlignSpecialComments := true;
   Settings.MatchParamLimit := 1;
 end;
 
-procedure _Settings.Добавлять_From_В_Delete;
+procedure _Settings.Р”РѕР±Р°РІР»СЏС‚СЊ_From_Р’_Delete;
 begin
   Settings.AddFromToDelete := true;
 end;
 
-procedure _Settings.Добавлять_In;
+procedure _Settings.Р”РѕР±Р°РІР»СЏС‚СЊ_In;
 begin
   Settings.AddInAccessSpecificator := true;
 end;
 
-procedure _Settings.Заменять_As_На_Is;
+procedure _Settings.Р—Р°РјРµРЅСЏС‚СЊ_As_РќР°_Is;
 begin
   Settings.ReplaceAsIs := true;
 end;
 
-procedure _Settings.Заменять_Default;
+procedure _Settings.Р—Р°РјРµРЅСЏС‚СЊ_Default;
 begin
   Settings.ReplaceDefault := true;
 end;
 
-procedure _Settings.Заполнять_Пустоты;
+procedure _Settings.Р—Р°РїРѕР»РЅСЏС‚СЊ_РџСѓСЃС‚РѕС‚С‹;
 begin
   PostponeTill(2024, 6, 30);
   Settings.AlignUseSpace := true;
@@ -123,155 +123,155 @@ begin
   Settings.AlignFields := true;
 end;
 
-procedure _Settings.Исправлять_Пробелы_В_Комментариях;
+procedure _Settings.РСЃРїСЂР°РІР»СЏС‚СЊ_РџСЂРѕР±РµР»С‹_Р’_РљРѕРјРјРµРЅС‚Р°СЂРёСЏС…;
 begin
   Settings.CorrectCommentSpaces := true;
 end;
 
-procedure _Settings.Менять_Типы_Комментариев;
+procedure _Settings.РњРµРЅСЏС‚СЊ_РўРёРїС‹_РљРѕРјРјРµРЅС‚Р°СЂРёРµРІ;
 begin
   Settings.ChangeCommentType := true;
 end;
 
-procedure _Settings.Не_Выравнивать_Выражения;
+procedure _Settings.РќРµ_Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_Р’С‹СЂР°Р¶РµРЅРёСЏ;
 begin
   Settings.AlignExpressions := false;
 end;
 
-procedure _Settings.Не_Выравнивать_Колонки;
+procedure _Settings.РќРµ_Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РљРѕР»РѕРЅРєРё;
 begin
   Settings.AlignColumns := false;
 end;
 
-procedure _Settings.Не_Выравнивать_Команды;
+procedure _Settings.РќРµ_Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РљРѕРјР°РЅРґС‹;
 begin
   Settings.AlignCommands := false;
 end;
 
-procedure _Settings.Не_Выравнивать_Переменные;
+procedure _Settings.РќРµ_Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РџРµСЂРµРјРµРЅРЅС‹Рµ;
 begin
   Settings.AlignVariables := false;
 end;
 
-procedure _Settings.Не_Выравнивать_Поля;
+procedure _Settings.РќРµ_Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РџРѕР»СЏ;
 begin
   Settings.AlignFields := false;
 end;
 
-procedure _Settings.Не_Выравнивать_Спецкомментарии;
+procedure _Settings.РќРµ_Р’С‹СЂР°РІРЅРёРІР°С‚СЊ_РЎРїРµС†РєРѕРјРјРµРЅС‚Р°СЂРёРё;
 begin
   Settings.AlignSpecialComments := false;
   Settings.MatchParamLimit := 1;
 end;
 
-procedure _Settings.Не_Добавлять_From_В_Delete;
+procedure _Settings.РќРµ_Р”РѕР±Р°РІР»СЏС‚СЊ_From_Р’_Delete;
 begin
   Settings.AddFromToDelete := false;
 end;
 
-procedure _Settings.Не_Добавлять_In;
+procedure _Settings.РќРµ_Р”РѕР±Р°РІР»СЏС‚СЊ_In;
 begin
   Settings.AddInAccessSpecificator := false;
 end;
 
-procedure _Settings.Не_Заменять_As_На_Is;
+procedure _Settings.РќРµ_Р—Р°РјРµРЅСЏС‚СЊ_As_РќР°_Is;
 begin
   Settings.ReplaceAsIs := false;
 end;
 
-procedure _Settings.Не_Заменять_Default;
+procedure _Settings.РќРµ_Р—Р°РјРµРЅСЏС‚СЊ_Default;
 begin
   Settings.ReplaceDefault := false;
 end;
 
-procedure _Settings.Не_Заполнять_Пустоты;
+procedure _Settings.РќРµ_Р—Р°РїРѕР»РЅСЏС‚СЊ_РџСѓСЃС‚РѕС‚С‹;
 begin
   Settings.AlignUseSpace := false;
   Settings.AlignVariables := true;
   Settings.AlignFields := true;
 end;
 
-procedure _Settings.Не_Исправлять_Пробелы_В_Комментариях;
+procedure _Settings.РќРµ_РСЃРїСЂР°РІР»СЏС‚СЊ_РџСЂРѕР±РµР»С‹_Р’_РљРѕРјРјРµРЅС‚Р°СЂРёСЏС…;
 begin
   Settings.CorrectCommentSpaces := false;
 end;
 
-procedure _Settings.Не_Менять_Типы_Комментариев;
+procedure _Settings.РќРµ_РњРµРЅСЏС‚СЊ_РўРёРїС‹_РљРѕРјРјРµРЅС‚Р°СЂРёРµРІ;
 begin
   Settings.ChangeCommentType := false;
 end;
 
-procedure _Settings.Не_Сдвигать_Декларации_В_Пакете;
+procedure _Settings.РќРµ_РЎРґРІРёРіР°С‚СЊ_Р”РµРєР»Р°СЂР°С†РёРё_Р’_РџР°РєРµС‚Рµ;
 begin
   Settings.ShiftPackageHeader := false;
   Settings.ShiftPackageBody   := false;
 end;
 
-procedure _Settings.Не_Сдвигать_Декларации_В_Теле_Пакета;
+procedure _Settings.РќРµ_РЎРґРІРёРіР°С‚СЊ_Р”РµРєР»Р°СЂР°С†РёРё_Р’_РўРµР»Рµ_РџР°РєРµС‚Р°;
 begin
   Settings.ShiftPackageHeader := false;
   Settings.ShiftPackageBody   := false;
 end;
 
-procedure _Settings.Не_Удалять_Пароли_Из_Connect;
+procedure _Settings.РќРµ_РЈРґР°Р»СЏС‚СЊ_РџР°СЂРѕР»Рё_РР·_Connect;
 begin
   Settings.RemoveConnectPasswords := false;
 end;
 
-procedure _Settings.Не_Учитывать_Длинные_Операнды;
+procedure _Settings.РќРµ_РЈС‡РёС‚С‹РІР°С‚СЊ_Р”Р»РёРЅРЅС‹Рµ_РћРїРµСЂР°РЅРґС‹;
 begin
   Settings.BeautifyLongOperands := false;
   Settings.PreferredExpressionLength := 40;
 end;
 
-procedure _Settings.Предел_Именованных_Аргументов_В_Строке;
+procedure _Settings.РџСЂРµРґРµР»_РРјРµРЅРѕРІР°РЅРЅС‹С…_РђСЂРіСѓРјРµРЅС‚РѕРІ_Р’_РЎС‚СЂРѕРєРµ;
 begin
   Settings.NamedArgumentSingleLineParamLimit := 3;
 end;
 
-procedure _Settings.Предел_Параметров_В_Строке;
+procedure _Settings.РџСЂРµРґРµР»_РџР°СЂР°РјРµС‚СЂРѕРІ_Р’_РЎС‚СЂРѕРєРµ;
 begin
   Settings.DeclarationSingleLineParamLimit := 3;
 end;
 
-procedure _Settings.Предел_Позиционных_Аргументов_В_Строке;
+procedure _Settings.РџСЂРµРґРµР»_РџРѕР·РёС†РёРѕРЅРЅС‹С…_РђСЂРіСѓРјРµРЅС‚РѕРІ_Р’_РЎС‚СЂРѕРєРµ;
 begin
   Settings.PositionalArgumentSingleLineParamLimit := 3;
 end;
 
-procedure _Settings.Предел_Сопоставляемых_Параметров;
+procedure _Settings.РџСЂРµРґРµР»_РЎРѕРїРѕСЃС‚Р°РІР»СЏРµРјС‹С…_РџР°СЂР°РјРµС‚СЂРѕРІ;
 begin
   Settings.MatchParamLimit := 3;
 end;
 
-procedure _Settings.Предпочитаемая_Длина_Выражений;
+procedure _Settings.РџСЂРµРґРїРѕС‡РёС‚Р°РµРјР°СЏ_Р”Р»РёРЅР°_Р’С‹СЂР°Р¶РµРЅРёР№;
 begin
   Settings.PreferredExpressionLength := 40;
 end;
 
-procedure _Settings.Сдвигать_Декларации_В_Пакете;
+procedure _Settings.РЎРґРІРёРіР°С‚СЊ_Р”РµРєР»Р°СЂР°С†РёРё_Р’_РџР°РєРµС‚Рµ;
 begin
   Settings.ShiftPackageHeader := true;
   Settings.ShiftPackageBody := false;
 end;
 
-procedure _Settings.Сдвигать_Декларации_В_Теле_Пакета;
+procedure _Settings.РЎРґРІРёРіР°С‚СЊ_Р”РµРєР»Р°СЂР°С†РёРё_Р’_РўРµР»Рµ_РџР°РєРµС‚Р°;
 begin
   Settings.ShiftPackageHeader := false;
   Settings.ShiftPackageBody := true;
 end;
 
-procedure _Settings.Стартовый_Сдвиг;
+procedure _Settings.РЎС‚Р°СЂС‚РѕРІС‹Р№_РЎРґРІРёРі;
 begin
   Settings.StartIndent := 7;
 end;
 
-procedure _Settings.Удалять_Пароли_Из_Connect;
+procedure _Settings.РЈРґР°Р»СЏС‚СЊ_РџР°СЂРѕР»Рё_РР·_Connect;
 begin
   Settings.RemoveConnectPasswords := true;
 end;
 
-procedure _Settings.Учитывать_Длинные_Операнды;
+procedure _Settings.РЈС‡РёС‚С‹РІР°С‚СЊ_Р”Р»РёРЅРЅС‹Рµ_РћРїРµСЂР°РЅРґС‹;
 begin
   Settings.BeautifyLongOperands := true;
   Settings.PreferredExpressionLength := 40;

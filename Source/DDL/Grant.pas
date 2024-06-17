@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                                Команда GRANT                               //
+//                                РљРѕРјР°РЅРґР° GRANT                               //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -15,7 +15,7 @@ interface
 uses SysUtils, Statements, Tokens, Commons, Printer;
 
 type
-  { Команда grant }
+  { РљРѕРјР°РЅРґР° grant }
   TGrant = class(TSemicolonStatement)
   strict private
     _Grant, _On, _To, _IdentifiedBy, _WithAdminOption, _WithGrantOption, _WithHierarchyOption: TEpithet;
@@ -34,7 +34,7 @@ uses Streams;
 
 type
 
-  { Грантуемая привилегия }
+  { Р“СЂР°РЅС‚СѓРµРјР°СЏ РїСЂРёРІРёР»РµРіРёСЏ }
   TPrivilege = class(TStatement)
   strict private
     Tokens: array of TToken;
@@ -43,14 +43,14 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Список грантуемых привилегий }
+  { РЎРїРёСЃРѕРє РіСЂР°РЅС‚СѓРµРјС‹С… РїСЂРёРІРёР»РµРіРёР№ }
   TPrivileges = class(TCommaList<TPrivilege>)
   strict protected
     function ParseBreak: boolean; override;
     function OnePerLine: boolean; override;
   end;
 
-  { Технические классы для внесения различия между grant и grant on }
+  { РўРµС…РЅРёС‡РµСЃРєРёРµ РєР»Р°СЃСЃС‹ РґР»СЏ РІРЅРµСЃРµРЅРёСЏ СЂР°Р·Р»РёС‡РёСЏ РјРµР¶РґСѓ grant Рё grant on }
   TGrantOn = class(TGrant);
   TGrantOff = class(TGrant);
 
@@ -117,7 +117,7 @@ var
   L: integer;
 begin
   Savepoint := Source.Mark;
-  { Сначала идут один или несколько идентификаторов }
+  { РЎРЅР°С‡Р°Р»Р° РёРґСѓС‚ РѕРґРёРЅ РёР»Рё РЅРµСЃРєРѕР»СЊРєРѕ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂРѕРІ }
   T := NextToken;
   while (T is TEpithet) and not SameStr(T.Value, 'on') and not SameStr(T.Value, 'to') do
   begin
@@ -128,13 +128,13 @@ begin
     Tokens[L] := T;
     T := NextToken;
   end;
-  { Если теперь не открывающая скобка, разбор окончен }
+  { Р•СЃР»Рё С‚РµРїРµСЂСЊ РЅРµ РѕС‚РєСЂС‹РІР°СЋС‰Р°СЏ СЃРєРѕР±РєР°, СЂР°Р·Р±РѕСЂ РѕРєРѕРЅС‡РµРЅ }
   if not SameStr(T.Value, '(') then
   begin
     Source.Restore(Savepoint);
     exit(Length(Tokens) > 0);
   end;
-  { А если открывающая - читаем названия колонок вплоть до закрывающей }
+  { Рђ РµСЃР»Рё РѕС‚РєСЂС‹РІР°СЋС‰Р°СЏ - С‡РёС‚Р°РµРј РЅР°Р·РІР°РЅРёСЏ РєРѕР»РѕРЅРѕРє РІРїР»РѕС‚СЊ РґРѕ Р·Р°РєСЂС‹РІР°СЋС‰РµР№ }
   repeat
     if T is TEpithet then TEpithet(T).IsIdent := true;
     L := Length(Tokens);

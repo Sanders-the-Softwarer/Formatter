@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                                Оператор EXIT                               //
+//                                РћРїРµСЂР°С‚РѕСЂ EXIT                               //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -15,7 +15,7 @@ interface
 uses Statements, Tokens, Printer, PLSQL;
 
 type
-  { Оператор exit }
+  { РћРїРµСЂР°С‚РѕСЂ exit }
   TExit = class(TPLSQLStatement)
   strict private
     _Exit, _When: TEpithet;
@@ -38,7 +38,7 @@ begin
   if not Assigned(_Exit) then exit(false);
   _When := Keyword('when');
   if Assigned(_When) then TExpression.Parse(Self, Source, _Condition);
-  { Чтобы не путать с sqlplus-ным when, потребуем либо when, либо точку с запятой }
+  { Р§С‚РѕР±С‹ РЅРµ РїСѓС‚Р°С‚СЊ СЃ sqlplus-РЅС‹Рј when, РїРѕС‚СЂРµР±СѓРµРј Р»РёР±Рѕ when, Р»РёР±Рѕ С‚РѕС‡РєСѓ СЃ Р·Р°РїСЏС‚РѕР№ }
   if not inherited and not Assigned(_When) then exit(false);
 end;
 

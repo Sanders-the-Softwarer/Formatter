@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                                Команда ALTER                               //
+//                                РљРѕРјР°РЅРґР° ALTER                               //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -15,7 +15,7 @@ interface
 uses Tokens, Statements, Printer, Commons;
 
 type
-  { Команда alter }
+  { РљРѕРјР°РЅРґР° alter }
   TAlter = class(TSemicolonSlashStatement)
   strict private
     _Alter: TEpithet;

@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                                 Команда DROP                               //
+//                                 РљРѕРјР°РЅРґР° DROP                               //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -15,7 +15,7 @@ interface
 uses Statements, Tokens, Printer, Commons;
 
 type
-  { Команда drop }
+  { РљРѕРјР°РЅРґР° drop }
   TDrop = class(TSemicolonStatement)
   strict private
     _Drop, _Type, _Force, _CascadeConstraints: TEpithet;

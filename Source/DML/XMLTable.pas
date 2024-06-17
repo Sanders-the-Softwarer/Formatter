@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                               Функция XMLTABLE                             //
+//                               Р¤СѓРЅРєС†РёСЏ XMLTABLE                             //
 //                                                                            //
 //               Copyright(c) 2019-2021 by Sanders the Softwarer              //
 //                                                                            //
@@ -15,7 +15,7 @@ interface
 uses Tokens, Statements, Printer, Commons;
 
 type
-  { Специальный синтаксис функции xmltable }
+  { РЎРїРµС†РёР°Р»СЊРЅС‹Р№ СЃРёРЅС‚Р°РєСЃРёСЃ С„СѓРЅРєС†РёРё xmltable }
   TXmlTable = class(TSpecialFunction)
   strict private
     _Namespace, _Passing, _Returning, _Columns, _XQuery: TStatement;
@@ -32,7 +32,7 @@ uses DML, Expressions;
 
 type
 
-  { Конструкция XMLNAMESPACES }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ XMLNAMESPACES }
   TXmlNamespaces = class(TStatement)
   strict private
     _XmlNamespaces: TEpithet;
@@ -42,7 +42,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Элемент конструкции XMLNAMESPACES }
+  { Р­Р»РµРјРµРЅС‚ РєРѕРЅСЃС‚СЂСѓРєС†РёРё XMLNAMESPACES }
   TXmlNamespace = class(TStatement)
   strict private
     _Default, _As, _Identifier: TEpithet;
@@ -52,7 +52,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция PASSING }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ PASSING }
   TPassing = class(TStatement)
   strict private
     _Passing, _By, _Value: TEpithet;
@@ -63,7 +63,7 @@ type
     function Aligned: TAlignMode; override;
   end;
 
-  { Значение в конструкции PASSING }
+  { Р—РЅР°С‡РµРЅРёРµ РІ РєРѕРЅСЃС‚СЂСѓРєС†РёРё PASSING }
   TPassingValue = class(TStatement)
   strict private
     _Expr: TStatement;
@@ -73,7 +73,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция RETURNING }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ RETURNING }
   TReturning = class(TStatement)
   strict private
     _Returning, _Sequence, _By, _Ref: TEpithet;
@@ -82,7 +82,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Конструкция COLUMNS }
+  { РљРѕРЅСЃС‚СЂСѓРєС†РёСЏ COLUMNS }
   TColumns = class(TStatement)
   strict private
     _Columns: TEpithet;
@@ -93,7 +93,7 @@ type
     function Aligned: TAlignMode; override;
   end;
 
-  { Значение в конструкции COLUMNS }
+  { Р—РЅР°С‡РµРЅРёРµ РІ РєРѕРЅСЃС‚СЂСѓРєС†РёРё COLUMNS }
   TColumn = class(TStatement)
   strict private
     _Column, _For, _Ordinality, _Sequence, _By, _Ref, _Path, _Default: TEpithet;

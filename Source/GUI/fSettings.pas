@@ -1,4 +1,4 @@
-unit fSettings;
+﻿unit fSettings;
 
 interface
 

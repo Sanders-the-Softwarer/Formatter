@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                           Команда SET  (SQL*Plus)                          //
+//                           РљРѕРјР°РЅРґР° SET  (SQL*Plus)                          //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -16,7 +16,7 @@ uses SysUtils, System.Generics.Collections, Tokens, Statements, Printer,
   Commons, SQLPlus;
 
 type
-  { Команда set }
+  { РљРѕРјР°РЅРґР° set }
   TSet = class(TSQLPlusStatement)
   strict private
     _Set, _Target: TEpithet;
@@ -31,7 +31,7 @@ implementation
 uses Parser;
 
 type
-  { Класс, поддерживающий список set-переменных }
+  { РљР»Р°СЃСЃ, РїРѕРґРґРµСЂР¶РёРІР°СЋС‰РёР№ СЃРїРёСЃРѕРє set-РїРµСЂРµРјРµРЅРЅС‹С… }
   TSetVariables = class
   strict private
     Shorts, Longs: TDictionary<string, string>;
@@ -118,7 +118,7 @@ initialization
     Add('blo', 'ckterminator');
     Add('cmds', 'ep');
     Add('colinvi', 'sible');
-    Add('col', ''); // мистическая команда, которой нет в документации, но которая, тем не менее, встречается в скриптах top
+    Add('col', ''); // РјРёСЃС‚РёС‡РµСЃРєР°СЏ РєРѕРјР°РЅРґР°, РєРѕС‚РѕСЂРѕР№ РЅРµС‚ РІ РґРѕРєСѓРјРµРЅС‚Р°С†РёРё, РЅРѕ РєРѕС‚РѕСЂР°СЏ, С‚РµРј РЅРµ РјРµРЅРµРµ, РІСЃС‚СЂРµС‡Р°РµС‚СЃСЏ РІ СЃРєСЂРёРїС‚Р°С… top
     Add('colsep', '');
     Add('con', 'cat');
     Add('copyc', 'ommit');

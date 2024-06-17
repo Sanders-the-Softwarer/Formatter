@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                           Лексический  анализатор                          //
+//                           Р›РµРєСЃРёС‡РµСЃРєРёР№  Р°РЅР°Р»РёР·Р°С‚РѕСЂ                          //
 //                                                                            //
 //               Copyright(c) 2019-2020 by Sanders the Softwarer              //
 //                                                                            //
@@ -10,28 +10,28 @@
 
 unit Tokenizer;
 
-{ ----- Примечания -------------------------------------------------------------
+{ ----- РџСЂРёРјРµС‡Р°РЅРёСЏ -------------------------------------------------------------
 
-  Наиболее сложной, видимо, задачей форматирования является работа с коммента-
-  риями. Они могут находиться в любом месте кода, мешают синтаксическому
-  анализу, но при этом должны быть сохранены и выведены в итоговый текст,
-  причём правильно расположенными относительно синтаксических конструкций.
-  Для решения этой задачи между лексическим и синтаксическим анализом введён
-  специальный шаг обработки комментариев. Идея в том, что комментарий убирается
-  из потока и привязывается к значимой лексеме, рядом с которой находится.
-  Далее лексема войдёт составной частью в распознанную синтаксическую конструк-
-  цию, и когда дело дойдёт до вывода форматированного текста - вместе с лексемой
-  будет выведен и привязанный к ней комментарий.
+  РќР°РёР±РѕР»РµРµ СЃР»РѕР¶РЅРѕР№, РІРёРґРёРјРѕ, Р·Р°РґР°С‡РµР№ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ СЏРІР»СЏРµС‚СЃСЏ СЂР°Р±РѕС‚Р° СЃ РєРѕРјРјРµРЅС‚Р°-
+  СЂРёСЏРјРё. РћРЅРё РјРѕРіСѓС‚ РЅР°С…РѕРґРёС‚СЊСЃСЏ РІ Р»СЋР±РѕРј РјРµСЃС‚Рµ РєРѕРґР°, РјРµС€Р°СЋС‚ СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєРѕРјСѓ
+  Р°РЅР°Р»РёР·Сѓ, РЅРѕ РїСЂРё СЌС‚РѕРј РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ СЃРѕС…СЂР°РЅРµРЅС‹ Рё РІС‹РІРµРґРµРЅС‹ РІ РёС‚РѕРіРѕРІС‹Р№ С‚РµРєСЃС‚,
+  РїСЂРёС‡С‘Рј РїСЂР°РІРёР»СЊРЅРѕ СЂР°СЃРїРѕР»РѕР¶РµРЅРЅС‹РјРё РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєРёС… РєРѕРЅСЃС‚СЂСѓРєС†РёР№.
+  Р”Р»СЏ СЂРµС€РµРЅРёСЏ СЌС‚РѕР№ Р·Р°РґР°С‡Рё РјРµР¶РґСѓ Р»РµРєСЃРёС‡РµСЃРєРёРј Рё СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєРёРј Р°РЅР°Р»РёР·РѕРј РІРІРµРґС‘РЅ
+  СЃРїРµС†РёР°Р»СЊРЅС‹Р№ С€Р°Рі РѕР±СЂР°Р±РѕС‚РєРё РєРѕРјРјРµРЅС‚Р°СЂРёРµРІ. РРґРµСЏ РІ С‚РѕРј, С‡С‚Рѕ РєРѕРјРјРµРЅС‚Р°СЂРёР№ СѓР±РёСЂР°РµС‚СЃСЏ
+  РёР· РїРѕС‚РѕРєР° Рё РїСЂРёРІСЏР·С‹РІР°РµС‚СЃСЏ Рє Р·РЅР°С‡РёРјРѕР№ Р»РµРєСЃРµРјРµ, СЂСЏРґРѕРј СЃ РєРѕС‚РѕСЂРѕР№ РЅР°С…РѕРґРёС‚СЃСЏ.
+  Р”Р°Р»РµРµ Р»РµРєСЃРµРјР° РІРѕР№РґС‘С‚ СЃРѕСЃС‚Р°РІРЅРѕР№ С‡Р°СЃС‚СЊСЋ РІ СЂР°СЃРїРѕР·РЅР°РЅРЅСѓСЋ СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєСѓСЋ РєРѕРЅСЃС‚СЂСѓРє-
+  С†РёСЋ, Рё РєРѕРіРґР° РґРµР»Рѕ РґРѕР№РґС‘С‚ РґРѕ РІС‹РІРѕРґР° С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРЅРѕРіРѕ С‚РµРєСЃС‚Р° - РІРјРµСЃС‚Рµ СЃ Р»РµРєСЃРµРјРѕР№
+  Р±СѓРґРµС‚ РІС‹РІРµРґРµРЅ Рё РїСЂРёРІСЏР·Р°РЅРЅС‹Р№ Рє РЅРµР№ РєРѕРјРјРµРЅС‚Р°СЂРёР№.
 
-  Предполагается, что будет анализироваться и сохраняться положение комментария
-  относительно лексемы - сверху, снизу, левее или правее. Пока что для простоты
-  реализации все комментарии, кроме стартового, привязываются к предыдущей
-  значимой лексеме. После реализации других частей кода это место будет
-  доработано.
+  РџСЂРµРґРїРѕР»Р°РіР°РµС‚СЃСЏ, С‡С‚Рѕ Р±СѓРґРµС‚ Р°РЅР°Р»РёР·РёСЂРѕРІР°С‚СЊСЃСЏ Рё СЃРѕС…СЂР°РЅСЏС‚СЊСЃСЏ РїРѕР»РѕР¶РµРЅРёРµ РєРѕРјРјРµРЅС‚Р°СЂРёСЏ
+  РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ Р»РµРєСЃРµРјС‹ - СЃРІРµСЂС…Сѓ, СЃРЅРёР·Сѓ, Р»РµРІРµРµ РёР»Рё РїСЂР°РІРµРµ. РџРѕРєР° С‡С‚Рѕ РґР»СЏ РїСЂРѕСЃС‚РѕС‚С‹
+  СЂРµР°Р»РёР·Р°С†РёРё РІСЃРµ РєРѕРјРјРµРЅС‚Р°СЂРёРё, РєСЂРѕРјРµ СЃС‚Р°СЂС‚РѕРІРѕРіРѕ, РїСЂРёРІСЏР·С‹РІР°СЋС‚СЃСЏ Рє РїСЂРµРґС‹РґСѓС‰РµР№
+  Р·РЅР°С‡РёРјРѕР№ Р»РµРєСЃРµРјРµ. РџРѕСЃР»Рµ СЂРµР°Р»РёР·Р°С†РёРё РґСЂСѓРіРёС… С‡Р°СЃС‚РµР№ РєРѕРґР° СЌС‚Рѕ РјРµСЃС‚Рѕ Р±СѓРґРµС‚
+  РґРѕСЂР°Р±РѕС‚Р°РЅРѕ.
 
-  Для удобства работы с многословными синтаксическими конструкциями (end if,
-  full outer join, when not matched then и т. п.) предусмотрен специальный
-  поток, который находит подобные идиомы и собирает их воедино.
+  Р”Р»СЏ СѓРґРѕР±СЃС‚РІР° СЂР°Р±РѕС‚С‹ СЃ РјРЅРѕРіРѕСЃР»РѕРІРЅС‹РјРё СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєРёРјРё РєРѕРЅСЃС‚СЂСѓРєС†РёСЏРјРё (end if,
+  full outer join, when not matched then Рё С‚. Рї.) РїСЂРµРґСѓСЃРјРѕС‚СЂРµРЅ СЃРїРµС†РёР°Р»СЊРЅС‹Р№
+  РїРѕС‚РѕРє, РєРѕС‚РѕСЂС‹Р№ РЅР°С…РѕРґРёС‚ РїРѕРґРѕР±РЅС‹Рµ РёРґРёРѕРјС‹ Рё СЃРѕР±РёСЂР°РµС‚ РёС… РІРѕРµРґРёРЅРѕ.
 
 ------------------------------------------------------------------------------ }
 
@@ -42,13 +42,13 @@ uses Classes, System.Character, System.SysUtils, System.Generics.Collections,
 
 type
 
-  { Лексический анализатор превращает поток символов в поток лексем }
+  { Р›РµРєСЃРёС‡РµСЃРєРёР№ Р°РЅР°Р»РёР·Р°С‚РѕСЂ РїСЂРµРІСЂР°С‰Р°РµС‚ РїРѕС‚РѕРє СЃРёРјРІРѕР»РѕРІ РІ РїРѕС‚РѕРє Р»РµРєСЃРµРј }
   TTokenizer = class(TNextStream<TPositionedChar, TToken>)
   strict protected
     function InternalNext: TToken; override;
   end;
 
-  { Дополнительный класс пропускает незначащие пробелы }
+  { Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Р№ РєР»Р°СЃСЃ РїСЂРѕРїСѓСЃРєР°РµС‚ РЅРµР·РЅР°С‡Р°С‰РёРµ РїСЂРѕР±РµР»С‹ }
   TWhitespaceSkipper = class(TNextStream<TToken, TToken>)
   strict private
     procedure Skip;
@@ -57,13 +57,13 @@ type
     function InternalNext: TToken; override;
   end;
 
-  { Дополнительный класс склеивает комбинации типа 'end' 'if' в общий 'end if' }
+  { Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Р№ РєР»Р°СЃСЃ СЃРєР»РµРёРІР°РµС‚ РєРѕРјР±РёРЅР°С†РёРё С‚РёРїР° 'end' 'if' РІ РѕР±С‰РёР№ 'end if' }
   TMerger = class(TNextStream<TToken, TToken>)
   strict protected
     function InternalNext: TToken; override;
   end;
 
-  { Класс выкусывает "спецкомментарии", вставленные в текст во время прошлого форматирования }
+  { РљР»Р°СЃСЃ РІС‹РєСѓСЃС‹РІР°РµС‚ "СЃРїРµС†РєРѕРјРјРµРЅС‚Р°СЂРёРё", РІСЃС‚Р°РІР»РµРЅРЅС‹Рµ РІ С‚РµРєСЃС‚ РІРѕ РІСЂРµРјСЏ РїСЂРѕС€Р»РѕРіРѕ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ }
   TSkipSpecCommentProcessor = class(TNextStream<TToken, TToken>)
   strict private
     T: TToken;
@@ -73,7 +73,7 @@ type
     function InternalNext: TToken; override;
   end;
 
-  { Класс выкусывает комментарии из основного потока и привязывает их к значимым лексемам }
+  { РљР»Р°СЃСЃ РІС‹РєСѓСЃС‹РІР°РµС‚ РєРѕРјРјРµРЅС‚Р°СЂРёРё РёР· РѕСЃРЅРѕРІРЅРѕРіРѕ РїРѕС‚РѕРєР° Рё РїСЂРёРІСЏР·С‹РІР°РµС‚ РёС… Рє Р·РЅР°С‡РёРјС‹Рј Р»РµРєСЃРµРјР°Рј }
   TCommentProcessor = class(TNextStream<TToken, TToken>)
   strict private
     LeftPos: TDictionary<integer, integer>;
@@ -100,7 +100,7 @@ implementation
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//       Лексический анализатор превращает поток символов в поток лексем      //
+//       Р›РµРєСЃРёС‡РµСЃРєРёР№ Р°РЅР°Р»РёР·Р°С‚РѕСЂ РїСЂРµРІСЂР°С‰Р°РµС‚ РїРѕС‚РѕРє СЃРёРјРІРѕР»РѕРІ РІ РїРѕС‚РѕРє Р»РµРєСЃРµРј      //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -112,7 +112,7 @@ function TTokenizer.InternalNext: TToken;
     TokenValue: string;
     LastChar: char;
 
-  { Восстановление начального состояния анализатора }
+  { Р’РѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ РЅР°С‡Р°Р»СЊРЅРѕРіРѕ СЃРѕСЃС‚РѕСЏРЅРёСЏ Р°РЅР°Р»РёР·Р°С‚РѕСЂР° }
   procedure Restore;
   begin
     Source.Restore(StartPosition);
@@ -120,7 +120,7 @@ function TTokenizer.InternalNext: TToken;
     LastChar := #0;
   end;
 
-  { Чтение следующего символа лексемы }
+  { Р§С‚РµРЅРёРµ СЃР»РµРґСѓСЋС‰РµРіРѕ СЃРёРјРІРѕР»Р° Р»РµРєСЃРµРјС‹ }
   function NextChar: char;
   begin
     if Source.Eof then exit(#0);
@@ -130,7 +130,7 @@ function TTokenizer.InternalNext: TToken;
     LastChar := Result;
   end;
 
-  { Откат к предпоследнему считанному символу }
+  { РћС‚РєР°С‚ Рє РїСЂРµРґРїРѕСЃР»РµРґРЅРµРјСѓ СЃС‡РёС‚Р°РЅРЅРѕРјСѓ СЃРёРјРІРѕР»Сѓ }
   procedure RefuseLastChar;
   begin
     if Source.Eof then exit;
@@ -138,7 +138,7 @@ function TTokenizer.InternalNext: TToken;
     LastChar := #0;
   end;
 
-  { Подтверждение последнего считанного символа }
+  { РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ РїРѕСЃР»РµРґРЅРµРіРѕ СЃС‡РёС‚Р°РЅРЅРѕРіРѕ СЃРёРјРІРѕР»Р° }
   procedure ApplyLastChar;
   begin
     if Source.Eof then exit;
@@ -147,7 +147,7 @@ function TTokenizer.InternalNext: TToken;
     LastChar := #0;
   end;
 
-  { Считывание незначащих пробелов }
+  { РЎС‡РёС‚С‹РІР°РЅРёРµ РЅРµР·РЅР°С‡Р°С‰РёС… РїСЂРѕР±РµР»РѕРІ }
   function ParseWhitespace: boolean;
   begin
     Restore;
@@ -156,7 +156,7 @@ function TTokenizer.InternalNext: TToken;
     RefuseLastChar;
   end;
 
-  { Считывание имени файла }
+  { РЎС‡РёС‚С‹РІР°РЅРёРµ РёРјРµРЅРё С„Р°Р№Р»Р° }
   function ParseFilename: boolean;
   begin
     Restore;
@@ -165,7 +165,7 @@ function TTokenizer.InternalNext: TToken;
     RefuseLastChar;
   end;
 
-  { Считывание идентификатора }
+  { РЎС‡РёС‚С‹РІР°РЅРёРµ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂР° }
   function ParseIdent(AFromCurrent: boolean = false): boolean;
   var
     C, F: char;
@@ -189,7 +189,7 @@ function TTokenizer.InternalNext: TToken;
     Result := true;
   end;
 
-  { Считывание строчного комментария }
+  { РЎС‡РёС‚С‹РІР°РЅРёРµ СЃС‚СЂРѕС‡РЅРѕРіРѕ РєРѕРјРјРµРЅС‚Р°СЂРёСЏ }
   function ParseLineComment: boolean;
   begin
     Restore;
@@ -199,7 +199,7 @@ function TTokenizer.InternalNext: TToken;
     RefuseLastChar;
   end;
 
-  { Считывание скобочного комментария }
+  { РЎС‡РёС‚С‹РІР°РЅРёРµ СЃРєРѕР±РѕС‡РЅРѕРіРѕ РєРѕРјРјРµРЅС‚Р°СЂРёСЏ }
   function ParseBracedComment: boolean;
   var PrevStar: boolean;
   begin
@@ -211,34 +211,34 @@ function TTokenizer.InternalNext: TToken;
       if PrevStar and (LastChar = '/')
         then break
         else PrevStar := (LastChar = '*');
-    { Если достигнут конец файла, будем интерпретировать это как неожиданно кончившийся комментарий - так лучше чем как неизвестную лексему }
+    { Р•СЃР»Рё РґРѕСЃС‚РёРіРЅСѓС‚ РєРѕРЅРµС† С„Р°Р№Р»Р°, Р±СѓРґРµРј РёРЅС‚РµСЂРїСЂРµС‚РёСЂРѕРІР°С‚СЊ СЌС‚Рѕ РєР°Рє РЅРµРѕР¶РёРґР°РЅРЅРѕ РєРѕРЅС‡РёРІС€РёР№СЃСЏ РєРѕРјРјРµРЅС‚Р°СЂРёР№ - С‚Р°Рє Р»СѓС‡С€Рµ С‡РµРј РєР°Рє РЅРµРёР·РІРµСЃС‚РЅСѓСЋ Р»РµРєСЃРµРјСѓ }
     ApplyLastChar;
   end;
 
-  { Считывание числа }
+  { РЎС‡РёС‚С‹РІР°РЅРёРµ С‡РёСЃР»Р° }
   function ParseNumber: boolean;
   begin
     Restore;
-    { Число должно начинаться с цифры. Унарные плюс-минус рассматриваем как операцию в выражении }
+    { Р§РёСЃР»Рѕ РґРѕР»Р¶РЅРѕ РЅР°С‡РёРЅР°С‚СЊСЃСЏ СЃ С†РёС„СЂС‹. РЈРЅР°СЂРЅС‹Рµ РїР»СЋСЃ-РјРёРЅСѓСЃ СЂР°СЃСЃРјР°С‚СЂРёРІР°РµРј РєР°Рє РѕРїРµСЂР°С†РёСЋ РІ РІС‹СЂР°Р¶РµРЅРёРё }
     Result := NextChar.IsDigit;
     if not Result then exit;
-    { Прочитаем целую часть числа }
+    { РџСЂРѕС‡РёС‚Р°РµРј С†РµР»СѓСЋ С‡Р°СЃС‚СЊ С‡РёСЃР»Р° }
     repeat until not NextChar.IsDigit;
-    { Если за ней следует точка, нужно тщательно отделить вещественное число от конструкции for i in 1..10 }
+    { Р•СЃР»Рё Р·Р° РЅРµР№ СЃР»РµРґСѓРµС‚ С‚РѕС‡РєР°, РЅСѓР¶РЅРѕ С‚С‰Р°С‚РµР»СЊРЅРѕ РѕС‚РґРµР»РёС‚СЊ РІРµС‰РµСЃС‚РІРµРЅРЅРѕРµ С‡РёСЃР»Рѕ РѕС‚ РєРѕРЅСЃС‚СЂСѓРєС†РёРё for i in 1..10 }
     if LastChar = '.' then
     begin
       if not NextChar.IsDigit then Restore;
       repeat until not NextChar.IsDigit;
     end;
-    { Если за ней следует буква e, прочитаем порядок }
+    { Р•СЃР»Рё Р·Р° РЅРµР№ СЃР»РµРґСѓРµС‚ Р±СѓРєРІР° e, РїСЂРѕС‡РёС‚Р°РµРј РїРѕСЂСЏРґРѕРє }
     if LastChar.ToLower = 'e' then
       if NextChar.IsDigit or (LastChar = '+') or (LastChar = '-') then
         repeat until not NextChar.IsDigit;
-    { Всё }
+    { Р’СЃС‘ }
     RefuseLastChar;
   end;
 
-  { Считывание Q-литерала }
+  { РЎС‡РёС‚С‹РІР°РЅРёРµ Q-Р»РёС‚РµСЂР°Р»Р° }
   function ParseQLiteral: boolean;
   var
     C, L: char;
@@ -263,7 +263,7 @@ function TTokenizer.InternalNext: TToken;
     Result := true;
   end;
 
-  { Считывание литерала }
+  { РЎС‡РёС‚С‹РІР°РЅРёРµ Р»РёС‚РµСЂР°Р»Р° }
   function ParseLiteral: boolean;
   var
     Odd: boolean;
@@ -285,7 +285,7 @@ function TTokenizer.InternalNext: TToken;
     if C <> #0 then RefuseLastChar else ApplyLastChar;
   end;
 
-  { Считывание метки }
+  { РЎС‡РёС‚С‹РІР°РЅРёРµ РјРµС‚РєРё }
   function ParseLabel: boolean;
   begin
     Restore;
@@ -297,7 +297,7 @@ function TTokenizer.InternalNext: TToken;
     if Result then ApplyLastChar;
   end;
 
-  { Считывание многосимвольных лексем }
+  { РЎС‡РёС‚С‹РІР°РЅРёРµ РјРЅРѕРіРѕСЃРёРјРІРѕР»СЊРЅС‹С… Р»РµРєСЃРµРј }
   function ParseTerminal: boolean;
   const
     N = 35;
@@ -335,10 +335,10 @@ function TTokenizer.InternalNext: TToken;
   end;
 
 begin
-  { Сохраним начальную позицию }
+  { РЎРѕС…СЂР°РЅРёРј РЅР°С‡Р°Р»СЊРЅСѓСЋ РїРѕР·РёС†РёСЋ }
   StartPosition := Source.Mark;
   Start := Source.Next;
-  { В зависимости от первого символа }
+  { Р’ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ РїРµСЂРІРѕРіРѕ СЃРёРјРІРѕР»Р° }
   if ParseWhitespace then
     Result := TWhitespace.Create(TokenValue, Start)
   else if ParseLineComment then
@@ -366,7 +366,7 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//           Дополнительный класс для пропуска незначимых пробелов            //
+//           Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Р№ РєР»Р°СЃСЃ РґР»СЏ РїСЂРѕРїСѓСЃРєР° РЅРµР·РЅР°С‡РёРјС‹С… РїСЂРѕР±РµР»РѕРІ            //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -397,7 +397,7 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                          Обработчик комментариев                           //
+//                          РћР±СЂР°Р±РѕС‚С‡РёРє РєРѕРјРјРµРЅС‚Р°СЂРёРµРІ                           //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -437,7 +437,7 @@ end;
 procedure TCommentProcessor.ReadNext;
 begin
   if Source.Eof then
-    { неоткуда }
+    { РЅРµРѕС‚РєСѓРґР° }
   else if not Assigned(T1) then
     T1 := SourceNext
   else if not Assigned(T2) then
@@ -445,7 +445,7 @@ begin
   else if not Assigned(T3) then
     T3 := SourceNext
   else
-    { пока больше не нужно }
+    { РїРѕРєР° Р±РѕР»СЊС€Рµ РЅРµ РЅСѓР¶РЅРѕ }
 end;
 
 function TCommentProcessor.AppliedAfter(C: TComment; T: TToken): boolean;
@@ -486,7 +486,7 @@ end;
 procedure TCommentProcessor.Compress;
 var C: TComment;
 begin
-  { Если начинаем с комментария, пока возможно будем привязывать его к следующей лексеме }
+  { Р•СЃР»Рё РЅР°С‡РёРЅР°РµРј СЃ РєРѕРјРјРµРЅС‚Р°СЂРёСЏ, РїРѕРєР° РІРѕР·РјРѕР¶РЅРѕ Р±СѓРґРµРј РїСЂРёРІСЏР·С‹РІР°С‚СЊ РµРіРѕ Рє СЃР»РµРґСѓСЋС‰РµР№ Р»РµРєСЃРµРјРµ }
   ReadNext; ReadNext;
   while (T1 is TComment) and Assigned(T2) do
   begin
@@ -499,7 +499,7 @@ begin
     T3 := nil;
     ReadNext;
   end;
-  { Теперь, когда в начале (возможно) не комментарий, комментарий из середины привяжем либо к предыдущей, либо к следующей }
+  { РўРµРїРµСЂСЊ, РєРѕРіРґР° РІ РЅР°С‡Р°Р»Рµ (РІРѕР·РјРѕР¶РЅРѕ) РЅРµ РєРѕРјРјРµРЅС‚Р°СЂРёР№, РєРѕРјРјРµРЅС‚Р°СЂРёР№ РёР· СЃРµСЂРµРґРёРЅС‹ РїСЂРёРІСЏР¶РµРј Р»РёР±Рѕ Рє РїСЂРµРґС‹РґСѓС‰РµР№, Р»РёР±Рѕ Рє СЃР»РµРґСѓСЋС‰РµР№ }
   ReadNext;
   while T2 is TComment do
   begin
@@ -528,7 +528,7 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//        Объединение отдельных лексем в составные типа full outer join       //
+//        РћР±СЉРµРґРёРЅРµРЅРёРµ РѕС‚РґРµР»СЊРЅС‹С… Р»РµРєСЃРµРј РІ СЃРѕСЃС‚Р°РІРЅС‹Рµ С‚РёРїР° full outer join       //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -545,7 +545,7 @@ function TMerger.InternalNext: TToken;
     begin
       T.Printed := true;
       TEpithet(T).IsKeyword := true;
-      { Коммантарии из той же строки сгруппируем справа от результата }
+      { РљРѕРјРјР°РЅС‚Р°СЂРёРё РёР· С‚РѕР№ Р¶Рµ СЃС‚СЂРѕРєРё СЃРіСЂСѓРїРїРёСЂСѓРµРј СЃРїСЂР°РІР° РѕС‚ СЂРµР·СѓР»СЊС‚Р°С‚Р° }
       if Assigned(T.CommentAfter) then
       begin
         C := AResult;
@@ -553,14 +553,14 @@ function TMerger.InternalNext: TToken;
         C.CommentAfter := T.CommentAfter;
         T.CommentAfter := nil;
       end;
-      { Верхние комментарии сгруппируем сверху от результата }
+      { Р’РµСЂС…РЅРёРµ РєРѕРјРјРµРЅС‚Р°СЂРёРё СЃРіСЂСѓРїРїРёСЂСѓРµРј СЃРІРµСЂС…Сѓ РѕС‚ СЂРµР·СѓР»СЊС‚Р°С‚Р° }
       if Assigned(T.CommentAbove) then
       begin
         T.CommentAbove.CommentAbove := AResult.CommentAbove;
-        AResult.CommentAbove := nil; { иначе сработает защита на присваивании ниже }
+        AResult.CommentAbove := nil; { РёРЅР°С‡Рµ СЃСЂР°Р±РѕС‚Р°РµС‚ Р·Р°С‰РёС‚Р° РЅР° РїСЂРёСЃРІР°РёРІР°РЅРёРё РЅРёР¶Рµ }
         AResult.CommentAbove := T.CommentAbove;
       end;
-      { Нижние комментарии сгруппируем снизу от результата }
+      { РќРёР¶РЅРёРµ РєРѕРјРјРµРЅС‚Р°СЂРёРё СЃРіСЂСѓРїРїРёСЂСѓРµРј СЃРЅРёР·Сѓ РѕС‚ СЂРµР·СѓР»СЊС‚Р°С‚Р° }
       if Assigned(T.CommentBelow) or Assigned(T.CommentBelowBOL) then
       begin
         C := AResult;
@@ -573,14 +573,14 @@ function TMerger.InternalNext: TToken;
         T.CommentBelow := nil;
         T.CommentBelowBOL := nil;
       end;
-      { С сильно верхними и сильно нижними ... }
+      { РЎ СЃРёР»СЊРЅРѕ РІРµСЂС…РЅРёРјРё Рё СЃРёР»СЊРЅРѕ РЅРёР¶РЅРёРјРё ... }
       if Assigned(T.CommentFarAbove) then
       begin
         T.CommentFarAbove.CommentFarAbove := AResult.CommentFarAbove;
         AResult.CommentFarAbove := nil;
         AResult.CommentFarAbove := T.CommentFarAbove;
       end;
-      { ... поступим аналогично }
+      { ... РїРѕСЃС‚СѓРїРёРј Р°РЅР°Р»РѕРіРёС‡РЅРѕ }
       if Assigned(T.CommentFarBelow) then
       begin
         C := AResult;
@@ -606,7 +606,7 @@ function TMerger.InternalNext: TToken;
       else
         if S3 <> '' then Source.Restore(P4);
     AResult := TEpithet.Create(S, T1.Line, T1.Col);
-    {!! НЕЛЬЗЯ !! TEpithet(AResult).IsKeyword := true; например, из-за grant dissassociate statistics to public }
+    {!! РќР•Р›Р¬Р—РЇ !! TEpithet(AResult).IsKeyword := true; РЅР°РїСЂРёРјРµСЂ, РёР·-Р·Р° grant dissassociate statistics to public }
     Result := true;
     Exclude(T1);
     Exclude(T2);
@@ -615,7 +615,7 @@ function TMerger.InternalNext: TToken;
   end;
 
 begin
-  { Прочитаем лексемы }
+  { РџСЂРѕС‡РёС‚Р°РµРј Р»РµРєСЃРµРјС‹ }
   T1 := Source.Next;
   P2 := Source.Mark;
   if not Source.Eof then T2 := Source.Next else T2 := nil;
@@ -623,7 +623,7 @@ begin
   if not Source.Eof then T3 := Source.Next else T3 := nil;
   P4 := Source.Mark;
   if not Source.Eof then T4 := Source.Next else T4 := nil;
-  { И попробуем их скомбинировать }
+  { Р РїРѕРїСЂРѕР±СѓРµРј РёС… СЃРєРѕРјР±РёРЅРёСЂРѕРІР°С‚СЊ }
   if Check(Result, 'after', 'each', 'row') then exit;
   if Check(Result, 'after', 'clone') then exit;
   if Check(Result, 'after', 'db_role_change') then exit;
@@ -648,7 +648,7 @@ begin
   if Check(Result, 'compound', 'trigger') then exit;
   if Check(Result, 'connect', 'by', 'nocycle') then exit;
   if Check(Result, 'connect', 'by') then exit;
-  { !!НЕЛЬЗЯ!! if Check(Result, 'connect', 'to') then exit; Из-за grant connect to user }
+  { !!РќР•Р›Р¬Р—РЇ!! if Check(Result, 'connect', 'to') then exit; РР·-Р·Р° grant connect to user }
   if Check(Result, 'cross', 'apply') then exit;
   if Check(Result, 'cross', 'join') then exit;
   if Check(Result, 'database', 'link') then exit;
@@ -658,7 +658,7 @@ begin
   if Check(Result, 'end', 'if') then exit;
   if Check(Result, 'end', 'loop') then exit;
   if Check(Result, 'for', 'each', 'row') then exit;
-  // !! НЕЛЬЗЯ !! if Check(Result, 'for', 'update') then exit; Из-за create trigger ... for update on
+  // !! РќР•Р›Р¬Р—РЇ !! if Check(Result, 'for', 'update') then exit; РР·-Р·Р° create trigger ... for update on
   if Check(Result, 'full', 'join') then exit;
   if Check(Result, 'full', 'natural', 'join') then exit;
   if Check(Result, 'full', 'outer', 'join') then exit;
@@ -721,7 +721,7 @@ begin
   if Check(Result, 'with', 'hierarchy', 'option') then exit;
   if Check(Result, 'with', 'read', 'only') then exit;
   if Check(Result, 'with', 'time', 'zone') then exit;
-  { Раз не удалось - возвращаем первую лексему }
+  { Р Р°Р· РЅРµ СѓРґР°Р»РѕСЃСЊ - РІРѕР·РІСЂР°С‰Р°РµРј РїРµСЂРІСѓСЋ Р»РµРєСЃРµРјСѓ }
   Source.Restore(P2);
   Result := Transit(T1);
 end;
@@ -748,7 +748,7 @@ begin
     T := Source.Next;
     if (T is TComment) and T.Value.StartsWith('/*/') and T.Value.EndsWith('/*/') then
     begin
-      T.Printed := true; { чтобы не ругалась диагностика }
+      T.Printed := true; { С‡С‚РѕР±С‹ РЅРµ СЂСѓРіР°Р»Р°СЃСЊ РґРёР°РіРЅРѕСЃС‚РёРєР° }
       T := nil;
     end;
   end;

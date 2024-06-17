@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+п»ї////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                           Форматизатор исходников                          //
+//                           Р¤РѕСЂРјР°С‚РёР·Р°С‚РѕСЂ РёСЃС…РѕРґРЅРёРєРѕРІ                          //
 //                                                                            //
-//                          Команда DEFINE (SQL*Plus)                         //
+//                          РљРѕРјР°РЅРґР° DEFINE (SQL*Plus)                         //
 //                                                                            //
 //               Copyright(c) 2019-2021 by Sanders the Softwarer              //
 //                                                                            //
@@ -16,7 +16,7 @@ uses SQLPlus, Printer, Tokens, Statements;
 
 type
 
-  { Команда define }
+  { РљРѕРјР°РЅРґР° define }
   TDefine = class(TSQLPlusStatement)
   strict private
     _Define, _Target: TEpithet;
