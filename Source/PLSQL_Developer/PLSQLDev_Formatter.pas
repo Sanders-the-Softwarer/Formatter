@@ -238,7 +238,7 @@ begin
     else Postfix := Input.Substring(i);
   { Отформатируем текст }
   Settings.StartIndent := Col + ColShift;
-  Controller.MakeFormatted(Input, Settings, OracleParser, Output);
+  Controller.MakeFormatted(Input, Settings, Output);
   if Output = '' then exit;
   { Если сказано сделать новое окно, вернём туда результат }
   if ANewWindow then

@@ -16,7 +16,7 @@ uses Commons, Statements, Tokens, Printer, Parser, Keywords;
 
 type
   { Команда create [or replace] }
-  TCreate = class(TSemicolonStatement)
+  TCreate = class(TTopStatement)
   strict private
     _Create, _Or, _Replace: TEpithet;
     _What: TStatement;

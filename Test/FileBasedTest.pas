@@ -82,7 +82,7 @@ end;
 { Оповещение о том, что тест не реализован }
 procedure TFileBasedTest.UnderConstruction;
 begin
-  if Now < EncodeDate(2024, 6, 30)
+  if Now < EncodeDate(2024, 7, 30)
     then Skip := true
     else Fail('Пока не сделано!');
 end;
@@ -164,7 +164,7 @@ begin
   if Random >= 0.5
     then AText := TrimRight(AText) + #13
     else AText := TrimRight(AText);
-  Controller.MakeFormatted(AText, Settings, OracleParser, Actual);
+  Controller.MakeFormatted(AText, Settings, Actual);
   if ASaveToFile <> '' then
     with TStringList.Create do
     try

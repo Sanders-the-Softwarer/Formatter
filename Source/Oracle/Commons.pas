@@ -4,7 +4,7 @@
 //                                                                            //
 //                  Общеупотребимые синтаксические конструкции                //
 //                                                                            //
-//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
+//               Copyright(c) 2019-2024 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -16,19 +16,8 @@ uses SysUtils, Tokens, Statements, Printer;
 
 type
 
-  { Конструкция, завершающаяся точкой с запятой }
-  TSemicolonStatement = class(TStatement)
-  strict private
-    _Semicolon: TTerminal;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function HasSemicolon: boolean;
-  end;
-
-  { Конструкция, завершающаяся точкой с запятой и слешем }
-  TSemicolonSlashStatement = class(TSemicolonStatement)
+  { Разделитель для Оракла (поддерживающий слеш в дополнение или вместо точки с запятой)}
+  TOracleSeparator = class(TSeparator)
   strict private
     _Slash: TTerminal;
   strict protected
@@ -189,37 +178,15 @@ uses Parser, Expressions, Intervals;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                   Оператор, завершающийся точкой с запятой                 //
+//                            Разделитель для Оракла                          //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-function TSemicolonStatement.InternalParse: boolean;
-begin
-  _Semicolon := Terminal(';');
-  Result := Assigned(_Semicolon);
-end;
-
-procedure TSemicolonStatement.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.CancelNextLine;
-  APrinter.PrintItem(_Semicolon);
-end;
-
-function TSemicolonStatement.HasSemicolon: boolean;
-begin
-  Result := Assigned(_Semicolon);
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-//               Оператор, завершающийся точкой с запятой и слешем            //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-
-function TSemicolonSlashStatement.InternalParse: boolean;
+function TOracleSeparator.InternalParse: boolean;
 var Last: TToken;
 begin
   Result := inherited;
+  { Воспринимаем слеш только если он на следующей строке }
   Last := Source.Last;
   Source.SaveMark;
   _Slash := Terminal('/');
@@ -228,7 +195,7 @@ begin
   Source.Restore;
 end;
 
-procedure TSemicolonSlashStatement.InternalPrintSelf(APrinter: TPrinter);
+procedure TOracleSeparator.InternalPrintSelf(APrinter: TPrinter);
 begin
   inherited;
   APrinter.NextLineIf(_Slash);

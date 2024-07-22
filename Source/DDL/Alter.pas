@@ -16,7 +16,7 @@ uses Tokens, Statements, Printer, Commons;
 
 type
   { Команда alter }
-  TAlter = class(TSemicolonSlashStatement)
+  TAlter = class(TTopStatement)
   strict private
     _Alter: TEpithet;
     _What: TStatement;

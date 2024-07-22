@@ -17,7 +17,7 @@ uses SysUtils, Tokens, Statements, Parser, Printer, Streams, Commons, PLSQL;
 type
 
   { Объект index }
-  TIndex = class(TSemicolonStatement)
+  TIndex = class(TStatement)
   strict private
     _Unique, _Index, _On: TEpithet;
     _IndexName, _TableName, _Fields, _Tablespace: TStatement;
@@ -43,7 +43,7 @@ type
   end;
 
   { Объект table }
-  TTable = class(TSemicolonStatement)
+  TTable = class(TStatement)
   strict private
     _Global, _Temporary, _Table: TEpithet;
     _TableName, _Items: TStatement;
@@ -212,7 +212,7 @@ type
   end;
 
   { Команда comment }
-  TComment = class(TSemicolonStatement)
+  TComment = class(TTopStatement)
   strict private
     _Comment, _On, _TableOrColumn: TEpithet;
     _Name: TStatement;
@@ -282,14 +282,12 @@ begin
   TQualifiedIdent.Parse(Self, Source, _TableName);
   TSingleLine<TBracketedStatement<TExpressionFields>>.Parse(Self, Source, _Fields);
   TTablespace.Parse(Self, Source, _Tablespace);
-  inherited;
   Result := true;
 end;
 
 procedure TIndex.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Unique, _Index, _IndexName, _On, _TableName, _Fields, _Tablespace]);
-  inherited;
 end;
 
 { TTypeBody }
@@ -341,7 +339,6 @@ begin
       TTablespace.Parse(Self, Source, _Tablespace);
       TLobStores.Parse(Self, Source, _LobStores);
     end;
-  inherited;
   Result := true;
 end;
 
@@ -355,7 +352,6 @@ begin
   APrinter.NextLineIf([_LobStores]);
   APrinter.NextLineIf([_On, _Commit, _DeleteOrPreserve, _Rows]);
   APrinter.Undent;
-  inherited;
 end;
 
 function TTable.StatementName: string;

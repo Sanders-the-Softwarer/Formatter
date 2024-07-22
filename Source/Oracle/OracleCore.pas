@@ -24,19 +24,23 @@ unit OracleCore;
 
 interface
 
-uses Parser;
+uses SysUtils, Parser;
 
 { Парсер для ораклового синтаксиса }
 function OracleParser: TParserInfo;
 
 implementation
 
-uses PLSQL, DML, DDL, SQLPlus;
+uses Commons, PLSQL, DML, DDL, SQLPlus;
 
 { Парсер для ораклового синтаксиса }
 function OracleParser: TParserInfo;
 begin
   Result := TParserInfo.InstanceFor('Oracle');
 end;
+
+initialization
+  { Зарегистрируем разделитель для Оракла }
+  TParserInfo.InstanceFor('Oracle.Separator').Add(TOracleSeparator);
 
 end.

@@ -117,7 +117,7 @@ end;
 
 procedure _Settings.Заполнять_Пустоты;
 begin
-  PostponeTill(2024, 6, 30);
+  PostponeTill(2024, 7, 30);
   Settings.AlignUseSpace := true;
   Settings.AlignVariables := true;
   Settings.AlignFields := true;

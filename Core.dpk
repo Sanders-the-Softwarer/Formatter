@@ -97,7 +97,7 @@ contains
   OracleCreate in 'Source\Oracle\OracleCreate.pas',
   PostgresCreate in 'Source\Postgres\PostgresCreate.pas',
   PostgresCore in 'Source\Postgres\PostgresCore.pas',
-  PostgresDDL in 'Source\Postgres\PostgresDDL.pas';
+  Customization in 'Source\Core\Customization.pas';
 
 end.
 

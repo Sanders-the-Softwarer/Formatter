@@ -16,7 +16,7 @@ uses SysUtils, Statements, Tokens, Commons, Printer;
 
 type
   { Команда grant }
-  TGrant = class(TSemicolonStatement)
+  TGrant = class(TTopStatement)
   strict private
     _Grant, _On, _To, _IdentifiedBy, _WithAdminOption, _WithGrantOption, _WithHierarchyOption: TEpithet;
     _Privileges, _Object, _Grantee, _Password: TStatement;

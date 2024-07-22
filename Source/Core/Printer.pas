@@ -150,7 +150,7 @@ procedure FreeFormatterCmds;
 
 implementation
 
-uses FormatterPrinter;
+uses FormatterPrinter, Statements;
 
 { Отправка извещения о необходимости синхронизации интерфейса }
 procedure SendSyncNotification(AObject: TObject; ALine, ACol, ALen: integer);
@@ -381,7 +381,6 @@ begin
   ShiftPackageHeader                     := true;
   ShiftPackageBody                       := true;
 end;
-
 
 procedure TFormatSettings.Save(Target: TStrings);
 begin

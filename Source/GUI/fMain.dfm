@@ -37,9 +37,8 @@ object FormMain: TFormMain
     Align = alClient
     TabOrder = 2
     OnChange = pgDestChange
-    ExplicitTop = 0
     ExplicitWidth = 237
-    ExplicitHeight = 623
+    ExplicitHeight = 578
     object tabTokenizer: TTabSheet
       Caption = #1051#1077#1082#1089#1080#1095#1077#1089#1082#1080#1081' '#1072#1085#1072#1083#1080#1079
       object edTokenizer: TListBox
@@ -56,7 +55,6 @@ object FormMain: TFormMain
         ItemHeight = 13
         TabOrder = 0
         OnClick = edTokenizerClick
-        ExplicitHeight = 586
       end
     end
     object tabParser: TTabSheet
@@ -78,7 +76,6 @@ object FormMain: TFormMain
         ReadOnly = True
         TabOrder = 0
         OnChange = treeParserChange
-        ExplicitHeight = 564
       end
       object checkShowTransparent: TCheckBox
         AlignWithMargins = True
@@ -121,7 +118,7 @@ object FormMain: TFormMain
         ScrollBars = ssBoth
         TabOrder = 0
         ExplicitWidth = 219
-        ExplicitHeight = 585
+        ExplicitHeight = 540
       end
     end
     object tabAlarmToken: TTabSheet
@@ -141,7 +138,6 @@ object FormMain: TFormMain
         ItemHeight = 13
         TabOrder = 0
         OnClick = edAlarmTokenClick
-        ExplicitHeight = 586
       end
     end
     object tabAlarmStatement: TTabSheet
@@ -161,7 +157,6 @@ object FormMain: TFormMain
         ItemHeight = 13
         TabOrder = 0
         OnClick = edAlarmStatementClick
-        ExplicitHeight = 586
       end
     end
     object tabCompareAutoTestResult: TTabSheet
@@ -183,7 +178,6 @@ object FormMain: TFormMain
         TabOrder = 0
         WordWrap = False
         OnChange = edCompareAutoTestResultChange
-        ExplicitHeight = 596
       end
     end
   end
@@ -195,8 +189,8 @@ object FormMain: TFormMain
     Align = alLeft
     TabOrder = 0
     Visible = False
-    ExplicitLeft = 3
-    ExplicitHeight = 629
+    ExplicitTop = 45
+    ExplicitHeight = 584
     inherited Label1: TLabel
       Width = 217
       Height = 13
@@ -252,8 +246,7 @@ object FormMain: TFormMain
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitTop = 0
-    ExplicitHeight = 628
+    ExplicitHeight = 583
     object pgSrc: TPageControl
       AlignWithMargins = True
       Left = 5
@@ -267,7 +260,7 @@ object FormMain: TFormMain
       ActivePage = tabSrc
       Align = alClient
       TabOrder = 0
-      ExplicitHeight = 623
+      ExplicitHeight = 578
       object tabSrc: TTabSheet
         Caption = #1048#1089#1093#1086#1076#1085#1080#1082
         object spDebugInfo: TSplitter
@@ -302,7 +295,7 @@ object FormMain: TFormMain
           ScrollBars = ssBoth
           TabOrder = 0
           OnChange = UpdateRequired
-          ExplicitHeight = 363
+          ExplicitHeight = 318
         end
         object edDebugInfo: TMemo
           AlignWithMargins = True
@@ -326,7 +319,7 @@ object FormMain: TFormMain
           ScrollBars = ssBoth
           TabOrder = 1
           Visible = False
-          ExplicitTop = 413
+          ExplicitTop = 368
         end
         object grpCheckbox: TPanel
           AlignWithMargins = True
@@ -337,7 +330,7 @@ object FormMain: TFormMain
           Align = alBottom
           BevelOuter = bvNone
           TabOrder = 2
-          ExplicitTop = 380
+          ExplicitTop = 335
           object checkShowDebugInfo: TCheckBox
             Left = 351
             Top = 0
@@ -388,6 +381,7 @@ object FormMain: TFormMain
       'Postgres')
     TabOrder = 3
     OnClick = UpdateRequired
+    ExplicitLeft = -5
   end
   object tmMemo: TTimer
     Interval = 20

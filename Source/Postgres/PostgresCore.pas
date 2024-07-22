@@ -10,28 +10,30 @@
 
 unit PostgresCore;
 
-{ ----- Примечания -------------------------------------------------------------
-
-  Модули, описывающие синтаксис Postgres, самостоятельно регистрируются в
-  парсере. Единственное, что для этого нужно - указать их в предложении uses
-
------------------------------------------------------------------------------- }
-
 interface
 
-uses Parser;
+uses SysUtils, Parser;
 
 { Парсер для Postgres синтаксиса }
 function PostgresParser: TParserInfo;
 
 implementation
 
-uses PostgresDDL;
+uses Statements;
 
 { Парсер для Postgres синтаксиса }
 function PostgresParser: TParserInfo;
 begin
   Result := TParserInfo.InstanceFor('Postgres');
 end;
+
+initialization
+  { Зарегистрируем разделитель для Постгреса }
+  TParserInfo.InstanceFor('Postgres.Separator').Add(TSeparator);
+  { Регистрация синтаксических конструкций }
+  with PostgresParser do
+  begin
+//    Add(TPostgresCreate);
+  end;
 
 end.

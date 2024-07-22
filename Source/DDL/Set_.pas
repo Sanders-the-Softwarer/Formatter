@@ -16,7 +16,7 @@ uses Tokens, Statements, Printer, Commons;
 
 type
   { Команда set }
-  TSet = class(TSemicolonStatement)
+  TSet = class(TTopStatement)
   strict private
     _Set: TEpithet;
     _What: TStatement;

@@ -4,7 +4,7 @@
 //                                                                            //
 //           Базовые классы выражений для синтаксического анализатора         //
 //                                                                            //
-//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
+//               Copyright(c) 2019-2024 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -40,10 +40,11 @@ unit Statements;
   классу, влияние таких ситуций на результат носит ограниченный и локальный
   характер.
 
-  Операторы и конструкции могут и часто должны завершаться точкой с запятой,
-  поэтому класс TSemicolonStatement избавляет от необходимости описывать в
-  тысяче мест парсинг одного и того же символа. Аналогично, класс
-  TBracketedStatement позволяет удобно описывать конструкции в скобках.
+  Класс TTopStatement описывает класс "самостоятельных" конструкций - команд,
+  операторов и прочих, которые типично завершаются точкой с запятой или другим
+  разделителем. Он пришёл на замену TSemicolon[Slash]Statement.
+
+  Класс TBracketedStatement позволяет удобно описывать конструкции в скобках.
 
 ------------------------------------------------------------------------------ }
 
@@ -230,12 +231,32 @@ type
     function Transparent: boolean; override;
   end;
 
+  { "Самостоятельная" конструкция }
+  TTopStatement = class(TStatement)
+  strict private
+    _Separator: TStatement;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  public
+    function HasSeparator: boolean;
+  end;
+
+  { Разделитель конструкций }
+  TSeparator = class(TStatement)
+  strict private
+    _Semicolon: TTerminal;
+  strict protected
+    function InternalParse: boolean; override;
+    procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
 { Конвертация настройки в TAlignMode }
 function AlignMode(ASetting: boolean): TAlignMode;
 
 implementation
 
-uses Parser, Keywords;
+uses Parser, Customization, Keywords;
 
 { Конвертация настройки в TAlignMode }
 function AlignMode(ASetting: boolean): TAlignMode;
@@ -980,6 +1001,38 @@ end;
 function TStrictStatementList<S>.AllowUnexpected: boolean;
 begin
   Result := false;
+end;
+
+{ TTopStatement }
+
+function TTopStatement.HasSeparator: boolean;
+begin
+  Result := Assigned(_Separator);
+end;
+
+function TTopStatement.InternalParse: boolean;
+begin
+  TParser.Parse(Source, Settings, Customization.GetSeparatorParser, Self, _Separator);
+  Result := Assigned(_Separator);
+end;
+
+procedure TTopStatement.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.PrintItem(_Separator);
+end;
+
+{ TSeparator }
+
+function TSeparator.InternalParse: boolean;
+begin
+  _Semicolon := Terminal(';');
+  Result := Assigned(_Semicolon);
+end;
+
+procedure TSeparator.InternalPrintSelf(APrinter: TPrinter);
+begin
+  APrinter.CancelNextLine;
+  APrinter.PrintItem(_Semicolon);
 end;
 
 end.

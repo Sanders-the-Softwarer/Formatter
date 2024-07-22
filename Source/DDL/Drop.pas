@@ -16,7 +16,7 @@ uses Statements, Tokens, Printer, Commons;
 
 type
   { Команда drop }
-  TDrop = class(TSemicolonStatement)
+  TDrop = class(TTopStatement)
   strict private
     _Drop, _Type, _Force, _CascadeConstraints: TEpithet;
     _Name: TStatement;

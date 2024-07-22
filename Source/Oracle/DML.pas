@@ -18,7 +18,7 @@ uses Classes, SysUtils, Math, Tokens, Streams, Statements, Printer, Commons,
 type
 
   { Общий предок DML-операторов }
-  TDML = class(TSemicolonSlashStatement);
+  TDML = class(TTopStatement);
 
   { Указание таблицы - в select, merge, delete и т. п. }
   TTableRef = class(TStatement)
@@ -140,7 +140,7 @@ function TableSpecFunctionParser: TParserInfo;
 
 implementation
 
-uses Keywords, Select, Insert, Update, DML_Commons, PLSQL, Trim, Extract,
+uses OracleCore, Keywords, Select, Insert, Update, DML_Commons, PLSQL, Trim, Extract,
   ListAgg, XmlTable, XMLSerialize, Call;
 
 { Парсер для DML }
@@ -624,7 +624,8 @@ begin
   if TInsert.Parse(Self, Source, _DML) or
      TUpdate.Parse(Self, Source, _DML) then
     begin
-      if TDML(_DML).HasSemicolon then exit;
+      Assert(Assigned(_DML));
+      if TDML(_DML).HasSeparator then exit;
       _Delete := Keyword('delete');
       TWhere.Parse(Self, Source, _Where);
     end
@@ -719,5 +720,6 @@ initialization
   end;
   { Включим DML в PLSQL - так проще, чем в нескольких местах парсить "dml или plsql" }
   PLSQLParser.Add(DMLParser);
+  OracleParser.Add(DMLParser);
 
 end.

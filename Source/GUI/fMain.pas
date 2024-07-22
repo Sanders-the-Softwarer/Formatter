@@ -99,7 +99,7 @@ implementation
 
 {$R *.dfm}
 
-uses GUIPrinters, Parser;
+uses GUIPrinters, Parser, Customization;
 
 { Приведение переносов строк к стандартному виду }
 function TFormMain.CorrectCRLF: boolean;
@@ -119,10 +119,12 @@ begin
   FreeAndNil(StatementStream);
   { Скопируем настройки }
   if not IntoUpdateSettings then frSettings.UpdateSettings;
+  { Зададим язык }
+  Customization.SetLanguage(rgParser.Items[rgParser.ItemIndex]);
   { Создадим потоки }
   MinTokenStream  := Controller.MakeMinimalTokenStream(edSrc.Text);
   AdvTokenStream  := Controller.MakeAdvancedTokenStream(MinTokenStream);
-  StatementStream := Controller.MakeStatementStream(AdvTokenStream, Settings, TParserInfo.InstanceFor(rgParser.Items[rgParser.ItemIndex]));
+  StatementStream := Controller.MakeStatementStream(AdvTokenStream, Settings);
   { Напечатаем данные }
   try
     StatementStream.PrintAll(ResultPrinter);

@@ -4,7 +4,7 @@
 //                                                                            //
 //                       Вызовы основной функциональности                     //
 //                                                                            //
-//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
+//               Copyright(c) 2019-2024 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -30,7 +30,7 @@ interface
 uses SysUtils, Printer, FormatterPrinter, Streams, Tokens, Statements, Parser;
 
 { Форматирование текста, полученного в виде строки, с возвратом результата в строку }
-procedure MakeFormatted(const AText: string; ASettings: TFormatSettings; AParserInfo: TParserInfo; out AResult: string);
+procedure MakeFormatted(const AText: string; ASettings: TFormatSettings; out AResult: string);
 
 { Создание минимально обработанного потока лексем из текста, полученного в виде строки }
 function MakeMinimalTokenStream(const AText: string): TBufferedStream<TToken>;
@@ -39,14 +39,14 @@ function MakeMinimalTokenStream(const AText: string): TBufferedStream<TToken>;
 function MakeAdvancedTokenStream(ATokenStream: TBufferedStream<TToken>): TBufferedStream<TToken>;
 
 { Создание потока синтаксических конструкций из потока лексем }
-function MakeStatementStream(ATokenStream: TBufferedStream<TToken>; ASettings: TFormatSettings; AParserInfo: TParserInfo): TBufferedStream<TStatement>;
+function MakeStatementStream(ATokenStream: TBufferedStream<TToken>; ASettings: TFormatSettings): TBufferedStream<TStatement>;
 
 implementation
 
-uses Tokenizer;
+uses Tokenizer, Customization;
 
 { Форматирование текста, полученного в виде строки, с возвратом результата в строку }
-procedure MakeFormatted(const AText: string; ASettings: TFormatSettings; AParserInfo: TParserInfo; out AResult: string);
+procedure MakeFormatted(const AText: string; ASettings: TFormatSettings; out AResult: string);
 var
   Parser: TBufferedStream<TStatement>;
   Printer: TPrinter;
@@ -62,7 +62,7 @@ begin
         ASettings := Settings;
       end;
     { Создадим парсер входного текста }
-    Parser := MakeStatementStream(MakeAdvancedTokenStream(MakeMinimalTokenStream(AText)), ASettings, AParserInfo);
+    Parser := MakeStatementStream(MakeAdvancedTokenStream(MakeMinimalTokenStream(AText)), ASettings);
     { И выведем его результат на принтер }
     Printer := TFineCopyPrinter.Create(ASettings);
     Parser.PrintAll(Printer);
@@ -88,13 +88,16 @@ begin
 end;
 
 { Создание потока синтаксических конструкций из потока лексем }
-function MakeStatementStream(ATokenStream: TBufferedStream<TToken>; ASettings: TFormatSettings; AParserInfo: TParserInfo): TBufferedStream<TStatement>;
+function MakeStatementStream(ATokenStream: TBufferedStream<TToken>; ASettings: TFormatSettings): TBufferedStream<TStatement>;
+var
+  ParserInfo: TParserInfo;
 begin
+  { Возьмём парсер из установленного языка }
+  ParserInfo := Customization.GetLanguageParser;
   { Каков бы ни был синтаксис, засунем в него вариант unexpected token }
-  Assert(AParserInfo <> nil);
-  AParserInfo.Add(TUnexpectedToken);
+  ParserInfo.Add(TUnexpectedToken);
   { И соберём итоговый поток }
-  Result := TSameTypeLinker.Create(TParser.Create(ATokenStream, ASettings, AParserInfo));
+  Result := TSameTypeLinker.Create(TParser.Create(ATokenStream, ASettings, ParserInfo));
   Result.FreeFormatterCmds := true;
 end;
 

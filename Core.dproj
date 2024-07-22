@@ -214,7 +214,7 @@
         <DCCReference Include="Source\Oracle\OracleCreate.pas"/>
         <DCCReference Include="Source\Postgres\PostgresCreate.pas"/>
         <DCCReference Include="Source\Postgres\PostgresCore.pas"/>
-        <DCCReference Include="Source\Postgres\PostgresDDL.pas"/>
+        <DCCReference Include="Source\Core\Customization.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

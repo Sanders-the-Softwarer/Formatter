@@ -98,7 +98,7 @@ begin
       end;
     end;
     { Отформатируем }
-    Controller.MakeFormatted(InText, Settings, OracleParser, OutText);
+    Controller.MakeFormatted(InText, Settings, OutText);
     { И сохраним }
     OutFile := nil;
     try

@@ -26,12 +26,10 @@ function PostgresCreateParser: TParserInfo;
 
 implementation
 
-uses PostgresDDL;
-
 { Список конструкций для команды CREATE }
 function PostgresCreateParser: TParserInfo;
 begin
-  Result := TParserInfo.InstanceFor('Postgres.DDL.Create');
+  Result := TParserInfo.InstanceFor('Postgres.Create');
 end;
 
 { TPostgresCreate }
@@ -40,5 +38,10 @@ function TPostgresCreate.WhatParser: TParserInfo;
 begin
   Result := PostgresCreateParser;
 end;
+
+initialization
+  with PostgresCreateParser do
+  begin
+  end;
 
 end.

@@ -18,7 +18,7 @@ uses SysUtils, Statements, Streams, Tokens, Parser, Printer, Contnrs,
 type
 
   { Базовый класс команд SQL*Plus }
-  TSQLPlusStatement = class(TSemicolonStatement)
+  TSQLPlusStatement = class(TTopStatement)
   strict protected
     { Считывание лексемы "символы до конца строки" }
     function SqlPlusString: TTerminal;
