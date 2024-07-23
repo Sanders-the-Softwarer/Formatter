@@ -1,4 +1,4 @@
-program CmdLineFormatter;
+п»їprogram CmdLineFormatter;
 
 {$APPTYPE CONSOLE}
 
@@ -37,7 +37,7 @@ var
 begin
 
   try
-    { Если вызов без параметров или с неверными параметрами - ругнёмся }
+    { Р•СЃР»Рё РІС‹Р·РѕРІ Р±РµР· РїР°СЂР°РјРµС‚СЂРѕРІ РёР»Рё СЃ РЅРµРІРµСЂРЅС‹РјРё РїР°СЂР°РјРµС‚СЂР°РјРё - СЂСѓРіРЅС‘РјСЃСЏ }
     Parser := CommandLineParser;
     CmdLine := TCommandLine.Create;
     if (ParamCount < 1) or not Parser.Parse(CmdLine) then
@@ -47,13 +47,13 @@ begin
       for S in Parser.Usage do WriteLn(S);
       Halt(1);
     end;
-    { Проверим наличие входного файла }
+    { РџСЂРѕРІРµСЂРёРј РЅР°Р»РёС‡РёРµ РІС…РѕРґРЅРѕРіРѕ С„Р°Р№Р»Р° }
     if not FileExists(CmdLine.InFile) then
     begin
       WriteLn('File ' + CmdLine.InFile + ' does not exists');
       Halt(2);
     end;
-    { Прочитаем его }
+    { РџСЂРѕС‡РёС‚Р°РµРј РµРіРѕ }
     InFile := nil;
     try
       InFile := TStringList.Create;
@@ -71,14 +71,14 @@ begin
     finally
       FreeAndNil(InFile);
     end;
-    { Сформируем имя выходного файла }
+    { РЎС„РѕСЂРјРёСЂСѓРµРј РёРјСЏ РІС‹С…РѕРґРЅРѕРіРѕ С„Р°Р№Р»Р° }
     if CmdLine.OutFile = '' then CmdLine.OutFile := CmdLine.InFile + '.formatted';
     if FileExists(CmdLine.OutFile) then
     begin
       WriteLn('File ' + CmdLine.OutFile + ' already exists');
       Halt(4);
     end;
-    { Соберём настройки }
+    { РЎРѕР±РµСЂС‘Рј РЅР°СЃС‚СЂРѕР№РєРё }
     Settings := TFormatSettings.Default;
     if CmdLine.SettingsFile <> '' then
     begin
@@ -97,9 +97,9 @@ begin
         Halt(6);
       end;
     end;
-    { Отформатируем }
+    { РћС‚С„РѕСЂРјР°С‚РёСЂСѓРµРј }
     Controller.MakeFormatted(InText, Settings, OutText);
-    { И сохраним }
+    { Р СЃРѕС…СЂР°РЅРёРј }
     OutFile := nil;
     try
       OutFile := TStringList.Create;

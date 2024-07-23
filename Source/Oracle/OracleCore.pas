@@ -40,7 +40,9 @@ begin
 end;
 
 initialization
-  { Зарегистрируем разделитель для Оракла }
+  { Зарегистрируем реализации для Оракла }
+  TParserInfo.InstanceFor('Oracle.AfterEnd').Add(TQualifiedIdent);
+  TParserInfo.InstanceFor('Oracle.Declarations').Add(TOracleDeclarations);
   TParserInfo.InstanceFor('Oracle.Separator').Add(TOracleSeparator);
 
 end.

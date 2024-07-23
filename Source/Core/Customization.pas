@@ -44,6 +44,21 @@ function GetLanguageParser: TParserInfo;
 { Возврат парсера для разделителя синтаксических конструкций }
 function GetSeparatorParser: TParserInfo;
 
+{ Возврат парсера для списка деклараций }
+function GetDeclarationsParser: TParserInfo;
+
+{ Возврат парсера для одиночной декларации }
+function GetDeclarationParser: TParserInfo;
+
+{ Возврат парсера для операторов }
+function GetStatementParser: TParserInfo;
+
+{ Проверка наличия парсера для конструкции после end }
+function HasAfterEndParser: boolean;
+
+{ Возврат парсера для конструкции после end }
+function GetAfterEndParser: TParserInfo;
+
 implementation
 
 var
@@ -67,6 +82,42 @@ function GetSeparatorParser: TParserInfo;
 begin
   Result := TParserInfo.InstanceFor(Language + '.Separator');
   if not Assigned(Result) then raise Exception.CreateFmt('Separator for [%s] does not registered', [Language]);
+end;
+
+{ Возврат парсера для списка деклараций }
+function GetDeclarationsParser: TParserInfo;
+begin
+  Result := TParserInfo.InstanceFor(Language + '.Declarations');
+  if not Assigned(Result) then raise Exception.CreateFmt('Declaration list for [%s] does not registered', [Language]);
+end;
+
+{ Возврат парсера для одиночной декларации }
+function GetDeclarationParser: TParserInfo;
+begin
+  Result := TParserInfo.InstanceFor(Language + '.Declaration');
+  if not Assigned(Result) then raise Exception.CreateFmt('Declarations for [%s] does not registered', [Language]);
+end;
+
+{ Возврат парсера для операторов }
+function GetStatementParser: TParserInfo;
+begin
+  Result := TParserInfo.InstanceFor(Language + '.Statement');
+  if not Assigned(Result) then raise Exception.CreateFmt('Statements for [%s] does not registered', [Language]);
+end;
+
+{ Проверка наличия парсера для конструкции после end }
+function HasAfterEndParser: boolean;
+var PI: TParserInfo;
+begin
+  PI := TParserInfo.InstanceFor(Language + '.AfterEnd');
+  Result := Assigned(PI);
+end;
+
+{ Возврат парсера для конструкции после end }
+function GetAfterEndParser: TParserInfo;
+begin
+  Result := TParserInfo.InstanceFor(Language + '.AfterEnd');
+  if not Assigned(Result) then raise Exception.CreateFmt('After end statement for [%s] does not registered', [Language]);
 end;
 
 end.

@@ -26,22 +26,6 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Объект type body }
-  TTypeBody = class(TProgramBlock)
-  strict protected
-    function GetHeaderClass: TStatementClass; override;
-  end;
-
-  { Заголовок type body }
-  TTypeBodyHeader = class(TStatement)
-  strict private
-    _TypeBody, _AsIs: TEpithet;
-    _TypeName: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
   { Объект table }
   TTable = class(TStatement)
   strict private
@@ -288,30 +272,6 @@ end;
 procedure TIndex.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_Unique, _Index, _IndexName, _On, _TableName, _Fields, _Tablespace]);
-end;
-
-{ TTypeBody }
-
-function TTypeBody.GetHeaderClass: TStatementClass;
-begin
-  Result := TTypeBodyHeader;
-end;
-
-{ TTypeBodyHeader }
-
-function TTypeBodyHeader.InternalParse: boolean;
-begin
-  Result := true;
-  _TypeBody := Keyword('type body');
-  if not Assigned(_TypeBody) then exit(false);
-  TQualifiedIdent.Parse(Self, Source, _TypeName);
-  _AsIs := Keyword(['as', 'is']);
-  if Assigned(_AsIs) then _AsIs.CanReplace := true;
-end;
-
-procedure TTypeBodyHeader.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_TypeBody, _TypeName, _AsIs]);
 end;
 
 { TTable }

@@ -174,7 +174,7 @@ type
 
 implementation
 
-uses Parser, Expressions, Intervals;
+uses Parser, Expressions, Intervals, Keywords;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -561,6 +561,10 @@ function TIdentFields.ParseBreak: boolean;
 begin
   Result := Any([Terminal([')', ';']), Keyword('*')]);
 end;
+
+initialization
+  Keywords.RegisterOrphan(TTypeRef);
+  Keywords.RegisterKeywords(TTypeRef, ['as', 'is', 'exception']);
 
 end.
 

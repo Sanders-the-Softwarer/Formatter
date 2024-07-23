@@ -4,7 +4,7 @@
 //                                                                            //
 //                             Синтаксис триггеров                            //
 //                                                                            //
-//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
+//               Copyright(c) 2019-2024 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -12,7 +12,7 @@ unit Trigger;
 
 interface
 
-uses Tokens, Statements, Printer, PLSQL;
+uses Tokens, Statements, Printer, PLSQL, ProgramBlock;
 
 type
   { Триггер }
@@ -90,7 +90,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Тело compound триггера }
+  { Тело составного триггера }
   TTriggerCompoundBody = class(TStatement)
   strict private
     _CompoundTrigger, _End, _AfterEnd: TEpithet;
@@ -101,23 +101,23 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Блок составного триггера }
-  TTimingBlock = class(TProgramBlock)
-  strict protected
-    function GetHeaderClass: TStatementClass; override;
-    function ParseAfterEnd: TObject; override;
-    function IndentBody: boolean; override;
-  public
-    function StatementName: string; override;
-  end;
-
-  { Заголовок блока }
+  { Заголовок блока составного триггера }
   TTimingBlockHeader = class(TStatement)
   private
     _TimingPoint, _Is: TEpithet;
   strict protected
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
+  end;
+
+  { Блок составного триггера }
+  TTimingBlock = class(THeadedProgramBlock<TTimingBlockHeader, TProgramBlock>)
+  strict protected
+    { TODO : Разобраться с закомментированными функциями
+    function ParseAfterEnd: TObject; override;
+    function IndentBody: boolean; override; }
+  public
+    function StatementName: string; override;
   end;
 
 implementation
@@ -341,10 +341,7 @@ end;
 
 { TTimingBlock }
 
-function TTimingBlock.GetHeaderClass: TStatementClass;
-begin
-  Result := TTimingBlockHeader;
-end;
+{ TODO : Разобраться с закомментированными функциями
 
 function TTimingBlock.ParseAfterEnd: TObject;
 begin
@@ -355,11 +352,11 @@ end;
 function TTimingBlock.IndentBody: boolean;
 begin
   Result := true;
-end;
+end;}
 
 function TTimingBlock.StatementName: string;
 begin
-  Result := Concat([(Header as TTimingBlockHeader)._TimingPoint]);
+  Result := Concat([(_Header as TTimingBlockHeader)._TimingPoint]);
 end;
 
 { TTimingBlockHeader }

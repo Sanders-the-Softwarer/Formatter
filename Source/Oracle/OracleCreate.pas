@@ -33,7 +33,8 @@ function OracleCreateParser: TParserInfo;
 
 implementation
 
-uses DDL, PLSQL, Sequence, Trigger, Role, Synonym, DatabaseLink, View, Context;
+uses DDL, PLSQL, Sequence, Trigger, Role, Synonym, DatabaseLink, View, Context,
+  Package, TypeBody, Subroutine;
 
 { Список конструкций для команды CREATE }
 function OracleCreateParser: TParserInfo;

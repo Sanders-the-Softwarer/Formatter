@@ -28,7 +28,7 @@ type
 
 implementation
 
-uses Commons, Parser, PLSQL, Expressions, DML_Commons;
+uses Commons, Parser, PLSQL, Expressions, DML_Commons, Subroutine;
 
 type
 
@@ -435,6 +435,7 @@ type
     function InternalGetMatchTarget: TBaseStatementList; override;
   end;
 
+  { TODO : Разобраться с закомментированным }
 (*
   { Внутренняя часть конструкции row pattern }
   TRowPatternInternal = class(TStatement)

@@ -97,7 +97,11 @@ contains
   OracleCreate in 'Source\Oracle\OracleCreate.pas',
   PostgresCreate in 'Source\Postgres\PostgresCreate.pas',
   PostgresCore in 'Source\Postgres\PostgresCore.pas',
-  Customization in 'Source\Core\Customization.pas';
+  Customization in 'Source\Core\Customization.pas',
+  ProgramBlock in 'Source\SQL\ProgramBlock.pas',
+  Package in 'Source\Oracle\Package.pas',
+  Subroutine in 'Source\Oracle\Subroutine.pas',
+  TypeBody in 'Source\Oracle\TypeBody.pas';
 
 end.
 

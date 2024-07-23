@@ -19,7 +19,7 @@ function PostgresParser: TParserInfo;
 
 implementation
 
-uses Statements;
+uses Statements, ProgramBlock;
 
 { Парсер для Postgres синтаксиса }
 function PostgresParser: TParserInfo;
@@ -28,8 +28,9 @@ begin
 end;
 
 initialization
-  { Зарегистрируем разделитель для Постгреса }
+  { Зарегистрируем реализации для Постгреса }
   TParserInfo.InstanceFor('Postgres.Separator').Add(TSeparator);
+  TParserInfo.InstanceFor('Postgres.Declarations').Add(TDeclarations);
   { Регистрация синтаксических конструкций }
   with PostgresParser do
   begin

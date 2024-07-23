@@ -4,7 +4,7 @@
 //                                                                            //
 //                      Синтаксические конструкции PL/SQL                     //
 //                                                                            //
-//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
+//               Copyright(c) 2019-2024 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -27,166 +27,18 @@ unit PLSQL;
 interface
 
 uses Classes, Windows, SysUtils, Math, Streams, Tokens, Statements, Commons,
-  Printer, Parser;
+  Printer, Parser, ProgramBlock, Subroutine;
 
 type
 
-  { Базовый класс для операторов PL/SQL }
+  { Оператор PL/SQL с зарегистрированными в этом контексте дополнительными ключевыми словами }
   TPLSQLStatement = class(TTopStatement);
 
-  { Программный блок - та или иная конструкция на основе begin .. end }
-  TProgramBlock = class(TPLSQLStatement)
-  strict private
-    _Header, _Declarations, _Operators, _Handlers: TStatement;
-    _Begin, _Exception, _End: TEpithet;
-    _Slash: TTerminal;
-    _AfterEnd: TObject;
-  strict protected
-    property Header: TStatement read _Header;
-    function GetHeaderClass: TStatementClass; virtual; abstract;
-    function ParseAfterEnd: TObject; virtual;
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-    function IndentBody: boolean; virtual;
-    function IndentInsideBody: boolean; virtual;
-  end;
-
-  { Заголовок анонимного блока }
-  TAnonymousHeader = class(TStatement)
-  strict private
-    _Declare: TEpithet;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
   { Анонимный блок }
-  TAnonymousBlock = class(TProgramBlock)
-  strict protected
-    function GetHeaderClass: TStatementClass; override;
-  end;
-
-  { Заголовок пакета }
-  TPackageHeader = class(TStatement)
-  strict private
-    _Package, _AuthId, _AsIs: TEpithet;
-    _Name: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function StatementName: string; override;
-    function IndentInsideBody: boolean;
-  end;
-
-  { Пакет }
-  TPackage = class(TProgramBlock)
-  strict protected
-    function GetHeaderClass: TStatementClass; override;
-    function IndentInsideBody: boolean; override;
-  public
-    function StatementName: string; override;
-  end;
-
-  { Атрибуты функции }
-  TFunctionAttributes = class(TStatement)
-  strict private
-    _Keyword, _ReliesOn: TEpithet;
-    _Datasources: TStatement;
-    _Next: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { Объявление подпрограммы }
-  TSubroutineHeaderBase = class(TStatement)
-  strict private
-    _Map: TEpithet;
-    _FunctionType: TEpithet;
-    _ProcedureOrFunction: TEpithet;
-    _Name: TStatement;
-    _Params: TStatement;
-    _Return: TEpithet;
-    _SelfAsResult: TEpithet;
-    _ReturnType: TStatement;
-    _Attributes: TStatement;
-    FIndentedBeforeIs, FIndentedAfterIs: boolean;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function StatementName: string; override;
-    property IndentedBeforeIs: boolean read FIndentedBeforeIs;
-    property IndentedAfterIs: boolean read FIndentedAfterIs write FIndentedAfterIs;
-  end;
-
-  { Заголовок подпрограммы }
-  TSubroutineHeader = class(TSubroutineHeaderBase)
-  strict private
-    _Is: TEpithet;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function Name: string; override;
-  end;
-
-  { Предварительное объявление подпрограммы }
-  TSubroutineForwardDeclaration = class(TSubroutineHeaderBase)
-  strict private
-    _Semicolon: TTerminal;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    class function Priority: integer; override;
-  end;
-
-  { Подпрограмма }
-  TSubroutine = class(TProgramBlock)
-  strict protected
-    function GetHeaderClass: TStatementClass; override;
-  public
-    function StatementName: string; override;
-  end;
-
-  { Параметр подпрограммы }
-  TParamDeclaration = class(TStatement)
-  strict private
-    _ParamName: TEpithet;
-    _InOut: TEpithet;
-    _Nocopy: TEpithet;
-    _ParamType: TStatement;
-    _Assignment: TToken;
-    _DefaultValue: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  public
-    function StatementName: string; override;
-  end;
-
-  { Выровненный блок параметров подпрограммы }
-  TAlignedParamsDeclaration = class(TCommaList<TParamDeclaration>)
-  strict protected
-    function Aligned: TAlignMode; override;
-  public
-    function Transparent: boolean; override;
-    function OnePerLine: boolean; override;
-  end;
-
-  { Блок параметров подпрограммы в скобках }
-  TParamsDeclaration = class(TBracketedStatement<TAlignedParamsDeclaration>)
-  protected
-    function MultiLine: boolean; override;
-  end;
+  TAnonymousBlock = class(TProgramBlock);
 
   { Блок деклараций }
-  TDeclarations = class(TStatementList<TStatement>)
-  strict protected
-    function ParseStatement(out AResult: TStatement): boolean; override;
-    function ParseBreak: boolean; override;
+  TOracleDeclarations = class(TDeclarations)
   public
     function EmptyLineBefore: boolean; override;
     function EmptyLineAfter: boolean; override;
@@ -444,7 +296,8 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { Блок обработки исключений }
+  { TODO : Разобраться, нужен ли }
+  { Секция when }
   TExceptionHandler = class(TStatement)
   strict private
     _When: TEpithet;
@@ -456,6 +309,7 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
+  { TODO : Разобраться, нужен ли }
   { Операторы секции exceptions }
   TExceptionStatements = class(TStatements)
   strict protected
@@ -540,9 +394,8 @@ type
     function ParseBreak: boolean; override;
   end;
 
-  { Декларация метода }
-  TObjectMethodDeclaration = class(TSubroutineHeaderBase)
-  end;
+  { Метод класса }
+  TObjectMethodDeclaration = class(TSubroutineHeaderBase);
 
   { Обособленный комментарий, не привязанный к конструкции }
   TStandaloneComment = class(TStatement)
@@ -566,12 +419,12 @@ implementation
 
 uses Expressions, DML, DDL, Keywords, Select, Label_, Goto_, Exit_,
   OpenFor, ForAll, Assignment, DML_Commons, SubType, ExecuteImmediate,
-  OracleCore;
+  OracleCore, Package;
 
 { Парсер для PL/SQL }
 function PLSQLParser: TParserInfo;
 begin
-  Result := TParserInfo.InstanceFor('Oracle.PLSQL');
+  Result := TParserInfo.InstanceFor('Oracle.Statement');
 end;
 
 { Парсер для типов }
@@ -583,230 +436,24 @@ end;
 { Парсер для деклараций }
 function DeclarationParser: TParserInfo;
 begin
-  Result := TParserInfo.InstanceFor('Oracle.PLSQL.Declarations');
+  Result := TParserInfo.InstanceFor('Oracle.Declaration');
 end;
 
-{ TProgramBlock }
+{ TOracleDeclarations }
 
-function TProgramBlock.ParseAfterEnd: TObject;
+function TOracleDeclarations.EmptyLineBefore: boolean;
 begin
-  TQualifiedIdent.Parse(Self, Source, TStatement(Result));
+  Result := Assigned(Parent) and (Parent.Parent is TPackage);
 end;
 
-function TProgramBlock.InternalParse: boolean;
+function TOracleDeclarations.EmptyLineAfter: boolean;
 begin
-  { Пытаемся распознать заголовок }
-  Result := GetHeaderClass.Parse(Self, Source, _Header);
-  if not Result then exit;
-  { Распознаём декларации }
-  TDeclarations.Parse(Self, Source, _Declarations);
-  { Если нашли begin, распознаём операторы }
-  _Begin := Keyword('begin');
-  if Assigned(_Begin) then TStatements.Parse(Self, Source, _Operators);
-  { Если нашли exception, распознаём обработчики исключений }
-  _Exception := Keyword('exception');
-  if Assigned(_Exception) then TExceptionStatements.Parse(Self, Source, _Handlers);
-  { end }
-  _End := Keyword('end');
-  _AfterEnd := ParseAfterEnd;
-  inherited;
-  { Завершающий слеш }
-  _Slash := Terminal('/');
+  Result := Assigned(Parent) and (Parent.Parent is TPackage);
 end;
 
-procedure TProgramBlock.InternalPrintSelf(APrinter: TPrinter);
-var _I1, _I2, _U1, _U2: TObject;
+function TOracleDeclarations.EmptyLineInside: boolean;
 begin
-  _I1 := nil; _I2 := nil; _U1 := nil; _U2 := nil;
-  if IndentBody then begin _I1 := _Indent; _U1 := _Undent; end;
-  if IndentInsideBody then begin _I2 := _Indent; _U2 := _Undent; end;
-  if _Header is TSubroutineHeaderBase then
-    TSubroutineHeaderBase(_Header).IndentedAfterIs := Assigned(_Declarations);
-  APrinter.PrintItems([_Header,    _NextLine,
-                                   _I1,
-                                   _I2,
-                                   _Declarations,   _NextLine,
-                                   _U2,
-                       _Begin,     _IndentNextLine,
-                                   _Operators,      _UndentNextLine,
-                       _Exception, _IndentNextLine,
-                                   _Handlers,       _UndentNextLine,
-                       _End,       _AfterEnd,       _U1]);
-  inherited;
-  APrinter.NextLineIf(_Slash);
-end;
-
-function TProgramBlock.IndentBody: boolean;
-begin
-  Result := false;
-end;
-
-function TProgramBlock.IndentInsideBody: boolean;
-begin
-  Result := true;
-end;
-
-{ TPackageHeader }
-
-function TPackageHeader.InternalParse: boolean;
-begin
-  { Если распознали слово package, то распознали конструкцию }
-  _Package := Keyword(['package', 'package body']);
-  if not Assigned(_Package) then exit(false);
-  Result := true;
-  { Проверим название пакета }
-  TQualifiedIdent.Parse(Self, Source, _Name);
-  { Проверим наличие authid }
-  _AuthId := Keyword(['authid definer', 'authid current_user']);
-  { Проверим наличие is }
-  _AsIs := Keyword(['is', 'as']);
-  if Assigned(_AsIs) then _AsIs.CanReplace := true;
-end;
-
-procedure TPackageHeader.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Package, _Name, _AuthId, _AsIs]);
-  APrinter.NextLine;
-end;
-
-function TPackageHeader.StatementName: string;
-begin
-  Result := Concat([_Package, _Name]);
-end;
-
-function TPackageHeader.IndentInsideBody: boolean;
-begin
-  if Assigned(_Package) and SameText(_Package.Value, 'package')
-    then Result := Settings.ShiftPackageHeader
-    else Result := Settings.ShiftPackageBody;
-end;
-
-{ TPackage }
-
-function TPackage.StatementName: string;
-begin
-  Result := Header.StatementName;
-end;
-
-function TPackage.GetHeaderClass: TStatementClass;
-begin
-  Result := TPackageHeader;
-end;
-
-function TPackage.IndentInsideBody: boolean;
-begin
-  Result := Assigned(Header) and (Header as TPackageHeader).IndentInsideBody;
-end;
-
-{ TSubroutineHeaderBase }
-
-function TSubroutineHeaderBase.InternalParse: boolean;
-begin
-  _Map := Keyword('map');
-  _FunctionType := Keyword(['member', 'static', 'constructor']);
-  { Проверим procedure/function }
-  _ProcedureOrFunction := Keyword(['procedure', 'function']);
-  if not Assigned(_ProcedureOrFunction) then exit(false);
-  Result := true;
-  { Название процедуры и параметры }
-  TQualifiedIdent.Parse(Self, Source, _Name);
-  if not Assigned(_Name) then exit;
-  TParamsDeclaration.Parse(Self, Source, _Params);
-  { Возвращаемое значение }
-  _Return := Keyword('return');
-  _SelfAsResult := Keyword('self as result');
-  if not Assigned(_SelfAsResult) then TTypeRef.Parse(Self, Source, _ReturnType);
-  { Признаки }
-  TFunctionAttributes.Parse(Self, Source, _Attributes);
-end;
-
-procedure TSubroutineHeaderBase.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Map, _FunctionType, _ProcedureOrFunction, _Name]);
-  APrinter.Indent;
-  if not Assigned(_Params) or (_Params is TParamsDeclaration) and TParamsDeclaration(_Params).MultiLine then
-  {$B+}
-    FIndentedBeforeIs := APrinter.NextLineIf([_Params]) or
-                         APrinter.NextLineIf([_Return, _SelfAsResult, _ReturnType])
-  else
-    FIndentedBeforeIs := APrinter.PrintItems([_Params, _Return, _SelfAsResult, _ReturnType]);
-  FIndentedBeforeIs := FIndentedBeforeIs or
-                       APrinter.NextLineIf([_Attributes]);
-  {$B-}
-  APrinter.Undent;
-end;
-
-function TSubroutineHeaderBase.StatementName: string;
-begin
-  Result := Concat([_FunctionType, _ProcedureOrFunction, _Name]);
-end;
-
-{ TParamDeclaration }
-
-function TParamDeclaration.InternalParse: boolean;
-begin
-  _ParamName := Identifier;
-  _InOut  := Keyword(['in', 'out', 'in out']);
-  _Nocopy := Keyword('nocopy');
-  TTypeRef.Parse(Self, Source, _ParamType);
-  if not Assigned(_ParamName) and not Assigned(_InOut) and not Assigned(_Nocopy) and not Assigned(_ParamType) then exit(false);
-  _Assignment := Terminal(':=');
-  if not Assigned(_Assignment) then _Assignment := Keyword('default');
-  if Assigned(_Assignment) then
-  begin
-    _Assignment.CanReplace := true;
-    TExpression.Parse(Self, Source, _DefaultValue);
-  end;
-  Result := true;
-end;
-
-function TParamDeclaration.StatementName: string;
-begin
-  Result := Concat([_ParamName]);
-end;
-
-procedure TParamDeclaration.InternalPrintSelf(APrinter: TPrinter);
-begin
-  if Settings.AddInAccessSpecificator and not Assigned(_InOut) then
-  begin
-    _InOut := TEpithet.Create('in', -1, -1);
-    AddToFreeList(_InOut);
-  end;
-  APrinter.PrintRulerItems('name', [_ParamName]);
-  APrinter.PrintRulerItems('modifiers', [_InOut, _Nocopy]);
-  APrinter.PrintRulerItems('type', [_ParamType]);
-  APrinter.PrintRulerItems('assignment', [_Assignment]);
-  APrinter.PrintRulerItems('value', [_DefaultValue]);
-end;
-
-{ TDeclarations }
-
-function TDeclarations.ParseStatement(out AResult: TStatement): boolean;
-begin
-  Result := TParser.Parse(Source, Settings, DeclarationParser, Self, AResult);
-end;
-
-function TDeclarations.ParseBreak: boolean;
-begin
-  Result := Any([Keyword(['begin', 'end', 'create', 'after each row',
-                          'after statement', 'before each row',
-                          'before statement', 'instead of each row']),
-                 Terminal('/')]);
-end;
-
-function TDeclarations.EmptyLineBefore: boolean;
-begin
-  Result := Parent is TPackage;
-end;
-
-function TDeclarations.EmptyLineAfter: boolean;
-begin
-  Result := Parent is TPackage;
-end;
-
-function TDeclarations.EmptyLineInside: boolean;
-begin
-  Result := Parent is TPackage;
+  Result := Assigned(Parent) and (Parent.Parent is TPackage);
 end;
 
 { TVariableDeclaration }
@@ -929,63 +576,6 @@ begin
   inherited;
 end;
 
-{ TSubroutine }
-
-function TSubroutine.GetHeaderClass: TStatementClass;
-begin
-  Result := TSubroutineHeader;
-end;
-
-function TSubroutine.StatementName: string;
-begin
-  Result := Header.StatementName;
-end;
-
-{ TSubroutineHeader }
-
-function TSubroutineHeader.InternalParse: boolean;
-begin
-  Result := inherited InternalParse;
-  if Result then _Is := Keyword(['is', 'as']);
-  if Assigned(_Is) then _Is.CanReplace := true;
-end;
-
-procedure TSubroutineHeader.InternalPrintSelf(APrinter: TPrinter);
-var Indented: boolean;
-begin
-  inherited;
-  Indented := IndentedBeforeIs and not IndentedAfterIs;
-  if Indented then APrinter.Indent;
-  APrinter.PrintItems([_NextLine, _Is]);
-  if Indented then APrinter.Undent;
-end;
-
-function TSubroutineHeader.Name: string;
-begin
-  Result := StatementType;
-end;
-
-{ TSubroutineForwardDeclaration }
-
-class function TSubroutineForwardDeclaration.Priority: integer;
-begin
-  Result := HIGHER_PRIORITY;
-end;
-
-function TSubroutineForwardDeclaration.InternalParse: boolean;
-begin
-  Result := inherited InternalParse;
-  if Result then _Semicolon := Terminal(';');
-  Result := Result and Assigned(_Semicolon);
-end;
-
-procedure TSubroutineForwardDeclaration.InternalPrintSelf(APrinter: TPrinter);
-begin
-  inherited;
-  APrinter.CancelNextLine;
-  APrinter.PrintItem(_Semicolon);
-end;
-
 { TStatements }
 
 function TStatements.ParseStatement(out AResult: TStatement): boolean;
@@ -1027,31 +617,6 @@ begin
   { Собственно печать }
   APrinter.PrintItems([_If, _Indent, _Condition, _Undent, _NL, _Sections, _NextLine, _EndIf]);
   inherited;
-end;
-
-{ TAnonymousHeader }
-
-function TAnonymousHeader.InternalParse: boolean;
-var P: TMark;
-begin
-  _Declare := Keyword('declare');
-  if Assigned(_Declare) then exit(true);
-  P := Source.Mark;
-  Result := Assigned(Keyword('begin'));
-  Source.Restore(P);
-end;
-
-procedure TAnonymousHeader.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItem(_Declare);
-  APrinter.NextLine;
-end;
-
-{ TAnonymousBlock }
-
-function TAnonymousBlock.GetHeaderClass: TStatementClass;
-begin
-  Result := TAnonymousHeader;
 end;
 
 { TExceptionHandler }
@@ -1552,52 +1117,11 @@ begin
   APrinter.PrintItems([_NextLine, _NextLine, _Comment, _NextLine, _NextLine]);
 end;
 
-{ TAlignedParamsDeclaration }
-
-function TAlignedParamsDeclaration.Aligned: TAlignMode;
-begin
-  Result := AlignMode(Settings.AlignVariables);
-end;
-
-function TAlignedParamsDeclaration.Transparent: boolean;
-begin
-  Result := true;
-end;
-
-function TAlignedParamsDeclaration.OnePerLine: boolean;
-begin
-  Result := (Self.Count > Settings.DeclarationSingleLineParamLimit);
-end;
-
 { TRecordFields }
 
 function TRecordFields.Aligned: TAlignMode;
 begin
   Result := AlignMode(Settings.AlignVariables);
-end;
-
-{ TParamsDeclaration }
-
-function TParamsDeclaration.MultiLine: boolean;
-begin
-  Result := (InnerStatement is TAlignedParamsDeclaration) and TAlignedParamsDeclaration(InnerStatement).OnePerLine;
-end;
-
-{ TFunctionAttributes }
-
-function TFunctionAttributes.InternalParse: boolean;
-begin
-  Result := true;
-  _Keyword := Keyword(['deterministic', 'pipelined', 'parallel_enable', 'result_cache']);
-  if not Assigned(_Keyword) then exit(false);
-  if SameText(_Keyword.Value, 'result_cache') then _ReliesOn := Keyword('relies_on');
-  if Assigned(_ReliesOn) then TSingleLine<TBracketedStatement<TIdentFields>>.Parse(Self, Source, _Datasources);
-  TFunctionAttributes.Parse(Self, Source, _Next);
-end;
-
-procedure TFunctionAttributes.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_Keyword, _ReliesOn, _Datasources, _NextLine, _Next]);
 end;
 
 initialization
