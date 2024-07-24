@@ -668,6 +668,13 @@ begin
 end;
 
 initialization
+  { Зарегистрируем создаваемые в CREATE объекты }
+  with OracleCreateParser do
+  begin
+    Add(TTable);
+    Add(TIndex);
+    Add(TUser);
+  end;
   { Зарегистрируем конструкции DDL }
   with DDLParser do
   begin

@@ -53,6 +53,9 @@ function GetDeclarationParser: TParserInfo;
 { Возврат парсера для операторов }
 function GetStatementParser: TParserInfo;
 
+{ Возврат парсера для создаваемых объектов }
+function GetCreateParser: TParserInfo;
+
 { Проверка наличия парсера для конструкции после end }
 function HasAfterEndParser: boolean;
 
@@ -103,6 +106,13 @@ function GetStatementParser: TParserInfo;
 begin
   Result := TParserInfo.InstanceFor(Language + '.Statement');
   if not Assigned(Result) then raise Exception.CreateFmt('Statements for [%s] does not registered', [Language]);
+end;
+
+{ Возврат парсера для создаваемых объектов }
+function GetCreateParser: TParserInfo;
+begin
+  Result := TParserInfo.InstanceFor(Language + '.Create');
+  if not Assigned(Result) then raise Exception.CreateFmt('Creates for [%s] does not registered', [Language]);
 end;
 
 { Проверка наличия парсера для конструкции после end }

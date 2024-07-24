@@ -40,7 +40,7 @@ type
 
 implementation
 
-uses Commons;
+uses Commons, OracleCore;
 
 { TPackageHeader }
 
@@ -90,5 +90,8 @@ begin
   { И, собственно, напечатаем }
   inherited;
 end;
+
+initialization
+  OracleCreateParser.Add(TPackage);
 
 end.

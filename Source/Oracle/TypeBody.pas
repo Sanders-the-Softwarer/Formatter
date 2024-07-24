@@ -31,7 +31,7 @@ type
 
 implementation
 
-uses Commons;
+uses Commons, OracleCore;
 
 { TTypeBodyHeader }
 
@@ -49,5 +49,8 @@ procedure TTypeBodyHeader.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_TypeBody, _TypeName, _AsIs]);
 end;
+
+initialization
+  OracleCreateParser.Add(TTypeBody);
 
 end.

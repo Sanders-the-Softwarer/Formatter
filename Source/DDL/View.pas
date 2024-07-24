@@ -51,7 +51,7 @@ type
 
 implementation
 
-uses DDL, Commons, Select, OracleCreate;
+uses DDL, Commons, Select, OracleCore;
 
 { TView }
 

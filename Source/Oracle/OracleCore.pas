@@ -4,7 +4,7 @@
 //                                                                            //
 //                     Заглавный модуль Oracle-синтаксиса                     //
 //                                                                            //
-//               Copyright(c) 2019-2020 by Sanders the Softwarer              //
+//               Copyright(c) 2019-2024 by Sanders the Softwarer              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -29,6 +29,9 @@ uses SysUtils, Parser;
 { Парсер для ораклового синтаксиса }
 function OracleParser: TParserInfo;
 
+{ Список конструкций для команды CREATE }
+function OracleCreateParser: TParserInfo;
+
 implementation
 
 uses Commons, PLSQL, DML, DDL, SQLPlus;
@@ -37,6 +40,12 @@ uses Commons, PLSQL, DML, DDL, SQLPlus;
 function OracleParser: TParserInfo;
 begin
   Result := TParserInfo.InstanceFor('Oracle');
+end;
+
+{ Список конструкций для команды CREATE }
+function OracleCreateParser: TParserInfo;
+begin
+  Result := TParserInfo.InstanceFor('Oracle.Create');
 end;
 
 initialization

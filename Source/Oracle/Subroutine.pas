@@ -110,7 +110,7 @@ type
 
 implementation
 
-uses Parser, Expressions;
+uses Parser, Expressions, OracleCore;
 
 { TSubroutineHeaderBase }
 
@@ -285,5 +285,8 @@ begin
   APrinter.PrintRulerItems('assignment', [_Assignment]);
   APrinter.PrintRulerItems('value', [_DefaultValue]);
 end;
+
+initialization
+  OracleCreateParser.Add(TSubroutine);
 
 end.

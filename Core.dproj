@@ -212,7 +212,6 @@
         <DCCReference Include="Source\DDL\Context.pas"/>
         <DCCReference Include="Source\PLSQL\ExecuteImmediate.pas"/>
         <DCCReference Include="Source\Oracle\OracleCreate.pas"/>
-        <DCCReference Include="Source\Postgres\PostgresCreate.pas"/>
         <DCCReference Include="Source\Postgres\PostgresCore.pas"/>
         <DCCReference Include="Source\Core\Customization.pas"/>
         <DCCReference Include="Source\SQL\ProgramBlock.pas"/>

@@ -296,27 +296,6 @@ type
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   end;
 
-  { TODO : Разобраться, нужен ли }
-  { Секция when }
-  TExceptionHandler = class(TStatement)
-  strict private
-    _When: TEpithet;
-    _Condition: TStatement;
-    _Then: TEpithet;
-    _Body: TStatement;
-  strict protected
-    function InternalParse: boolean; override;
-    procedure InternalPrintSelf(APrinter: TPrinter); override;
-  end;
-
-  { TODO : Разобраться, нужен ли }
-  { Операторы секции exceptions }
-  TExceptionStatements = class(TStatements)
-  strict protected
-    function ParseStatement(out AStatement: TStatement): boolean; override;
-    function AllowWhen: boolean; override;
-  end;
-
   { Декларация pragma }
   TPragma = class(TPLSQLStatement)
   strict private
@@ -617,35 +596,6 @@ begin
   { Собственно печать }
   APrinter.PrintItems([_If, _Indent, _Condition, _Undent, _NL, _Sections, _NextLine, _EndIf]);
   inherited;
-end;
-
-{ TExceptionHandler }
-
-function TExceptionHandler.InternalParse: boolean;
-begin
-  _When := Keyword('when');
-  Result := Assigned(_When) and TSingleLine<TExpression>.Parse(Self, Source, _Condition);
-  if not Result then exit;
-  _Then := Keyword('then');
-  TStatements.Parse(Self, Source, _Body);
-end;
-
-procedure TExceptionHandler.InternalPrintSelf(APrinter: TPrinter);
-begin
-  APrinter.PrintItems([_When, _Condition, _Then]);
-  APrinter.PrintIndented(_Body);
-end;
-
-{ TExceptionStatements }
-
-function TExceptionStatements.ParseStatement(out AStatement: TStatement): boolean;
-begin
-  Result := TExceptionHandler.Parse(Self, Source, AStatement) or inherited ParseStatement(AStatement);
-end;
-
-function TExceptionStatements.AllowWhen: boolean;
-begin
-  Result := true;
 end;
 
 { TNull }
@@ -1173,6 +1123,8 @@ initialization
     Add(TPLSQLTable);
     Add(TRefCursor);
   end;
+  { Включим типы в создаваемые объекты }
+  OracleCreateParser.Add(TType);
   { Включим PLSQL в общеоракловый парсер }
   OracleParser.Add(PLSQLParser);
   OracleParser.Add(DeclarationParser);

@@ -30,7 +30,7 @@ type
 
 implementation
 
-uses Commons;
+uses Commons, OracleCore;
 
 { TRole }
 
@@ -59,5 +59,8 @@ function TRole.Grouping: TStatementClass;
 begin
   Result := TRole;
 end;
+
+initialization
+  OracleCreateParser.Add(TRole);
 
 end.

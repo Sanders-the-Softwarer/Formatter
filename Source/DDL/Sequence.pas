@@ -40,7 +40,7 @@ type
 
 implementation
 
-uses Commons, DDL;
+uses Commons, DDL, OracleCore;
 
 { TSequence }
 
@@ -80,5 +80,8 @@ function TSequencePart.StatementName: string;
 begin
   Result := Concat([_Name, _Value]);
 end;
+
+initialization
+  OracleCreateParser.Add(TSequence);
 
 end.

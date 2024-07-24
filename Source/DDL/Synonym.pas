@@ -31,7 +31,7 @@ type
 
 implementation
 
-uses Commons, DDL;
+uses Commons, DDL, OracleCore;
 
 { TSynonym }
 
@@ -69,5 +69,8 @@ function TSynonym.SameTypeAligned: TAlignMode;
 begin
   Result := AlignMode(Settings.AlignCommands);
 end;
+
+initialization
+  OracleCreateParser.Add(TSynonym);
 
 end.

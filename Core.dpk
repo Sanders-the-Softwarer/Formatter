@@ -95,7 +95,6 @@ contains
   Context in 'Source\DDL\Context.pas',
   ExecuteImmediate in 'Source\PLSQL\ExecuteImmediate.pas',
   OracleCreate in 'Source\Oracle\OracleCreate.pas',
-  PostgresCreate in 'Source\Postgres\PostgresCreate.pas',
   PostgresCore in 'Source\Postgres\PostgresCore.pas',
   Customization in 'Source\Core\Customization.pas',
   ProgramBlock in 'Source\SQL\ProgramBlock.pas',

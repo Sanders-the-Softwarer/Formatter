@@ -155,8 +155,6 @@ begin
                                    _Handlers,       _UndentNextLine,
                        _End,       _AfterEnd]);
   inherited;
-  { TODO : Разобраться
-  APrinter.NextLineIf(_Slash); }
 end;
 
 function TProgramBlock.DeclareAssumed: boolean;

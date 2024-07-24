@@ -31,10 +31,5 @@ initialization
   { Зарегистрируем реализации для Постгреса }
   TParserInfo.InstanceFor('Postgres.Separator').Add(TSeparator);
   TParserInfo.InstanceFor('Postgres.Declarations').Add(TDeclarations);
-  { Регистрация синтаксических конструкций }
-  with PostgresParser do
-  begin
-//    Add(TPostgresCreate);
-  end;
 
 end.

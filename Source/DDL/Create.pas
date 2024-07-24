@@ -24,8 +24,7 @@ type
     function InternalParse: boolean; override;
     procedure InternalPrintSelf(APrinter: TPrinter); override;
   strict protected
-    function WhatParser: TParserInfo; virtual; abstract;
-    function AdditionalParse: boolean; virtual;
+    procedure AdditionalParse; virtual;
     procedure AdditionalPrintSelf(APrinter: TPrinter); virtual;
   public
     function StatementName: string; override;
@@ -34,6 +33,8 @@ type
   end;
 
 implementation
+
+uses Customization;
 
 { TCreate }
 
@@ -46,17 +47,12 @@ begin
   { Проверим наличие or replace }
   _Or := Keyword('or');
   if Assigned(_Or) then _Replace := Keyword('replace');
-  if Assigned(_Or) and not Assigned(_Replace) then exit(true);
+  if Assigned(_Or) and not Assigned(_Replace) then exit;
   { Место для подключения дополнительных конструкций в наследниках }
-  if not AdditionalParse then exit(false);
+  AdditionalParse;
   { И, наконец, распознаем, что же мы создаём }
-  if TParser.Parse(Source, Settings, WhatParser, Self, _What) or
+  if TParser.Parse(Source, Settings, Customization.GetCreateParser, Self, _What) or
      TUnexpectedToken.Parse(Self, Source, _What) then inherited;
-end;
-
-function TCreate.AdditionalParse: boolean;
-begin
-  Result := true;
 end;
 
 procedure TCreate.InternalPrintSelf(APrinter: TPrinter);
@@ -65,6 +61,11 @@ begin
   AdditionalPrintSelf(APrinter);
   APrinter.PrintItems([_What]);
   inherited;
+end;
+
+procedure TCreate.AdditionalParse;
+begin
+  { ничего не делаем }
 end;
 
 procedure TCreate.AdditionalPrintSelf(APrinter: TPrinter);

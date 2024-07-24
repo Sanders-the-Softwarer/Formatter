@@ -122,7 +122,7 @@ type
 
 implementation
 
-uses Parser, Commons, DML, DDL, SQLPlus, Expressions, DML_Commons, Call;
+uses Parser, Commons, OracleCore, DML, DDL, SQLPlus, Expressions, DML_Commons, Call;
 
 { TTrigger }
 
@@ -374,5 +374,8 @@ procedure TTimingBlockHeader.InternalPrintSelf(APrinter: TPrinter);
 begin
   APrinter.PrintItems([_TimingPoint, _Is]);
 end;
+
+initialization
+  OracleCreateParser.Add(TTrigger);
 
 end.

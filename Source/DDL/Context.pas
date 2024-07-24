@@ -29,7 +29,7 @@ type
 
 implementation
 
-uses Commons, OracleCreate;
+uses Commons, OracleCore;
 
 { TContext }
 

@@ -28,7 +28,7 @@ type
 
 implementation
 
-uses Commons;
+uses Commons, OracleCore;
 
 { TDatabaseLink }
 
@@ -66,5 +66,8 @@ begin
              _AuthenticatedBy, _AuthUser, _AuthIdentifiedBy, _AuthPassword, _NextLine,
              _Using, _ConnectionString, _Undent]);
 end;
+
+initialization
+  OracleCreateParser.Add(TDatabaseLink);
 
 end.
